@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280">
+  <style>
+    .draw { opacity: 0; animation: appear 0.35s ease forwards; }
+    .d2 { animation-delay: 0.3s; }
+    .d3 { animation-delay: 0.6s; }
+    .d4 { animation-delay: 0.9s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="720" height="280" fill="#f6f1e7"/>
+  <text x="190" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">thread 1</text>
+  <text x="520" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">thread 2</text>
+  <g class="draw">
+    <rect x="48" y="60" width="280" height="44" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="188" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142">reads count, sees 0</text>
+    <rect x="380" y="60" width="280" height="44" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="520" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142">reads count, sees 0</text>
+  </g>
+  <g class="draw d2">
+    <rect x="48" y="118" width="280" height="44" rx="10" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="188" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142">adds 1, holds 1</text>
+    <rect x="380" y="118" width="280" height="44" rx="10" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="520" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142">adds 1, holds 1</text>
+  </g>
+  <g class="draw d3">
+    <rect x="48" y="176" width="280" height="44" rx="10" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="188" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142">writes 1</text>
+    <rect x="380" y="176" width="280" height="44" rx="10" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="520" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142">writes 1</text>
+  </g>
+  <text class="draw d4" x="360" y="256" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">count is 1, not 2</text>
+</svg>

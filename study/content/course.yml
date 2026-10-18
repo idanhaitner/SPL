@@ -1,0 +1,663 @@
+id: systems-programming
+title: Systems Programming
+lang: en
+dir: ltr
+term: "2026"
+summary: >
+  Systems Programming (תכנות מערכות, 202-1-2031) takes a program apart into
+  the machine it actually runs on. You draw the stack and the heap, write the
+  special member functions a C++ class needs when it owns memory, then move
+  through Java, threads, sockets, the reactor, and a relational database.
+
+changelog:
+  - date: 2026-10-17
+    note: "First guide from the thirteen lecture decks, the thirteen exercise sessions, and the 2015-2024 exams."
+  - date: 2026-10-18
+    note: "Chapters follow the lecture decks. Past-paper practice no longer shows the year or the moed."
+  - date: 2026-10-18
+    note: "Each chapter gained a diagram of the idea it teaches, and three short traces for frames, pointer steps, and the link stage."
+
+sources:
+  - path: "Classes/Chapter 1 - The Memory Model.pptx"
+    type: lecture
+    status: incorporated
+    note: "Address space, stack, heap, statics, code, and the Von Neumann cycle."
+    problems: [worked-stack-array, worked-frame-call]
+  - path: "Classes/Chapter 2 - Pointers.pptx"
+    type: lecture
+    status: incorporated
+    note: "Addresses, pointer arithmetic, references, and lvalues."
+    problems: [worked-pointer-trace, worked-pointer-step]
+  - path: "Classes/Chapter 3 - Classes and Objects.pptx"
+    type: lecture
+    status: incorporated
+    note: "Class layout, constructors, and initializer lists."
+    problems: [worked-initializer]
+  - path: "Classes/Chapter 4 - Rule of Thee.pptx"
+    type: lecture
+    status: incorporated
+    note: "Destructor, copy constructor, and copy assignment."
+    problems: [worked-copy-and-swap]
+  - path: "Classes/Chapter 5 - Rule of Five and Zero.pptx"
+    type: lecture
+    status: incorporated
+    note: "Move operations, RAII, and smart pointers."
+    problems: [worked-move-image]
+  - path: "Classes/Chapter 6 - Inheritance.pptx"
+    type: lecture
+    status: incorporated
+    note: "Derived classes, virtual functions, and the vtable."
+    problems: [worked-virtual-call]
+  - path: "Classes/Chapter 7 - Back to Java.pptx"
+    type: lecture
+    status: incorporated
+    note: "Java object layout, arrays, and the runtime the later chapters use."
+    problems: [worked-array-layout]
+  - path: "Classes/Chapter 8 - Concurrency.pptx"
+    type: lecture
+    status: incorporated
+    note: "Threads, races, locks, and liveness."
+  - path: "Classes/Chapter 9 - Design by Contract.pptx"
+    type: lecture
+    status: incorporated
+    note: "Preconditions, postconditions, and invariants."
+    problems: [worked-crop-contract]
+  - path: "Classes/Chapter 10 - Networking.pptx"
+    type: lecture
+    status: incorporated
+    note: "TCP, UDP, and the accept loop."
+    problems: [worked-tcp-accept]
+  - path: "Classes/Chapter 11 - Reactor.pptx"
+    type: lecture
+    status: incorporated
+    note: "The single-threaded selector loop and non-blocking channels."
+  - path: "Classes/Chapter 12 - Serialization.pptx"
+    type: lecture
+    status: incorporated
+    note: "Java Serializable, transient fields, and serialVersionUID."
+    problems: [worked-transient-hash]
+  - path: "Classes/Chapter 13 - Persistance.pptx"
+    type: lecture
+    status: incorporated
+    note: "Relational tables, SQL, and joins."
+    problems: [worked-inner-join]
+  - path: "Exrecises/SPL_PS1 (1).pptx"
+    type: exercise
+    status: incorporated
+    note: "Compile and link, makefiles, and the contrast with Java."
+    problems: [ps1-link-vs-java, ps1-makefile-first-target, worked-compile-vs-link]
+  - path: "Exrecises/SPL_PS2 (1).pptx"
+    type: exercise
+    status: incorporated
+    note: "Stack versus heap, pointer mistakes, and deleting a two-dimensional array."
+    problems: [ps2-stack-vs-heap, ps2-pointer-dangers, ps2-delete-2d]
+  - path: "Exrecises/SPL_PS3.pptx"
+    type: exercise
+    status: incorporated
+    note: "Pass by value, the rule of three, and virtual destructors."
+    problems: [ps3-pass-by-value, ps3-rule-of-three, ps3-virtual-destructor]
+  - path: "Exrecises/SPL_PS4.pptx"
+    type: exercise
+    status: incorporated
+    note: "How many copies a call makes, and unique_ptr versus shared_ptr."
+    problems: [ps4-copy-count, ps4-unique-vs-shared]
+  - path: "Exrecises/SPL_PS5.pptx"
+    type: exercise
+    status: incorporated
+    note: "Checked exceptions and a stack written as a contract."
+    problems: [ps5-checked-exception, ps5-stack-contract]
+  - path: "Exrecises/PS6-2026-1.pptx"
+    type: exercise
+    status: incorporated
+    note: "A race on a shared counter, and a safe average."
+    problems: [worked-counter-race, ps6-counter-race, ps6-average-safe]
+  - path: "Exrecises/SPL_PS7.pptx"
+    type: exercise
+    status: incorporated
+    note: "wait versus spinning, and the names of the liveness failures."
+    problems: [ps7-wait-vs-spin, ps7-liveness-names]
+  - path: "Exrecises/SPL_PS8.pptx"
+    type: exercise
+    status: incorporated
+    note: "A lazy singleton and interrupting a thread."
+    problems: [ps8-singleton, ps8-interrupt]
+  - path: "Exrecises/PS9 2026.pptx"
+    type: exercise
+    status: incorporated
+    note: "TCP versus UDP, and character encodings."
+    problems: [ps9-tcp-udp, ps9-encoding]
+  - path: "Exrecises/SPL_PS10.pptx"
+    type: exercise
+    status: incorporated
+    note: "lock_guard, the reactor flip, and STOMP frames."
+    problems: [ps10-lock-guard, worked-flip, ps10-flip, ps10-stomp]
+  - path: "Exrecises/SPL_PS11.pptx"
+    type: exercise
+    status: incorporated
+    note: "Actor-pool ordering and when to keep OP_WRITE."
+    problems: [ps11-actor-order, ps11-write-interest]
+  - path: "Exrecises/SPL_PS12.pptx"
+    type: exercise
+    status: incorporated
+    note: "Foreign keys and inner versus left joins on the teaching-assistant tables."
+    problems: [ps12-foreign-key, ps12-join]
+  - path: "Exrecises/SPL_PS13_PRES.pptx"
+    type: exercise
+    status: incorporated
+    note: "DTO, DAO, repository, and a generic row mapper."
+    problems: [ps13-dto-dao, ps13-orm-find]
+  - path: "Exams/15-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2015 moed A. Threads, a vector drawing, a UDP reactor edit, and BigApple."
+    problems: [exam-15a-q1, exam-15a-q2, exam-15a-q3, exam-15a-q4]
+  - path: "Exams/15-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2015 moed A."
+    problems: [exam-15a-q1, exam-15a-q2, exam-15a-q3, exam-15a-q4]
+  - path: "Exams/15-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2015 moed B. Synchronization, the vector again, a length-prefix protocol, and BigApple extended."
+    problems: [exam-15b-q1, exam-15b-q2, exam-15b-q3, exam-15b-q4]
+  - path: "Exams/15-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2015 moed B."
+    problems: [exam-15b-q1, exam-15b-q2, exam-15b-q3, exam-15b-q4]
+  - path: "Exams/16-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2016 moed A. A contract, virtual dispatch, a protocol change, and Abbey Road."
+    problems: [exam-16a-q1, exam-16a-q2, exam-16a-q3, exam-16a-q4]
+  - path: "Exams/16-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2016 moed A."
+    problems: [exam-16a-q1, exam-16a-q2, exam-16a-q3, exam-16a-q4]
+  - path: "Exams/16-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2016 moed B. Threads, move and copy, a reactor edit, and Abbey Road roles."
+    problems: [exam-16b-q1, exam-16b-q2, exam-16b-q3, exam-16b-q4]
+  - path: "Exams/16-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2016 moed B."
+    problems: [exam-16b-q1, exam-16b-q2, exam-16b-q3, exam-16b-q4]
+  - path: "Exams/17-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2017 moed A. Threads, the rule of three, a reactor edit, and a glasses shop."
+    problems: [exam-17a-q1, exam-17a-q2, exam-17a-q3, exam-17a-q4]
+  - path: "Exams/17-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2017 moed A."
+    problems: [exam-17a-q1, exam-17a-q2, exam-17a-q3, exam-17a-q4]
+  - path: "Exams/17-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2017 moed B. Threads, the rule of three, a protocol, and a garage."
+    problems: [exam-17b-q1, exam-17b-q2, exam-17b-q3, exam-17b-q4]
+  - path: "Exams/17-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2017 moed B."
+    problems: [exam-17b-q1, exam-17b-q2, exam-17b-q3, exam-17b-q4]
+  - path: "Exams/18-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2018 moed A. Virtual dispatch, a contract, a reactor edit, and an exam-question schema."
+    problems: [exam-18a-q1, exam-18a-q2, exam-18a-q3, exam-18a-q4]
+  - path: "Exams/18-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2018 moed A."
+    problems: [exam-18a-q1, exam-18a-q2, exam-18a-q3, exam-18a-q4]
+  - path: "Exams/18-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2018 moed B. Virtual dispatch, threads, a reactor edit, and wiretap tables."
+    problems: [exam-18b-q1, exam-18b-q2, exam-18b-q3, exam-18b-q4]
+  - path: "Exams/18-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2018 moed B."
+    problems: [exam-18b-q1, exam-18b-q2, exam-18b-q3, exam-18b-q4]
+  - path: "Exams/19-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2019 moed A. Virtual dispatch, a contract, a reactor edit, and Airbnb."
+    problems: [exam-19a-q1, exam-19a-q2, exam-19a-q3, exam-19a-q4]
+  - path: "Exams/19-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2019 moed A."
+    problems: [exam-19a-q1, exam-19a-q2, exam-19a-q3, exam-19a-q4]
+  - path: "Exams/19-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2019 moed B. Virtual dispatch, threads, a reactor edit, and Airbnb nights."
+    problems: [exam-19b-q1, exam-19b-q2, exam-19b-q3, exam-19b-q4]
+  - path: "Exams/19-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2019 moed B."
+    problems: [exam-19b-q1, exam-19b-q2, exam-19b-q3, exam-19b-q4]
+  - path: "Exams/20-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2020 moed A. A pointer repository, threads, a reactor edit, and a DVD service."
+    problems: [exam-20a-q1, exam-20a-q2, exam-20a-q3, exam-20a-q4]
+  - path: "Exams/20-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2020 moed A."
+    problems: [exam-20a-q1, exam-20a-q2, exam-20a-q3, exam-20a-q4]
+  - path: "Exams/20-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2020 moed B. Smart pointers, threads, a protocol, and DVD scores."
+    problems: [exam-20b-q1, exam-20b-q2, exam-20b-q3, exam-20b-q4]
+  - path: "Exams/20-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2020 moed B."
+    problems: [exam-20b-q1, exam-20b-q2, exam-20b-q3, exam-20b-q4]
+  - path: "Exams/24-a.pdf"
+    type: exam
+    status: incorporated
+    note: "2024 moed A. The rule of five, a contract, and a reactor with a database."
+    problems: [exam-24a-q1, exam-24a-q2, exam-24a-q3]
+  - path: "Exams/24-a-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2024 moed A."
+    problems: [exam-24a-q1, exam-24a-q2, exam-24a-q3]
+  - path: "Exams/24-b.pdf"
+    type: exam
+    status: incorporated
+    note: "2024 moed B. Virtual dispatch, threads, and a reactor with a database."
+    problems: [exam-24b-q1, exam-24b-q2, exam-24b-q3]
+  - path: "Exams/24-b-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2024 moed B."
+    problems: [exam-24b-q1, exam-24b-q2, exam-24b-q3]
+  - path: "Exams/24-c.pdf"
+    type: exam
+    status: incorporated
+    note: "2024 moed C. The rule of five, threads, and a reactor with a database."
+    problems: [exam-24c-q1, exam-24c-q2, exam-24c-q3]
+  - path: "Exams/24-c-solution.pdf"
+    type: exam_solution
+    status: incorporated
+    note: "Official solutions for 2024 moed C."
+    problems: [exam-24c-q1, exam-24c-q2, exam-24c-q3]
+  - path: "Exams/ppl252-a.pdf"
+    type: exam
+    status: intentionally_excluded
+    note: "Principles of Programming Languages (202-1-2051), not Systems Programming. Syntax, type systems, functional programming, and logic programming."
+  - path: "Exams/ppl252-a-solution.pdf"
+    type: exam_solution
+    status: intentionally_excluded
+    note: "Solutions for the Principles of Programming Languages paper, course 202-1-2051."
+  - path: "Exams/ppl252-b.pdf"
+    type: exam
+    status: intentionally_excluded
+    note: "Second Principles of Programming Languages paper (202-1-2051), not Systems Programming."
+  - path: "Exams/ppl252-b-solution.pdf"
+    type: exam_solution
+    status: intentionally_excluded
+    note: "Solutions for the second Principles of Programming Languages paper."
+
+topics:
+  - id: memory-model
+    file: topics/memory-model.md
+    title: The memory model
+    exam_weight: core
+    exam_shape: "Draw the stack and the heap after a by-value call. The trap is putting the buffer on the stack, or drawing a by-value parameter as the same object as the caller's."
+    prerequisites: []
+    unlocks: [pointers]
+  - id: pointers
+    file: topics/pointers.md
+    title: Pointers and references
+    exam_weight: tested
+    exam_shape: "A repository of images behind a pointer array, returned by value from a local. The trap is treating the return as a copy of the pixels, or using sizeof of a pointer as a length."
+    prerequisites: [memory-model]
+    unlocks: [classes-and-objects]
+  - id: classes-and-objects
+    file: topics/classes-and-objects.md
+    title: Classes and objects
+    exam_weight: taught
+    prerequisites: [pointers]
+    unlocks: [rule-of-three]
+  - id: rule-of-three
+    file: topics/rule-of-three.md
+    title: Rule of three
+    exam_weight: core
+    exam_shape: "A small class owns a raw array. Write the destructor and the deep copy. The trap is the default memberwise copy, or an assignment that frees the buffer before the new one exists."
+    prerequisites: [classes-and-objects]
+    unlocks: [rule-of-five]
+  - id: rule-of-five
+    file: topics/rule-of-five.md
+    title: Rule of five and zero
+    exam_weight: core
+    exam_shape: "Steal a buffer, or delay the clone until a write. The trap is leaving the source pointer alive so two destructors free one block, or copying a unique_ptr."
+    prerequisites: [rule-of-three]
+    unlocks: [inheritance]
+  - id: inheritance
+    file: topics/inheritance.md
+    title: Inheritance and polymorphism
+    exam_weight: core
+    exam_shape: "Two derived types sit behind one base pointer. The call is non-virtual, the destructor is non-virtual, or an overload is used where an override was needed. The trap is a memory drawing that omits the vptr, or a delete through the base that skips the derived destructor."
+    prerequisites: [rule-of-five]
+    unlocks: [java-runtime]
+  - id: java-runtime
+    file: topics/java-runtime.md
+    title: Back to Java
+    exam_weight: taught
+    prerequisites: [inheritance]
+    unlocks: [concurrency]
+  - id: concurrency
+    file: topics/concurrency.md
+    title: Concurrency
+    exam_weight: core
+    exam_shape: "A shared structure. Show a race, a deadlock, or a repair with synchronized, a semaphore, or an atomic. The trap is a lock order that waits forever, or protecting the update but not the read that publishes it."
+    prerequisites: [java-runtime]
+    unlocks: [design-by-contract]
+  - id: design-by-contract
+    file: topics/design-by-contract.md
+    title: Design by contract
+    exam_weight: core
+    exam_shape: "Write the invariant and the preconditions and postconditions of a method. The trap is an invariant that forgets the empty case, or a postcondition that is only true when nobody else mutates the object."
+    prerequisites: [concurrency]
+    unlocks: [networking]
+  - id: networking
+    file: topics/networking.md
+    title: Networking
+    exam_weight: core
+    exam_shape: "Replace a delimiter with a length prefix, cap the clients, or write a small command protocol. The trap is treating a TCP read as a whole message, or forgetting that UDP has no accept."
+    prerequisites: [design-by-contract]
+    unlocks: [reactor]
+  - id: reactor
+    file: topics/reactor.md
+    title: The reactor
+    exam_weight: core
+    exam_shape: "Edit the reactor from the appendix. Move tokenization off the selector, cap work per client, add a log, or serve a query without blocking select. The trap is a heavy call on the selector thread, or leaving OP_WRITE set so select spins."
+    prerequisites: [networking]
+    unlocks: [serialization]
+  - id: serialization
+    file: topics/serialization.md
+    title: Serialization
+    exam_weight: taught
+    prerequisites: [reactor]
+    unlocks: [persistence]
+  - id: persistence
+    file: topics/persistence.md
+    title: Persistence and SQL
+    exam_weight: core
+    exam_shape: "Design the tables, with a primary key, foreign keys, and a junction table for a many-to-many, then write one SELECT with a join. The trap is a Cartesian product with no join condition, or a list stored as columns instead of a junction table."
+    prerequisites: [serialization]
+    unlocks: []
+
+glossary:
+  - term: stack
+    topic: memory-model
+    definition: "The LIFO region of automatic storage, one activation frame per call, freed when the call returns."
+  - term: heap
+    topic: memory-model
+    definition: "The region of dynamic storage obtained with new and released only by a matching delete."
+  - term: pointer
+    topic: pointers
+    definition: "An object whose value is the address of another object, or null."
+  - term: reference
+    topic: pointers
+    definition: "A name bound to an existing object. It cannot be null and it cannot be reseated."
+  - term: destructor
+    topic: rule-of-three
+    definition: "The special member function that runs when an object's lifetime ends and that frees what the object owns."
+  - term: copy constructor
+    topic: rule-of-three
+    definition: "The constructor that builds a new object as a deep copy of another of the same type."
+  - term: assignment operator
+    topic: rule-of-three
+    definition: "The operator that replaces an existing object's resources with a copy of another's, and that must stay safe if the two are the same object."
+  - term: move constructor
+    topic: rule-of-five
+    definition: "The constructor that steals a source object's buffer and leaves that source empty so its destructor frees nothing."
+  - term: RAII
+    topic: rule-of-five
+    definition: "Binding a resource's lifetime to an object's lifetime, so the destructor is the release."
+  - term: unique_ptr
+    topic: rule-of-five
+    definition: "A smart pointer that owns one object, cannot be copied, and can be moved."
+  - term: shared_ptr
+    topic: rule-of-five
+    definition: "A smart pointer that shares ownership through a count and deletes the object when the count hits zero."
+  - term: virtual function
+    topic: inheritance
+    definition: "A member function whose implementation is chosen from the dynamic type of the object, through the vtable."
+  - term: vtable
+    topic: inheritance
+    definition: "The per-class table of virtual-function addresses. Each object holds a pointer to its class's table."
+  - term: invariant
+    topic: design-by-contract
+    definition: "A condition that is true of an object whenever no method of the object is running."
+  - term: precondition
+    topic: design-by-contract
+    definition: "What the caller must make true before a method runs. The method may assume it."
+  - term: postcondition
+    topic: design-by-contract
+    definition: "What the method guarantees when it returns, provided the precondition held."
+  - term: thread
+    topic: concurrency
+    definition: "A sequential flow of execution that shares the process heap with the other threads."
+  - term: deadlock
+    topic: concurrency
+    definition: "A wait cycle in which each thread holds a lock the next thread needs."
+  - term: livelock
+    topic: concurrency
+    definition: "Threads keep changing state in response to each other and never make progress."
+  - term: starvation
+    topic: concurrency
+    definition: "A thread that is ready to run is passed over indefinitely by the scheduler or by the lock."
+  - term: TCP
+    topic: networking
+    definition: "A connection-oriented, reliable byte stream. A read returns some of the bytes, not necessarily one message."
+  - term: UDP
+    topic: networking
+    definition: "A connectionless datagram protocol. There is no accept, and a datagram arrives whole or not at all."
+  - term: reactor
+    topic: reactor
+    definition: "One thread that waits in select and dispatches ready non-blocking channels."
+  - term: selector
+    topic: reactor
+    definition: "The Java NIO object that reports which registered channels are ready to read or write."
+  - term: serialization
+    topic: serialization
+    definition: "A representation of an object as a byte sequence that records its type, the shape of its fields, and the field values."
+  - term: primary key
+    topic: persistence
+    definition: "The column or columns that identify one row of a table."
+  - term: foreign key
+    topic: persistence
+    definition: "A column whose values must equal a key of another table, the relational form of a pointer."
+
+exams:
+  - year: 2015
+    source: "Exams/15-a.pdf"
+    pattern: "Threads, a stack-and-heap drawing of a vector, a UDP edit of the reactor, and a BigApple schema."
+    questions:
+      - id: exam-15a-q1
+        topic: concurrency
+      - id: exam-15a-q2
+        topic: memory-model
+      - id: exam-15a-q3
+        topic: reactor
+      - id: exam-15a-q4
+        topic: persistence
+  - year: 2015
+    source: "Exams/15-b.pdf"
+    pattern: "Narrowed synchronization, the vector again, a length-prefix tokenizer, and number portability."
+    questions:
+      - id: exam-15b-q1
+        topic: concurrency
+      - id: exam-15b-q2
+        topic: memory-model
+      - id: exam-15b-q3
+        topic: networking
+      - id: exam-15b-q4
+        topic: persistence
+  - year: 2016
+    source: "Exams/16-a.pdf"
+    pattern: "A contract, virtual dispatch, a protocol change, and Abbey Road sessions."
+    questions:
+      - id: exam-16a-q1
+        topic: design-by-contract
+      - id: exam-16a-q2
+        topic: inheritance
+      - id: exam-16a-q3
+        topic: networking
+      - id: exam-16a-q4
+        topic: persistence
+  - year: 2016
+    source: "Exams/16-b.pdf"
+    pattern: "Threads, move and copy, a reactor edit, and a restricted set of roles."
+    questions:
+      - id: exam-16b-q1
+        topic: concurrency
+      - id: exam-16b-q2
+        topic: rule-of-five
+      - id: exam-16b-q3
+        topic: reactor
+      - id: exam-16b-q4
+        topic: persistence
+  - year: 2017
+    source: "Exams/17-a.pdf"
+    pattern: "Threads, the rule of three, a reactor edit, and a glasses shop."
+    questions:
+      - id: exam-17a-q1
+        topic: concurrency
+      - id: exam-17a-q2
+        topic: rule-of-three
+      - id: exam-17a-q3
+        topic: reactor
+      - id: exam-17a-q4
+        topic: persistence
+  - year: 2017
+    source: "Exams/17-b.pdf"
+    pattern: "Threads, the rule of three, a command protocol, and a garage."
+    questions:
+      - id: exam-17b-q1
+        topic: concurrency
+      - id: exam-17b-q2
+        topic: rule-of-three
+      - id: exam-17b-q3
+        topic: networking
+      - id: exam-17b-q4
+        topic: persistence
+  - year: 2018
+    source: "Exams/18-a.pdf"
+    pattern: "Virtual dispatch, a contract, a reactor edit, and a schema for reused exam questions."
+    questions:
+      - id: exam-18a-q1
+        topic: inheritance
+      - id: exam-18a-q2
+        topic: design-by-contract
+      - id: exam-18a-q3
+        topic: reactor
+      - id: exam-18a-q4
+        topic: persistence
+  - year: 2018
+    source: "Exams/18-b.pdf"
+    pattern: "Virtual dispatch, threads, a reactor edit, and wiretap recordings."
+    questions:
+      - id: exam-18b-q1
+        topic: inheritance
+      - id: exam-18b-q2
+        topic: concurrency
+      - id: exam-18b-q3
+        topic: reactor
+      - id: exam-18b-q4
+        topic: persistence
+  - year: 2019
+    source: "Exams/19-a.pdf"
+    pattern: "Virtual dispatch, a contract, a reactor edit, and Airbnb."
+    questions:
+      - id: exam-19a-q1
+        topic: inheritance
+      - id: exam-19a-q2
+        topic: design-by-contract
+      - id: exam-19a-q3
+        topic: reactor
+      - id: exam-19a-q4
+        topic: persistence
+  - year: 2019
+    source: "Exams/19-b.pdf"
+    pattern: "Virtual dispatch, threads, a reactor edit, and a night that cannot be double-booked."
+    questions:
+      - id: exam-19b-q1
+        topic: inheritance
+      - id: exam-19b-q2
+        topic: concurrency
+      - id: exam-19b-q3
+        topic: reactor
+      - id: exam-19b-q4
+        topic: persistence
+  - year: 2020
+    source: "Exams/20-a.pdf"
+    pattern: "A pointer repository, threads, a reactor edit, and a DVD catalog."
+    questions:
+      - id: exam-20a-q1
+        topic: pointers
+      - id: exam-20a-q2
+        topic: concurrency
+      - id: exam-20a-q3
+        topic: reactor
+      - id: exam-20a-q4
+        topic: persistence
+  - year: 2020
+    source: "Exams/20-b.pdf"
+    pattern: "Smart pointers, threads, a protocol, and an updating average score."
+    questions:
+      - id: exam-20b-q1
+        topic: rule-of-five
+      - id: exam-20b-q2
+        topic: concurrency
+      - id: exam-20b-q3
+        topic: networking
+      - id: exam-20b-q4
+        topic: persistence
+  - year: 2024
+    source: "Exams/24-a.pdf"
+    pattern: "The rule of five, a contract, and a reactor that also talks to a database."
+    questions:
+      - id: exam-24a-q1
+        topic: rule-of-five
+      - id: exam-24a-q2
+        topic: design-by-contract
+      - id: exam-24a-q3
+        topic: reactor
+  - year: 2024
+    source: "Exams/24-b.pdf"
+    pattern: "Virtual dispatch, threads, and a reactor that also talks to a database."
+    questions:
+      - id: exam-24b-q1
+        topic: inheritance
+      - id: exam-24b-q2
+        topic: concurrency
+      - id: exam-24b-q3
+        topic: reactor
+  - year: 2024
+    source: "Exams/24-c.pdf"
+    pattern: "The rule of five, threads, and a reactor that also talks to a database."
+    questions:
+      - id: exam-24c-q1
+        topic: rule-of-five
+      - id: exam-24c-q2
+        topic: concurrency
+      - id: exam-24c-q3
+        topic: reactor

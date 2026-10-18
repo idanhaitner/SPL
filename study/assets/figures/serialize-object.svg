@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250">
+  <style>
+    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
+    .d2 { animation-delay: 0.4s; }
+    .d3 { animation-delay: 0.8s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="760" height="250" fill="#f6f1e7"/>
+  <g class="draw">
+    <rect x="24" y="48" width="200" height="150" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="124" y="84" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Pet on the heap</text>
+    <text x="124" y="114" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">name = "A"</text>
+    <text x="124" y="140" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">age = 3</text>
+    <text x="124" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#8a5a22">hash cached</text>
+  </g>
+  <g class="draw d2">
+    <rect x="280" y="72" width="200" height="100" rx="14" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="380" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">the byte stream</text>
+    <text x="380" y="136" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">name and age</text>
+    <text x="380" y="154" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">hash is left out</text>
+    <polygon points="268,122 254,116 254,128" fill="#c47b2b"/>
+  </g>
+  <g class="draw d3">
+    <rect x="536" y="48" width="200" height="150" rx="14" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
+    <text x="636" y="84" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">a new Pet</text>
+    <text x="636" y="114" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">name = "A"</text>
+    <text x="636" y="140" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">age = 3</text>
+    <text x="636" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#8a5a22">hash is null</text>
+    <polygon points="524,122 510,116 510,128" fill="#c47b2b"/>
+  </g>
+</svg>

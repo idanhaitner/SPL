@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320">
+  <style>
+    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
+    .d2 { animation-delay: 0.4s; }
+    .d3 { animation-delay: 0.75s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="760" height="320" fill="#f6f1e7"/>
+  <g class="draw">
+    <text x="130" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">stack, main's frame</text>
+    <rect x="36" y="56" width="190" height="70" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="131" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">int[] a</text>
+    <text x="131" y="108" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">a reference</text>
+    <rect x="36" y="142" width="190" height="70" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="131" y="172" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">String[] b</text>
+    <text x="131" y="194" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">a reference</text>
+  </g>
+  <g class="draw d2">
+    <text x="470" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">heap</text>
+    <rect x="300" y="52" width="200" height="88" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
+    <text x="400" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142">int array</text>
+    <text x="400" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">length 10, one block</text>
+  </g>
+  <g class="draw d3">
+    <rect x="300" y="176" width="200" height="88" rx="12" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5"/>
+    <text x="400" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142">ref array</text>
+    <text x="400" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">ten pointers, start null</text>
+    <rect x="540" y="176" width="184" height="88" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="632" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142">a String</text>
+    <text x="632" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">its own block</text>
+    <line x1="226" y1="96" x2="300" y2="96" stroke="#c47b2b" stroke-width="2"/>
+    <polygon points="300,96 288,90 288,102" fill="#c47b2b"/>
+    <line x1="226" y1="176" x2="300" y2="220" stroke="#c47b2b" stroke-width="2"/>
+    <polygon points="300,220 286,214 290,202" fill="#c47b2b"/>
+    <line x1="500" y1="220" x2="540" y2="220" stroke="#c47b2b" stroke-width="2"/>
+    <polygon points="540,220 528,214 528,226" fill="#c47b2b"/>
+  </g>
+</svg>
