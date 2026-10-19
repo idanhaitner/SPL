@@ -1,6 +1,6 @@
 ---
 id: concurrency
-title: Concurrency
+title: מקביליות
 sources:
   - "Classes/Chapter 8 - Concurrency.pptx"
   - "Exrecises/PS6-2026-1.pptx"
@@ -30,21 +30,21 @@ sources:
   - "Exams/24-c-solution.pdf"
 ---
 
-Clock speed stopped being the way to make a computer faster. The cheap improvement is more processors. A typical machine already runs tens or hundreds of processes at once. Inside one process, the same idea is a thread (חוט ביצוע): another stack, the same heap.
+מקביליות (concurrency) מתחילה כשמהירות השעון הפסיקה להיות הדרך להאיץ מחשב. השיפור הזול הוא יותר מעבדים. מכונה טיפוסית כבר מריצה עשרות או מאות תהליכים (process) בבת אחת. בתוך תהליך אחד, אותו רעיון הוא חוט-ביצוע (thread): מחסנית (stack) נוספת, אותה ערימה (heap).
 
-## Processes do not share a heap
+## תהליכים לא חולקים ערימה
 
-Physical memory is the RAM chips. Each cell has a physical address. Virtual memory is the lie the operating system tells a process: the address space looks private, from 0 up to a huge limit, even though many processes are alive. The lecture draws that space as pages (דפים), often 4KB, mapped by the operating system onto physical frames. Two processes that both use address `0x20000` are talking about different frames. That is why one calculator cannot read another's memory, and why cooperating programs need an explicit channel.
+זיכרון פיזי (physical memory) הוא שבבי ה-RAM. לכל תא יש כתובת פיזית. זיכרון וירטואלי (virtual memory) הוא השקר שמערכת ההפעלה מספרת לתהליך: מרחב הכתובות נראה פרטי, מ-0 ועד גבול עצום, גם כשהרבה תהליכים חיים. ההרצאה מציירת את המרחב כדפים (pages), לעיתים של 4KB, שמערכת ההפעלה ממפה למסגרות פיזיות (frames). שני תהליכים ששניהם משתמשים בכתובת `0x20000` מדברים על מסגרות שונות. לכן מחשבון אחד אינו יכול לקרוא את הזיכרון של האחר, ולכן תוכניות שמשתפות פעולה צריכות ערוץ מפורש.
 
-Chapter 8 reprints the [memory-model](topic:memory-model) picture and then puts a page table under it. A load can miss: the page is not in RAM, and the operating system brings it in. None of that is visible in a Java variable. What is visible is the consequence: threads of one process share the heap and the statics, and they do not share stacks.
+פרק 8 מדפיס מחדש את התמונה של [מודל הזיכרון](topic:memory-model) ואז שם טבלת דפים מתחתיה. טעינה יכולה להחטיא: הדף אינו ב-RAM, ומערכת ההפעלה מכניסה אותו. שום דבר מזה אינו נראה במשתנה של Java. מה שנראה הוא התוצאה: חוטים של תהליך אחד חולקים את הערימה ואת המשתנים הסטטיים, ואינם חולקים מחסניות.
 
-## A thread is a stack plus a task
+## חוט הוא מחסנית ועוד מטלה
 
-:::definition id=def-thread title="Thread of execution" source="Classes/Chapter 8 - Concurrency.pptx"
-A thread is an independent execution inside a process. Each thread has a private stack. The process starts with one thread and can create more. On several cores the threads run at the same time. On one core they take turns. They share the heap.
+:::definition id=def-thread title="חוט-ביצוע" source="Classes/Chapter 8 - Concurrency.pptx"
+חוט-ביצוע הוא ביצוע עצמאי בתוך תהליך. לכל חוט יש מחסנית פרטית. התהליך מתחיל עם חוט אחד ויכול ליצור עוד. על כמה ליבות החוטים רצים באותו זמן. על ליבה אחת הם מתחלפים. הם חולקים את הערימה.
 :::
 
-`Thread` is the object that starts and joins that execution. `Runnable` is the task. Keeping them apart means one task can be handed to a pool later.
+`Thread` הוא האובייקט (object) שמתחיל ומאחד את הביצוע הזה. `Runnable` הוא המטלה. ההפרדה ביניהם אומרת שמטלה אחת יכולה להימסר למאגר אחר כך.
 
 ```java
 public class Task implements Runnable {
@@ -56,41 +56,41 @@ public class Task implements Runnable {
 }
 ```
 
-`task.run()` uses the caller's thread. `new Thread(task).start()` allocates a new one. A lambda is a `Runnable` when the interface has one method: `new Thread(() -> fw.write("x")).start()`. `join()` waits until that thread's `run` returns. Without it, `main` can finish, or read the result, before the writes happen.
+`task.run()` משתמש בחוט של הקורא. `new Thread(task).start()` מקצה חוט חדש. ביטוי למבדה הוא `Runnable` כשלאינטרפייס (interface) יש מתודה אחת: `new Thread(() -> fw.write("x")).start()`. `join()` מחכה עד ש-`run` של החוט הזה חוזר. בלעדיו, `main` יכול להסתיים, או לקרוא את התוצאה, לפני שהכתיבות קורות.
 
-`ExecutorService` decouples "please run this" from "which thread runs it." `Executors.newFixedThreadPool(3)` reuses three threads for as many tasks as you submit. Session 6's `SerialExecutor` is the opposite extreme: one thread, tasks queued.
+`ExecutorService` מפריד בין "בבקשה תריץ את זה" לבין "איזה חוט מריץ את זה". `Executors.newFixedThreadPool(3)` ממחזר שלושה חוטים לכמה מטלות שמגישים. `SerialExecutor` של תרגול 6 הוא הקיצון ההפוך: חוט אחד, מטלות בתור.
 
-A shared resource is any object reachable from more than one thread. Locals that never escape are not shared. That is thread confinement, the first technique in session 7: if only one thread can name the object, it needs no lock.
+משאב משותף הוא כל אובייקט שנגיש מיותר מחוט אחד. משתנים מקומיים שלעולם אינם בורחים אינם משותפים. זו כליאת חוט (thread confinement), הטכניקה הראשונה בתרגול 7: אם רק חוט אחד יכול לנקוב בשם האובייקט, הוא אינו צריך מנעול (lock).
 
-## Races
+## מרוצים (race)
 
-The session's counter is the whole bug in three instructions.
+המונה של התרגול הוא כל הבאג בשלוש הוראות.
 
 ```java
 public void increment() { count++; }
 ```
 
-`count++` is a read, an add, and a write. Two threads can both read 0, both add 1, and both write 1. The global counter ends at 1. Nothing in the language promises an order among those six steps.
+`count++` הוא קריאה, חיבור וכתיבה. שני חוטים יכולים לקרוא שניהם 0, לחבר שניהם 1, ולכתוב שניהם 1. המונה הגלובלי נגמר ב-1. שום דבר בשפה אינו מבטיח סדר בין ששת הצעדים האלה.
 
-![Two threads both read 0, both add 1, and both write 1, so one increment is lost](../assets/figures/race-interleaving.svg)
+![שני חוטים קוראים שניהם 0, מחברים שניהם 1, וכותבים שניהם 1, ולכן תוספת אחת אובדת](../assets/figures/race-interleaving.svg)
 
-:::definition id=def-critical-section title="Critical section" source="Classes/Chapter 8 - Concurrency.pptx"
-A critical section (אזור קריטי) is code that at most one thread may execute at a time. The mutual exclusion that enforces it is a mutex. In Java, `synchronized` is that mutex. A synchronized method locks `this`. A synchronized block locks the object you name.
+:::definition id=def-critical-section title="אזור קריטי (critical section)" source="Classes/Chapter 8 - Concurrency.pptx"
+אזור קריטי הוא קוד שלכל היותר חוט אחד רשאי לבצע בזמן נתון. המניעה ההדדית שמאכפת אותו היא מנעול מניעה הדדית (mutex). ב-Java, `synchronized` הוא המנעול הזה. מתודה שהיא `synchronized` נועלת את `this`. בלוק `synchronized` נועל את האובייקט שנוקבים בשמו.
 
 ```java
 public synchronized int next() { n++; n++; return n; }
 ```
 :::
 
-`Even.next` without the keyword can return an odd number: one thread passes the first `n++` and the other thread runs both increments. With `synchronized` on the method, the three steps happen while one thread holds `this`. A private `final Object lock = new Object()` is the monitor when you do not want to lock the whole public object. Every access to the protected fields must lock that same object. A second lock does not exclude the first.
+`Even.next` בלי מילת המפתח יכול להחזיר מספר אי-זוגי: חוט אחד עובר את ה-`n++` הראשון, והחוט האחר מריץ את שתי התוספות. עם `synchronized` על המתודה, שלושת הצעדים קורים בזמן שחוט אחד מחזיק את `this`. זה הסנכרון (synchronization). `final Object lock = new Object()` פרטי הוא המוניטור (monitor) כשאין רצון לנעול את כל האובייקט הציבורי. כל גישה לשדות המוגנים חייבת לנעול את אותו אובייקט. מנעול שני אינו מדיר חוט שנועל את הראשון.
 
-`volatile` is a different promise. A volatile write is visible to a later volatile read in another thread. The variable is not kept quietly in a register or a private cache. It does not make `count++` atomic. The lecture says so in one line: visibility, not mutual exclusion.
+`volatile` הוא הבטחה אחרת. כתיבה ל-`volatile` נראית לקריאה מאוחרת יותר של `volatile` בחוט אחר. המשתנה אינו נשמר בשקט ברגיסטר או במטמון פרטי. זה אינו הופך את `count++` לאטומי. ההרצאה אומרת את זה בשורה אחת: נראות, לא מניעה הדדית.
 
-An immutable object never changes after publication. Session 7's checklist: the class is `final`, every field is `final`, `this` does not escape during construction, and a field that points at a mutable object points at a copy the caller cannot reach. `String` and `Integer` qualify. `ThreeStooges` qualifies even though it contains a list, because the list is never exposed and never modified. Publishing a new object instead of mutating an old one is the lecture's alternative to locking: build the new state, then swing one reference into place.
+אובייקט שאינו ניתן לשינוי (immutable) אינו משתנה אחרי פרסום. רשימת הבדיקה של תרגול 7: המחלקה (class) היא `final`, כל שדה הוא `final`, `this` אינו בורח במהלך הבנייה, ושדה שמצביע על אובייקט ניתן לשינוי מצביע על עותק שהקורא אינו יכול להגיע אליו. `String` ו-`Integer` עומדים בזה. `ThreeStooges` עומד בזה אף שהוא מכיל רשימה, כי הרשימה אינה נחשפת ולעולם אינה משתנה. פרסום אובייקט חדש במקום שינוי של ישן הוא החלופה של ההרצאה לנעילה: בונים את המצב החדש, ואז מציבים רפרנס (reference) אחד במקומו.
 
-### wait, notify, locks, atomics
+### wait, notify, מנעולים ואטומיים
 
-`synchronized` does not wait for a condition. A loop that retests a flag burns a core (busy waiting). Sleeping between tests wastes less CPU and reacts late. `wait` and `notify` are the primitive that actually blocks.
+`synchronized` אינו מחכה לתנאי. לולאה שבודקת דגל שוב ושוב שורפת ליבה. זו המתנה עסוקה (busy waiting). שינה בין בדיקות מבזבזת פחות מעבד ומגיבה מאוחר. `wait` ו-`notify` הם הפרימיטיב שבאמת חוסם.
 
 ```java
 public synchronized int take() throws InterruptedException {
@@ -107,33 +107,33 @@ public synchronized void put(int v) throws InterruptedException {
 }
 ```
 
-The lecture's notes on this queue: `take` waits for a value, `put` stores one and wakes a waiter. If several threads wait, the order is not fair. A thread can wake early, which is why the test is a `while` and not an `if`. `wait`, `notify`, and `notifyAll` are called on the monitor you hold. `notify` wakes one waiter. `notifyAll` wakes all of them, which is required when waiters are sleeping for different conditions, as in the lecture's `Cafe`: waking the wrong customer with `notify` leaves the right one asleep.
+הערות ההרצאה על התור הזה: `take` מחכה לערך, `put` שומר אחד ומעיר ממתינים. אם כמה חוטים ממתינים, הסדר אינו הוגן. חוט יכול להתעורר מוקדם, ולכן הבדיקה היא `while` ולא `if`. `wait`, `notify` ו-`notifyAll` נקראים על המוניטור שמחזיקים. `notify` מעיר ממתין אחד. `notifyAll` מעיר את כולם, וזה נדרש כשממתינים ישנים לתנאים שונים, כמו ב-`Cafe` של ההרצאה: אם מעירים את הלקוח הלא נכון עם `notify`, הנכון נשאר ישן.
 
-`ReentrantLock` is a mutex you lock and unlock yourself, with `tryLock` and an optional fair ordering. `ReadWriteLock` lets many readers in, and a writer excludes everyone. `Semaphore` counts permits. `acquire` waits for a permit, `release` returns one. A semaphore of 5 is a critical section that admits five threads. The dining philosophers use two semaphores as the forks.
+`ReentrantLock` הוא מנעול מניעה הדדית שנועלים ומשחררים בעצמך, עם `tryLock` וסדר הוגן אופציונלי. `ReadWriteLock` מכניס קוראים רבים, וכותב מדיר את כולם. `Semaphore` מונה היתרים. זהו מנעול אתת (semaphore): `acquire` מחכה להיתר, `release` מחזיר אחד. מנעול אתת של 5 הוא אזור קריטי שמכניס חמישה חוטים. הפילוסופים הסועדים משתמשים בשני מנעולי אתת כמזלגות.
 
-`AtomicInteger` and its relatives offer atomic updates without a `synchronized` block. `addAndGet(2)` is the fix for `n += 2`, which is still a race if you write it on a plain `int`. `compareAndSet` is the compare-and-swap the hardware provides: if the value is still the expected one, store the new one, as a single step. Session 8 builds a lock-free `Pair` and a lock-free linked list on `AtomicReference` by retrying the CAS. The limitation on the slide: without a lock you cannot make a thread block, so a blocking queue still needs `wait` or an equivalent. Lock-free structures are also harder to get right.
+`AtomicInteger` וקרוביו מציעים עדכונים אטומיים בלי בלוק `synchronized`. `addAndGet(2)` הוא התיקון ל-`n += 2`, שזה עדיין מרוץ אם כותבים אותו על `int` רגיל. `compareAndSet` הוא ההשוואה-והחלפה (compare-and-swap) שהחומרה נותנת: אם הערך עדיין הערך הצפוי, שומרים את החדש, כצעד אחד. תרגול 8 בונה `Pair` בלי מנעול (lock-free) ורשימה מקושרת בלי מנעול על `AtomicReference`, על ידי ניסיון חוזר של ה-CAS. המגבלה על השקף: בלי מנעול אי אפשר לגרום לחוט להיחסם, ולכן תור חוסם עדיין צריך `wait` או שווה ערך. מבנים בלי מנעול גם קשים יותר לדייק בהם.
 
-`BlockingQueue` is the producer-consumer tool. `put` waits when the queue is full. `take` waits when it is empty. `ArrayBlockingQueue` is the lecture's one-liner. The producer thread `put`s, the consumer thread `take`s.
+`BlockingQueue` הוא כלי היצרן-צרכן. `put` מחכה כשהתור מלא. `take` מחכה כשהתור ריק. `ArrayBlockingQueue` הוא השורה האחת של ההרצאה. חוט היצרן קורא ל-`put`, חוט הצרכן קורא ל-`take`.
 
-`ExecutorService pool = Executors.newFixedThreadPool(n)` is the same idea as a pool of workers pulling tasks. Submit a `Runnable` or a `Callable`. A `Callable` returns a value; the submit call hands back a `Future` you `get()`. Session 8's completion service lets you `take` futures in the order they finish rather than the order you submitted.
+`ExecutorService pool = Executors.newFixedThreadPool(n)` הוא אותו רעיון כמו מאגר עובדים שמושכים מטלות. מגישים `Runnable` או `Callable`. `Callable` מחזיר ערך; קריאת ההגשה מחזירה `Future` שעליו קוראים `get()`. שירות ההשלמה של תרגול 8 מאפשר `take` של futures לפי סדר הסיום, ולא לפי סדר ההגשה.
 
-### Liveness
+### חיוּת (liveness)
 
-A program is live when threads keep making progress. Three failures, with the same definitions in the lecture and in sessions 7 and 8:
+תוכנית חיה כשחוטים ממשיכים להתקדם. שלושה כישלונות, עם אותן הגדרות בהרצאה ובתרגולים 7 ו-8:
 
-:::definition id=def-liveness title="Deadlock, livelock, starvation" source="Classes/Chapter 8 - Concurrency.pptx"
-Deadlock (נעילה הדדית, חבק): threads are blocked, each waiting for a lock another of them holds. The lecture's `red`/`blue` locks and the `Image.mix` that locks `this` then `other` are the pictures. One fix is a global order: every thread locks the lower address first.
+:::definition id=def-liveness title="נעילה הדדית (deadlock, חבק), חסימת livelock, הרעבה (starvation)" source="Classes/Chapter 8 - Concurrency.pptx"
+נעילה הדדית: חוטים חסומים, כל אחד מחכה למנעול שחוט אחר מהם מחזיק. המנעולים `red`/`blue` של ההרצאה, ו-`Image.mix` שנועל את `this` ואז את `other`, הם התמונות. תיקון אחד הוא סדר גלובלי: כל חוט נועל קודם את הכתובת הנמוכה.
 
-Livelock: threads are not blocked, but each spends its time reacting to the other, so no work finishes. The polite grab locks the first mutex, sees the second taken, drops the first, and retries forever.
+חסימת livelock: החוטים אינם חסומים, אבל כל אחד מבלה את זמנו בתגובה לאחר, ולכן שום עבודה אינה נגמרת. התפיסה המנומסת נועלת את מנעול המניעה ההדדית הראשון, רואה שהשני תפוס, משחררת את הראשון, ומנסה שוב לנצח.
 
-Starvation (הרעבה): a thread does not get regular access, because a greedy thread holds the resource or because scheduling always prefers others. Fair locks and a queue are the usual repairs.
+הרעבה: חוט אינו מקבל גישה סדירה, כי חוט חמדן מחזיק את המשאב או כי התזמון תמיד מעדיף אחרים. מנעולים הוגנים ותור הם התיקונים הרגילים.
 :::
 
-Interrupting a thread sets a flag. `sleep` and `wait` throw `InterruptedException` when they see it. `stop()` is the session's forbidden hammer: it unlocks nothing cleanly. A `volatile boolean shouldStop` works only if the thread actually reads it between blocking calls.
+`interrupt` של חוט מדליק דגל. `sleep` ו-`wait` זורקים `InterruptedException` כשהם רואים אותו. `stop()` הוא הפטיש האסור של התרגול: הוא אינו משחרר שום דבר בצורה נקייה. `volatile boolean shouldStop` עובד רק אם החוט באמת קורא אותו בין קריאות חוסמות.
 
-The singleton slides are a race on publication. A null check then `new` lets two threads construct two instances. Synchronizing the whole `getInstance` is correct and serializes every later call. Double-checked locking without `volatile` is broken by reordering: another thread can see the reference before the constructor's writes. The session's safe lazy form is the holder class. The JVM initializes that class, and its static field, once, on first use.
+השקפים של הסינגלטון (singleton) הם מרוץ על פרסום. בדיקת null ואז `new` נותנים לשני חוטים לבנות שני מופעים. סנכרון של כל `getInstance` נכון, ומסדר בטור כל קריאה מאוחרת. נעילה בבדיקה כפולה (double-checked locking) בלי `volatile` נשברת בגלל סידור מחדש: חוט אחר יכול לראות את הרפרנס לפני הכתיבות של הבנאי. הצורה העצלה הבטוחה של התרגול היא מחלקת המחזיק (holder class). ה-JVM מאתחל את המחלקה הזאת, ואת השדה הסטטי שלה, פעם אחת, בשימוש הראשון.
 
-:::algorithm id=alg-synchronized-increment title="Make a read-modify-write atomic" source="Classes/Chapter 8 - Concurrency.pptx" complexity="O(1) work, but a thread may wait unbounded time for the monitor" invariant="At most one thread is inside the synchronized block on this monitor."
+:::algorithm id=alg-synchronized-increment title="הפיכת קריאה-שינוי-כתיבה לאטומית" source="Classes/Chapter 8 - Concurrency.pptx" complexity="עבודה של O(1), אבל חוט עלול לחכות למוניטור זמן לא חסום" invariant="לכל היותר חוט אחד נמצא בבלוק ה-synchronized על המוניטור הזה."
 ```java
 public final class Counter {
     private int count = 0;
@@ -143,38 +143,56 @@ public final class Counter {
 ```
 :::
 
-The invariant is true every time a thread enters or leaves the block, and it is true of threads that are outside: they are not in the block. It does not say anything about a second method that touches `count` without locking.
+התנאי הפנימי (invariant) נכון בכל פעם שחוט נכנס לבלוק או יוצא ממנו, והוא נכון גם לחוטים שבחוץ: הם אינם בתוך הבלוק. הוא אינו אומר דבר על מתודה שנייה שנוגעת ב-`count` בלי נעילה.
 
 :::problem id=worked-counter-race source="Exrecises/PS6-2026-1.pptx" kind=worked solution_origin=source
-Two threads call `increment` once on a counter that starts at 0. The body is the read, add, write sequence. Give an interleaving whose result is 1.
+שני חוטים קוראים כל אחד ל-`increment` פעם אחת. המונה מתחיל ב-0. תן שזירה (interleaving) שהתוצאה שלה היא 1.
+
+```java
+public void increment() {
+    int tmp = count;   // read
+    tmp = tmp + 1;     // add
+    count = tmp;       // write
+}
+```
 
 :::solution
-t1 reads 0. t2 reads 0. t1 writes 1. t2 writes 1. Both calls returned, and `count` is 1. The lost update is the race. `synchronized` on `increment` forbids this interleaving because the second thread cannot read until the first has written.
+t1 קורא 0. t2 קורא 0. t1 כותב 1. t2 כותב 1. שתי הקריאות חזרו, ו-`count` הוא 1.
+
+```text
+t1: read 0
+t2: read 0
+t1: write 1
+t2: write 1
+count == 1
+```
+
+העדכון שאבד הוא המרוץ. `synchronized` על `increment` אוסר את השזירה הזאת, כי החוט השני אינו יכול לקרוא עד שהראשון כתב.
 :::
 :::
 
 :::check id=chk-volatile
-Two threads execute `count++` on a `volatile int`. Is the increment atomic?
+שני חוטים מבצעים `count++` על `volatile int`. האם התוספת אטומית?
 
-- [ ] Yes, volatile makes the update atomic
-- [x] No, volatile only makes the reads and writes visible
-- [ ] Yes, because int writes are always atomic and the increment is one write
+- [ ] כן, volatile הופך את העדכון לאטומי
+- [x] לא. volatile רק הופך את הקריאות ואת הכתיבות לנראות
+- [ ] כן, כי כתיבות של int תמיד אטומיות והתוספת היא כתיבה אחת
 
-The lecture separates visibility from mutual exclusion. The read and the write are two steps even when each of them is visible.
+ההרצאה מפרידה נראות ממניעה הדדית. הקריאה והכתיבה הם שני צעדים גם כשכל אחד מהם נראה.
 :::
 
 :::trap
-`if (value == null) wait();` misses a wakeup that happens after the check and before `wait`, and it misses a spurious wakeup. The lecture's queue uses `while`.
+`if (value == null) wait();` מפספס התעוררות שקורית אחרי הבדיקה ולפני `wait`, ומפספס התעוררות סרק (spurious wakeup). התור של ההרצאה משתמש ב-`while`.
 :::
 
 :::trap
-Locking `this` in one method and a private lock in another does not exclude those methods from each other. The philosophers deadlock when each holds the left fork and wants the right. Number the forks and take the lower number first.
+נעילת `this` במתודה אחת ומנעול פרטי במתודה אחרת אינה מדירה את המתודות זו מזו. הפילוסופים נכנסים לנעילה הדדית כשכל אחד מחזיק את המזלג השמאלי ורוצה את הימני. ממספרים את המזלגות ולוקחים קודם את המספר הנמוך.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps6-counter-race source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=source
-Session 6 asks what `cnt.increment()` does if two threads call it "at the same time" on this class, and what the three machine steps of the body are.
+תרגול 6 שואל מה `cnt.increment()` עושה אם שני חוטים קוראים לו "באותו זמן" על המחלקה הזאת, ומה שלושת צעדי המכונה של הגוף.
 
 ```java
 public class Counter {
@@ -186,279 +204,279 @@ public class Counter {
 ```
 
 :::hint
-"At the same time" means the three steps of one call can sit between the three steps of the other.
+"באותו זמן" אומר ששלושת הצעדים של קריאה אחת יכולים לשבת בין שלושת הצעדים של האחרת.
 :::
 :::hint
-List the steps as the session does: read into a register, add one, write back.
+פרט את הצעדים כמו התרגול: קריאה לרגיסטר, חיבור אחד, כתיבה חזרה.
 :::
 :::hint
-Start both threads from `count == 0`.
+התחל את שני החוטים מ-`count == 0`.
 :::
 :::solution
-The result is not determined. One legal outcome is 2, when one call finishes before the other starts. Another is 1, when both read 0 before either writes. The body is: read `count` into a register, add 1 to the register, write the register back to `count`. `getValue` can also observe a stale `count` if there is no happens-before edge; `volatile` or the same lock fixes the visibility, and only the lock fixes the lost update.
+התוצאה אינה קבועה. תוצאה חוקית אחת היא 2, כשקריאה אחת נגמרת לפני שהאחרת מתחילה. אחרת היא 1, כששניהם קוראים 0 לפני שאחד מהם כותב. הגוף הוא: קריאת `count` לרגיסטר, חיבור 1 לרגיסטר, כתיבת הרגיסטר חזרה ל-`count`. `getValue` יכול גם לראות `count` מיושן אם אין קשת happens-before; `volatile` או אותו מנעול מתקנים את הנראות, ורק המנעול מתקן את העדכון שאבד.
 :::
 :::
 
 :::problem id=ps6-average-safe source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=derived
-The session's last slide asks whether a parallel average is safe. Each worker sums a slice into a shared `total` with `total += part`, then the main thread `join`s and divides by the length. Is it correct?
+השקף האחרון של התרגול שואל אם ממוצע מקבילי בטוח. כל עובד סוכם פרוסה לתוך `total` משותף עם `total += part`, ואז החוט הראשי קורא ל-`join` ומחלק באורך. האם זה נכון?
 
 :::hint
-`join` waits for the workers. It does not make `+=` atomic.
+`join` מחכה לעובדים. הוא אינו הופך את `+=` לאטומי.
 :::
 :::hint
-The shared variable is `total`. The slices of the array are not shared if each index is written by one worker.
+המשתנה המשותף הוא `total`. פרוסות המערך אינן משותפות אם כל אינדקס נכתב על ידי עובד אחד.
 :::
 :::hint
-Say what is data-race-free and what is not.
+אמור מה חופשי ממרוץ נתונים ומה אינו חופשי.
 :::
 :::solution
-The joins make the subsequent division see the workers' writes, so visibility after `join` is fine. The updates `total += part` race with each other. Two workers can lose an addition the same way `count++` loses one. The function is not correct. Give each worker a private sum, `join`, then add those private sums in the parent. No lock is required, because the shared array is only read and the totals are confined until the joins finish.
+ה-`join` גורמים לחלוקה שאחריהם לראות את כתיבות העובדים, ולכן הנראות אחרי `join` תקינה. העדכונים `total += part` רצים זה מול זה. שני עובדים יכולים לאבד חיבור באותו אופן ש-`count++` מאבד אחד. הפונקציה אינה נכונה. תן לכל עובד סכום פרטי, קרא ל-`join`, ואז חבר את הסכומים הפרטיים בהורה. אין צורך במנעול, כי המערך המשותף נקרא בלבד והסכומים כלואים עד שה-`join` נגמרים.
 :::
 :::
 
 :::problem id=ps7-wait-vs-spin source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
-Session 7 lists three ways a thread can wait for a condition: busy waiting, sleep-and-check, and `wait`/`notify`. Say what each costs, and which one can block without polling.
+תרגול 7 מונה שלוש דרכים שבהן חוט יכול לחכות לתנאי: המתנה עסוקה, שינה-ובדיקה, ו-`wait`/`notify`. אמור מה כל אחת עולה, ואיזו מהן יכולה לחסום בלי סריקה (polling).
 
 :::hint
-Busy waiting is the one the session allows only when the wait is expected to be tiny.
+המתנה עסוקה היא זו שהתרגול מרשה רק כשההמתנה צפויה להיות זעירה.
 :::
 :::hint
-Sleep lowers the CPU cost and adds a delay before the thread notices.
+שינה מורידה את עלות המעבד ומוסיפה השהיה לפני שהחוט שם לב.
 :::
 :::hint
-`wait` releases the monitor. The other two do not involve a monitor.
+`wait` משחרר את המוניטור. שתי האחרות אינן נוגעות במוניטור.
 :::
 :::solution
-Busy waiting retests the condition in a tight loop. It reacts immediately and occupies a core. The session recommends it only for a very short expected wait.
+המתנה עסוקה בודקת את התנאי שוב בלולאה צפופה. היא מגיבה מיד ותופסת ליבה. התרגול ממליץ עליה רק להמתנה צפויה קצרה מאוד.
 
-Sleep-and-check does the same test with a sleep between tries. It wastes less CPU and notices the condition late, by up to the sleep interval.
+שינה-ובדיקה עושה אותה בדיקה עם שינה בין ניסיונות. היא מבזבזת פחות מעבד ושמה לב לתנאי מאוחר, עד כדי מרווח השינה.
 
-`wait` parks the thread on a monitor until another thread, holding that monitor, calls `notify` or `notifyAll`. No polling. The waiter must be in a `while` loop, and it must own the monitor when it calls `wait`. That is the one that blocks.
+`wait` מחנה את החוט על מוניטור עד שחוט אחר, שמחזיק את המוניטור הזה, קורא ל-`notify` או ל-`notifyAll`. בלי סריקה. הממתין חייב להיות בלולאת `while`, והוא חייב להחזיק את המוניטור כשהוא קורא ל-`wait`. זו הדרך שחוסמת.
 :::
 :::
 
 :::problem id=ps7-liveness-names source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
-Name the failure: (1) two threads each hold one lock and wait for the other's, (2) a low-priority thread never obtains the lock because a high-priority thread keeps taking it, (3) two threads repeatedly lock, notice the other lock is taken, unlock, and try again, forever.
+תן שם לכישלון: (1) שני חוטים מחזיקים כל אחד מנעול אחד ומחכים לזה של האחר, (2) חוט בעדיפות נמוכה לעולם אינו מקבל את המנעול כי חוט בעדיפות גבוהה ממשיך לקחת אותו, (3) שני חוטים נועלים שוב ושוב, שמים לב שהמנעול האחר תפוס, משחררים, ומנסים שוב, לנצח.
 
 :::hint
-Blocked versus running is the split between the first and the third.
+חסום מול רץ הוא הפיצול בין הראשון לשלישי.
 :::
 :::hint
-The second thread is not stuck in a cycle with a partner. It is simply never chosen.
+החוט השני אינו תקוע במעגל עם שותף. פשוט אף פעם לא בוחרים בו.
 :::
 :::hint
-The session's repair for the first is a lock order.
+התיקון של התרגול לראשון הוא סדר מנעולים.
 :::
 :::solution
-(1) is deadlock. Both threads are blocked. A total order on the locks breaks the cycle.
+(1) היא נעילה הדדית. שני החוטים חסומים. סדר מלא על המנעולים שובר את המעגל.
 
-(2) is starvation. The thread is runnable in principle and does not get the resource often enough. Fair locks, or not holding the resource for a long time, are the session's repairs. Priority scheduling can cause it.
+(2) היא הרעבה. החוט ניתן להרצה עקרונית ואינו מקבל את המשאב לעיתים קרובות מספיק. מנעולים הוגנים, או אי-החזקה של המשאב לזמן ארוך, הם התיקונים של התרגול. תזמון לפי עדיפות יכול לגרום לזה.
 
-(3) is livelock. The threads are not blocked. They are busy being polite. A backoff, or a lock order that does not drop the first lock, lets one of them finish.
+(3) היא חסימת livelock. החוטים אינם חסומים. הם עסוקים בנימוס. נסיגה לאחור, או סדר מנעולים שאינו משחרר את המנעול הראשון, נותנים לאחד מהם לסיים.
 :::
 :::
 
 :::problem id=ps8-singleton source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
-The session shows a lazy singleton:
+התרגול מראה סינגלטון עצל:
 
 ```java
 if (instance == null)
     instance = new ClassicSingleton();
 ```
 
-Why is this wrong with two threads? Why is `synchronized` on the whole getter correct but bad for liveness? Why does the holder class work?
+למה זה שגוי עם שני חוטים? למה `synchronized` על כל ה-getter נכון אבל רע לחיוּת? למה מחלקת המחזיק עובדת?
 
 :::hint
-Both threads can pass the null check before either assignment is visible.
+שני החוטים יכולים לעבור את בדיקת ה-null לפני שאחת ההשמות נראית.
 :::
 :::hint
-A lock around the whole method is held even when `instance` is already published.
+מנעול סביב כל המתודה מוחזק גם כש-`instance` כבר פורסם.
 :::
 :::hint
-Class initialization runs once, before any thread sees the static field.
+אתחול מחלקה רץ פעם אחת, לפני שחוט כלשהו רואה את השדה הסטטי.
 :::
 :::solution
-Two threads can both observe `instance == null` and both construct an object. The field ends as one of them; the other object is leaked and some callers may have observed the other. The race is on the check-then-act.
+שני חוטים יכולים שניהם לראות `instance == null` ושניהם לבנות אובייקט. השדה נגמר כאחד מהם; האובייקט האחר דולף, ויש קוראים שאולי ראו את האחר. המרוץ הוא על בדיקה-ואז-פעולה.
 
-Synchronizing `getInstance` makes the check and the construction one critical section, so the instance is unique. Every later call also takes the lock, so threads queue to read a field that no longer changes. That is the liveness complaint.
+סנכרון של `getInstance` הופך את הבדיקה ואת הבנייה לאזור קריטי אחד, ולכן המופע יחיד. כל קריאה מאוחרת גם לוקחת את המנעול, ולכן חוטים עומדים בתור כדי לקרוא שדה שכבר אינו משתנה. זו תלונת החיוּת.
 
-The holder class is not initialized until `getInstance` first touches it. The JVM initializes its static `INSTANCE` once and publishes it safely. Later calls read the field with no lock. Eager initialization, a static field on the singleton class itself, is the other correct form, and it constructs the instance even if nobody asks.
+מחלקת המחזיק אינה מאותחלת עד ש-`getInstance` נוגע בה לראשונה. ה-JVM מאתחל את `INSTANCE` הסטטי שלה פעם אחת ומפרסם אותו בבטחה. קריאות מאוחרות קוראות את השדה בלי מנעול. אתחול להוט, שדה סטטי על מחלקת הסינגלטון עצמה, הוא הצורה הנכונה האחרת, והוא בונה את המופע גם אם אף אחד אינו מבקש.
 :::
 :::
 
 :::problem id=ps8-interrupt source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
-A worker loops until `shouldStop` is true. Another thread sets the flag. The worker is inside `sleep`. Explain why the flag is not enough, and what `interrupt` changes.
+עובד רץ בלולאה עד ש-`shouldStop` אמיתי. חוט אחר מדליק את הדגל. העובד נמצא בתוך `sleep`. הסבר למה הדגל אינו מספיק, ומה `interrupt` משנה.
 
 :::hint
-`sleep` does not read your boolean.
+`sleep` אינו קורא את ה-boolean שלך.
 :::
 :::hint
-`interrupt` sets a status the blocking call is required to notice.
+`interrupt` מדליק סטטוס שהקריאה החוסמת חייבת לשים לב אליו.
 :::
 :::hint
-The session forbids `Thread.stop`.
+התרגול אוסר את `Thread.stop`.
 :::
 :::solution
-While the worker is inside `sleep`, it is not evaluating `shouldStop`. The flag becomes true and the thread keeps sleeping until the timeout. `interrupt()` sets the thread's interrupt status. `sleep` and `wait` observe it, throw `InterruptedException`, and clear the status. The worker's catch block can then leave the loop. A worker that is not blocked must still poll `Thread.currentThread().isInterrupted()` or the flag. `stop()` is unsafe because it aborts the thread at an arbitrary instruction and releases no application invariant.
+בזמן שהעובד בתוך `sleep`, הוא אינו בודק את `shouldStop`. הדגל נעשה אמיתי והחוט ממשיך לישון עד פקיעת הזמן. `interrupt()` מדליק את סטטוס ההפסקה של החוט. `sleep` ו-`wait` רואים אותו, זורקים `InterruptedException`, ומנקים את הסטטוס. בלוק ה-catch של העובד יכול אז לצאת מהלולאה. עובד שאינו חסום עדיין חייב לסרוק את `Thread.currentThread().isInterrupted()` או את הדגל. `stop()` אינו בטוח כי הוא קוטע את החוט בהוראה שרירותית ואינו משחרר תנאי פנימי של היישום.
 :::
 :::
 
 
 :::examnote
-The question gives a shared structure and asks for a race, a deadlock, or a repair with `synchronized`, a semaphore, or an atomic. The trap is locking in an order that waits forever, or protecting the update and not the read that publishes it.
+השאלה נותנת מבנה משותף ומבקשת מרוץ, נעילה הדדית, או תיקון עם `synchronized`, מנעול אתת, או אטומי. המלכודת היא נעילה בסדר שמחכה לנצח, או הגנה על העדכון בלי הקריאה שמפרסמת אותו.
 :::
 
 :::problem id=exam-15a-q1 source="Exams/15-a.pdf" kind=exam solution_origin=derived
-`Gear` knows its center, radius, and left and right neighbors. `move` turns this gear and both neighbors, in the opposite direction. `SimpleGear` stores a `_state` angle.
+`Gear` יודע את המרכז שלו, את הרדיוס, ואת השכנים משמאל ומימין. `move` מסובב את הגלגל הזה ואת שני השכנים, בכיוון ההפוך. `SimpleGear` שומר זווית `_state`.
 
-a. Define an invariant.
-b. `check` validates constructor arguments against that invariant.
-c. Is the class safe under every interleaving? If not, show one.
-d. After `_state` is updated inside `move`, `moveLeft`, and `moveRight`, is it safe? Show a bad interleaving or argue.
-e. Preconditions and postconditions of `move`.
-f. A `Spinner` thread calls `move` on a gear. Is a run of several spinners correct if "correct" means the sequence of states is one that a serial order of `move` calls could produce? Repair it if not.
+a. הגדר תנאי פנימי.
+b. `check` מאמת ארגומנטים של בנאי מול התנאי הפנימי הזה.
+c. האם המחלקה בטוחה תחת כל שזירה? אם לא, הראה אחת.
+d. אחרי ש-`_state` מתעדכן בתוך `move`, `moveLeft` ו-`moveRight`, האם זה בטוח? הראה שזירה רעה או נמק.
+e. תנאי קדם (precondition) ותנאי סיום (postcondition) של `move`.
+f. חוט `Spinner` קורא ל-`move` על גלגל. האם ריצה של כמה ספינרים נכונה אם "נכון" אומר שסדרת המצבים היא סדרה שסדר טורי של קריאות `move` היה יכול לייצר? תקן אם לא.
 
 :::hint
-The geometric invariant is about radii and centers: meshing gears have to actually touch, and a gear is not its own neighbor.
+התנאי הפנימי הגאומטרי עוסק ברדיוסים ובמרכזים: גלגלי שיניים שמשתלבים חייבים באמת לגעת, וגלגל אינו השכן של עצמו.
 :::
 :::hint
-`_state = _state + delta` is a read-modify-write on a field the neighbor's thread also writes, because `move` calls into the neighbor.
+`_state = _state + delta` הוא קריאה-שינוי-כתיבה על שדה שגם החוט של השכן כותב, כי `move` קורא אל תוך השכן.
 :::
 :::hint
-A serial order means each `move` finishes before the next starts. Two spinners on adjacent gears overlap.
+סדר טורי אומר שכל `move` נגמר לפני שהבא מתחיל. שני ספינרים על גלגלים סמוכים חופפים.
 :::
 :::solution
-Invariant: radius is positive; left and right, if set, are different gears; a neighbor's center is exactly `radius + neighbor.radius` away on the x axis; `_state` stays in `[0, 360)`.
+תנאי פנימי: הרדיוס חיובי; שמאל וימין, אם הם מוגדרים, הם גלגלי שיניים שונים; המרכז של שכן נמצא במרחק `radius + neighbor.radius` בדיוק על ציר ה-x; `_state` נשאר ב-`[0, 360)`.
 
-`check` rejects a non-positive radius and a center that would break the mesh when the neighbor is already set.
+`check` דוחה רדיוס שאינו חיובי, ומרכז שהיה שובר את השילוב כשהשכן כבר מוגדר.
 
-Without synchronization, two `move` calls on adjacent gears interleave their `_state` updates and the recursive calls into each other. One gear's angle can be applied twice or lost. That is a race, so the class is not safe.
+בלי סנכרון, שתי קריאות `move` על גלגלים סמוכים משזרות את עדכוני ה-`_state` שלהן ואת הקריאות הרקורסיביות זו לתוך זו. הזווית של גלגל אחד יכולה להיות מופעלת פעמיים או ללכת לאיבוד. זה מרוץ, ולכן המחלקה אינה בטוחה.
 
-Adding `_state` updates inside the three methods does not create safety. Thread A runs `move` on g1 and has entered g2.`moveRight`. Thread B runs `move` on g2 and writes `_state` between A's read and write. The same lost update remains.
+הוספת עדכוני `_state` בתוך שלוש המתודות אינה יוצרת בטיחות. חוט A מריץ `move` על g1 ונכנס ל-g2.`moveRight`. חוט B מריץ `move` על g2 וכותב `_state` בין הקריאה של A לכתיבה שלו. אותו עדכון שאבד נשאר.
 
-Precondition of `move`: the invariant holds, and the neighbor chain reachable from this gear does not contain a cycle that this call would follow forever. Postcondition: this gear's angle has changed by its step, and each neighbor's angle has changed by the opposite step, and the invariant still holds.
+תנאי קדם של `move`: התנאי הפנימי מתקיים, ושרשרת השכנים שנגישה מהגלגל הזה אינה מכילה מעגל שהקריאה הזאת הייתה עוקבת אחריו לנצח. תנאי סיום: הזווית של הגלגל הזה השתנתה בצעד שלו, הזווית של כל שכן השתנתה בצעד ההפוך, והתנאי הפנימי עדיין מתקיים.
 
-Several `Spinner` threads do not produce a serial history, because their `move` calls overlap on shared gears. Make each public method `synchronized` on a single lock ordered along the chain, or lock a dedicated simulation lock around `move`, so each call finishes before the next begins. Per-gear locks deadlock if `move` locks this gear and then the neighbor while the neighbor locks itself and then this gear. The 2015 B solution's repair for that cycle is one ordered lock, or one semaphore for the whole mesh.
+כמה חוטי `Spinner` אינם מייצרים היסטוריה טורית, כי קריאות ה-`move` שלהם חופפות על גלגלים משותפים. הפוך כל מתודה ציבורית ל-`synchronized` על מנעול יחיד שמסודר לאורך השרשרת, או נעל מנעול סימולציה ייעודי סביב `move`, כך שכל קריאה נגמרת לפני שהבאה מתחילה. מנעולים לכל גלגל נכנסים לנעילה הדדית אם `move` נועל את הגלגל הזה ואז את השכן, בזמן שהשכן נועל את עצמו ואז את הגלגל הזה. התיקון למחזור הזה הוא מנעול מסודר אחד, או מנעול אתת אחד לכל הרשת.
 :::
 :::
 
 :::problem id=exam-15b-q1 source="Exams/15-b.pdf" kind=exam solution_origin=source
-`SimpleGear`'s public methods are all `synchronized`. Neighbors call each other's `moveLeft` / `moveRight`, which also need the neighbor's lock.
+המתודות הציבוריות של `SimpleGear` כולן `synchronized`. שכנים קוראים זה ל-`moveLeft` / `moveRight` של זה, וגם אלה צריכים את המנעול של השכן.
 
-a. (7) Show a deadlock of several gears.
-b. (18) Remove it in three ways: narrowing the synchronization, and using a semaphore instead of `synchronized`, and one further way that keeps the program correct.
-c. (5) Which way do you adopt, and why?
+a. הראה נעילה הדדית של כמה גלגלי שיניים.
+b. הסר אותה בשלוש דרכים: צמצום הסנכרון, שימוש במנעול אתת במקום `synchronized`, ודרך נוספת ששומרת על נכונות התוכנית.
+c. באיזו דרך תבחר, ולמה?
 
 :::hint
-Gear A locks itself and calls B, which locks itself and calls A.
+גלגל A נועל את עצמו וקורא ל-B, שנועל את עצמו וקורא ל-A.
 :::
 :::hint
-A semaphore of one permit, taken in a fixed order, is a mutex that is not tied to the gear's `this`.
+מנעול אתת עם היתר אחד, שנלקח בסדר קבוע, הוא מנעול מניעה הדדית שאינו קשור ל-`this` של הגלגל.
 :::
 :::hint
-The official note prefers the repair that does not hold a lock the critical section does not need.
+ההערה הרשמית מעדיפה את התיקון שאינו מחזיק מנעול שהאזור הקריטי אינו צריך.
 :::
 :::solution
-a. A.move locks A and calls B.moveRight, which tries to lock B. Concurrently B.move locks B and calls A.moveLeft, which tries to lock A. Each holds one monitor and waits for the other.
+a. A.move נועל את A וקורא ל-B.moveRight, שמנסה לנעול את B. במקביל B.move נועל את B וקורא ל-A.moveLeft, שמנסה לנעול את A. כל אחד מחזיק מוניטור אחד ומחכה לאחר.
 
-b. Three correct repairs. Narrow the synchronized regions so a gear does not call a neighbor while holding its own lock: copy the facts you need, unlock, then call. Use one `Semaphore(1)` for a whole connected mesh, acquired before any move and released after, so there is a single lock and no cycle. Take per-gear locks in address order, or in a left-to-right order, so every thread locks the earlier gear first. All three keep a single `move` atomic with respect to other moves.
+b. שלושה תיקונים נכונים. צמצם את אזורי ה-synchronized כך שגלגל אינו קורא לשכן בזמן שהוא מחזיק את המנעול שלו: העתק את העובדות שצריך, שחרר, ואז קרא. השתמש ב-`Semaphore(1)` אחד לרשת מחוברת שלמה, שנרכש לפני כל תזוזה ומשוחרר אחריה, כך שיש מנעול יחיד ואין מעגל. קח מנעולים לכל גלגל לפי סדר כתובות, או בסדר משמאל לימין, כך שכל חוט נועל קודם את הגלגל המוקדם. שלושתם שומרים על `move` יחיד אטומי ביחס לתזוזות אחרות.
 
-c. The official solution says the narrowed synchronization is the one to adopt: the other two hold a resource the critical section does not need for the whole call. Order and the mesh semaphore are correct and coarser.
+c. הפתרון הרשמי אומר שצמצום הסנכרון הוא זה שכדאי לאמץ: שני האחרים מחזיקים משאב שהאזור הקריטי אינו צריך במשך כל הקריאה. הסדר ומנעול האתת של הרשת נכונים וגסים יותר.
 :::
 :::
 
 :::problem id=exam-16b-q1 source="Exams/16-b.pdf" kind=exam solution_origin=derived
-`SynchQueue` implements `Queue` with every method synchronized on `this`. `ExtIntQueue` adds `sum()` over the integers.
+`SynchQueue` מממש `Queue` כשכל מתודה `synchronized` על `this`. `ExtIntQueue` מוסיף `sum()` על השלמים.
 
-a. (4) Pre- and postcondition of `sum`.
-b. (6) An interleaving where the postcondition fails.
-c. (10) Make `sum` correct without synchronizing the whole walk, in the optimistic style of a versioned iterator. The method must not stay locked for the whole summation.
-d. (10) Mystics look at a fork while thinking, and must not look at a fork someone is eating with. Adjust the semaphore protocol from the dining philosophers.
+a. תנאי קדם ותנאי סיום של `sum`.
+b. שזירה שבה תנאי הסיום נכשל.
+c. הפוך את `sum` לנכון בלי לסנכרן את כל ההליכה, בסגנון האופטימי של איטרטור עם גרסה. המתודה אינה נשארת נעולה במשך כל הסכימה.
+d. מיסטיקנים מסתכלים על מזלג בזמן חשיבה, ואסור להם להסתכל על מזלג שמישהו אוכל איתו. התאם את פרוטוקול מנעול האתת של הפילוסופים הסועדים.
 
 :::hint
-`sum` is a query. Its postcondition names the elements present at one instant.
+`sum` היא שאילתה. תנאי הסיום שלה מנקוב ברכיבים שהיו נוכחים ברגע אחד.
 :::
 :::hint
-A synchronized `add` in the middle of an unsynchronized walk changes the total.
+`add` שהוא `synchronized` באמצע הליכה שאינה מסונכרנת משנה את הסכום.
 :::
 :::hint
-A version stamp that `add` and `remove` increment lets `sum` retry when the stamp moved.
+חותמת גרסה ש-`add` ו-`remove` מגדילים נותנת ל-`sum` לנסות שוב כשהחותמת זזה.
 :::
 :::solution
-a. Precondition: the queue's invariant holds (`size` matches the chain). Postcondition: the result equals the sum of the integers that were in the queue at one moment during the call, and `sum` does not change the queue.
+a. תנאי קדם: התנאי הפנימי של התור מתקיים (`size` תואם את השרשרת). תנאי סיום: התוצאה שווה לסכום השלמים שהיו בתור ברגע אחד במהלך הקריאה, ו-`sum` אינו משנה את התור.
 
-b. `sum` reads 1 and 2, then another thread `add`s 10 and `remove`s 1, then `sum` reads the rest. The total matches no single state of the queue.
+b. `sum` קורא 1 ו-2, ואז חוט אחר קורא ל-`add` של 10 ול-`remove` של 1, ואז `sum` קורא את השאר. הסכום אינו תואם שום מצב יחיד של התור.
 
-c. Keep a `volatile int version` incremented at the end of every mutator. `sum` records the version, walks without holding the lock, adds, and retries if the version changed. A bounded number of retries can fall back to a locked walk so the method is wait-free only in the quiet case and still terminates. The walk itself is not inside `synchronized`.
+c. שמור `volatile int version` שגדל בסוף כל משנה. `sum` רושם את הגרסה, הולך בלי להחזיק את המנעול, מחבר, ומנסה שוב אם הגרסה השתנתה. מספר חסום של ניסיונות יכול ליפול חזרה להליכה נעולה, כך שהמתודה חופשית מהמתנה (wait-free) רק במקרה השקט ועדיין מסתיימת. ההליכה עצמה אינה בתוך `synchronized`.
 
-d. A fork that is being eaten with is held exclusively, as in the philosopher solution. A fork that is only being looked at can be held by many mystics: a reader side of a `ReadWriteLock`, or a separate count. Eating takes the write side, so it waits until lookers leave, and lookers wait while an eater holds it. Two mystics may look at one fork together. Nobody looks at a fork an eater holds.
+d. מזלג שאוכלים איתו מוחזק בלעדית, כמו בפתרון הפילוסופים. מזלג שרק מסתכלים עליו יכול להיות מוחזק על ידי מיסטיקנים רבים: צד הקוראים של `ReadWriteLock`, או מונה נפרד. אכילה לוקחת את צד הכתיבה, ולכן היא מחכה עד שהמסתכלים עוזבים, והמסתכלים מחכים בזמן שאוכל מחזיק אותו. שני מיסטיקנים יכולים להסתכל על מזלג אחד יחד. אף אחד אינו מסתכל על מזלג שאוכל מחזיק.
 :::
 :::
 
 :::problem id=exam-17a-q1 source="Exams/17-a.pdf" kind=exam solution_origin=derived
-A board of `N` by `N` starts with one goblet and several players. Each player has a `Strategy` that picks a `Direction`. A player who reaches the goblet ends the game. The question asks you to finish the launch in `main` and to protect the board so two players cannot occupy one cell or miss the win. Locks are required; do not rewrite the whole class.
+לוח של `N` על `N` מתחיל עם גביע אחד וכמה שחקנים. לכל שחקן יש `Strategy` שבוחר `Direction`. שחקן שמגיע לגביע מסיים את המשחק. השאלה מבקשת לסיים את ההפעלה ב-`main` ולהגן על הלוח כך ששני שחקנים אינם יכולים לתפוס תא אחד או לפספס את הניצחון. נדרשים מנעולים; אל תכתוב את כל המחלקה מחדש.
 
 :::hint
-The board is the shared object. Each player thread calls into it.
+הלוח הוא האובייקט המשותף. כל חוט שחקן קורא לתוכו.
 :::
 :::hint
-A move that checks a cell and then writes it is a critical section on the board, not on the player.
+תזוזה שבודקת תא ואז כותבת אותו היא אזור קריטי על הלוח, לא על השחקן.
 :::
 :::hint
-The game ending is a flag those same critical sections must see, or a late move resurrects a finished game.
+סיום המשחק הוא דגל שאותם אזורים קריטיים חייבים לראות, אחרת תזוזה מאוחרת מקימה לתחייה משחק שנגמר.
 :::
 :::solution
-Each player is a `Runnable` whose `run` loops: ask the strategy, call `board.move(this, dir)`, stop when the result is `WIN` or `LOST`. `main` constructs the board, starts one thread per player, and joins them.
+כל שחקן הוא `Runnable` שה-`run` שלו רץ בלולאה: שאל את האסטרטגיה, קרא ל-`board.move(this, dir)`, ועצור כשהתוצאה היא `WIN` או `LOST`. `main` בונה את הלוח, מתחיל חוט אחד לכל שחקן, ומאחד אותם.
 
-`move` is `synchronized` on the board. It returns `FAIL` if the game is over or the step would leave the board or hit another player. It returns `WIN` and sets a finished flag if the destination is the goblet. It returns `SUCCESS` and updates the player's location otherwise. Because the whole check-and-update holds one lock, two players cannot commit two writes to one cell. Strategies that only read immutable data need no lock.
+`move` הוא `synchronized` על הלוח. הוא מחזיר `FAIL` אם המשחק נגמר, או שהצעד היה יוצא מהלוח, או שהיה פוגע בשחקן אחר. הוא מחזיר `WIN` ומדליק דגל סיום אם היעד הוא הגביע. הוא מחזיר `SUCCESS` ומעדכן את מיקום השחקן אחרת. מכיוון שכל הבדיקה-והעדכון מחזיקים מנעול אחד, שני שחקנים אינם יכולים לבצע שתי כתיבות לאותו תא. אסטרטגיות שקוראות רק נתונים שאינם ניתנים לשינוי אינן צריכות מנעול.
 :::
 :::
 
 :::problem id=exam-17b-q1 source="Exams/17-b.pdf" kind=exam solution_origin=derived
-Players on an `N` by `N` board may `move` one step or `lookAhead`, which returns the distance to the nearest object or to the edge. `Segment` can test intersection and is already implemented.
+שחקנים על לוח של `N` על `N` יכולים `move` צעד אחד או `lookAhead`, שמחזיר את המרחק לאובייקט הקרוב או לשפה. `Segment` יכול לבדוק חיתוך והוא כבר ממומש.
 
-a. (5) Pre- and postconditions of `lookAhead`.
-The implementation must stay correct when several player threads call `move` and `lookAhead`. `Segment` is given as thread-safe only if you do not mutate it; it is an immutable value.
+a. תנאי קדם ותנאי סיום של `lookAhead`.
+המימוש חייב להישאר נכון כשכמה חוטי שחקן קוראים ל-`move` ול-`lookAhead`. `Segment` נתון כבטוח לחוטים רק אם אינך משנה אותו; הוא ערך שאינו ניתן לשינוי.
 
 :::hint
-`lookAhead` is a query. Say so in the postcondition.
+`lookAhead` היא שאילתה. אמור את זה בתנאי הסיום.
 :::
 :::hint
-A move that is not atomic with the look lets the distance describe a board that never existed.
+תזוזה שאינה אטומית עם המבט נותנת למרחק לתאר לוח שמעולם לא היה.
 :::
 :::hint
-Lock the board for both methods, or the look can tear a coordinate.
+נעל את הלוח לשתי המתודות, אחרת המבט יכול לקרוע קואורדינטה.
 :::
 :::solution
-Precondition: `dir` is a legal direction, and the player's location is on the board. Postcondition: the result is the number of steps from the player, in `dir`, to the first other player, the goblet, or the edge, on the board state at one instant during the call. The method does not change the board.
+תנאי קדם: `dir` הוא כיוון חוקי, ומיקום השחקן על הלוח. תנאי סיום: התוצאה היא מספר הצעדים מהשחקן, ב-`dir`, עד השחקן האחר הראשון, הגביע, או השפה, על מצב הלוח ברגע אחד במהלך הקריאה. המתודה אינה משנה את הלוח.
 
-Implement both `move` and `lookAhead` as `synchronized` on the board. `lookAhead` builds a `Segment` from the player's cell and walks until `intersect` hits another object's cell or the edge. The lock makes that walk see one layout. `move` updates a location only while holding the same lock, and it returns `WIN` when the destination is the goblet.
+ממש את `move` ואת `lookAhead` כ-`synchronized` על הלוח. `lookAhead` בונה `Segment` מהתא של השחקן והולך עד ש-`intersect` פוגע בתא של אובייקט אחר או בשפה. המנעול גורם להליכה הזאת לראות פריסה אחת. `move` מעדכן מיקום רק בזמן שהוא מחזיק את אותו מנעול, ומחזיר `WIN` כשהיעד הוא הגביע.
 :::
 :::
 
 :::problem id=exam-18b-q2 source="Exams/18-b.pdf" kind=exam solution_origin=derived
-A bounded `Stack` has the invariant `0 <= size() <= capacity()`. `push` and `pop` may fail their preconditions in the implementation you are given.
+ל-`Stack` חסום יש התנאי הפנימי `0 <= size() <= capacity()`. `push` ו-`pop` עלולים להיכשל בתנאי הקדם שלהם במימוש שניתן לך.
 
-Show two threads `T1` and `T2`, and two stacks `S1` and `S2`, that deadlock. Each thread may call `push` and `pop` on both stacks. The methods lock the stack they belong to, and a `push` of a stack into the other stack locks both.
+הראה שני חוטים `T1` ו-`T2`, ושני `Stack` `S1` ו-`S2`, שנכנסים לנעילה הדדית. כל חוט רשאי לקרוא ל-`push` ול-`pop` על שני ה-`Stack`. המתודות נועלות את ה-`Stack` שהן שייכות אליו, ו-`push` של `Stack` לתוך ה-`Stack` האחר נועל את שניהם.
 
 :::hint
-Deadlock needs a cycle. Two stacks are enough if each thread takes them in a different order.
+נעילה הדדית צריכה מעגל. שני `Stack` מספיקים אם כל חוט לוקח אותם בסדר אחר.
 :::
 :::hint
-`T1` locks `S1` then tries `S2`. `T2` locks `S2` then tries `S1`.
+`T1` נועל את `S1` ואז מנסה את `S2`. `T2` נועל את `S2` ואז מנסה את `S1`.
 :::
 :::hint
-Write the calls, not a metaphor.
+כתוב את הקריאות, לא מטאפורה.
 :::
 :::solution
-`T1` calls `S1.push(x)`, which locks `S1`, and inside that call locks `S2` because the value being pushed is a structure tied to `S2` (the question's transfer locks the destination and then the source). `T2` calls `S2.push(...)` and then locks `S1`. Each thread holds one stack's monitor and waits for the other. Neither `pop` nor `push` returns.
+`T1` קורא ל-`S1.push(x)`, שנועל את `S1`, ובתוך הקריאה הזאת נועל את `S2` כי הערך שנדחף הוא מבנה שקשור ל-`S2` (ההעברה של השאלה נועלת את היעד ואז את המקור). `T2` קורא ל-`S2.push(...)` ואז נועל את `S1`. כל חוט מחזיק את המוניטור של `Stack` אחד ומחכה לאחר. לא `pop` ולא `push` חוזרים.
 
-The repair, which the question asks you to see by exhibiting the bug, is one order: lock the stack with the lower identity first, in both threads. The same cycle appears in the lecture's `Image.mix`.
+התיקון, שהשאלה מבקשת לראות על ידי הצגת הבאג, הוא סדר אחד: נעל קודם את ה-`Stack` עם הזהות הנמוכה, בשני החוטים. אותו מעגל מופיע ב-`Image.mix` של ההרצאה.
 :::
 :::
 
 :::problem id=exam-19b-q2 source="Exams/19-b.pdf" kind=exam solution_origin=derived
-`SortedBinaryTree` publishes this invariant:
+`SortedBinaryTree` מפרסם את התנאי הפנימי הזה:
 
 ```java
 //@INV: getData() != null &&
@@ -466,59 +484,59 @@ The repair, which the question asks you to see by exhibiting the bug, is one ord
 // (getRight() == null || getData().compareTo(getRight().getData()) < 0)
 ```
 
-The implementation inserts by walking `volatile` child pointers with no lock. Show an interleaving that breaks the invariant, and give a locking scheme that preserves it. A later part asks what a readers-writer lock would change.
+המימוש מכניס על ידי הליכה במצביעים (pointer) של הילדים, שהם `volatile`, בלי מנעול. הראה שזירה ששוברת את התנאי הפנימי, ותן סכמת נעילה ששומרת אותו. חלק מאוחר שואל מה מנעול קוראים-כותב היה משנה.
 
 :::hint
-Two inserts can pass the same null check on `left` and both assign it.
+שתי הכנסות יכולות לעבור את אותה בדיקת null על `left` ושתיהן להציב אותו.
 :::
 :::hint
-`volatile` publishes each write. It does not make the check and the write one step.
+`volatile` מפרסם כל כתיבה. הוא אינו הופך את הבדיקה ואת הכתיבה לצעד אחד.
 :::
 :::hint
-One lock on the node you are about to modify, held from the check through the assignment, is enough if every insert takes locks from the root downward.
+מנעול אחד על הצומת שעומדים לשנות, מוחזק מהבדיקה ועד ההצבה, מספיק אם כל הכנסה לוקחת מנעולים מהשורש כלפי מטה.
 :::
 :::solution
-Start from a node holding 5, with null children. Thread A decides to insert 3 and reads `left == null`. Thread B inserts 4 the same way and writes `left`. Thread A then writes `left` to a node of 3, orphaning 4. The tree no longer contains 4, and any later child of 3 is not ordered against the lost node. The invariant at the root fails as soon as A's write lands on top of a child that was supposed to stay.
+התחל מצומת שמחזיק 5, עם ילדים null. חוט A מחליט להכניס 3 וקורא `left == null`. חוט B מכניס 4 באותו אופן וכותב `left`. חוט A כותב אז את `left` לצומת של 3, ומשאיר את 4 יתום. העץ כבר אינו מכיל את 4, וכל ילד מאוחר של 3 אינו מסודר מול הצומת שאבד. התנאי הפנימי בשורש נכשל ברגע שהכתיבה של A נוחתת מעל ילד שהיה אמור להישאר.
 
-Lock each node from the root down, and hold the lock on a node while you read its child and, if you update that child, while you write it. Two inserts then serialize on the first node they both need. A `ReadWriteLock` lets concurrent `contains` calls take the read lock, and `insert` takes the write lock. `contains` during a write waits. That is the gain the question asks you to name: readers overlap, writers still exclude the walk they mutate.
+נעל כל צומת מהשורש כלפי מטה, והחזק את המנעול על צומת בזמן שקוראים את הילד שלו, ואם מעדכנים את הילד הזה, גם בזמן שכותבים אותו. שתי הכנסות מסתדרות אז בטור על הצומת הראשון ששתיהן צריכות. `ReadWriteLock` נותן לקריאות `contains` מקבילות לקחת את מנעול הקריאה, ו-`insert` לוקח את מנעול הכתיבה. `contains` במהלך כתיבה מחכה. זה הרווח שהשאלה מבקשת לנקוב בשמו: קוראים חופפים, וכותבים עדיין מוציאים את ההליכה שהם משנים.
 :::
 :::
 
 :::problem id=exam-20a-q2 source="Exams/20-a.pdf" kind=exam solution_origin=derived
-Two threads share an object and run a method that reads a field, decides, and writes it back, with no lock. List every legal output of the program and justify each. A second part asks which outputs disappear if the method is `synchronized`.
+שני חוטים חולקים אובייקט ומריצים מתודה שקוראת שדה, מחליטה, וכותבת אותו חזרה, בלי מנעול. מנה כל פלט חוקי של התוכנית ונמק כל אחד. חלק שני שואל אילו פלטים נעלמים אם המתודה היא `synchronized`.
 
-The shape of the program on the paper is two threads calling the same unsynchronized method on one object whose field starts at a known value, each thread printing what it observed.
+צורת התוכנית על הנייר היא שני חוטים שקוראים לאותה מתודה בלי `synchronized` על אובייקט אחד שהשדה שלו מתחיל בערך ידוע, וכל חוט מדפיס את מה שראה.
 
 :::hint
-List the sequential histories first. Those are always legal.
+מנה קודם את ההיסטוריות הטוריות. אלה תמיד חוקיות.
 :::
 :::hint
-Then list the histories that tear the read-modify-write. Those are legal only while the method is not atomic.
+אחר כך מנה את ההיסטוריות שקורעות את הקריאה-שינוי-כתיבה. אלה חוקיות רק כל עוד המתודה אינה אטומית.
 :::
 :::hint
-`synchronized` on the method keeps exactly the sequential histories.
+`synchronized` על המתודה שומר בדיוק את ההיסטוריות הטוריות.
 :::
 :::solution
-Every interleaving in which each thread's statements stay in program order is legal. If each thread prints the value it read and then writes a new one, the possible prints are the sequential ones (second thread sees the first thread's write) and the racy ones (both threads read the original value and both print it). Writes of a single `int` reference are atomic, so you will not see a torn integer; you will see a lost update.
+כל שזירה שבה המשפטים של כל חוט נשארים בסדר התוכנית היא חוקית. אם כל חוט מדפיס את הערך שקרא ואז כותב חדש, ההדפסות האפשריות הן הטוריות (החוט השני רואה את הכתיבה של הראשון) והמרוץ (שני החוטים קוראים את הערך המקורי ושניהם מדפיסים אותו). כתיבות של `int` יחיד אטומיות, ולכן לא רואים שלם קרוע; רואים עדכון שאבד.
 
-After `synchronized`, each call holds the object's monitor for the whole method. One call finishes before the other begins. Only the two sequential outputs remain, in either order. The both-read-the-original output is gone.
+אחרי `synchronized`, כל קריאה מחזיקה את המוניטור של האובייקט במשך כל המתודה. קריאה אחת נגמרת לפני שהאחרת מתחילה. נשארים רק שני הפלטים הטוריים, בכל סדר. הפלט שבו שניהם קוראים את המקורי נעלם.
 :::
 :::
 
 :::problem id=exam-20b-q2 source="Exams/20-b.pdf" kind=exam solution_origin=derived
-Synchronization with atomic variables. Two threads `t1` and `t2` both call `f()`. Show the races if `f` updates a plain `int`, and rewrite the update with `AtomicInteger` so the posted invariant holds. A CAS loop is the tool the question expects when the new value depends on the old one.
+סנכרון עם משתנים אטומיים. שני חוטים `t1` ו-`t2` קוראים שניהם ל-`f()`. הראה את המרוצים אם `f` מעדכן `int` רגיל, וכתוב מחדש את העדכון עם `AtomicInteger` כך שהתנאי הפנימי שפורסם מתקיים. לולאת CAS היא הכלי שהשאלה מצפה לו כשהערך החדש תלוי בישן.
 
 :::hint
-`atomic++` is not a method. `addAndGet` and `compareAndSet` are.
+`atomic++` אינו מתודה. `addAndGet` ו-`compareAndSet` כן.
 :::
 :::hint
-If the new value is "old plus one", `incrementAndGet` is enough. If it depends on a neighbor in a structure, retry `compareAndSet`.
+אם הערך החדש הוא "הישן ועוד אחד", `incrementAndGet` מספיק. אם הוא תלוי בשכן במבנה, נסה שוב את `compareAndSet`.
 :::
 :::hint
-A failed `compareAndSet` means another thread won. Read again and retry. Do not retry blindly without reading.
+`compareAndSet` שנכשל אומר שחוט אחר ניצח. קרא שוב ונסה שוב. אל תנסה שוב בעיוורון בלי לקרוא.
 :::
 :::solution
-On a plain `int`, both threads can read the same value and both write `value + 1`, so one update disappears. The set of legal results includes every number from the sequential answer down to "only one update stuck."
+על `int` רגיל, שני החוטים יכולים לקרוא את אותו ערך ושניהם לכתוב `value + 1`, ולכן עדכון אחד נעלם. קבוצת התוצאות החוקיות כוללת כל מספר מהתשובה הטורית ועד "רק עדכון אחד נתפס".
 
 ```java
 final AtomicInteger n = new AtomicInteger(0);
@@ -528,23 +546,23 @@ do {
 } while (!n.compareAndSet(observed, observed + 1));
 ```
 
-`incrementAndGet()` is the same loop inside the library. After both threads finish, `n` is 2. `get` on a third thread sees that value once both CASes have happened; it does not need `volatile` on the side, because the atomic operations already order the writes.
+`incrementAndGet()` הוא אותה לולאה בתוך הספרייה. אחרי ששני החוטים מסיימים, `n` הוא 2. `get` על חוט שלישי רואה את הערך הזה אחרי ששני ה-CAS קרו; הוא אינו צריך `volatile` בצד, כי הפעולות האטומיות כבר מסדרות את הכתיבות.
 :::
 :::
 
 :::problem id=exam-24b-q2 source="Exams/24-b.pdf" kind=exam solution_origin=derived
-A `Barrier` lets a fixed set of threads proceed in phases. `await` says "I finished this phase." The caller blocks until every participant has finished it, then all of them enter the next phase.
+`Barrier` נותן לקבוצה קבועה של חוטים להתקדם בפאזות. `await` אומר "סיימתי את הפאזה הזאת". הקורא נחסם עד שכל משתתף סיים אותה, ואז כולם נכנסים לפאזה הבאה.
 
-Implement `await` so that a generation counter prevents a fast thread from sneaking into the following phase and releasing the previous one early. `InterruptedException` must leave the barrier usable.
+ממש את `await` כך שמונה דור (generation) מונע מחוט מהיר להתגנב לפאזה הבאה ולשחרר את הקודמת מוקדם. `InterruptedException` חייבת להשאיר את המחסום שמיש.
 
 :::hint
-The count of arrivals has to go back to zero for the next phase, and that reset must not release a thread that has not arrived.
+מספר ההגעות חייב לחזור לאפס לפאזה הבאה, והאיפוס הזה אינו משחרר חוט שעדיין לא הגיע.
 :::
 :::hint
-A generation integer, incremented when the last thread arrives, is the thing each waiter remembers.
+שלם דור, שגדל כשהחוט האחרון מגיע, הוא הדבר שכל ממתין זוכר.
 :::
 :::hint
-`wait` in a `while` against that generation, and `notifyAll` from the last arriver.
+`wait` בתוך `while` מול הדור הזה, ו-`notifyAll` מהמגיע האחרון.
 :::
 :::solution
 ```java
@@ -568,27 +586,27 @@ public class Barrier {
 }
 ```
 
-The last thread resets `arrived` and bumps `generation` before waking anyone, so a woken thread that immediately calls `await` again waits for the new generation. A thread that wakes spuriously sees `g == generation` and waits again. On `InterruptedException`, the caller must decrement `arrived` before rethrowing, or the phase never fills. The question's four methods are this `await` plus the constructor and the queries the tests use to read the phase.
+החוט האחרון מאפס את `arrived` ומקדם את `generation` לפני שהוא מעיר מישהו, ולכן חוט שהתעורר ומיד קורא שוב ל-`await` מחכה לדור החדש. חוט שמתעורר סתם רואה `g == generation` ומחכה שוב. ב-`InterruptedException`, הקורא חייב להקטין את `arrived` לפני זריקה מחדש, אחרת הפאזה לעולם אינה מתמלאת. ארבע המתודות של השאלה הן ה-`await` הזה ועוד הבנאי והשאילתות שהבדיקות משתמשות בהן כדי לקרוא את הפאזה.
 :::
 :::
 
 :::problem id=exam-24c-q2 source="Exams/24-c.pdf" kind=exam solution_origin=derived
-`Set` adds `iterator()` and `clone()` to `contains` and `add`. `SetImpl` is a linked list. An iterator that walks `next` pointers races with `add`. Make `iterator` and `add` safe. Cloning must not publish a structure another thread is in the middle of changing.
+`Set` מוסיף `iterator()` ו-`clone()` ל-`contains` ול-`add`. `SetImpl` היא רשימה מקושרת. איטרטור שהולך על מצביעי `next` רץ מול `add`. הפוך את `iterator` ואת `add` לבטוחים. שכפול אינו מפרסם מבנה שחוט אחר נמצא באמצע שינוי שלו.
 
 :::hint
-A fail-fast iterator remembers a version. `add` increments it.
+איטרטור כשל-מהיר (fail-fast) זוכר גרסה. `add` מגדיל אותה.
 :::
 :::hint
-`clone` must copy the nodes while holding the same lock `add` holds, or the copy tears.
+`clone` חייב להעתיק את הצמתים בזמן שהוא מחזיק את אותו מנעול ש-`add` מחזיק, אחרת העותק נקרע.
 :::
 :::hint
-`ConcurrentModificationException` is the usual signal. Returning a snapshot is the other legal design.
+`ConcurrentModificationException` הוא האות הרגיל. החזרת צילום מצב היא העיצוב החוקי האחר.
 :::
 :::solution
-One lock around `add`, `contains`, `iterator`'s creation, and `clone`. `add` appends a node and increments `modCount`. The iterator copies `modCount` at creation and throws `ConcurrentModificationException` if it changes before `next`. That is the fail-fast contract.
+מנעול אחד סביב `add`, `contains`, יצירת האיטרטור, ו-`clone`. `add` משרשר צומת ומגדיל את `modCount`. האיטרטור מעתיק את `modCount` ביצירה וזורק `ConcurrentModificationException` אם הוא משתנה לפני `next`. זה חוזה הכשל-המהיר.
 
-`clone` holds the lock, walks the list, and allocates a new list with the same elements. The returned set has its own nodes and its own lock. Callers who use the clone do not share structure with the source. A snapshot iterator, which copies the elements at `iterator()` time, is the alternative that does not fail fast and also needs the lock only during the copy.
+`clone` מחזיק את המנעול, הולך על הרשימה, ומקצה רשימה חדשה עם אותם רכיבים. הקבוצה שחוזרת יש לה צמתים משלה ומנעול משלה. קוראים שמשתמשים בעותק אינם חולקים מבנה עם המקור. איטרטור של צילום מצב (snapshot), שמעתיק את הרכיבים בזמן `iterator()`, הוא החלופה שאינה נכשלת מהר וגם צריכה את המנעול רק במהלך ההעתקה.
 :::
 :::
 
-Threads are why a server cannot stop the world inside `accept`. [Networking](topic:networking) is the channel between processes, and [The reactor](topic:reactor) is the server that waits for many of those channels with one thread.
+חוטים הם הסיבה ששרת אינו יכול לעצור את העולם בתוך `accept`. [תקשורת](topic:networking) הוא הערוץ בין תהליכים, ו[הריאקטור](topic:reactor) הוא השרת שמחכה להרבה ערוצים כאלה עם חוט אחד.

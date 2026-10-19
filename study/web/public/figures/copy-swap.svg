@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" width="760" height="460">
+  <style>
+    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
+    .d2 { animation-delay: 0.35s; }
+    .d3 { animation-delay: 0.7s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="760" height="460" fill="#f6f1e7"/>
+  <g class="draw">
+    <text x="36" y="36" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">1. before the assignment</text>
+    <rect x="36" y="48" width="140" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="106" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">avi ’ A</text>
+    <rect x="200" y="48" width="140" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="270" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">benni ’ B</text>
+    <rect x="400" y="48" width="120" height="64" rx="10" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
+    <text x="460" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">A</text>
+    <rect x="540" y="48" width="120" height="64" rx="10" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
+    <text x="600" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">B</text>
+  </g>
+  <g class="draw d2">
+    <text x="36" y="164" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">2. temp deep-copies B into a new buffer B2</text>
+    <rect x="36" y="176" width="140" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="106" y="214" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">avi ’ A</text>
+    <rect x="200" y="176" width="150" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="275" y="214" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">benni ’ B</text>
+    <rect x="374" y="176" width="150" height="64" rx="10" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="449" y="214" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">temp ’ B2</text>
+    <rect x="548" y="176" width="160" height="64" rx="10" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
+    <text x="628" y="204" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">A   B   B2</text>
+    <text x="628" y="224" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5c5348">three buffers</text>
+  </g>
+  <g class="draw d3">
+    <text x="36" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">3. swap, then temp's destructor frees A</text>
+    <rect x="36" y="304" width="150" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="111" y="342" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">avi ’ B2</text>
+    <rect x="206" y="304" width="150" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="281" y="342" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">benni ’ B</text>
+    <rect x="376" y="304" width="160" height="64" rx="10" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5"/>
+    <text x="456" y="332" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">temp ’ A</text>
+    <text x="456" y="352" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5c5348">delete[] A</text>
+    <text x="36" y="412" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">benni still owns B. avi owns the copy. nothing is shared.</text>
+  </g>
+</svg>

@@ -1,19 +1,19 @@
 ---
 id: classes-and-objects
-title: Classes and objects
+title: מחלקות ועצמים
 sources:
   - "Classes/Chapter 3 - Classes and Objects.pptx"
   - "Exrecises/SPL_PS1 (1).pptx"
   - "Exrecises/SPL_PS3.pptx"
 ---
 
-A C++ class is a layout plus functions that receive a hidden pointer to that layout. The practical sessions start one step earlier, because a class is useless until the compiler and the linker have turned two files into one program. This topic is that path: how a program is built, how an object is constructed, and how a call sees the object.
+מחלקה (class) ב-C++ היא פריסה ועוד פונקציות שמקבלות מצביע (pointer) סמוי אל הפריסה הזו. התרגולים מתחילים צעד אחד קודם, כי מחלקה לא שווה כלום עד שהקומפיילר (compiler) ושלב הקישור (link) הפכו שני קבצים לתוכנית אחת. הנושא הזה הוא המסלול הזה: איך תוכנית נבנית, איך אובייקט (object) נבנה, ואיך קריאה רואה את האובייקט.
 
-## Building a program
+## בניית תוכנית
 
-A C++ function does not have to live inside a class. A name declared outside every class is in the global scope. A definition gives the prototype and the body. A declaration gives only the prototype and a semicolon. You may declare a function many times and define it once.
+פונקציה ב-C++ לא חייבת לחיות בתוך מחלקה. שם שמוצהר מחוץ לכל מחלקה נמצא בטווח הגלובלי. הגדרה נותנת את הפרוטוטיפ ואת הגוף. הצהרה נותנת רק את הפרוטוטיפ ונקודה-פסיק. מותר להצהיר על פונקציה פעמים רבות ולהגדיר אותה פעם אחת.
 
-A forward declaration tells the compiler the shape of a name whose body comes later. Names needed by more than one `.cpp` file go in a header, and each user `#include`s that header. `#include` pastes the file in. Include headers, not other `.cpp` files, and guard the header so a cycle does not paste it twice:
+הצהרה מוקדמת אומרת לקומפיילר את הצורה של שם שהגוף שלו מגיע אחר כך. שמות שצריך ביותר מקובץ `.cpp` אחד הולכים לכותרת, וכל משתמש עושה `#include` לכותרת הזו. `#include` מדביק את הקובץ פנימה. כללו כותרות, לא קובצי `.cpp` אחרים, ושמרו על הכותרת כדי שמעגל לא ידביק אותה פעמיים:
 
 ```cpp
 #ifndef POINT_H
@@ -22,39 +22,44 @@ A forward declaration tells the compiler the shape of a name whose body comes la
 #endif
 ```
 
-The build has four stages, from practical session 1.
+לבנייה יש ארבעה שלבים, מתרגול 1.
 
-:::definition id=def-build title="Compile and link" source="Exrecises/SPL_PS1 (1).pptx"
-The preprocessor takes a `.cpp` file, strips comments, and obeys `#` directives (`#include`, `#ifndef`, `#define`). The compiler turns that into assembly. The assembler produces an object file (`.o`). The linker resolves calls to other object files, finds `main`, and writes one executable.
+:::definition id=def-build title="קומפילציה (compilation) וקישור" source="Exrecises/SPL_PS1 (1).pptx"
+הקדם-מעבד (preprocessor) לוקח קובץ `.cpp`, מסיר הערות, ומציית להנחיות `#` (`#include`, `#ifndef`, `#define`). הקומפיילר הופך את זה לאסמבלי. האסמבלר (assembler) מייצר קובץ אובייקט (object file, `.o`). המקשר פותר קריאות לקובצי אובייקט אחרים, מוצא את `main`, וכותב קובץ הרצה אחד.
 :::
 
-Java compiles to bytecode and links when the program runs. C++ does the preprocessor, the compile, and the assemble up front, and the linker runs before the program starts. `g++ -c` stops before the link. `g++ -o name` names the executable; the default name is `a.out`.
+Java עוברת קומפילציה ל-bytecode ומקשרת כשהתוכנית רצה. C++ עושה את הקדם-מעבד, את הקומפילציה ואת האסמבלי מראש, והמקשר רץ לפני שהתוכנית מתחילה. `g++ -c` עוצר לפני הקישור. `g++ -o name` נותן שם לקובץ ההרצה. שם ברירת המחדל הוא `a.out`.
 
-![Four build stages in order: preprocessor, compiler, assembler, then the linker that produces one executable](../assets/figures/build-pipeline.svg)
+![ארבעה שלבי בנייה לפי הסדר: קדם-מעבד, קומפיילר, אסמבלר, ואז המקשר שמייצר קובץ הרצה אחד](../assets/figures/build-pipeline.svg)
 
 :::problem id=worked-compile-vs-link source="Exrecises/SPL_PS1 (1).pptx" kind=worked solution_origin=source
-`g++ -c student.cpp` succeeds. `g++ -o app student.o` then fails because `main` is undefined. Which stage failed, and why did `-c` not catch it?
+הפקודה הראשונה מצליחה. השנייה נכשלת כי `main` לא מוגדר. איזה שלב נכשל, ולמה `-c` לא תפס את זה?
+
+```text
+g++ -c student.cpp
+g++ -o app student.o
+```
 
 :::solution
-The link failed. `-c` stops after the assembler, so `student.o` only has to be a valid object file. `main` lives in another file. The linker is the stage that looks for `main` and for calls into other object files. The compiler of `student.cpp` never saw those files.
+הקישור נכשל. `-c` עוצר אחרי האסמבלר, ולכן `student.o` צריך רק להיות קובץ אובייקט תקין. `main` חי בקובץ אחר. המקשר הוא השלב שמחפש את `main` וקריאות אל קובצי אובייקט אחרים. הקומפיילר של `student.cpp` אף פעם לא ראה את הקבצים האלה.
 :::
 :::
 
-A makefile records targets and the files they depend on. `make` runs the first target unless you name another. A sketch from the session:
+קובץ makefile רושם מטרות ואת הקבצים שהן תלויות בהם. `make` מריץ את המטרה הראשונה אלא אם מציינים מטרה אחרת. סקיצה מהתרגול:
 
 ```
 hello: helloWorld.o run.o
 	g++ -o bin/hello bin/helloWorld.o bin/run.o
 ```
 
-Tabs, not spaces, introduce the recipe. `clean` removes the products and is not the first target, so a bare `make` does not wipe the build.
+טאב, לא רווחים, פותח את הפקודה. `clean` מוחק את התוצרים והוא לא המטרה הראשונה, ולכן `make` חשוף לא מוחק את הבנייה.
 
-The types you meet immediately are the primitives `int`, `double`, `long`, `bool`, `char`, and `const` in place of Java's `final`. `std::string` is mutable, compared with `==`, not `equals`. `std::vector<T>` is a growable array with random access. Both live in namespace `std`.
+הטיפוסים שפוגשים מיד הם הפרימיטיביים `int`, `double`, `long`, `bool`, `char`, ו-`const` במקום `final` של Java. `std::string` ניתן לשינוי, ומשווים אותו ב-`==`, לא ב-`equals`. `std::vector<T>` הוא מערך שגדל עם גישה אקראית. שניהם חיים במרחב השמות `std`.
 
-## An object is a value
+## אובייקט הוא ערך
 
-:::definition id=def-class title="Class layout" source="Classes/Chapter 3 - Classes and Objects.pptx"
-A class is a sequence of members with access control. The default access in a `class` is private. A `struct` is the same layout with default public access. The definition ends with a semicolon, because the grammar allows objects to be declared in the same sentence:
+:::definition id=def-class title="פריסת מחלקה" source="Classes/Chapter 3 - Classes and Objects.pptx"
+מחלקה היא סדרה של איברים עם בקרת גישה. הגישה שברירת המחדל ב-`class` היא `private`. `struct` הוא אותה פריסה עם ברירת מחדל `public`. ההגדרה נגמרת בנקודה-פסיק, כי הדקדוק מרשה להצהיר על אובייקטים באותו משפט:
 
 ```cpp
 struct Point {
@@ -63,10 +68,10 @@ struct Point {
 } p1(1, 1), p2(2, 2);
 ```
 
-A class with no name in that position is an anonymous class, useful only for the objects declared there.
+מחלקה בלי שם במקום הזה היא מחלקה אנונימית, שימושית רק לאובייקטים שמוצהרים שם.
 :::
 
-The constructor that the lecture wants is not a series of assignments in the body. Members are initialized on the member-initializer list, before the body runs. That is the only way to initialize a `const` member or a reference member, and it avoids constructing a member and then assigning over it.
+הבנאי (constructor) שההרצאה רוצה אינו סדרה של השמות בגוף. האיברים מאותחלים ברשימת האתחול (initializer list), לפני שהגוף רץ. זו הדרך היחידה לאתחל איבר `const` או איבר רפרנס (reference), והיא נמנעת מבנייה של איבר ואז השמה מעליו.
 
 ```cpp
 // student.h
@@ -85,9 +90,9 @@ Student::Student(const std::string& name, int year)
 }
 ```
 
-The bad version on the slide takes `std::string` by value and assigns `_name = name` in the body. The good version binds a const reference and initializes `_name` from it. Passing a large object by value calls the copy constructor, which session 3 flags as the slow path.
+הגרסה הרעה בשקף מקבלת `std::string` לפי ערך ומציבה `_name = name` בגוף. הגרסה הטובה קושרת רפרנס `const` ומאתחלת את `_name` ממנו. העברה של אובייקט גדול לפי ערך קוראת לבנאי ההעתקה (copy constructor), ותרגול 3 מסמן את זה כמסלול האיטי.
 
-An object with no `new` lives in the frame, and you use `.`. An object from `new` lives on the heap, you hold a pointer, and you use `->`.
+אובייקט בלי `new` חי במסגרת, ומשתמשים ב-`.`. אובייקט מ-`new` חי על הערימה (heap), מחזיקים מצביע, ומשתמשים ב-`->`.
 
 ```cpp
 Student a("Avi", 2000);
@@ -96,104 +101,119 @@ Student* pb = new Student("Benni", 2000);
 pb->print();
 ```
 
-### this, const, and static
+### this, const ו-static
 
-Every non-static member function receives a hidden pointer, `this`, holding the address of the object. `print` that mentions `_name` is the same function as one that mentions `this->_name`.
+כל פונקציית איבר שאינה `static` מקבלת מצביע סמוי, `this`, שמחזיק את הכתובת של האובייקט. `print` שמזכיר את `_name` הוא אותה פונקציה כמו אחת שמזכירה את `this->_name`.
 
-A `const` object, `const Student a("Avi")`, may only call `const` methods. `setName` is not `const`, so `a.setName("Benni")` is an error. `print() const` promises not to modify members, so the call is allowed. Inside a `const` method, `this` has type `const Student*`.
+אובייקט `const`, `const Student a("Avi")`, רשאי לקרוא רק למתודות `const`. `setName` אינו `const`, ולכן `a.setName("Benni")` הוא שגיאה. `print() const` מבטיח לא לשנות איברים, ולכן הקריאה מותרת. בתוך מתודה `const`, ל-`this` יש טיפוס `const Student*`.
 
-A `static` member function has no `this`. The lecture's `Line` stores a `const int len` computed from its endpoints. Calling an ordinary `calcLen()` from the initializer list is illegal: the object is not alive yet, so there is no `this`. A `static` `calcLen(p1, p2)` has no `this` and can run. A constructor may also delegate to another constructor of the same class, and that delegation is the whole initializer, not a mix with other members.
+לפונקציית איבר `static` אין `this`. ה-`Line` של ההרצאה שומר `const int len` שמחושב מקצותיו. קריאה ל-`calcLen()` רגילה מרשימת האתחול אינה חוקית: האובייקט עוד לא חי, ולכן אין `this`. `calcLen(p1, p2)` שהיא `static` אין לה `this` והיא יכולה לרוץ. בנאי רשאי גם לדלג לבנאי אחר של אותה מחלקה, בדלגציה (delegation), והדלגציה הזו היא כל רשימת האתחול, לא תערובת עם איברים אחרים.
 
-### Returning an object
+### החזרת אובייקט
 
-Returning a primitive by value returns a copy. Returning a local `Image` by value also returns a copy, and the copy is the caller's problem; the local dies. Returning a reference to a local is forbidden: the referent is in the frame that is about to pop.
+החזרה של פרימיטיבי לפי ערך מחזירה עותק. החזרה של `Image` מקומי לפי ערך גם מחזירה עותק, והעותק הוא הבעיה של הקורא. המקומי מת. החזרה של רפרנס למקומי אסורה: מה שהרפרנס קשור אליו נמצא במסגרת שעומדת להישלף.
 
 ```cpp
 Image& myPicture() {
     Image avi(...);
-    return avi;          // the referent dies at the closing brace
+    return avi;          // the object the reference names dies at the closing brace
 }
 ```
 
-Returning a reference to a member is allowed, and it aliases that member. The safe form on the slide returns `const Image&` from a `const` method, so the caller cannot assign through the alias and change the student's picture.
+החזרה של רפרנס לאיבר מותרת, והיא כינוי לאותו איבר. הצורה הבטוחה בשקף מחזירה `const Image&` ממתודה `const`, כדי שהקורא לא יוכל להציב דרך הכינוי ולשנות את התמונה של הסטודנט.
 
-Session 3 adds the vocabulary the next topic will need, already visible in ordinary classes:
+תרגול 3 מוסיף את אוצר המילים שהנושא הבא יצטרך, וכבר רואים אותו במחלקות רגילות:
 
-- A default constructor can be called with no arguments. The compiler writes one only if you wrote no constructors at all.
-- A copy constructor's first parameter is a reference to the same class, usually `const`.
-- The copy-assignment operator runs when an existing object is on the left of `=`.
-- The destructor runs when the object dies, by leaving scope or by `delete`. It has no parameters and no return type.
+- בנאי ברירת מחדל (default constructor) אפשר לקרוא לו בלי ארגומנטים. הקומפיילר כותב אחד רק אם לא כתבתם שום בנאי.
+- הפרמטר הראשון של בנאי העתקה הוא רפרנס לאותה מחלקה, בדרך כלל `const`.
+- אופרטור ההשמה להעתקה (copy assignment) רץ כשאובייקט קיים נמצא משמאל ל-`=`.
+- ההורס (destructor) רץ כשהאובייקט מת, ביציאה מהתחום או ב-`delete`. אין לו פרמטרים ואין לו טיפוס החזרה.
 
-If any of those is missing, the compiler generates a memberwise version. That generated version is the right one only when the class owns nothing besides its own bytes.
+אם אחד מאלה חסר, הקומפיילר מייצר גרסה שפועלת איבר-איבר. הגרסה שנוצרת נכונה רק כשהמחלקה לא מחזיקה כלום מלבד הבתים שלה עצמה.
 
 :::check id=chk-dot-arrow
-`Student* pb = new Student("Benni", 2000);` How do you call `print`?
+`Student* pb = new Student("Benni", 2000);` איך קוראים ל-`print`?
 
 - [ ] `pb.print()`
 - [x] `pb->print()`
-- [ ] `(*pb).print` is ill-formed, and so is the arrow
+- [ ] `(*pb).print` לא חוקי, וכך גם החץ
 
-`pb` is a pointer. The arrow dereferences, then selects the member. `(*pb).print()` is the same call written out.
+`pb` הוא מצביע. החץ ניגש לאובייקט ואז בוחר את האיבר. `(*pb).print()` היא אותה קריאה כתובה במפורש.
 :::
 
 :::problem id=worked-initializer source="Classes/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
-`Point` has `const int x, y`. Why does the constructor need `: x(x), y(y)`, and why does a `Line` that wants `len` computed in the initializer call a static function?
+למה `Point` צריך `: x(x), y(y)`, ולמה `Line` קורא לפונקציה `static` כדי לאתחל את `len`?
+
+```cpp
+struct Point {
+    const int x, y;
+    Point(int x, int y) : x(x), y(y) {}
+};
+
+struct Line {
+    Point p1, p2;
+    const int len;
+    Line(Point a, Point b)
+        : p1(a), p2(b), len(calcLen(a, b)) {}
+    static int calcLen(const Point& a, const Point& b);
+};
+```
 
 :::solution
-A `const` member is initialized once, before the constructor body. An assignment `_x = x` in the body would be writing a const after it already exists, and it does not compile. The initializer list is that initialization.
+איבר `const` מאותחל פעם אחת, לפני גוף הבנאי. השמה `x = x` בגוף הייתה כותבת ל-`const` אחרי שהוא כבר קיים, והיא לא מתקמפלת. רשימת האתחול היא האתחול הזה.
 
-`len` is also const, so it too must be initialized on the list. An ordinary member function call from that list would use `this` before the object is constructed. `static int calcLen(const Point&, const Point&)` does not need `this`, so `len(calcLen(p1, p2))` is legal. The slide's non-static version is marked as the one that will not compile.
+גם `len` הוא `const`, ולכן גם אותו חובה לאתחל ברשימה. קריאה לפונקציית איבר רגילה מהרשימה הזו הייתה משתמשת ב-`this` לפני שהאובייקט נבנה. `static int calcLen(const Point&, const Point&)` לא צריך `this`, ולכן `len(calcLen(a, b))` חוקי. הגרסה שאינה `static` בשקף מסומנת כזו שלא תתקמפל.
 :::
 :::
 
 :::trap
-Forgetting the semicolon after the class definition is a parse error, often reported on the next declaration. The semicolon is there because `struct Point { ... } p;` is one declaration.
+שכחת הנקודה-פסיק אחרי הגדרת המחלקה היא שגיאת פענוח, ולעיתים קרובות היא מדווחת על ההצהרה הבאה. הנקודה-פסיק שם כי `struct Point { ... } p;` היא הצהרה אחת.
 :::
 
 :::trap
-`void checkDebtAndGraduate(Student s)` receives a copy. `s.graduate()` sets the flag on the copy. The caller's student is unchanged. The session's repair is `Student& s`.
+`void checkDebtAndGraduate(Student s)` מקבל עותק. `s.graduate()` מדליק את הדגל על העותק. הסטודנט של הקורא לא משתנה. התיקון של התרגול הוא `Student& s`.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps1-link-vs-java source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-Session 1's comparison table asks where linking happens. State, for Java and for C++, when unresolved calls are tied to their definitions, and what file `g++ -c` produces.
+טבלת ההשוואה של תרגול 1 שואלת איפה הקישור קורה. ציינו, עבור Java ועבור C++, מתי קריאות שלא נפתרו נקשרות להגדרות שלהן, ואיזה קובץ `g++ -c` מייצר.
 
 :::hint
-Java's compiler does not emit machine code for one operating system.
+הקומפיילר של Java לא פולט קוד מכונה למערכת הפעלה אחת.
 :::
 :::hint
-C++ object files still contain symbols that other `.cpp` files define. Something after `-c` has to patch those in.
+קובצי אובייקט של C++ עדיין מכילים סמלים שקובצי `.cpp` אחרים מגדירים. משהו אחרי `-c` צריך לתקן אותם פנימה.
 :::
 :::hint
-The session's assembler step writes `*.o` on Unix.
+שלב האסמבלר בתרגול כותב `*.o` ב-Unix.
 :::
 :::solution
-Java compiles to bytecode and links at run time, when the virtual machine loads a class. There is no assembler step, because the bytecode is not a machine encoding.
+Java עוברת קומפילציה ל-bytecode ומקשרת בזמן ריצה, כשהמכונה הווירטואלית טוענת מחלקה. אין שלב אסמבלר, כי ה-bytecode אינו קידוד מכונה.
 
-`g++` by default preprocesses, compiles, and assembles. `g++ -c` stops after the object file: one `.o` per source file, symbols still unresolved. A later link, `g++` without `-c`, combines those objects, resolves cross-file calls, and uses `main` as the start address. If you skip the link, you have no executable.
+`g++` כברירת מחדל מריץ קדם-מעבד, קומפילציה ואסמבלי. `g++ -c` עוצר אחרי קובץ האובייקט: `.o` אחד לכל קובץ מקור, והסמלים עדיין לא נפתרו. קישור מאוחר יותר, `g++` בלי `-c`, מחבר את קובצי האובייקט האלה, פותר קריאות בין קבצים, ומשתמש ב-`main` ככתובת ההתחלה. אם מדלגים על הקישור, אין קובץ הרצה.
 :::
 :::
 
 :::problem id=ps1-makefile-first-target source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-A makefile lists `clean` first and `hello` second. `hello` depends on `helloWorld.o` and `run.o`. You type `make` in that directory. What runs, and what would you type to build `hello`?
+קובץ makefile רושם את `clean` ראשון ואת `hello` שני. `hello` תלוי ב-`helloWorld.o` וב-`run.o`. מקלידים `make` בתיקייה הזו. מה רץ, ומה הייתם מקלידים כדי לבנות את `hello`?
 
 :::hint
-`make` with no arguments does not search for a target named `all` unless that target is the one it finds first.
+`make` בלי ארגומנטים לא מחפש מטרה בשם `all` אלא אם זו המטרה שהוא מוצא ראשונה.
 :::
 :::hint
-The session says the default is the first target in the file.
+התרגול אומר שברירת המחדל היא המטרה הראשונה בקובץ.
 :::
 :::hint
-The recipe under a target is indented with a tab. The dependency line is `target: dep1 dep2`.
+הפקודה מתחת למטרה מוזחת בטאב. שורת התלות היא `target: dep1 dep2`.
 :::
 :::solution
-A bare `make` builds the first target, `clean`, and deletes the products. It does not build `hello`. `make hello` builds `hello`, and before that it builds `helloWorld.o` and `run.o` if those rules exist and the objects are older than their sources. Put the real program first, or name it `all` and put `all` first, if you want `make` to build the executable.
+`make` חשוף בונה את המטרה הראשונה, `clean`, ומוחק את התוצרים. הוא לא בונה את `hello`. `make hello` בונה את `hello`, ולפני זה הוא בונה את `helloWorld.o` ואת `run.o` אם הכללים האלה קיימים והאובייקטים ישנים מהמקורות שלהם. שימו את התוכנית האמיתית ראשונה, או קראו לה `all` ושימו את `all` ראשונה, אם אתם רוצים ש-`make` יבנה את קובץ ההרצה.
 :::
 :::
 
 :::problem id=ps3-pass-by-value source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
-`emphasize` should append three exclamation marks to the caller's string. The session shows three signatures. Which ones change the caller's string, and which one can be given a null?
+`emphasize` צריך לשרשר שלושה סימני קריאה למחרוזת של הקורא. התרגול מראה שלוש חתימות. אילו מהן משנות את המחרוזת של הקורא, ואיזו אפשר לתת לה null?
 
 ```cpp
 void emphasize(std::string word);
@@ -202,21 +222,21 @@ void emphasize(std::string* word);
 ```
 
 :::hint
-A by-value parameter is a different object from the caller's.
+פרמטר לפי ערך הוא אובייקט אחר מזה של הקורא.
 :::
 :::hint
-A reference must be bound to an object. A pointer can hold `nullptr`, and the body has to test it.
+רפרנס חייב להיקשר לאובייקט. מצביע יכול להחזיק `nullptr`, והגוף צריך לבדוק אותו.
 :::
 :::hint
-The body on the slide is `word.append(3, '!')` or `word->append(3, '!')`.
+הגוף בשקף הוא `word.append(3, '!')` או `word->append(3, '!')`.
 :::
 :::solution
-`std::string word` copies the string. `append` changes the copy. The caller is unchanged, and the copy constructor ran.
+`std::string word` מעתיק את המחרוזת. `append` משנה את העותק. הקורא לא משתנה, ובנאי ההעתקה רץ.
 
-`std::string& word` is another name for the caller's string. `append` changes that string. You cannot pass a null reference.
+`std::string& word` הוא שם נוסף למחרוזת של הקורא. `append` משנה את המחרוזת הזו. אי אפשר להעביר רפרנס null.
 
-`std::string* word` can be null. The session returns immediately when `word == nullptr`, and otherwise calls `word->append(3, '!')`, which changes the caller's string. The call site passes an address.
+`std::string* word` יכול להיות null. התרגול חוזר מיד כאשר `word == nullptr`, ואחרת קורא ל-`word->append(3, '!')`, שמשנה את המחרוזת של הקורא. אתר הקריאה מעביר כתובת.
 :::
 :::
 
-The initializer list and `this` are the ordinary half of a class. [Rule of three](topic:rule-of-three) is what changes when one of the members is a pointer to a buffer you allocated. [Inheritance](topic:inheritance) is what changes when the call through a base pointer should reach the derived function.
+רשימת האתחול ו-`this` הם החצי הרגיל של מחלקה. [חוק השלושה](topic:rule-of-three) הוא מה שמשתנה כשאחד האיברים הוא מצביע לחוצץ שהקציתם. [ירושה](topic:inheritance) הוא מה שמשתנה כשקריאה דרך מצביע למחלקת בסיס צריכה להגיע לפונקציה הנגזרת.

@@ -1,13 +1,13 @@
 id: systems-programming
-title: Systems Programming
-lang: en
-dir: ltr
+title: תכנות מערכות
+lang: he
+dir: rtl
 term: "2026"
 summary: >
-  Systems Programming (תכנות מערכות, 202-1-2031) takes a program apart into
-  the machine it actually runs on. You draw the stack and the heap, write the
-  special member functions a C++ class needs when it owns memory, then move
-  through Java, threads, sockets, the reactor, and a relational database.
+  תכנות מערכות (202-1-2031) מפרק תוכנית אל המכונה שהיא באמת רצה עליה.
+  מציירים את המחסנית ואת הערימה, כותבים את הפונקציות המיוחדות שמחלקה ב-C++
+  צריכה כשהיא מחזיקה זיכרון, ואז עוברים ל-Java, לחוטים, לשקעים, ל-Reactor,
+  ולבסיס נתונים רילציוני.
 
 changelog:
   - date: 2026-10-17
@@ -16,70 +16,74 @@ changelog:
     note: "Chapters follow the lecture decks. Past-paper practice no longer shows the year or the moed."
   - date: 2026-10-18
     note: "Each chapter gained a diagram of the idea it teaches, and three short traces for frames, pointer steps, and the link stage."
+  - date: 2026-10-18
+    note: "Worked examples now open on a real code block, with call, leak, static, and recursion pictures in the memory chapter."
+  - date: 2026-10-18
+    note: "The guide is in Hebrew, with the lecture names for each idea and the English terms the slides keep."
 
 sources:
   - path: "Classes/Chapter 1 - The Memory Model.pptx"
     type: lecture
     status: incorporated
-    note: "Address space, stack, heap, statics, code, and the Von Neumann cycle."
+    note: "מרחב הכתובות, המחסנית, הערימה, המשתנים הסטטיים, אזור הקוד, ומחזור פון נוימן."
     problems: [worked-stack-array, worked-frame-call]
   - path: "Classes/Chapter 2 - Pointers.pptx"
     type: lecture
     status: incorporated
-    note: "Addresses, pointer arithmetic, references, and lvalues."
+    note: "כתובות, אריתמטיקה של מצביעים, רפרנסים, ו-lvalue."
     problems: [worked-pointer-trace, worked-pointer-step]
   - path: "Classes/Chapter 3 - Classes and Objects.pptx"
     type: lecture
     status: incorporated
-    note: "Class layout, constructors, and initializer lists."
+    note: "מבנה מחלקה, בנאים, ורשימות אתחול."
     problems: [worked-initializer]
   - path: "Classes/Chapter 4 - Rule of Thee.pptx"
     type: lecture
     status: incorporated
-    note: "Destructor, copy constructor, and copy assignment."
+    note: "דיסטרקטור, בנאי העתקה, ואופרטור השמה."
     problems: [worked-copy-and-swap]
   - path: "Classes/Chapter 5 - Rule of Five and Zero.pptx"
     type: lecture
     status: incorporated
-    note: "Move operations, RAII, and smart pointers."
+    note: "העברה, RAII, ומצביעים חכמים."
     problems: [worked-move-image]
   - path: "Classes/Chapter 6 - Inheritance.pptx"
     type: lecture
     status: incorporated
-    note: "Derived classes, virtual functions, and the vtable."
+    note: "מחלקות נגזרות, פונקציות וירטואליות, וה-vtable."
     problems: [worked-virtual-call]
   - path: "Classes/Chapter 7 - Back to Java.pptx"
     type: lecture
     status: incorporated
-    note: "Java object layout, arrays, and the runtime the later chapters use."
+    note: "מבנה אובייקט ב-Java, מערכים, וסביבת הריצה של הפרקים הבאים."
     problems: [worked-array-layout]
   - path: "Classes/Chapter 8 - Concurrency.pptx"
     type: lecture
     status: incorporated
-    note: "Threads, races, locks, and liveness."
+    note: "חוטים, מרוצים, מנעולים, ובעיות סנכרון."
   - path: "Classes/Chapter 9 - Design by Contract.pptx"
     type: lecture
     status: incorporated
-    note: "Preconditions, postconditions, and invariants."
+    note: "תנאי קדם, תנאי סיום, ותנאים פנימיים."
     problems: [worked-crop-contract]
   - path: "Classes/Chapter 10 - Networking.pptx"
     type: lecture
     status: incorporated
-    note: "TCP, UDP, and the accept loop."
+    note: "TCP, UDP, ולולאת accept."
     problems: [worked-tcp-accept]
   - path: "Classes/Chapter 11 - Reactor.pptx"
     type: lecture
     status: incorporated
-    note: "The single-threaded selector loop and non-blocking channels."
+    note: "לולאת selector בחוט אחד, וערוצים בלי חסימה."
   - path: "Classes/Chapter 12 - Serialization.pptx"
     type: lecture
     status: incorporated
-    note: "Java Serializable, transient fields, and serialVersionUID."
+    note: "Serializable ב-Java, שדות transient, ו-serialVersionUID."
     problems: [worked-transient-hash]
   - path: "Classes/Chapter 13 - Persistance.pptx"
     type: lecture
     status: incorporated
-    note: "Relational tables, SQL, and joins."
+    note: "טבלאות רילציוניות, SQL, ו-join."
     problems: [worked-inner-join]
   - path: "Exrecises/SPL_PS1 (1).pptx"
     type: exercise
@@ -316,88 +320,88 @@ sources:
 topics:
   - id: memory-model
     file: topics/memory-model.md
-    title: The memory model
+    title: מודל הזיכרון
     exam_weight: core
     exam_shape: "Draw the stack and the heap after a by-value call. The trap is putting the buffer on the stack, or drawing a by-value parameter as the same object as the caller's."
     prerequisites: []
     unlocks: [pointers]
   - id: pointers
     file: topics/pointers.md
-    title: Pointers and references
+    title: מצביעים ורפרנסים
     exam_weight: tested
     exam_shape: "A repository of images behind a pointer array, returned by value from a local. The trap is treating the return as a copy of the pixels, or using sizeof of a pointer as a length."
     prerequisites: [memory-model]
     unlocks: [classes-and-objects]
   - id: classes-and-objects
     file: topics/classes-and-objects.md
-    title: Classes and objects
+    title: מחלקות ועצמים
     exam_weight: taught
     prerequisites: [pointers]
     unlocks: [rule-of-three]
   - id: rule-of-three
     file: topics/rule-of-three.md
-    title: Rule of three
+    title: חוק השלושה
     exam_weight: core
     exam_shape: "A small class owns a raw array. Write the destructor and the deep copy. The trap is the default memberwise copy, or an assignment that frees the buffer before the new one exists."
     prerequisites: [classes-and-objects]
     unlocks: [rule-of-five]
   - id: rule-of-five
     file: topics/rule-of-five.md
-    title: Rule of five and zero
+    title: חוק החמישה וחוק האפס
     exam_weight: core
     exam_shape: "Steal a buffer, or delay the clone until a write. The trap is leaving the source pointer alive so two destructors free one block, or copying a unique_ptr."
     prerequisites: [rule-of-three]
     unlocks: [inheritance]
   - id: inheritance
     file: topics/inheritance.md
-    title: Inheritance and polymorphism
+    title: ירושה
     exam_weight: core
     exam_shape: "Two derived types sit behind one base pointer. The call is non-virtual, the destructor is non-virtual, or an overload is used where an override was needed. The trap is a memory drawing that omits the vptr, or a delete through the base that skips the derived destructor."
     prerequisites: [rule-of-five]
     unlocks: [java-runtime]
   - id: java-runtime
     file: topics/java-runtime.md
-    title: Back to Java
+    title: חזרה ל-Java
     exam_weight: taught
     prerequisites: [inheritance]
     unlocks: [concurrency]
   - id: concurrency
     file: topics/concurrency.md
-    title: Concurrency
+    title: מקביליות
     exam_weight: core
     exam_shape: "A shared structure. Show a race, a deadlock, or a repair with synchronized, a semaphore, or an atomic. The trap is a lock order that waits forever, or protecting the update but not the read that publishes it."
     prerequisites: [java-runtime]
     unlocks: [design-by-contract]
   - id: design-by-contract
     file: topics/design-by-contract.md
-    title: Design by contract
+    title: תכנון לפי חוזה
     exam_weight: core
     exam_shape: "Write the invariant and the preconditions and postconditions of a method. The trap is an invariant that forgets the empty case, or a postcondition that is only true when nobody else mutates the object."
     prerequisites: [concurrency]
     unlocks: [networking]
   - id: networking
     file: topics/networking.md
-    title: Networking
+    title: תקשורת
     exam_weight: core
     exam_shape: "Replace a delimiter with a length prefix, cap the clients, or write a small command protocol. The trap is treating a TCP read as a whole message, or forgetting that UDP has no accept."
     prerequisites: [design-by-contract]
     unlocks: [reactor]
   - id: reactor
     file: topics/reactor.md
-    title: The reactor
+    title: Reactor
     exam_weight: core
     exam_shape: "Edit the reactor from the appendix. Move tokenization off the selector, cap work per client, add a log, or serve a query without blocking select. The trap is a heavy call on the selector thread, or leaving OP_WRITE set so select spins."
     prerequisites: [networking]
     unlocks: [serialization]
   - id: serialization
     file: topics/serialization.md
-    title: Serialization
+    title: סיריאליזציה
     exam_weight: taught
     prerequisites: [reactor]
     unlocks: [persistence]
   - id: persistence
     file: topics/persistence.md
-    title: Persistence and SQL
+    title: אחסון ו-SQL
     exam_weight: core
     exam_shape: "Design the tables, with a primary key, foreign keys, and a junction table for a many-to-many, then write one SELECT with a join. The trap is a Cartesian product with no join condition, or a list stored as columns instead of a junction table."
     prerequisites: [serialization]
@@ -406,85 +410,85 @@ topics:
 glossary:
   - term: stack
     topic: memory-model
-    definition: "The LIFO region of automatic storage, one activation frame per call, freed when the call returns."
+    definition: "המחסנית. אזור האחסון האוטומטי בסדר LIFO. לכל קריאה יש מסגרת הפעלה אחת, והיא משתחררת כשהקריאה חוזרת."
   - term: heap
     topic: memory-model
-    definition: "The region of dynamic storage obtained with new and released only by a matching delete."
+    definition: "הערימה. אזור האחסון הדינמי. מקבלים אותו ב-new ומשחררים רק ב-delete תואם."
   - term: pointer
     topic: pointers
-    definition: "An object whose value is the address of another object, or null."
+    definition: "מצביע. אובייקט שהערך שלו הוא הכתובת של אובייקט אחר, או null."
   - term: reference
     topic: pointers
-    definition: "A name bound to an existing object. It cannot be null and it cannot be reseated."
+    definition: "רפרנס. שם שקשור לאובייקט קיים. הוא לא יכול להיות null, ואי אפשר לקשור אותו מחדש."
   - term: destructor
     topic: rule-of-three
-    definition: "The special member function that runs when an object's lifetime ends and that frees what the object owns."
+    definition: "דיסטרקטור. הפונקציה המיוחדת שרצה כשזמן החיים של אובייקט נגמר, ומשחררת את מה שהוא מחזיק."
   - term: copy constructor
     topic: rule-of-three
-    definition: "The constructor that builds a new object as a deep copy of another of the same type."
+    definition: "בנאי העתקה. הבנאי שבונה אובייקט חדש כעותק עמוק של אובייקט אחר מאותו טיפוס."
   - term: assignment operator
     topic: rule-of-three
-    definition: "The operator that replaces an existing object's resources with a copy of another's, and that must stay safe if the two are the same object."
+    definition: "אופרטור השמה. מחליף את המשאבים של אובייקט קיים בעותק של אובייקט אחר, ונשאר בטוח גם אם שניהם אותו אובייקט."
   - term: move constructor
     topic: rule-of-five
-    definition: "The constructor that steals a source object's buffer and leaves that source empty so its destructor frees nothing."
+    definition: "בנאי-העברה. גונב את המאגר של אובייקט המקור ומשאיר את המקור ריק, כך שהדיסטרקטור שלו לא משחרר כלום."
   - term: RAII
     topic: rule-of-five
-    definition: "Binding a resource's lifetime to an object's lifetime, so the destructor is the release."
+    definition: "קישור זמן החיים של משאב לזמן החיים של אובייקט, כך שהדיסטרקטור הוא השחרור."
   - term: unique_ptr
     topic: rule-of-five
-    definition: "A smart pointer that owns one object, cannot be copied, and can be moved."
+    definition: "מצביע חכם ייחודי. מחזיק אובייקט אחד, אי אפשר להעתיק אותו, ואפשר להעביר אותו."
   - term: shared_ptr
     topic: rule-of-five
-    definition: "A smart pointer that shares ownership through a count and deletes the object when the count hits zero."
+    definition: "מצביע חכם משותף. משתף בעלות באמצעות מונה, ומוחק את האובייקט כשהמונה מגיע לאפס."
   - term: virtual function
     topic: inheritance
-    definition: "A member function whose implementation is chosen from the dynamic type of the object, through the vtable."
+    definition: "פונקציה וירטואלית. המימוש שלה נבחר לפי הטיפוס הדינמי של האובייקט, דרך ה-vtable."
   - term: vtable
     topic: inheritance
-    definition: "The per-class table of virtual-function addresses. Each object holds a pointer to its class's table."
+    definition: "הטבלה של כתובות הפונקציות הווירטואליות, אחת לכל מחלקה. כל אובייקט מחזיק vptr לטבלה של המחלקה שלו."
   - term: invariant
     topic: design-by-contract
-    definition: "A condition that is true of an object whenever no method of the object is running."
+    definition: "תנאי פנימי. נכון לגבי אובייקט בכל זמן שאף פעולה ציבורית שלו לא רצה."
   - term: precondition
     topic: design-by-contract
-    definition: "What the caller must make true before a method runs. The method may assume it."
+    definition: "תנאי קדם. מה שהקורא חייב לקיים לפני שפעולה רצה. הפעולה רשאית להניח שהוא מתקיים."
   - term: postcondition
     topic: design-by-contract
-    definition: "What the method guarantees when it returns, provided the precondition held."
+    definition: "תנאי סיום. מה שהפעולה מבטיחה כשהיא חוזרת, בתנאי שתנאי הקדם התקיים."
   - term: thread
     topic: concurrency
-    definition: "A sequential flow of execution that shares the process heap with the other threads."
+    definition: "חוט-ביצוע. רצף סדרתי שחולק את הערימה של התהליך עם שאר החוטים."
   - term: deadlock
     topic: concurrency
-    definition: "A wait cycle in which each thread holds a lock the next thread needs."
+    definition: "נעילה הדדית. מעגל המתנה שבו כל חוט מחזיק מנעול שהחוט הבא צריך."
   - term: livelock
     topic: concurrency
-    definition: "Threads keep changing state in response to each other and never make progress."
+    definition: "החוטים ממשיכים לשנות מצב זה בתגובה לזה, ולא מתקדמים."
   - term: starvation
     topic: concurrency
-    definition: "A thread that is ready to run is passed over indefinitely by the scheduler or by the lock."
+    definition: "הרעבה. חוט שמוכן לרוץ נדחה בלי סוף על ידי המתזמן או על ידי המנעול."
   - term: TCP
     topic: networking
-    definition: "A connection-oriented, reliable byte stream. A read returns some of the bytes, not necessarily one message."
+    definition: "זרם בתים אמין מעל חיבור. קריאה מחזירה חלק מהבתים, לא בהכרח הודעה שלמה."
   - term: UDP
     topic: networking
-    definition: "A connectionless datagram protocol. There is no accept, and a datagram arrives whole or not at all."
+    definition: "פרוטוקול דאטאגרמות בלי חיבור. אין accept, ודאטאגרמה מגיעה שלמה או בכלל לא."
   - term: reactor
     topic: reactor
-    definition: "One thread that waits in select and dispatches ready non-blocking channels."
+    definition: "חוט אחד שממתין ב-select ומפנה ערוצים לא חוסמים שמוכנים."
   - term: selector
     topic: reactor
-    definition: "The Java NIO object that reports which registered channels are ready to read or write."
+    definition: "אובייקט ה-NIO של Java שמדווח אילו ערוצים רשומים מוכנים לקריאה או לכתיבה."
   - term: serialization
     topic: serialization
-    definition: "A representation of an object as a byte sequence that records its type, the shape of its fields, and the field values."
+    definition: "סיריאליזציה. ייצוג של אובייקט כסדרת בתים שרושמת את הטיפוס, את צורת השדות, ואת ערכי השדות."
   - term: primary key
     topic: persistence
-    definition: "The column or columns that identify one row of a table."
+    definition: "מפתח ראשי. העמודה או העמודות שמזהות שורה אחת בטבלה."
   - term: foreign key
     topic: persistence
-    definition: "A column whose values must equal a key of another table, the relational form of a pointer."
+    definition: "מפתח זר. עמודה שהערכים שלה חייבים להיות שווים למפתח של טבלה אחרת. הצורה הרילציונית של מצביע."
 
 exams:
   - year: 2015

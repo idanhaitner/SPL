@@ -18,17 +18,17 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
     <article className="page chapter">
       <Visit courseId={course.id} slug={topic.id} />
       <header className="masthead">
-        <p className="kicker">Chapter {String(index + 1).padStart(2, "0")}</p>
+        <p className="kicker">פרק {String(index + 1).padStart(2, "0")}</p>
         <h1>{topic.title}</h1>
         <span className="masthead-num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
       </header>
       <Chapter blocks={topic.blocks} courseId={course.id} />
-      <nav className={`pager${previous && next ? " is-pair" : " is-single"}`} aria-label="Chapters">
+      <nav className={`pager${previous && next ? " is-pair" : " is-single"}`} aria-label="פרקים">
         {previous && (
           <Link className="pager-prev" href={`/topics/${previous.id}`}>
             <span className="pager-arrow" aria-hidden="true" />
             <span className="pager-copy">
-              <span>Previous</span>
+              <span>הקודם</span>
               <strong>{previous.title}</strong>
             </span>
           </Link>
@@ -36,7 +36,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         {next && (
           <Link className="pager-next" href={`/topics/${next.id}`}>
             <span className="pager-copy">
-              <span>Next</span>
+              <span>הבא</span>
               <strong>{next.title}</strong>
             </span>
             <span className="pager-arrow" aria-hidden="true" />

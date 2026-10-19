@@ -19,13 +19,13 @@ export default function GlossaryPage() {
   return (
     <article className="page glossary">
       <header className="masthead">
-        <p className="kicker">Glossary</p>
-        <h1>Terms</h1>
+        <p className="kicker">מונחים</p>
+        <h1>מונחים</h1>
         <span className="masthead-num" aria-hidden="true">{String(course.glossary.length).padStart(2, "0")}</span>
       </header>
-      <p className="lead">The words the lectures keep, grouped by the chapter that defines them.</p>
+      <p className="lead">המילים שהשיעורים שומרים, לפי הפרק שמגדיר אותן.</p>
       {groups.length > 0 && (
-        <nav className="glossary-jump" aria-label="Chapters in the glossary">
+        <nav className="glossary-jump" aria-label="פרקים במונחים">
           {groups.map((group) => (
             <a key={group.id} href={`#glossary-${group.id}`}>{group.title}</a>
           ))}
@@ -42,7 +42,7 @@ export default function GlossaryPage() {
               <article className="glossary-card" id={entry.anchor} key={entry.anchor}>
                 <h3>{entry.term}</h3>
                 <p>{entry.definition}</p>
-                <Link href={`/topics/${entry.topic}`}>Open chapter</Link>
+                <Link href={`/topics/${entry.topic}`}>לפתיחת הפרק</Link>
               </article>
             ))}
           </div>

@@ -1,36 +1,36 @@
 ---
 id: java-runtime
-title: Back to Java
+title: חזרה ל-Java
 sources:
   - "Classes/Chapter 7 - Back to Java.pptx"
   - "Exrecises/SPL_PS5.pptx"
 ---
 
-The second half of the course writes servers, threads, and databases in Java. Chapter 7 is the reset: what the virtual machine actually stores, which methods are virtual, and how a failure leaves a method.
+החצי השני של הקורס כותב שרתים, חוטי-ביצוע (thread) ומסדי נתונים ב-Java. פרק 7 הוא האיפוס: מה המכונה הווירטואלית (virtual machine) באמת שומרת, אילו מתודות וירטואליות (virtual), ואיך כישלון יוצא ממתודה.
 
-## The virtual machine
+## המכונה הווירטואלית
 
-Java is chosen here because the program runs on a virtual machine, so the same bytecode moves between operating systems, and because garbage collection removes the `delete` errors of the C++ half. The cost is that you have to understand the object graph the collector sees.
+Java נבחרה כאן כי התוכנית רצה על מכונה וירטואלית, ולכן אותו בייטקוד (bytecode) עובר בין מערכות הפעלה, ומפני שאוסף-האשפה (Garbage Collector) מסיר את שגיאות ה-`delete` של חצי ה-C++. המחיר הוא שצריך להבין את גרף האובייקטים (object) שהאוסף רואה.
 
-A source file ends in `.java` and compiles to a `.class` file of bytecode, the machine language of the JVM. Bytecode is not tied to one processor. The compiler's job, as the lecture lists it, is to check the program and to compress it into that form: full type checking, access control, argument matching, checked exceptions, inheritance and interfaces, and reachability. Most of the structure survives in the class file: names, signatures, the inheritance tree, and the shape of `if`, `while`, `for`, and `switch`. The lecture's point is that bytecode is largely reversible.
+קובץ מקור נגמר ב-`.java` ומתקמפל לקובץ `.class` של בייטקוד, שפת המכונה של ה-JVM. בייטקוד אינו קשור למעבד אחד. תפקיד הקומפיילר, כפי שההרצאה מונה אותו, הוא לבדוק את התוכנית ולדחוס אותה לצורה הזאת: בדיקת טיפוסים מלאה, בקרת גישה, התאמת ארגומנטים, חריגות בדוקות (exception, checked exception), ירושה ואינטרפייסים (interface), ונגישות. רוב המבנה שורד בקובץ ה-class: שמות, חתימות, עץ הירושה, וצורת `if`, `while`, `for` ו-`switch`. הנקודה של ההרצאה היא שבייטקוד הפיך ברובו.
 
-A program is classes only. There are no free functions and no globals. Some class has `public static void main(String[] args)`.
+תוכנית היא מחלקות (class) בלבד. אין פונקציות חופשיות ואין משתנים גלובליים. למחלקה כלשהי יש `public static void main(String[] args)`.
 
-:::definition id=def-java-storage title="Where Java stores a value" source="Classes/Chapter 7 - Back to Java.pptx"
-A local variable that is a primitive, or a reference that is not a field, lives on the stack. Objects live on the heap, and so do their fields, even fields that are primitives or references. Distinct objects are distinct heap blocks. A class is loaded as one `Class` object that describes fields, methods, and the hierarchy, and that object is what reflection and `new` consult.
+:::definition id=def-java-storage title="איפה Java שומרת ערך" source="Classes/Chapter 7 - Back to Java.pptx"
+משתנה מקומי שהוא טיפוס פרימיטיבי (primitive type), או רפרנס (reference) שאינו שדה, חי על המחסנית (stack). אובייקטים חיים על הערימה (heap), וכך גם השדות שלהם, גם שדות שהם טיפוסים פרימיטיביים או רפרנסים. אובייקטים נפרדים הם בלוקים נפרדים בערימה. מחלקה נטענת כאובייקט `Class` אחד שמתאר שדות, מתודות והיררכיה, והאובייקט הזה הוא מה שרפלקשן ו-`new` בודקים.
 :::
 
-An array is an object. It lives on the heap, it stores its length, and every index is checked. `int[] a = new int[10]` is a reference on the stack and an array object on the heap. An array of references is a heap array of pointers, each of which may point at its own object. That indirection is the lecture's complaint about Java arrays. A multi-dimensional array is an array of arrays, not one rectangular block.
+מערך הוא אובייקט. הוא חי על הערימה, הוא שומר את האורך שלו, וכל אינדקס נבדק. `int[] a = new int[10]` הוא רפרנס על המחסנית ואובייקט מערך על הערימה. מערך של רפרנסים הוא מערך בערימה של מצביעים (pointer), וכל אחד מהם יכול להצביע על אובייקט משלו. העקיפין הזה הוא התלונה של ההרצאה על מערכים ב-Java. מערך רב-ממדי הוא מערך של מערכים, לא בלוק מלבני אחד.
 
-![An int array is one heap block of ints. A String array is a heap block of references, and each string is a further object](../assets/figures/java-array.svg)
+![מערך int הוא בלוק אחד של int-ים בערימה. מערך String הוא בלוק של רפרנסים בערימה, וכל מחרוזת היא אובייקט נוסף](../assets/figures/java-array.svg)
 
-Wrapper types box a primitive. `Integer j = 3` is autoboxing: the compiler inserts the conversion to an `Integer` object. `Integer i = new Integer(3)` is the explicit form. The lecture warns that this allocation is easy to miss inside a hot loop.
+מחלקות עוטפות אוגדות טיפוס פרימיטיבי. `Integer j = 3` הוא אגרוף אוטומטי (autoboxing): הקומפיילר מכניס את ההמרה לאובייקט `Integer`. `Integer i = new Integer(3)` הוא הצורה המפורשת. ההרצאה מזהירה שההקצאה הזאת קלה לפספוס בתוך לולאה חמה.
 
-`Object` contributes `equals` for value equality and the other methods every class inherits. `==` on references compares identity, not the field values, unless you are comparing primitives.
+`Object` תורם את `equals` לשוויון של ערכים, ואת שאר המתודות שכל מחלקה יורשת. `==` על רפרנסים משווה זהות, לא את ערכי השדות. על טיפוסים פרימיטיביים `==` משווה את הערכים.
 
-## Inheritance, interfaces, exceptions
+## ירושה, אינטרפייסים וחריגות
 
-Java inheritance uses `extends`, and it is public only. Every class extends `Object`, directly or through its parent. A class has one superclass. It may implement many interfaces. `@Override` marks an override. `super` names the base. Every instance method is virtual. Static methods are not: a static call uses the compile-time class, which the lecture demonstrates with `A.staticFunc` hidden by `B`.
+ירושה ב-Java משתמשת ב-`extends`, והיא `public` בלבד. כל מחלקה מרחיבה את `Object`, ישירות או דרך ההורה. למחלקה יש מחלקת-על אחת. היא יכולה לממש אינטרפייסים רבים. `@Override` מסמן דריסה. `super` מציין את מחלקת הבסיס. כל מתודת מופע היא וירטואלית. מתודות סטטיות אינן: קריאה סטטית משתמשת במחלקה של זמן הקומפילציה, וההרצאה מדגימה את זה עם `A.staticFunc` ש-`B` מסתיר.
 
 ```java
 class A {
@@ -42,7 +42,7 @@ class B extends A {
 }
 ```
 
-An interface says what the object can do and, originally, gives no code. A class may implement several. From the practical session, an interface may also carry a default method, used when one implementation fits almost everyone. `Stack.isEmpty` as `return size() == 0` is the session's example: it only calls operations the interface already has.
+אינטרפייס אומר מה האובייקט יודע לעשות, ובמקור אינו נותן קוד. מחלקה יכולה לממש כמה. מהתרגול, אינטרפייס יכול גם לשאת מתודת ברירת מחדל, כשמימוש אחד מתאים כמעט לכולם. `Stack.isEmpty` כ-`return size() == 0` הוא הדוגמה של התרגול: הוא קורא רק לפעולות שהאינטרפייס כבר כולל.
 
 ```java
 interface Worker { void work(); }
@@ -52,63 +52,69 @@ class Circle extends Shape {
 }
 ```
 
-An abstract class mixes real methods with abstract ones and cannot be instantiated. An interface is the pure "what", with default methods as the later exception.
+מחלקה אבסטרקטית מערבבת מתודות אמיתיות עם מתודות מופשטות, ואי אפשר ליצור ממנה מופע. אינטרפייס הוא ה"מה" הטהור, ומתודות ברירת מחדל הן החריג המאוחר.
 
-:::definition id=def-exception title="Exceptions" source="Classes/Chapter 7 - Back to Java.pptx"
-An exception is a failure the virtual machine reports at run time by throwing an object. Checked exceptions extend `Exception`, may be legitimate failures such as a missing file, and must be caught or declared with `throws`. Unchecked exceptions extend `RuntimeException` and represent bugs: a null dereference, a bad index, division by zero. `Error` extends `java.lang.Error` and is a failure of the runtime itself, such as `StackOverflowError` or `OutOfMemoryError`. You do not catch those in ordinary code.
+:::definition id=def-exception title="חריגות" source="Classes/Chapter 7 - Back to Java.pptx"
+חריגה היא כישלון שהמכונה הווירטואלית מדווחת עליו בזמן ריצה על ידי זריקת אובייקט. חריגות בדוקות יורשות מ-`Exception`, יכולות להיות כישלונות לגיטימיים כמו קובץ חסר, וחייבות להיתפס או להיות מוצהרות עם `throws`. חריגות לא-בדוקות (unchecked exception) יורשות מ-`RuntimeException` ומייצגות באגים: גישה דרך null, אינדקס שגוי, חלוקה באפס. `Error` יורש מ-`java.lang.Error` והוא כישלון של סביבת הריצה עצמה, כמו `StackOverflowError` או `OutOfMemoryError`. לא תופסים אותן בקוד רגיל.
 :::
 
-`try` runs the body. `catch` handles one type. `finally` runs on the way out, including on `return`, `break`, and a thrown exception. Session 5's picture is a chain of calls: the exception walks back until a frame has a handler. If `main` has none, the JVM terminates the program.
+`try` מריץ את הגוף. `catch` מטפל בטיפוס אחד. `finally` רץ בדרך החוצה, כולל ב-`return`, ב-`break`, ובחריגה שנזרקה. התמונה של תרגול 5 היא שרשרת קריאות: החריגה הולכת אחורה עד שלמסגרת יש מטפל. אם ל-`main` אין מטפל, ה-JVM מסיים את התוכנית.
 
-Closing a resource can itself throw. A `close` inside `finally` can mask the original exception. Try-with-resources puts an `AutoCloseable` in the `try` header and closes it. If the body throws and `close` throws too, the close exception is suppressed and attached to the original, which is the session's last slide.
+סגירת משאב יכולה בעצמה לזרוק. `close` בתוך `finally` יכול להסתיר את החריגה המקורית. try-with-resources שם `AutoCloseable` בכותרת ה-`try` וסוגר אותו. אם הגוף זורק וגם `close` זורק, חריגת ה-`close` מדוכאת ומצורפת למקורית, וזה השקף האחרון של התרגול.
 
-The collector walks objects reachable from stacks and from statics. An object with no path is reclaimed. There is no `delete`. A leak in this model is a reference you still hold.
+אוסף-האשפה עובר על אובייקטים שנגישים ממחסניות וממשתנים סטטיים. אובייקט בלי מסלול מפונה. אין `delete`. דליפה במודל הזה היא רפרנס שעדיין מחזיקים.
 
 :::problem id=worked-array-layout source="Classes/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
-`int[] a = new int[10];` and `String[] b = new String[10];` inside `main`. What is on the stack, and what is on the heap?
+מה על המחסנית, ומה על הערימה?
+
+```java
+int[] a = new int[10];
+String[] b = new String[10];
+b[0] = new String("Avi");
+```
 
 :::solution
-`a` and `b` are references in `main`'s frame. `a` points at one heap array object that stores a header, the length 10, and ten `int`s. `b` points at one heap array of ten references. Those references start null. Each `new String` you later store is a further heap object. The ten strings are not inside `b`'s block.
+`a` ו-`b` הם רפרנסים במסגרת של `main`. `a` מצביע על אובייקט מערך אחד בערימה ששומר כותרת, את האורך 10, ועשרה `int`. `b` מצביע על מערך אחד בערימה של עשרה רפרנסים. הרפרנסים האלה מתחילים ב-null. `b[0] = new String("Avi")` שומר אובייקט ערימה נוסף אחד בתא הראשון. עשר המחרוזות אינן בתוך הבלוק של `b`, ותשעת התאים האחרים נשארים null.
 :::
 :::
 
 :::check id=chk-checked
-A method calls an API that throws `java.io.FileNotFoundException`, a checked exception. What does the compiler require?
+מתודה קוראת ל-API שזורק `java.io.FileNotFoundException`, חריגה בדוקה. מה הקומפיילר דורש?
 
-- [ ] Nothing, because only `Error` is mandatory
-- [x] A `try/catch` for that exception, or a `throws` clause
-- [ ] A `finally` block and no `catch`
+- [ ] כלום, כי רק `Error` הוא חובה
+- [x] `try/catch` לחריגה הזאת, או פסקת `throws`
+- [ ] בלוק `finally` ובלי `catch`
 
-Checked exceptions are part of the method's type. Unchecked exceptions and `Error` are not.
+חריגות בדוקות הן חלק מטיפוס המתודה. חריגות לא-בדוקות ו-`Error` נשארות מחוץ לטיפוס.
 :::
 
 :::trap
-`==` on two `Integer` objects compares references. Two boxed `200`s can be different objects. `equals` compares the values. The autobox cache makes some small integers share one object, which is why `==` appears to work until the number leaves the cache.
+`==` על שני אובייקטי `Integer` משווה רפרנסים. שני ערכי `200` אגורים יכולים להיות אובייקטים שונים. `equals` משווה את הערכים. מטמון האגרוף גורם לכמה שלמים קטנים לחלוק אובייקט אחד, ולכן `==` נראה עובד עד שהמספר יוצא מהמטמון.
 :::
 
 :::trap
-Catching `Error`, or catching `Exception` around a programming bug, hides the failure the lecture wants you to see. `finally` that throws replaces the exception you were handling.
+תפיסת `Error`, או תפיסת `Exception` סביב באג תכנותי, מסתירה את הכישלון שההרצאה רוצה שתראה. `finally` שזורק מחליף את החריגה שטיפלת בה.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps5-checked-exception source="Exrecises/SPL_PS5.pptx" kind=exercise solution_origin=source
-Session 5 contrasts a checked exception with an unchecked one. `FileNotFoundException` is checked. `ArithmeticException` is unchecked. For each, say whether the program compiles if the caller ignores it, and where a thrown exception goes if no frame handles it.
+תרגול 5 מנגיד חריגה בדוקה עם חריגה לא-בדוקה. `FileNotFoundException` בדוקה. `ArithmeticException` אינה בדוקה. לכל אחת, אמור אם התוכנית מתקמפלת כשהקורא מתעלם ממנה, ולאן חריגה שנזרקה הולכת אם אף מסגרת אינה מטפלת בה.
 
 :::hint
-The session's table: unchecked compiles even when it is ignored. Checked does not.
+הטבלה של התרגול: חריגה לא-בדוקה מתקמפלת גם כשמתעלמים ממנה. חריגה בדוקה אינה מתקמפלת כשמתעלמים ממנה.
 :::
 :::hint
-Handling a checked exception is `try/catch` or `throws` on the method.
+טיפול בחריגה בדוקה הוא `try/catch` או `throws` על המתודה.
 :::
 :::hint
-The call-stack picture ends at the JVM when `main` has no handler.
+תמונת מחסנית הקריאות נגמרת ב-JVM כשל-`main` אין מטפל.
 :::
 :::solution
-Ignoring `ArithmeticException` still compiles. Handling it is optional and usually wrong if it means a bug you should fix. Ignoring `FileNotFoundException` does not compile. The method must catch it or declare `throws FileNotFoundException`, and the caller then faces the same choice.
+התעלמות מ-`ArithmeticException` עדיין מתקמפלת. הטיפול בה אופציונלי, ובדרך כלל שגוי אם הכוונה לבאג שצריך לתקן. התעלמות מ-`FileNotFoundException` אינה מתקמפלת. המתודה חייבת לתפוס אותה או להצהיר `throws FileNotFoundException`, והקורא ניצב אז בפני אותה בחירה.
 
-If the exception is thrown and no frame from the throw site out to `main` has a matching `catch`, the JVM terminates the program and reports the exception. `finally` blocks along that walk still run. A try-with-resources closes the resource on that path; a second failure from `close` is suppressed rather than replacing the first exception.
+אם החריגה נזרקת ולאף מסגרת מאתר הזריקה ועד `main` אין `catch` מתאים, ה-JVM מסיים את התוכנית ומדווח את החריגה. בלוקי `finally` לאורך ההליכה הזאת עדיין רצים. try-with-resources סוגר את המשאב במסלול הזה; כישלון שני מ-`close` מדוכא ואינו מחליף את החריגה הראשונה.
 :::
 :::
 
-Java's "every instance method is virtual" is the rule [Inheritance](topic:inheritance) had to ask for with the `virtual` keyword. Next, [Concurrency](topic:concurrency) is what happens when more than one of those methods runs at once.
+הכלל שכל מתודת מופע ב-Java היא וירטואלית הוא הכלל ש[ירושה](topic:inheritance) נאלץ לבקש עם מילת המפתח `virtual`. בהמשך, [מקביליות](topic:concurrency) הוא מה שקורה כשיותר מאחת מהמתודות האלה רצה בבת אחת.

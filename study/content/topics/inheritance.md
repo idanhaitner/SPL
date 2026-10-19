@@ -1,6 +1,6 @@
 ---
 id: inheritance
-title: Inheritance and polymorphism
+title: ירושה
 sources:
   - "Classes/Chapter 6 - Inheritance.pptx"
   - "Exrecises/SPL_PS3.pptx"
@@ -18,7 +18,7 @@ sources:
   - "Exams/24-b-solution.pdf"
 ---
 
-Inheritance (ירושה) builds a new class on an existing one. The base class (מחלקת בסיס) is the one that already exists. The derived class (מחלקה נגזרת) adds members and can replace behavior. The colon in the class head is the C++ spelling of Java's `extends`.
+ירושה (inheritance) בונה מחלקה (class) חדשה על מחלקה קיימת. מחלקת הבסיס (base class) היא זו שכבר קיימת. המחלקה הנגזרת (derived class) מוסיפה איברים ויכולה להחליף התנהגות. הנקודתיים בראש המחלקה הן האיות של C++ ל-`extends` של Java.
 
 ```cpp
 class BlurFilter : public Filter {
@@ -29,11 +29,11 @@ public:
 };
 ```
 
-The derived constructor must call a base constructor. If it does not, the compiler tries the base default constructor, and the program fails to compile when the base has none. Session 3 shows both the explicit `Student(...) : Person(name) {}` and the implicit form that only compiles when `Person` can be built with no arguments.
+הבנאי (constructor) של המחלקה הנגזרת חייב לקרוא לבנאי של מחלקת הבסיס. אם הוא לא קורא, המהדר מנסה את בנאי ברירת המחדל של הבסיס, והתוכנית נכשלת בהידור כשלבסיס אין בנאי כזה. תרגול 3 מראה גם את הצורה המפורשת `Student(...) : Person(name) {}` וגם את הצורה המשתמעת, שמתקמפלת רק כשאפשר לבנות `Person` בלי ארגומנטים.
 
-## What is-a actually requires
+## מה יחס is-a באמת דורש
 
-An upcast (המרה למעלה) stores a derived object in a base pointer or a base reference. The justification on the slide is the is-a relation: a `BlurFilter` is a `Filter`.
+המרה למעלה (upcasting) שומרת אובייקט (object) נגזר במצביע (pointer) של מחלקת הבסיס או ברפרנס (reference) של מחלקת הבסיס. ההצדקה בשקף היא יחס is-a: `BlurFilter` הוא `Filter`.
 
 ```cpp
 void process(Image& img, const Filter& filter);
@@ -41,39 +41,39 @@ BlurFilter blur(50.0);
 process(img, blur);
 ```
 
-The same upcast works with `unique_ptr<Filter>` holding a `BlurFilter`.
+אותה המרה למעלה עובדת עם מצביע חכם ייחודי (unique_ptr): `unique_ptr<Filter>` שמחזיק `BlurFilter`.
 
-:::definition id=def-lsp title="Liskov substitution" source="Classes/Chapter 6 - Inheritance.pptx"
-The Liskov substitution principle (עקרון ההחלפה של ליסקוב): a derived object must be usable wherever a base object is required, without breaking the base invariants. It is a statement about behavior, not about sharing field names.
+:::definition id=def-lsp title="עקרון ההחלפה של ליסקוב (Liskov Substitution Principle)" source="Classes/Chapter 6 - Inheritance.pptx"
+עקרון ההחלפה של ליסקוב: אובייקט נגזר חייב להיות שמיש בכל מקום שנדרש אובייקט של מחלקת הבסיס, בלי לשבור את שמורות הבסיס. זה משפט על התנהגות, לא על שיתוף שמות של שדות.
 :::
 
-The lecture's counterexample is `SquareImage : Image` whose `crop` can change the width and the height independently, so the result is no longer square. Overriding `crop` to refuse that change breaks the base contract, which promised a crop. The inheritance is the wrong tool. A square is not an image-that-you-may-crop-freely.
+דוגמת הנגד בהרצאה היא `SquareImage : Image` שה-`crop` שלו יכול לשנות את הרוחב ואת הגובה בנפרד, כך שהתוצאה כבר אינה ריבוע. override של `crop` כדי לסרב לשינוי הזה שובר את החוזה של הבסיס, שהבטיח חיתוך. הירושה היא הכלי הלא נכון. ריבוע אינו תמונה שמותר לחתוך בחופשיות.
 
-### Public, protected, private
+### public, protected, private
 
-Encapsulation (אנקפסולציה) is giving access only to the code that needs it. The three levels are `public`, `protected`, and `private`. C++ also has three kinds of inheritance. Java has only the public kind.
+אנקפסולציה (encapsulation) היא לתת גישה רק לקוד שצריך אותה. שלוש הרמות הן `public`, `protected` ו-`private`. ל-C++ יש גם שלושה סוגי ירושה. ל-Java יש רק את הסוג ה-public.
 
-| inheritance | public member becomes | protected member becomes | private member |
+| ירושה | חבר public הופך ל- | חבר protected הופך ל- | חבר private |
 | --- | --- | --- | --- |
-| public | public | protected | inaccessible |
-| protected | protected | protected | inaccessible |
-| private | private | private | inaccessible |
+| public | public | protected | לא נגיש |
+| protected | protected | protected | לא נגיש |
+| private | private | private | לא נגיש |
 
-Public inheritance is is-a. Private inheritance is a has-a spelling the lecture tells you not to use for a filter stuck onto an image. Composition is the has-a the lecture wants: `Image` holds a `Filter*` and calls `filter->apply(*this)`. Protected inheritance is the "limited" middle the slide names and then does not use.
+ירושה public היא is-a. ירושה private היא איות של has-a שההרצאה אומרת לא להשתמש בו בשביל מסנן שמוצמד לתמונה. הרכבה / קומפוזיציה (composition) היא ה-has-a שההרצאה רוצה: `Image` מחזיק `Filter*` וקורא ל-`filter->apply(*this)`. ירושת protected היא האמצע ה«מוגבל» שהשקף נוקב בשמו ואז לא משתמש בו.
 
-### Shadowing and virtual functions
+### הצללה (shadowing) ופונקציות וירטואליות (virtual function)
 
-A non-virtual function in the derived class hides the base function of the same name. The call is bound from the static type of the expression. Through a `Filter*`, you get `Filter::apply`, even if the object is a `BlurFilter`. Fields can hide too: a second `_name` in the derived class is a different member, and an unqualified `_name` in the derived method is the derived one.
+פונקציה לא-virtual במחלקה הנגזרת מצלילה על פונקציית הבסיס בעלת אותו שם. הקריאה נקשרת לפי הטיפוס הסטטי (static type) של הביטוי. דרך `Filter*` מקבלים את `Filter::apply`, גם אם האובייקט הוא `BlurFilter`. גם שדות יכולים להצליל: `_name` שני במחלקה הנגזרת הוא איבר אחר, ו-`_name` לא מצוין במתודה הנגזרת הוא זה של הנגזרת.
 
-:::definition id=def-virtual title="Virtual function and vtable" source="Classes/Chapter 6 - Inheritance.pptx"
-A virtual function uses dynamic binding, also called late binding. The call goes to the override of the dynamic type. A non-virtual function uses static, or early, binding.
+:::definition id=def-virtual title="פונקציה וירטואלית ו-vtable" source="Classes/Chapter 6 - Inheritance.pptx"
+פונקציה וירטואלית משתמשת בקשירה דינמית (dynamic binding), שנקראת גם קשירה מאוחרת (late binding). הקריאה הולכת ל-override של הטיפוס הדינמי (dynamic type). פונקציה לא-virtual משתמשת בקשירה סטטית (static binding), או קשירה מוקדמת (early binding).
 
-A class is polymorphic when it has at least one virtual function. The compiler then adds, to each object, a hidden pointer `vptr` to that class's virtual table (`vtable`), which holds the addresses of the virtual functions.
+מחלקה היא פולימורפית כשיש בה לפחות פונקציה וירטואלית אחת. זה פולימורפיזם (polymorphism). המהדר מוסיף אז, לכל אובייקט, מצביע חבוי `vptr` אל ה-vtable של המחלקה, שמחזיקה את הכתובות של הפונקציות הווירטואליות.
 
-`override` checks that you really overrode a base virtual. `final` on a function forbids further overrides. `final` on a class forbids further derivation.
+`override` בודק שבאמת דרסתם virtual של הבסיס. `final` על פונקציה אוסר דריסות נוספות. `final` על מחלקה אוסר גזירה נוספת.
 :::
 
-The call, as the lecture draws it: load the object's `vptr`, index the function in the vtable, call that address. A `Filter*` that actually points at a `BlurFilter` still finds `BlurFilter::apply` if `apply` is virtual.
+הקריאה, כפי שההרצאה מציירת אותה: טוענים את ה-`vptr` של האובייקט, מאנדקסים את הפונקציה ב-vtable, וקוראים לכתובת הזאת. `Filter*` שבאמת מצביע על `BlurFilter` עדיין מוצא את `BlurFilter::apply` אם `apply` הוא virtual.
 
 ```cpp
 struct Filter {
@@ -84,104 +84,118 @@ struct BlurFilter : Filter {
     void apply(Image& img) const override { std::cout << "Apply BlurFilter\n"; }
 };
 const Filter* p = new BlurFilter();
-p->apply(img);     // "Apply BlurFilter"
+p->apply(img);     // prints "Apply BlurFilter"
 ```
 
-![A BlurFilter object holds a vptr. The call follows it into that class's vtable and finds BlurFilter::apply](../assets/figures/vtable-call.svg)
+![אובייקט BlurFilter מחזיק vptr. הקריאה עוקבת אחריו אל ה-vtable של המחלקה ומוצאת את BlurFilter::apply](../assets/figures/vtable-call.svg)
 
-### Downcasts, and the virtual destructor
+### המרה למטה (downcast) והדיסטרקטור (destructor) הווירטואלי
 
-A downcast (המרה למטה) turns a base pointer back into a derived pointer. A C-style cast tries too many conversions and will accept nonsense such as `(BlurFilter*)3`. `static_cast` is checked at compile time and still trusts you at run time. `dynamic_cast` looks at the vtable and returns null (for a pointer) when the object is not of that derived type. It needs a polymorphic type. `const_cast` adds or removes `const`. `reinterpret_cast` reinterprets the bits.
+המרה למטה הופכת מצביע של הבסיס בחזרה למצביע נגזר. המרה בסגנון C מנסה יותר מדי המרות ותקבל גם שטות כמו `(BlurFilter*)3`. `static_cast` נבדק בזמן הידור ועדיין סומך עליכם בזמן ריצה. `dynamic_cast` מסתכל ב-vtable ומחזיר null (עבור מצביע) כשהאובייקט אינו מהטיפוס הנגזר הזה. הוא צריך טיפוס פולימורפי. `const_cast` מוסיף או מסיר `const`. `reinterpret_cast` מפרש מחדש את הביטים.
 
-:::theorem id=thm-virtual-dtor title="Virtual destructor" source="Classes/Chapter 6 - Inheritance.pptx"
-If a class is polymorphic, its destructor must be virtual. That remains true when the derived class adds no fields of its own. Otherwise `delete` through a base pointer is undefined: the derived destructor may not run, and the memory may be released with the wrong size.
+:::theorem id=thm-virtual-dtor title="דיסטרקטור וירטואלי" source="Classes/Chapter 6 - Inheritance.pptx"
+אם מחלקה פולימורפית, הדיסטרקטור שלה חייב להיות virtual. זה נשאר נכון גם כשהמחלקה הנגזרת לא מוסיפה שדות משלה. אחרת `delete` דרך מצביע של הבסיס הוא התנהגות לא מוגדרת (undefined behavior): ייתכן שהדיסטרקטור של הנגזרת לא ירוץ, והזיכרון עשוי להשתחרר בגודל הלא נכון.
 
 :::proof
-**Intuition.** `delete p` has to know the real object, not the type written on the pointer. The vtable is how every other virtual call knows. The destructor is that call for the end of the object's life.
+**אינטואיציה.** `delete p` חייב לדעת את האובייקט האמיתי, לא את הטיפוס שכתוב על המצביע. ה-vtable הוא איך כל קריאה וירטואלית אחרת יודעת. הדיסטרקטור הוא הקריאה הזאת לסוף חיי האובייקט.
 
-**Proof.** `Filter* p = new BlurFilter(...); delete p;` looks up the destructor the same way it looks up `apply`, but only if `~Filter` is virtual. If it is not, the static type wins: `~Filter` runs, `~BlurFilter` does not, and a member `BlurFilter` allocated is leaked. The lecture also warns that the allocator may free only `sizeof(Filter)` bytes. Declaring `virtual ~Filter() = default;` puts the destructor in the vtable, so `delete p` reaches `~BlurFilter` and then the base.
+**הוכחה.** `Filter* p = new BlurFilter(...); delete p;` מחפש את הדיסטרקטור באותה דרך שהוא מחפש את `apply`, אבל רק אם `~Filter` הוא virtual. אם הוא לא, הטיפוס הסטטי מנצח: `~Filter` רץ, `~BlurFilter` לא, ואיבר ש-`BlurFilter` הקצה דולף. ההרצאה גם מזהירה שהמקצה עשוי לשחרר רק `sizeof(Filter)` בתים. הכרזה `virtual ~Filter() = default;` שמה את הדיסטרקטור ב-vtable, כך ש-`delete p` מגיע ל-`~BlurFilter` ואז לבסיס.
 
-**What the proof used.** Dynamic binding, and the fact that a polymorphic class already has a vptr. A class with no virtual functions has no vtable to put a destructor in, which is why the rule is stated for polymorphic classes.
+**על מה ההוכחה נשענה.** קשירה דינמית, והעובדה שלמחלקה פולימורפית כבר יש vptr. למחלקה בלי פונקציות וירטואליות אין vtable לשים בו דיסטרקטור, ולכן הכלל מנוסח למחלקות פולימורפיות.
 :::
 :::
 
-A pure virtual function is written `= 0` and has no body that you are required to call. A class with one is abstract: it cannot be instantiated. That is the C++ form of a Java abstract method, which session 3 also states. Constructors cannot be virtual. A virtual function cannot be static. The signature in the override must match, or you have hidden the base function instead of overriding it.
+פונקציה וירטואלית טהורה (pure virtual) נכתבת `= 0` ואין לה גוף שחייבים לקרוא לו. מחלקה שיש בה אחת היא מופשטת (abstract): אי אפשר ליצור ממנה מופע. זו הצורה של C++ למתודה מופשטת של Java, שגם תרגול 3 מציין. בנאים לא יכולים להיות virtual. פונקציה וירטואלית לא יכולה להיות `static`. החתימה ב-override חייבת להתאים, אחרת הצללתם את פונקציית הבסיס במקום לדרוס אותה.
 
-An object of a derived class is one block: the base subobject first, then the derived members. The lecture's table for a stack `BlurFilter` shows `_str` beside the base fields, one allocation, not two objects.
+אובייקט של מחלקה נגזרת הוא בלוק אחד: קודם תת-האובייקט של הבסיס (subobject), ואז האיברים הנגזרים. הטבלה בהרצאה ל-`BlurFilter` על המחסנית (stack) מראה את `_str` ליד שדות הבסיס, הקצאה אחת, לא שני אובייקטים.
 
-## A call trace
+## מעקב אחרי קריאה
 
-| expression | static type | function that runs if `apply` is virtual | if it is not |
+| ביטוי | טיפוס סטטי | הפונקציה שרצה אם `apply` הוא virtual | אם הוא לא |
 | --- | --- | --- | --- |
 | `filter.apply(img)` | `Filter` | `Filter::apply` | `Filter::apply` |
 | `blur.apply(img)` | `BlurFilter` | `BlurFilter::apply` | `BlurFilter::apply` |
 | `Filter* p = &blur; p->apply(img)` | `Filter` | `BlurFilter::apply` | `Filter::apply` |
 
 :::problem id=worked-virtual-call source="Classes/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
-`Filter* filter = new BlurFilter(); filter->apply(...);` with `apply` virtual. Which function runs, and what changes if you remove `virtual`?
+`apply` הוא virtual. איזו פונקציה רצה, ומה משתנה אם מסירים את `virtual`?
+
+```cpp
+Filter* filter = new BlurFilter();
+filter->apply(img);
+```
 
 :::solution
-With `virtual`, the call loads the vptr of the `BlurFilter` object and calls `BlurFilter::apply`. The output on the slide is "Apply BlurFilter". Without `virtual`, the compiler binds `Filter::apply` from the pointer's type, and the output is "Apply Filter". The object did not change. The binding did.
+עם `virtual`, הקריאה טוענת את ה-vptr של אובייקט ה-`BlurFilter` וקוראת ל-`BlurFilter::apply`. הפלט בשקף הוא «Apply BlurFilter».
+
+```text
+filter->apply(img)
+    load the vptr from the BlurFilter object
+    index apply in that vtable
+    call BlurFilter::apply
+```
+
+בלי `virtual`, המהדר קושר את `Filter::apply` לפי טיפוס המצביע, והפלט הוא «Apply Filter». האובייקט לא השתנה. הקשירה כן.
 :::
 :::
 
 :::check id=chk-virtual-dtor
-You will `delete` a `BlurFilter` through a `Filter*`. What must be true of `~Filter`?
+אתם הולכים לבצע `delete` ל-`BlurFilter` דרך `Filter*`. מה חייב להיות נכון לגבי `~Filter`?
 
-- [ ] It must be pure virtual and have no body
-- [x] It must be virtual
-- [ ] It must be private
+- [ ] הוא חייב להיות וירטואלי טהור ובלי גוף
+- [x] הוא חייב להיות virtual
+- [ ] הוא חייב להיות private
 
-The derived destructor has to run. Only a virtual destructor is dispatched through the vptr.
+הדיסטרקטור של הנגזרת חייב לרוץ. רק דיסטרקטור וירטואלי משוגר דרך ה-vptr.
 :::
 
 :::trap
-Hiding is not overriding. A derived `apply` that is not marked virtual, on a base that is not virtual, does not change calls through a base pointer. `override` turns that mistake into a compile error.
+הצללה אינה override. `apply` נגזר שלא סומן virtual, על בסיס שאינו virtual, לא משנה קריאות דרך מצביע של הבסיס. `override` הופך את הטעות הזאת לשגיאת הידור.
 :::
 
 :::trap
-Public inheritance of a type whose operations break your invariant is not saved by a tighter override. The square-image `crop` is the lecture's example.
+ירושה public של טיפוס שהפעולות שלו שוברות את השמורה שלכם לא ניצלת על ידי override הדוק יותר. ה-`crop` של תמונת הריבוע הוא הדוגמה של ההרצאה.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps3-virtual-destructor source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
-Session 3: a derived object is deleted through a base pointer, and the destructor is not virtual. What is the result, and what is the rule the session states for a class that is meant to be a base?
+תרגול 3: אובייקט נגזר עובר `delete` דרך מצביע של הבסיס, והדיסטרקטור אינו virtual. מה התוצאה, ומה הכלל שהתרגול מציין למחלקה שנועדה להיות בסיס?
 
 :::hint
-The static type of the pointer is the base. Non-virtual calls use that type.
+הטיפוס הסטטי של המצביע הוא הבסיס. קריאות לא-virtual משתמשות בטיפוס הזה.
 :::
 :::hint
-The session's phrase is "undefined result", not "the derived destructor still runs."
+הניסוח בתרגול הוא «תוצאה לא מוגדרת», לא «הדיסטרקטור של הנגזרת עדיין רץ».
 :::
 :::hint
-Tie the rule to "if a class is supposed to be inherited from."
+קשרו את הכלל אל «אם מחלקה אמורה לרשת ממנה».
 :::
 :::solution
-The behavior is undefined. In practice the derived destructor is skipped, so resources the derived class owns leak, and the deallocation may use the base size. The session's rule: if a class is meant to be inherited from, give it a virtual destructor. The lecture is stricter in wording and equivalent in effect: a polymorphic class must have one. Constructors stay non-virtual. A pure virtual method, written `= 0`, makes the base abstract, which is a separate decision from the destructor.
+ההתנהגות לא מוגדרת. בפועל מדלגים על הדיסטרקטור של הנגזרת, ולכן משאבים שהמחלקה הנגזרת מחזיקה דולפים, והשחרור עשוי להשתמש בגודל הבסיס. הכלל בתרגול: אם מחלקה נועדה לרשת ממנה, תנו לה דיסטרקטור וירטואלי. ההרצאה מחמירה יותר בניסוח ושקולה בתוצאה: מחלקה פולימורפית חייבת דיסטרקטור כזה. בנאים נשארים לא-virtual. מתודה וירטואלית טהורה, שנכתבת `= 0`, הופכת את הבסיס למופשט, וזו החלטה נפרדת מן הדיסטרקטור.
 :::
 :::
 
 
 :::examnote
-The question puts two derived types behind one base pointer and asks why a non-virtual call, a non-virtual destructor, or an overload (instead of an override) uses the base. The trap is a memory drawing that omits the vptr, or a `delete` through the base that never runs the derived destructor.
+השאלה שמה שני טיפוסים נגזרים מאחורי מצביע בסיס אחד ושואלת למה קריאה לא-virtual, דיסטרקטור לא-virtual, או העמסה (overload) במקום override משתמשים בבסיס. המלכודת היא ציור זיכרון שמחסיר את ה-vptr, או `delete` דרך הבסיס שאף פעם לא מריץ את הדיסטרקטור של הנגזרת.
 :::
 
 :::problem id=exam-16a-q2 source="Exams/16-a.pdf" kind=exam solution_origin=derived
-A game engine has `SHAPE`s (`SPHERE`, `BOX`) drawn by `SHADER`s (`BASIC_SHADER`, `COMPLEX_SHADER`). Each shader has `Render(SPHERE*)` and `Render(BOX*)`. `RENDER_MGR::Render` loops over shapes and shaders. Overload resolution on a `SHAPE*` cannot pick `Render(SPHERE*)`.
+למנוע משחק יש `SHAPE`ים (`SPHERE`, `BOX`) שמצוירים על ידי `SHADER`ים (`BASIC_SHADER`, `COMPLEX_SHADER`). לכל shader יש `Render(SPHERE*)` ו-`Render(BOX*)`. `RENDER_MGR::Render` עובר על הצורות ועל ה-shaders. בחירת העמסה על `SHAPE*` לא יכולה לבחור את `Render(SPHERE*)`.
 
-a. (20) Implement the visitor pattern so the loop dispatches to the right pair. `SHAPE` and `SHADER` must be abstract. Add code only in the classes named in the question.
+א. ממשו את תבנית המבקר (visitor) כדי שהלולאה תשלח לזוג הנכון. `SHAPE` ו-`SHADER` חייבים להיות מופשטים. הוסיפו קוד רק במחלקות ששמן מופיע בשאלה.
 
-b. (10) Write a deep copy constructor for `RENDER_MGR`.
+ב. כתבו בנאי העתקה (copy constructor) עמוק ל-`RENDER_MGR`.
 
 :::hint
-Double dispatch needs two virtual calls: the shape accepts the shader, and the shader then receives the concrete shape.
+שיגור כפול (double dispatch) צריך שתי קריאות virtual: הצורה מקבלת את ה-shader, וה-shader אז מקבל את הצורה הקונקרטית.
 :::
 :::hint
-`Accept` on `SPHERE` calls `shader->Render(this)` where `this` is `SPHERE*`, so the overload is resolved in the derived class.
+`Accept` על `SPHERE` קורא ל-`shader->Render(this)` כש-`this` הוא `SPHERE*`, ולכן ההעמסה נפתרת במחלקה הנגזרת.
 :::
 :::hint
-A manager that holds owning pointers deep-copies by cloning each shape and each shader, not by copying the pointers.
+מנהל שמחזיק מצביעים בעלי בעלות מעתיק עמוק על ידי שיבוט של כל צורה וכל shader, לא על ידי העתקת המצביעים.
 :::
 :::solution
 ```cpp
@@ -202,94 +216,94 @@ struct Box : Shape {
 };
 ```
 
-`RENDER_MGR::Render` calls `shape->Accept(shader)` for each pair. `BasicShader` and `ComplexShader` override both `Render` overloads. The copy constructor allocates new shapes and shaders. If the hierarchy has a virtual `clone()`, that is the deep copy; copying the pointer array is the bug part (b) is there to catch.
+`RENDER_MGR::Render` קורא ל-`shape->Accept(shader)` לכל זוג. `BasicShader` ו-`ComplexShader` דורסים את שתי העמסות ה-`Render`. בנאי ההעתקה מקצה צורות ו-shaders חדשים. אם בהיררכיה יש `clone()` וירטואלי, זו ההעתקה העמוקה; העתקת מערך המצביעים היא הבאג שסעיף ב נועד לתפוס.
 :::
 :::
 
 :::problem id=exam-18a-q1 source="Exams/18-a.pdf" kind=exam solution_origin=derived
-`Image` is an abstract base with `int n_pixels` and `virtual void show() = 0`. `ColorImage` derives from it and owns a pixel array. The multiple-choice claims include: the program leaks because `~ColorImage` never runs; the fix is `virtual ~Image() {}`; `ColorImage` also needs its own destructor that `delete[]`s the array; there is no leak. Choose the right claim, and say what a by-value copy of a `ColorImage` does to the array under the rule of three.
+`Image` הוא בסיס מופשט עם `int n_pixels` ו-`virtual void show() = 0`. `ColorImage` יורש ממנו ומחזיק מערך פיקסלים. הטענות לבחירה כוללות: התוכנית דולפת (leak) כי `~ColorImage` אף פעם לא רץ; התיקון הוא `virtual ~Image() {}`; גם ל-`ColorImage` צריך דיסטרקטור משלו שמבצע `delete[]` על המערך; אין דליפה. בחרו את הטענה הנכונה, ואמרו מה העתקה לפי ערך של `ColorImage` עושה למערך תחת חוק השלושה (rule of three).
 
 :::hint
-`Image* p = new ColorImage(...); delete p;` uses `~Image` unless that destructor is virtual.
+`Image* p = new ColorImage(...); delete p;` משתמש ב-`~Image` אלא אם הדיסטרקטור הזה הוא virtual.
 :::
 :::hint
-Making the destructor virtual runs `~ColorImage`. It does not, by itself, free a raw array. The derived destructor has to.
+הפיכת הדיסטרקטור ל-virtual מריצה את `~ColorImage`. היא לא, כשלעצמה, משחררת מערך גולמי. הדיסטרקטור של הנגזרת חייב לעשות את זה.
 :::
 :::hint
-The official options treat "add `virtual ~Image`" as necessary and not sufficient when a second array exists.
+האפשרויות בשאלה מתייחסות אל «הוסיפו `virtual ~Image`» כהכרחי ולא כמספיק כשקיים מערך שני.
 :::
 :::solution
-`delete` through an `Image*` runs only `~Image` when the destructor is not virtual, so `~ColorImage` never frees the pixel array. That is a leak. Declaring `virtual ~Image() = default` makes the delete dispatch to `~ColorImage`. If `ColorImage` owns a raw array, `~ColorImage` must `delete[]` it, and the copy constructor and assignment must deep-copy it. A claim that says there is no leak is false. A claim that only changes `main` to name the dynamic type fixes this one line and leaves the next `Image*` delete broken. The rule-of-three copy is a separate bug: the generated copy shares the array, and the two destructors free it twice.
+`delete` דרך `Image*` מריץ רק את `~Image` כשהדיסטרקטור אינו virtual, ולכן `~ColorImage` אף פעם לא משחרר את מערך הפיקסלים. זו דליפה. הכרזה `virtual ~Image() = default` גורמת ל-`delete` להישלח אל `~ColorImage`. אם `ColorImage` מחזיק מערך גולמי, `~ColorImage` חייב לבצע עליו `delete[]`, ובנאי ההעתקה וההשמה חייבים להעתיק אותו עמוק. טענה שאומרת שאין דליפה היא שקר. טענה שרק משנה את `main` כדי לנקוב בטיפוס הדינמי מתקנת את השורה הזאת ומשאירה את ה-`delete` הבא דרך `Image*` שבור. העתקה לפי חוק השלושה היא באג נפרד: ההעתקה שהמהדר מייצר חולקת את המערך, ושני הדיסטרקטורים משחררים אותו פעמיים.
 :::
 :::
 
 :::problem id=exam-18b-q1 source="Exams/18-b.pdf" kind=exam solution_origin=derived
-The same image hierarchy, rewritten so black-and-white and color images share one abstract base and differ in the pixel type. Draw the stack and the heap at the comment inside `show`, including vptrs. A later part asks which cast finds the dynamic type. The official discussion includes `dynamic_cast`.
+אותה היררכיית תמונות, כתובה מחדש כך שתמונות שחור-לבן וצבע חולקות בסיס מופשט אחד ונבדלות בטיפוס הפיקסל. ציירו את המחסנית ואת הערימה (heap) בהערה שבתוך `show`, כולל vptrים. סעיף מאוחר יותר שואל איזו המרה מוצאת את הטיפוס הדינמי. הדיון בשאלה כולל את `dynamic_cast`.
 
 :::hint
-One derived object is one block: base subobject, then derived members, plus a vptr because the class is polymorphic.
+אובייקט נגזר אחד הוא בלוק אחד: תת-אובייקט של הבסיס, ואז האיברים הנגזרים, ועוד vptr כי המחלקה פולימורפית.
 :::
 :::hint
-A pointer variable on the stack stores the address of that block. The pixel array, if allocated with `new`, is a second heap block.
+משתנה מצביע על המחסנית שומר את הכתובת של הבלוק הזה. מערך הפיקסלים, אם הוקצה עם `new`, הוא בלוק ערימה שני.
 :::
 :::hint
-`dynamic_cast` needs the vtable. It fails at run time when the object is not of the target type. It is not a compile-time-only conversion.
+`dynamic_cast` צריך את ה-vtable. הוא נכשל בזמן ריצה כשהאובייקט אינו מן הטיפוס היעד. זו אינה המרה של זמן הידור בלבד.
 :::
 :::solution
-At the call, the stack holds the pointer parameter (and the return address). The heap object starts with the vptr, then `n_pixels`, then the derived pointer to the pixel buffer, then the buffer itself as another heap block. A black-and-white image and a color image have different vtables, so `show` through an `Image*` reaches the override. `dynamic_cast<ColorImage*>(p)` returns null when `p` is not a color image, and returns the pointer when it is. A C-style cast does not perform that test. The drawing the question prints is right when every polymorphic subobject shows a vptr and the pixel array is not drawn inside the stack frame.
+בקריאה, המחסנית מחזיקה את פרמטר המצביע (ואת כתובת החזרה). אובייקט הערימה מתחיל ב-vptr, אחר כך `n_pixels`, אחר כך המצביע הנגזר אל חוצץ הפיקסלים, ואחר כך החוצץ עצמו כבלוק ערימה נוסף. לתמונת שחור-לבן ולתמונת צבע יש vtable שונה, ולכן `show` דרך `Image*` מגיע לדריסה. `dynamic_cast<ColorImage*>(p)` מחזיר null כש-`p` אינו תמונת צבע, ומחזיר את המצביע כשכן. המרה בסגנון C לא מבצעת את הבדיקה הזאת. הציור שהשאלה מדפיסה נכון כשכל תת-אובייקט פולימורפי מראה vptr ומערך הפיקסלים לא מצויר בתוך מסגרת המחסנית.
 :::
 :::
 
 :::problem id=exam-19a-q1 source="Exams/19-a.pdf" kind=exam solution_origin=derived
-`APP` is abstract with `virtual void run() = 0`. `PAY_APP` and `PLAY_APP` override it. `MY_APPS_REPO` must store both kinds in one array.
+`APP` מופשט עם `virtual void run() = 0`. `PAY_APP` ו-`PLAY_APP` דורסים אותו. `MY_APPS_REPO` חייב לשמור את שני הסוגים במערך אחד.
 
-a. (5) Give `apps_repo_arr_` a single type that can hold both.
+א. תנו ל-`apps_repo_arr_` טיפוס יחיד שיכול להחזיק את שניהם.
 
-b. (5) Implement `MY_APPS_REPO(int n_pay_app, int n_play_app)` to allocate and store that many of each.
+ב. ממשו את `MY_APPS_REPO(int n_pay_app, int n_play_app)` כדי להקצות ולשמור את המספר הזה מכל אחד.
 
-c. (10) The class learned a way to stop clients calling `new` on the repository, by hiding construction. Implement that, and show how a client still obtains an instance.
+ג. המחלקה למדה דרך לעצור לקוחות מלקרוא ל-`new` על המאגר, על ידי הסתרת הבנייה. ממשו את זה, והראו איך לקוח עדיין משיג מופע.
 
-d. (10) `Clone` and `test_apps_repo` are already correct. Make `repo->test_apps_repo(test->Clone())` do the copy efficiently. Implement only the functions that line needs.
+ד. `Clone` ו-`test_apps_repo` כבר נכונים. גרמו ל-`repo->test_apps_repo(test->Clone())` לבצע את ההעתקה ביעילות. ממשו רק את הפונקציות שהשורה הזאת צריכה.
 
 :::hint
-One array of `APP*` holds both derived types. An array of `APP` would slice, and an array of one derived type cannot hold the other.
+מערך אחד של `APP*` מחזיק את שני הטיפוסים הנגזרים. מערך של `APP` היה חותך (slicing), ומערך של טיפוס נגזר אחד לא יכול להחזיק את האחר.
 :::
 :::hint
-Hiding `new` is a private constructor plus a static factory, or a private `operator new`. The factory returns a pointer or a smart pointer.
+הסתרת `new` היא בנאי פרטי ועוד מפעל (factory) סטטי, או `operator new` פרטי. המפעל מחזיר מצביע או מצביע חכם.
 :::
 :::hint
-`Clone` returns a new repository. If it returns by value, the copy constructor runs. A move, or a pointer return, is the efficient version the line is asking for.
+`Clone` מחזיר מאגר חדש. אם הוא מחזיר לפי ערך, בנאי ההעתקה רץ. העברה, או החזרת מצביע, היא הגרסה היעילה שהשורה מבקשת.
 :::
 :::solution
-a. `APP** apps_repo_arr_;` or `std::vector<std::unique_ptr<APP>>`. The static type is the base pointer.
+א. `APP** apps_repo_arr_;` או `std::vector<std::unique_ptr<APP>>`. הטיפוס הסטטי הוא מצביע הבסיס.
 
-b. Allocate `n_pay_app + n_play_app` slots. The first `n_pay_app` are `new PAY_APP`, the rest `new PLAY_APP`.
+ב. הקצו `n_pay_app + n_play_app` משבצות. `n_pay_app` הראשונות הן `new PAY_APP`, והשאר `new PLAY_APP`.
 
-c. Make every constructor private and publish `static MY_APPS_REPO* create(...)`. Clients cannot write `new MY_APPS_REPO` from outside the class. They call `create`.
+ג. הפכו כל בנאי לפרטי ופרסמו `static MY_APPS_REPO* create(...)`. לקוחות לא יכולים לכתוב `new MY_APPS_REPO` מחוץ למחלקה. הם קוראים ל-`create`.
 
-d. `Clone` should move or deep-copy the pointer array into a new repository. The argument of `test_apps_repo` is a temporary if `Clone` returns by value, so a move constructor on the repository steals the pointer array instead of cloning it again. The virtual destructor on `APP` is required so destroying the repository deletes the real apps. Implement `Clone` and the constructor or move operation the call uses, not the whole class.
+ד. `Clone` צריך להעביר או להעתיק עמוק את מערך המצביעים אל מאגר חדש. הארגומנט של `test_apps_repo` הוא זמני אם `Clone` מחזיר לפי ערך, ולכן בנאי-העברה (move constructor) של המאגר גונב את מערך המצביעים במקום לשכפל אותו שוב. הדיסטרקטור הווירטואלי על `APP` נדרש כדי שהשמדת המאגר תבצע `delete` על היישומים האמיתיים. ממשו את `Clone` ואת הבנאי או את פעולת ההעברה שהקריאה משתמשת בהם, לא את כל המחלקה.
 :::
 :::
 
 :::problem id=exam-19b-q1 source="Exams/19-b.pdf" kind=exam solution_origin=derived
-`TESTER` declares three overloads, `test(APP*)`, `test(PAY_APP*)`, `test(PLAY_APP*)`, all virtual in the sense of the base, but a call `tester->test(app)` where `app` has static type `APP*` binds the `APP*` overload at compile time. Overload resolution does not use the dynamic type. Draw the memory for the run up to the comment (10 points), and explain why a `PAY_APP` object still hits `test(APP*)`.
+`TESTER` מכריז על שלוש העמסות, `test(APP*)`, `test(PAY_APP*)`, `test(PLAY_APP*)`, כולן virtual במובן של הבסיס, אבל קריאה `tester->test(app)` שבה ל-`app` יש טיפוס סטטי `APP*` קושרת את העמסת ה-`APP*` בזמן הידור. בחירת העמסה לא משתמשת בטיפוס הדינמי. ציירו את הזיכרון של הריצה עד ההערה, והסבירו למה אובייקט `PAY_APP` עדיין פוגע ב-`test(APP*)`.
 
 :::hint
-Overload resolution looks at the static type of the argument. Virtual dispatch then looks at the dynamic type of the object the method is called on, not of the argument.
+בחירת העמסה מסתכלת על הטיפוס הסטטי של הארגומנט. השיגור הווירטואלי מסתכל אחר כך על הטיפוס הדינמי של האובייקט שעליו נקראת המתודה, לא של הארגומנט.
 :::
 :::hint
-The visitor from 2016 is the way to make the argument's dynamic type participate. A single overload does not.
+תבנית המבקר היא הדרך לגרום לטיפוס הדינמי של הארגומנט להשתתף. העמסה יחידה לא עושה את זה.
 :::
 :::hint
-The memory drawing still needs a vptr if any function in the object is virtual.
+ציור הזיכרון עדיין צריך vptr אם פונקציה כלשהי באובייקט היא virtual.
 :::
 :::solution
-`test(app)` with `APP* app` selects `TESTER::test(APP*)` during compilation, even when `app` points at a `PAY_APP`. Virtual on those three overloads only chooses the tester's override for that exact signature. It does not look inside `app`. To dispatch on the app you need a virtual `accept` on `APP` (visitor), or a `dynamic_cast` chain, which the lecture treats as the inferior tool. The memory picture is the tester object and the app object, each with a vptr if they are polymorphic, the app's extra fields in the derived part, and the pointer on the stack. There is no second function pointer hiding in the argument.
+`test(app)` עם `APP* app` בוחר את `TESTER::test(APP*)` בזמן הידור, גם כש-`app` מצביע על `PAY_APP`. virtual על שלוש ההעמסות האלה בוחר רק את הדריסה של ה-tester לחתימה המדויקת הזאת. הוא לא מסתכל בתוך `app`. כדי לשגר לפי היישום צריך `accept` וירטואלי על `APP` (מבקר), או שרשרת `dynamic_cast`, שההרצאה מתייחסת אליה כאל הכלי הנחות. תמונת הזיכרון היא אובייקט ה-tester ואובייקט היישום, לכל אחד vptr אם הם פולימורפיים, השדות הנוספים של היישום בחלק הנגזר, והמצביע על המחסנית. אין מצביע פונקציה שני שמסתתר בארגומנט.
 :::
 :::
 
 :::problem id=exam-24b-q1 source="Exams/24-b.pdf" kind=exam solution_origin=derived
-`BinaryTree<T>` has `left` and `right`. `InorderBinaryTree` derives from it and also implements a traversal interface. Draw memory at the end of:
+ל-`BinaryTree<T>` יש `left` ו-`right`. `InorderBinaryTree` יורש ממנו וגם מממש ממשק סריקה. ציירו זיכרון בסוף:
 
 ```cpp
 Traversable<BinaryTree<int>>* t1 = new InorderBinaryTree<BinaryTree<int>>(
@@ -302,19 +316,19 @@ InorderBinaryTree<int> t2(2,
 ```
 
 :::hint
-`t1` is one pointer on the stack. The object is on the heap, and it contains a `BinaryTree` subobject plus the derived part.
+`t1` הוא מצביע אחד על המחסנית. האובייקט על הערימה, והוא מכיל תת-אובייקט `BinaryTree` ועוד את החלק הנגזר.
 :::
 :::hint
-`t2` is an automatic object. Its children were allocated with `new`, so those children are on the heap even though `t2` is not.
+`t2` הוא אובייקט אוטומטי. הילדים שלו הוקצו עם `new`, ולכן הילדים האלה על הערימה אף ש-`t2` לא.
 :::
 :::hint
-A by-value `BinaryTree<int>(2)` member is embedded, not pointed at. A `new InorderBinaryTree` child is a separate block with its own vptr.
+איבר `BinaryTree<int>(2)` לפי ערך מוטמע, לא מצביעים אליו. ילד `new InorderBinaryTree` הוא בלוק נפרד עם vptr משלו.
 :::
 :::solution
-`t1` lives in the frame and holds a heap address. That heap object is an `InorderBinaryTree` whose base subobject stores data 2 and two child pointers. Each child is its own heap `InorderBinaryTree`, data 1 and data 3. Because the class is polymorphic through `Traversable`, each of those three objects has a vptr.
+`t1` חי במסגרת ומחזיק כתובת ערימה. אובייקט הערימה הזה הוא `InorderBinaryTree` שתת-האובייקט של הבסיס שלו שומר נתון 2 ושני מצביעי ילדים. כל ילד הוא `InorderBinaryTree` ערימה משלו, נתון 1 ונתון 3. כי המחלקה פולימורפית דרך `Traversable`, לכל אחד משלושת האובייקטים האלה יש vptr.
 
-`t2` is the whole derived object in the frame: data 2, a vptr, and two pointers. The children 1 and 3 are heap objects, each with a vptr. Do not draw `t2`'s own fields on the heap. Do not draw the children's fields inside `t2`. The by-value node `BinaryTree<int>(2)` used as an argument was copied into the parent; it is not a fourth live tree after the constructor returns.
+`t2` הוא כל האובייקט הנגזר במסגרת: נתון 2, vptr, ושני מצביעים. הילדים 1 ו-3 הם אובייקטי ערימה, לכל אחד vptr. אל תציירו את השדות של `t2` עצמו על הערימה. אל תציירו את השדות של הילדים בתוך `t2`. צומת הערך `BinaryTree<int>(2)` ששימש ארגומנט הועתק אל ההורה; הוא אינו עץ חי רביעי אחרי שהבנאי חוזר.
 :::
 :::
 
-The vptr is the last hidden pointer in the object model. [Back to Java](topic:java-runtime) uses the same idea with a different spelling: every non-static method is virtual, and the collector, not `delete`, ends the object's life.
+ה-vptr הוא המצביע החבוי האחרון במודל האובייקט. [חזרה ל-Java](topic:java-runtime) משתמש באותו רעיון באיות אחר: כל מתודה לא-`static` היא virtual, ואוסף הזבל (garbage collector), לא `delete`, מסיים את חיי האובייקט.

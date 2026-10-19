@@ -1,6 +1,6 @@
 ---
 id: pointers
-title: Pointers and references
+title: מצביעים ורפרנסים
 sources:
   - "Classes/Chapter 2 - Pointers.pptx"
   - "Exrecises/SPL_PS2 (1).pptx"
@@ -8,51 +8,51 @@ sources:
   - "Exams/20-a-solution.pdf"
 ---
 
-A pointer (מצביע) is a variable whose value is the address of another cell. The machine does not know the name `s`. It knows "read 2 bytes from address 4" or "write 4 bytes at address 8, and treat them as a signed int." The type on the pointer is what tells the compiler how many bytes that means, and how to scale arithmetic.
+מצביע (pointer) הוא משתנה שהערך שלו הוא הכתובת של תא אחר. המכונה לא מכירה את השם `s`. היא מכירה "לקרוא 2 בתים מכתובת 4" או "לכתוב 4 בתים בכתובת 8, ולהתייחס אליהם כאל int עם סימן." הטיפוס שעל המצביע אומר לקומפיילר (compiler) כמה בתים זה אומר, ואיך לחשב את גודל הצעד באריתמטיקה.
 
-RAM in this lecture is a row of bytes. Each byte is 8 bits. Each byte has an index, starting at 0, and that index is the address. On the course machines a pointer itself occupies 8 bytes, because the system is 64-bit.
+ה-RAM בהרצאה הזו הוא שורה של בתים. כל בית (byte) הוא 8 ביטים. לכל בית יש אינדקס, שמתחיל ב-0, והאינדקס הזה הוא הכתובת. במכונות של הקורס מצביע עצמו תופס 8 בתים, כי המערכת היא 64 סיביות.
 
-## What a pointer is
+## מהו מצביע
 
-:::definition id=def-pointer title="Pointer" source="Classes/Chapter 2 - Pointers.pptx"
-A pointer is a variable that stores an address. Through it the program can read or write at that address and after it. The declaration `short* ps` says that `ps` points at a `short`. The address-of operator `&` produces the address of an object. The dereference operator `*` reads or writes the object at the stored address.
+:::definition id=def-pointer title="מצביע" source="Classes/Chapter 2 - Pointers.pptx"
+מצביע הוא משתנה ששומר כתובת. דרכו התוכנית יכולה לקרוא או לכתוב בכתובת הזו ומה ששאחריה. ההצהרה `short* ps` אומרת ש-`ps` מצביע אל `short`. אופרטור כתובת-של `&` מפיק את הכתובת של אובייקט (object). אופרטור הכוכבית `*` קורא או כותב את האובייקט בכתובת השמורה.
 
 ```cpp
 short s = 17978;
 short* ps;          // declaration
 ps = &s;            // assignment
 short* ps2 = &s;    // initialization
-*ps = 3;            // dereference, write
-std::cout << *ps;   // dereference, read
+*ps = 3;            // star, write
+std::cout << *ps;   // star, read
 ```
 :::
 
-The compiler's table for a variable has three columns: name, type, address. At run time the CPU only sees the address and a width. `short` at address 4 means bytes 4 and 5. The lecture's running picture puts `s` at a low address and `ps` in the next cells, holding that address, drawn in hexadecimal (`45 46 3A` and so on in the slide).
+בטבלה של הקומפיילר למשתנה יש שלושה טורים: שם, טיפוס, כתובת. בזמן ריצה המעבד רואה רק את הכתובת ואת הרוחב. `short` בכתובת 4 פירושו בתים 4 ו-5. הציור השוטף בהרצאה שם את `s` בכתובת נמוכה ואת `ps` בתאים הבאים, שמחזיקים את הכתובת הזו, מצוירים בהקסדצימלי (`45 46 3A` וכן הלאה בשקף).
 
-![A short in two bytes, and a pointer cell that stores that short's address](../assets/figures/pointer-bytes.svg)
+![short בשני בתים, ותא מצביע ששומר את הכתובת של ה-short](../assets/figures/pointer-bytes.svg)
 
-A pointer may be declared and initialized in one line, or several pointers in one declaration. `short *ps3 = ps2, *ps4` declares two pointers. `short* ps3 = ps2, ps4` declares one pointer and one `short`, because the star binds to the name. The slides pause on that line on purpose.
+מותר להצהיר על מצביע ולאתחל אותו בשורה אחת, או על כמה מצביעים בהצהרה אחת. `short *ps3 = ps2, *ps4` מצהיר על שני מצביעים. `short* ps3 = ps2, ps4` מצהיר על מצביע אחד ועל `short` אחד, כי הכוכבית נקשרת לשם. השקפים עוצרים על השורה הזו בכוונה.
 
-`NULL` and the integer 0 are the null pointer (מצביע null). Address 0 is a sentinel: it is never a valid object. Reading or writing through it is a segmentation fault. A pointer you did not initialize is not null; it holds whatever bits were in that slot.
+`NULL` והמספר השלם 0 הם מצביע ה-null. כתובת 0 היא ערך זקיף (sentinel): היא אף פעם לא אובייקט תקין. קריאה או כתיבה דרכה היא שגיאת זמן ריצה (segmentation fault). מצביע שלא אתחלתם אינו null. הוא מחזיק את הביטים שהיו בתא הזה.
 
 ```cpp
 int* p = nullptr;   // safe to test
 *p = 3;             // segmentation fault
 ```
 
-:::definition id=def-void-pointer title="void pointer" source="Classes/Chapter 2 - Pointers.pptx"
-`void*` stores an address and no element type. It cannot be dereferenced. To use the cell you cast it back to a typed pointer.
+:::definition id=def-void-pointer title="מצביע void" source="Classes/Chapter 2 - Pointers.pptx"
+`void*` שומר כתובת ובלי טיפוס איבר. אי אפשר להפעיל עליו את אופרטור הכוכבית. כדי להשתמש בתא ממירים אותו חזרה למצביע עם טיפוס.
 
 ```cpp
 short x;
 void* vp = &x;
-*vp = 3;            // ill-formed: no type to write
+*vp = 3;            // compile error: there is no type to write
 ```
 :::
 
-### const on a pointer
+### const על מצביע
 
-`const` here is the C++ analogue of Java's `final`, and the place of the keyword changes the meaning.
+`const` כאן הוא המקבילה ב-C++ ל-`final` של Java, ומקום המילה משנה את המשמעות.
 
 ```cpp
 short s1, s2;
@@ -60,55 +60,65 @@ const short* ps1 = &s1;   // the short is const: *ps1 = 3 is an error, ps1 = &s2
 short* const ps2 = &s1;   // the pointer is const: ps2 = &s2 is an error, *ps2 = 3 is allowed
 ```
 
-Read the star as the boundary. `const` on the left of `*` freezes the pointee. `const` on the right freezes the pointer variable.
+קראו את הכוכבית כגבול. `const` משמאל ל-`*` מקפיא את מה שמצביעים אליו. `const` מימין מקפיא את משתנה המצביע.
 
-### Pointer to pointer, and arithmetic
+### מצביע למצביע, ואריתמטיקה
 
-A pointer is a variable, so it has an address, so another pointer can hold that address.
+מצביע הוא משתנה, ולכן יש לו כתובת, ולכן מצביע אחר יכול להחזיק את הכתובת הזו.
 
 ```cpp
 int x = 3, *px = &x, **ppx = &px;
 int y = **ppx;     // 3
-int* ppy = &&y;    // illegal: &y is not an object you can take again this way
+int* ppy = &&y;    // illegal: &y is not an object you can take the address of again
 int* ppz = &123;   // illegal: 123 has no address
 ```
 
-Arithmetic steps by the size of the pointed-to type, not by one byte.
+האריתמטיקה צועדת לפי גודל הטיפוס שמצביעים אליו, לא לפי בית אחד.
 
 ```cpp
 int x, *px = &x;
-px++;                  // now aims at the next int, sizeof(int) bytes ahead
+px++;                  // now points at the next int, sizeof(int) bytes ahead
 int y = *(px - 2);     // the int two slots before
 int* pa = px, *pb = px + 10;
 int d = pb - pa;       // 10, a distance in ints
 ```
 
+אם `sizeof(int)` הוא 4 ו-`x` יושב בכתובת 16, ה-int הבא מתחיל ב-20. חיבור 1 למצביע אינו "עוד בית אחד."
+
+![px מכוון לכתובת 16. px + 1 מכוון ארבעה בתים אחר כך, לכתובת 20](../assets/figures/pointer-step.svg)
+
 :::problem id=worked-pointer-step source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
-`int* px` aims at `x`. `sizeof(int)` is 4 and `x` is at address 16. What address does `px + 1` name?
+`sizeof(int)` הוא 4 ו-`x` בכתובת 16. איזו כתובת `px + 1` מציין?
+
+```cpp
+int x;
+int* px = &x;
+int* next = px + 1;
+```
 
 :::solution
-`px + 1` names address 20. The step is the size of an `int`, four bytes, not one byte. `*(px + 1)` loads the int that starts at 20. That int is not `x`.
+`px + 1` מציין את כתובת 20. הצעד הוא הגודל של `int`, ארבעה בתים, לא בית אחד. `*(px + 1)` טוען את ה-int שמתחיל ב-20. ה-int הזה אינו `x`.
 :::
 :::
 
-An array name is treated as a pointer to the first element, and subscript is sugar for that arithmetic. The array itself, when written `int ax[8]`, is a block on the stack. `ax` is not a pointer variable you can reseat.
+שם של מערך מטופל כמצביע לאיבר הראשון, ואינדקס הוא סוכר תחבירי לאריתמטיקה הזו. המערך עצמו, כשכותבים `int ax[8]`, הוא בלוק על המחסנית (stack). `ax` אינו משתנה מצביע שאפשר לכוון מחדש.
 
 ```cpp
 int ax[8], b;
 b = ax[1];
-b = *(ax + 1);         // same load
+b = *(ax + 1);         // the same load
 int* px = ax;          // same as px = &ax[0]
 ```
 
-The session 2 warning is the other direction: a pointer that does not point at an array can still be subscripted. `pi[3] = 5` writes three elements past whatever `pi` aims at. If `pi` aims at a single local, that write steps on neighboring stack slots.
+האזהרה של תרגול 2 היא הכיוון ההפוך: מצביע שלא מצביע אל מערך עדיין אפשר לאנדקס. `pi[3] = 5` כותב שלושה איברים מעבר למה ש-`pi` מכוון אליו. אם `pi` מכוון אל משתנה מקומי יחיד, הכתיבה הזו דורכת על תאי מחסנית שכנים.
 
-### A C string is not a std::string
+### מחרוזת C אינה std::string
 
-A C string is a `char` array whose last used cell is 0. `const char* c = "abcdefg"` points at that array. `s.c_str()` on a `std::string` hands back a pointer into the string's buffer. If you then assign a new value to `s`, the buffer may move, and the saved `c` dangles. Modifying a const array through that pointer is undefined.
+מחרוזת C היא מערך `char` שהתא האחרון שבשימוש בו הוא 0. `const char* c = "abcdefg"` מצביע אל המערך הזה. `s.c_str()` על `std::string` מחזיר מצביע אל תוך החוצץ של המחרוזת. אם אחר כך מציבים ל-`s` ערך חדש, החוצץ עשוי לזוז, וה-`c` שנשמר הוא מצביע תלוי (dangling pointer). שינוי של מערך `const` דרך המצביע הזה הוא התנהגות לא מוגדרת.
 
-### References
+### רפרנסים (reference)
 
-An lvalue (ערך מיקום) is an object with an address that outlives the expression: a variable. An rvalue (ערך זמני) is a temporary: the result of `5 * 22`, a literal. A reference (רפרנס) of the lvalue kind is declared with `&` after the type. It must be initialized with a real object, it cannot be null, and it cannot be reseated. The lecture compares it to a const pointer that was bound once.
+ערך מיקום (lvalue) הוא אובייקט עם כתובת שמאריכה ימים אחרי הביטוי: משתנה. ערך זמני (rvalue) הוא זמני: התוצאה של `5 * 22`, ליטרל. רפרנס מהסוג של ערך מיקום מוצהר עם `&` אחרי הטיפוס. חובה לאתחל אותו באובייקט אמיתי, הוא לא יכול להיות null, ואי אפשר לכוון אותו מחדש. ההרצאה משווה אותו למצביע `const` שנקשר פעם אחת.
 
 ```cpp
 void dec(int& x) { x--; }
@@ -116,31 +126,47 @@ int a = 3;
 dec(a);                // a == 2
 ```
 
-The same effect with a pointer takes the address at the call and dereferences in the body: `void dec(int* x) { (*x)--; }` called as `dec(&a)`. The reference version does not have a pointer object whose address you can print. `printAddr(int& x)` that prints `&x` prints the address of `a`. `printAddr(int* x)` that prints `&x` prints the address of the pointer parameter, which is a different slot from `a`.
+אותו אפקט עם מצביע לוקח את הכתובת בקריאה ומפעיל את הכוכבית בגוף: `void dec(int* x) { (*x)--; }` שנקראת כ-`dec(&a)`. בגרסת הרפרנס אין אובייקט מצביע שהכתובת שלו ניתנת להדפסה. `printAddr(int& x)` שמדפיס `&x` מדפיס את הכתובת של `a`. `printAddr(int* x)` שמדפיס `&x` מדפיס את הכתובת של פרמטר המצביע, וזה תא אחר מ-`a`.
 
-`const int&` can bind to a temporary and extends that temporary's life to the reference's scope. It also refuses `x--`.
+`const int&` יכול להיקשר לזמני ומאריך את חיי הזמני עד לתחום של הרפרנס. הוא גם מסרב ל-`x--`.
 
-## A numeric trace
+## מעקב מספרי
 
-Slide 10's picture, stripped to the cells that matter:
+הציור של שקף 10, מצומצם לתאים שחשובים:
 
-| address | cell | meaning |
+| כתובת | תא | משמעות |
 | --- | --- | --- |
-| 0x00 | 45 46 | the short `s`, value 17978, little-endian in the drawing |
-| 0x08 | the 8 bytes of `ps` | the address of `s` |
+| 0x00 | 45 46 | ה-short `s`, הערך 17978, בציור בסדר little-endian |
+| 0x08 | 8 הבתים של `ps` | הכתובת של `s` |
 
-`*ps = 3` overwrites the short, not the pointer. `ps = &other` overwrites the pointer, not the short.
+`*ps = 3` דורס את ה-short, לא את המצביע. `ps = &other` דורס את המצביע, לא את ה-short.
 
 :::problem id=worked-pointer-trace source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
-`int i = 2; int* pi = &i; int** ppi = &pi;` What do `i`, `*pi`, `*ppi`, and `**ppi` print, and what does `&i` equal?
+מה מדפיסים `i`, `*pi`, `*ppi` ו-`**ppi`, ולמה שווה `&i`?
+
+```cpp
+int i = 2;
+int* pi = &i;
+int** ppi = &pi;
+```
 
 :::solution
-`i` is 2. `*pi` loads the int at the address stored in `pi`, which is `i`, so 2. `*ppi` loads the pointer stored in `ppi`, which is `pi`, so it prints the address of `i`. `**ppi` loads that address as an int, so 2. `&i` is the same address as `pi` and as `*ppi`.
+`i` הוא 2. `*pi` טוען את ה-int בכתובת השמורה ב-`pi`, שזה `i`, ולכן 2. `*ppi` טוען את המצביע השמור ב-`ppi`, שזה `pi`, ולכן הוא מדפיס את הכתובת של `i`. `**ppi` טוען את הכתובת הזו כ-int, ולכן 2. `&i` היא אותה כתובת כמו `pi` וכמו `*ppi`.
+
+```text
+i    = 2
+pi   = &i
+ppi  = &pi
+
+*pi  = 2
+*ppi = &i
+**ppi = 2
+```
 :::
 :::
 
 :::check id=chk-star-const
-Which line fails to compile?
+איזו שורה לא מתקמפלת?
 
 ```cpp
 short s1 = 1, s2 = 2;
@@ -151,21 +177,21 @@ const short* ps1 = &s1;
 - [x] `*ps1 = 3;`
 - [ ] `ps1 = &s2;`
 
-`const` is on the left of `*`, so the short is frozen and the pointer variable is not.
+`const` נמצא משמאל ל-`*`, ולכן ה-short קפוא ומשתנה המצביע לא.
 :::
 
 :::trap
-`int* p; *p = 3;` uses an uninitialized address. It is not a null check. The session lists the four classic faults: an uninitialized pointer, a null dereference, a use after `delete`, and a second pointer that still holds an address you already deleted (a dangling pointer). Setting `p = nullptr` after `delete p` makes the next `delete p` a no-op and makes the dangling use obvious.
+`int* p; *p = 3;` משתמש בכתובת שלא אותחלה. זו לא בדיקת null. התרגול מונה ארבע תקלות קלאסיות: מצביע שלא אותחל, הפעלת כוכבית על null, שימוש אחרי `delete`, ומצביע שני שעדיין מחזיק כתובת שכבר מחקתם (מצביע תלוי). הצבה `p = nullptr` אחרי `delete p` הופכת את ה-`delete p` הבא לפעולה ריקה, והופכת את השימוש התלוי לגלוי.
 :::
 
 :::trap
-`delete` on a block from `new[]`, or the reverse, is the wrong deallocator. A two-dimensional heap array is an array of pointers, each row its own `new[]`. Deleting only the outer array leaks every row. Session 2 leaves that cleanup as an exercise on purpose.
+`delete` על בלוק שהגיע מ-`new[]`, או להפך, הוא המשחרר הלא נכון. מערך ערימה (heap) דו-ממדי הוא מערך של מצביעים, וכל שורה היא `new[]` משלה. מחיקה של המערך החיצוני בלבד גורמת לזליגת זיכרון של כל שורה. תרגול 2 משאיר את הניקוי הזה כתרגיל בכוונה.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps2-pointer-dangers source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-For each fragment from the practical session, name the fault. Do not "fix" it by deleting a line that the session says still compiles.
+לכל קטע מהתרגול, נקבו בתקלה. אל "תתקנו" אותו על ידי מחיקת שורה שהתרגול אומר שעדיין מתקמפלת.
 
 ```cpp
 int* p = nullptr;
@@ -185,27 +211,27 @@ delete b;
 ```
 
 :::hint
-Ask, for each pointer, whether it holds a live object's address at the moment of the star.
+שאלו, לכל מצביע, אם ברגע הכוכבית הוא מחזיק כתובת של אובייקט חי.
 :::
 :::hint
-`delete` does not change the bits stored in other pointer variables that copied the address.
+`delete` לא משנה את הביטים השמורים במשתני מצביע אחרים שהעתיקו את הכתובת.
 :::
 :::hint
-The first fragment stores the sentinel address 0.
+הקטע הראשון שומר את כתובת הזקיף 0.
 :::
 :::solution
-The first is a null dereference: address 0 is the sentinel, and the load or store is a segmentation fault.
+הראשון הוא הפעלת כוכבית על null: כתובת 0 היא הזקיף, והטעינה או הכתיבה היא segmentation fault.
 
-The second is an uninitialized pointer. The session notes that a bare `int* p;` followed by `*p = 3` is not a well-defined program; the bits in `p` are not an object you allocated.
+השני הוא מצביע שלא אותחל. התרגול מציין ש-`int* p;` חשוף ואחריו `*p = 3` אינו תוכנית מוגדרת היטב. הביטים ב-`p` אינם אובייקט שהקציתם.
 
-The third is a use after `delete`. The slot `r` still contains the old address, and that address is no longer an object. The session's later slide comments that the assignment still compiles.
+השלישי הוא שימוש אחרי `delete`. התא `r` עדיין מכיל את הכתובת הישנה, והכתובת הזו כבר אינה אובייקט. שקף מאוחר יותר בתרגול מעיר שההשמה עדיין מתקמפלת.
 
-The fourth is a dangling alias. `b` and `a` held one address. `delete b` frees the int. `*a` uses the same address. The safe pattern on the slide is `delete p; p = nullptr;` and the same for every copy, which you cannot do unless you still know about those copies.
+הרביעי הוא כינוי תלוי. `b` ו-`a` החזיקו כתובת אחת. `delete b` משחרר את ה-int. `*a` משתמש באותה כתובת. הדפוס הבטוח בשקף הוא `delete p; p = nullptr;`, ואותו דבר לכל עותק, ואת זה אי אפשר לעשות אלא אם עדיין יודעים על העותקים האלה.
 :::
 :::
 
 :::problem id=ps2-delete-2d source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-This is the session's two-dimensional allocation. Free every block it obtained. Do not free a row twice.
+זו ההקצאה הדו-ממדית של התרגול. שחררו כל בלוק שהיא השיגה. אל תשחררו שורה פעמיים.
 
 ```cpp
 int** arry = new int*[rowCount];
@@ -214,13 +240,13 @@ for (int i = 0; i < rowCount; ++i)
 ```
 
 :::hint
-There are `rowCount + 1` heap blocks: one array of pointers, and one array of ints per row.
+יש `rowCount + 1` בלוקי ערימה: מערך אחד של מצביעים, ומערך אחד של int לכל שורה.
 :::
 :::hint
-Free the rows before you free the array that holds their addresses. After the outer `delete[]` you no longer have the row pointers.
+שחררו את השורות לפני שמשחררים את המערך שמחזיק את הכתובות שלהן. אחרי ה-`delete[]` החיצוני כבר אין את מצביעי השורות.
 :::
 :::hint
-The loop that allocated is the loop that must delete, in reverse order of dependence.
+הלולאה שהקצתה היא הלולאה שחייבת למחוק, בסדר הפוך של התלות.
 :::
 :::solution
 ```cpp
@@ -230,21 +256,21 @@ delete[] arry;
 arry = nullptr;
 ```
 
-Each `arry[i]` came from `new int[colCount]`, so it is released with `delete[]`. The pointer array came from `new int*[rowCount]`, so it is also `delete[]`. Reversing that order loses the only copies of the row addresses and leaks every row. Setting `arry` to null afterwards matches the session's safe-delete habit.
+כל `arry[i]` הגיע מ-`new int[colCount]`, ולכן הוא משוחרר ב-`delete[]`. מערך המצביעים הגיע מ-`new int*[rowCount]`, ולכן גם הוא `delete[]`. היפוך הסדר הזה מאבד את העותקים היחידים של כתובות השורות, ויש זליגת זיכרון של כל שורה. הצבת `arry` ל-null אחר כך מתאימה להרגל המחיקה הבטוחה של התרגול.
 :::
 :::
 
 
 :::examnote
-The question builds a repository of images behind a pointer array, then returns that repository by value from a function that default-constructed a local. The trap is treating the returned object as a copy of the pixels, and treating `sizeof` of a pointer as a length.
+השאלה בונה מאגר תמונות מאחורי מערך מצביעים, ואז מחזירה את המאגר לפי ערך מפונקציה שבנתה מקומי בברירת מחדל. המלכודת היא להתייחס לאובייקט המוחזר כאל עותק של הפיקסלים, ולהתייחס ל-`sizeof` של מצביע כאורך.
 :::
 
 :::problem id=exam-20a-q1 source="Exams/20-a.pdf" kind=exam solution_origin=derived
-Write a C++ program that stores two kinds of image, `Portrait` and `Scenery`. Each pixel is a gray level in `0..255`. Pixels of one image are kept in a one-dimensional `BYTES` array, row after row. An `ImageRepository` holds many images in an array named `_images`.
+כתבו תוכנית C++ ששומרת שני סוגים של תמונה, `Portrait` ו-`Scenery`. כל פיקסל הוא רמת אפור ב-`0..255`. הפיקסלים של תמונה אחת נשמרים במערך `BYTES` חד-ממדי, שורה אחרי שורה. `ImageRepository` מחזיק תמונות רבות במערך בשם `_images`.
 
-a. (10) Implement the constructor and `Insert`. The constructor allocates an array of `capacity` pointers. `Insert` receives an array of images, deep-copies that pointer array, and does not deep-copy the byte arrays of the images. Add fields or methods only if you need them.
+א. ממשו את הבנאי (constructor) ואת `Insert`. הבנאי מקצה מערך של `capacity` מצביעים. `Insert` מקבל מערך של תמונות, מעתיק עמוקות (deep copy) את מערך המצביעים הזה, ולא מעתיק עמוקות את מערכי הבתים של התמונות. הוסיפו שדות או מתודות רק אם אתם צריכים אותם.
 
-b. A student writes:
+ב. סטודנט כותב:
 
 ```cpp
 ImageRepository CreateEmptyRep() {
@@ -253,24 +279,24 @@ ImageRepository CreateEmptyRep() {
 }
 ```
 
-Explain what this returns and what is wrong with using it as an empty repository.
+הסבירו מה זה מחזיר, ומה לא בסדר בשימוש בזה כמאגר ריק.
 
-The rest of the question continues the same class; answer (a) and (b) as the pointer question.
+שאר השאלה ממשיך את אותה מחלקה (class). ענו על (א) ועל (ב) כשאלת המצביעים.
 
 :::hint
-`_images` is an array of pointers. Copying the array copies addresses. Copying an `Image` would copy pixels. The question asks for the first and forbids the second.
+`_images` הוא מערך של מצביעים. העתקת המערך מעתיקה כתובות. העתקת `Image` הייתה מעתיקה פיקסלים. השאלה מבקשת את הראשון ואוסרת את השני.
 :::
 :::hint
-`rep` is an automatic object. Returning it by value copy-constructs from that local. If you did not write a copy constructor, the copy shares `_images` with an object that is about to die.
+`rep` הוא אובייקט אוטומטי. החזרה שלו לפי ערך בונה עותק מהמקומי. אם לא כתבתם בנאי העתקה (copy constructor), העותק חולק את `_images` עם אובייקט שעומד למות.
 :::
 :::hint
-The constructor must do `_images = new Image*[capacity];` and remember `capacity`. `Insert` allocates a new pointer array of the same length and copies the pointers, not the `BYTES` blocks.
+הבנאי חייב לעשות `_images = new Image*[capacity];` ולזכור את `capacity`. `Insert` מקצה מערך מצביעים חדש באותו אורך ומעתיק את המצביעים, לא את בלוקי ה-`BYTES`.
 :::
 :::solution
-a. One consistent reading of the slide-level rules and the question:
+א. קריאה אחת עקבית של כללי השקף ושל השאלה:
 
 ```cpp
-class Image { /* pixels in a BYTES block, a virtual destructor */ };
+class Image { /* pixels in a BYTES block, virtual destructor */ };
 class ImageRepository {
     Image** _images;
     int _capacity;
@@ -289,10 +315,10 @@ public:
 };
 ```
 
-The byte arrays stay where the images already allocated them. Two repositories can hold the same `Image*`. That is the shallow copy the question requested. Whoever `delete`s an `Image` must be the sole owner; this design does not give you that.
+מערכי הבתים נשארים איפה שהתמונות כבר הקצו אותם. שני מאגרים יכולים להחזיק אותו `Image*`. זו ההעתקה הרדודה (shallow copy) שהשאלה ביקשה. מי שעושה `delete` ל-`Image` חייב להיות הבעלים היחיד. העיצוב הזה לא נותן לכם את זה.
 
-b. `rep` is constructed in the frame of `CreateEmptyRep`. `return rep` uses the copy constructor. The default one copies the `_images` pointer. Then `rep`'s destructor runs. If that destructor is `delete[] _images`, the returned object holds a dangling pointer. If the destructor does not free, the function leaks on every other path and the caller shares a buffer with a dead local. Either way a by-value return of a pointer-owning object is the rule-of-three problem, not a way to make an empty repository. Return an object that was constructed in the caller's storage, or move, which is the next chapter's tool. A correct empty repository is `ImageRepository(capacity)` with `_size == 0` and a live pointer array.
+ב. `rep` נבנה במסגרת של `CreateEmptyRep`. `return rep` משתמש בבנאי ההעתקה. בנאי ההעתקה שברירת המחדל מעתיק את המצביע `_images`. אחר כך רץ ההורס של `rep`. אם ההורס הזה הוא `delete[] _images`, האובייקט המוחזר מחזיק מצביע תלוי. אם ההורס לא משחרר, בכל מסלול אחר יש זליגת זיכרון והקורא חולק חוצץ עם מקומי מת. כך או כך, החזרה לפי ערך של אובייקט שמחזיק מצביעים היא הבעיה של חוק השלושה, לא דרך ליצור מאגר ריק. החזירו אובייקט שנבנה באחסון של הקורא, או move, הכלי של הפרק הבא. מאגר ריק נכון הוא `ImageRepository(capacity)` עם `_size == 0` ומערך מצביעים חי.
 :::
 :::
 
-Pointers are how [Classes and objects](topic:classes-and-objects) name a heap `Student`, and how [Rule of three](topic:rule-of-three) decides whether a copy shares a buffer or allocates a new one.
+מצביעים הם הדרך שבה [מחלקות ועצמים](topic:classes-and-objects) מציינים `Student` על הערימה, והדרך שבה [חוק השלושה](topic:rule-of-three) מחליט אם עותק חולק חוצץ או מקצה חדש.

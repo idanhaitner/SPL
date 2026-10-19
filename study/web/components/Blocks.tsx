@@ -23,9 +23,9 @@ function ListBlock({ block }: { block: Extract<Block, { type: "list" }> }) {
 function preview(blocks: Block[]) {
   for (const block of blocks) {
     if (block.type === "paragraph" || block.type === "quote") return block.text;
-    if (block.type === "code") return block.text.trim().split("\n")[0] || "Question";
+    if (block.type === "code") return block.text.trim().split("\n")[0] || "שאלה";
   }
-  return "Question";
+  return "שאלה";
 }
 
 function plain(text: string) {
@@ -98,25 +98,25 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
   if (name === "trap") {
     return (
       <aside className="callout callout-trap">
-        <p className="kicker">Watch for this</p>
+        <p className="kicker">שימו לב</p>
         <Blocks blocks={children} courseId={courseId} />
       </aside>
     );
   }
   if (name === "definition" || name === "theorem" || name === "algorithm") {
-    const label = name === "definition" ? "Definition" : name === "theorem" ? "Theorem" : "Algorithm";
+    const label = name === "definition" ? "הגדרה" : name === "theorem" ? "משפט" : "אלגוריתם";
     const proof = children.filter((child) => child.type === "directive" && child.name === "proof");
     const body = children.filter((child) => !(child.type === "directive" && child.name === "proof"));
     return (
       <section className="formal" id={attrs.id}>
         <p className="kicker">{label}</p>
         {attrs.title && <h3><Inline text={attrs.title} /></h3>}
-        {name === "algorithm" && attrs.complexity && <p className="meta">Complexity. {attrs.complexity}</p>}
-        {name === "algorithm" && attrs.invariant && <p className="meta">Invariant. {attrs.invariant}</p>}
+        {name === "algorithm" && attrs.complexity && <p className="meta">סיבוכיות. {attrs.complexity}</p>}
+        {name === "algorithm" && attrs.invariant && <p className="meta">תנאי פנימי. {attrs.invariant}</p>}
         <Blocks blocks={body} courseId={courseId} />
         {proof.map((item, index) => (
           <div className="proof" key={index}>
-            <p className="kicker">Proof</p>
+            <p className="kicker">הוכחה</p>
             <Blocks blocks={item.type === "directive" ? item.children : []} courseId={courseId} />
           </div>
         ))}
@@ -126,7 +126,7 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
   if (name === "proof") {
     return (
       <div className="proof">
-        <p className="kicker">Proof</p>
+        <p className="kicker">הוכחה</p>
         <Blocks blocks={children} courseId={courseId} />
       </div>
     );

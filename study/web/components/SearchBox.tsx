@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { SearchHit } from "@/lib/types";
 
+const KINDS: Record<string, string> = {
+  Chapter: "פרק",
+  Practice: "תרגול",
+  Glossary: "מונח",
+};
+
 export function SearchBox({ hits }: { hits: SearchHit[] }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -23,11 +29,11 @@ export function SearchBox({ hits }: { hits: SearchHit[] }) {
 
   return (
     <div className="search" ref={box}>
-      <label className="sr-only" htmlFor="q">Search the course</label>
+      <label className="sr-only" htmlFor="q">חיפוש בקורס</label>
       <input
         id="q"
         type="search"
-        placeholder="Search"
+        placeholder="חיפוש"
         value={query}
         autoComplete="off"
         onChange={(event) => {
@@ -38,10 +44,10 @@ export function SearchBox({ hits }: { hits: SearchHit[] }) {
       />
       {open && needle && (
         <div className="search-results">
-          {matches.length === 0 && <p>Nothing matches.</p>}
+          {matches.length === 0 && <p>אין תוצאות.</p>}
           {matches.map((hit) => (
             <Link key={hit.href + hit.title} href={hit.href} onClick={() => setOpen(false)}>
-              <span>{hit.kind}</span>
+              <span>{KINDS[hit.kind] ?? hit.kind}</span>
               {hit.title}
             </Link>
           ))}

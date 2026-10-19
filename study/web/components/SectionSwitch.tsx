@@ -74,7 +74,7 @@ export function SectionSwitch({ intro, parts }: { intro: ReactNode; parts: Part[
     <>
       {intro}
       {parts.length > 1 && (
-        <nav className="parts" aria-label="Sections">
+        <nav className="parts" aria-label="סעיפים">
           {parts.map((part, item) => (
             <button
               type="button"
@@ -93,7 +93,7 @@ export function SectionSwitch({ intro, parts }: { intro: ReactNode; parts: Part[
         {current.groups.length > 0 && <Folds groups={current.groups} revealId={revealId} />}
         {parts.length > 1 && upcoming && (
           <button type="button" className="part-next" onClick={() => show(index + 1)}>
-            <span>Next section</span>
+            <span>הסעיף הבא</span>
             <strong><Inline text={upcoming.title} /></strong>
           </button>
         )}

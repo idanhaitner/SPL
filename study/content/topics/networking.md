@@ -1,6 +1,6 @@
 ---
 id: networking
-title: Networking
+title: תקשורת
 sources:
   - "Classes/Chapter 10 - Networking.pptx"
   - "Exrecises/PS9 2026.pptx"
@@ -15,39 +15,39 @@ sources:
   - "Exams/20-b-solution.pdf"
 ---
 
-A process cannot read another process's memory. Chapter 10 starts from that isolation, including the case of two machines, and builds the channel the rest of the course will program against: a port, a socket, and a choice between TCP and UDP.
+תהליך (process) אינו יכול לקרוא את הזיכרון של תהליך אחר. פרק 10 בתקשורת (networking) יוצא מהבידוד הזה, כולל המקרה של שני מחשבים, ובונה את הערוץ (channel) ששאר הקורס יתכנת מולו: פורט, שקע (socket), ובחירה בין TCP ל-UDP.
 
-## Layers
+## שכבות
 
-The lecture uses a shortened OSI stack of four layers. Each layer offers a service to the one above it, hides its own implementation, and speaks a defined protocol.
+ההרצאה משתמשת במחסנית OSI מקוצרת של ארבע שכבות. כל שכבה מציעה שירות לזו שמעליה, מסתירה את המימוש שלה, ומדברת בפרוטוקול מוגדר.
 
-| layer | job | unit |
+| שכבה | תפקיד | יחידה |
 | --- | --- | --- |
-| link | bits on a wire, timing, the NIC and its driver | frame |
-| internet | addresses and routing | packet |
-| transport | process to process | segment or datagram |
-| application | what the message means | message |
+| גישה | ביטים על הכבל, תזמון, כרטיס הרשת והדרייבר שלו | מסגרת |
+| אינטרנט | כתובות וניתוב | חבילה |
+| תעבורה | מתהליך לתהליך | מקטע או דטגרם |
+| אפליקציה | מה ההודעה אומרת | הודעה |
 
-![The four layers the lecture keeps: application on top, then transport, internet, and the link](../assets/figures/network-layers.svg)
+![ארבע השכבות שההרצאה משאירה: אפליקציה למעלה, אחר כך תעבורה, אינטרנט, וגישה](../assets/figures/network-layers.svg)
 
-The link layer does not know who the application is. The internet layer, IP, puts a source and a destination on each packet. The header carries lengths, an identification, flags, and a TTL (time to live) that routers decrement so a packet cannot loop forever. A router looks up the next hop in a local table and hands the packet to the link layer. IP does not promise that the packet arrives, or that it arrives in order. DNS turns a name into an IP address. NAT lets a private network share one public address.
+שכבת הגישה אינה יודעת מי האפליקציה. שכבת האינטרנט, IP, שמה על כל חבילה כתובת מקור וכתובת יעד. הכותרת נושאת אורכים, זיהוי, דגלים, ו-TTL (time to live) שהנתבים מורידים כדי שחבילה לא תסתובב בלולאה לנצח. נתב מחפש את הקפיצה הבאה בטבלה מקומית ומוסר את החבילה לשכבת הגישה. IP אינו מבטיח שהחבילה תגיע, או שתגיע לפי הסדר. DNS הופך שם לכתובת IP. NAT נותן לרשת פרטית לשתף כתובת ציבורית אחת.
 
-The course then ignores the bottom and programs the top two layers.
+הקורס אחר כך מתעלם מהתחתית ומתכנת את שתי השכבות העליונות.
 
-:::definition id=def-host-port title="Host, IP address, port" source="Classes/Chapter 10 - Networking.pptx"
-A host (מארח) is a machine on the network that runs processes and sends and receives traffic. An IP address identifies the host for routing, not the process. A port is the number that identifies the process, or the service, on that host. The lecture's analogy is an apartment number in a building. Ports 1 through 1023 are reserved, which session 9 adds.
+:::definition id=def-host-port title="מארח, כתובת IP, פורט" source="Classes/Chapter 10 - Networking.pptx"
+מארח (host) הוא מחשב ברשת שמריץ תהליכים ושולח ומקבל תעבורה. כתובת IP מזהה את המארח לצורך ניתוב, לא את התהליך. פורט הוא המספר שמזהה את התהליך, או את השירות, על המארח הזה. האנלוגיה בהרצאה היא מספר דירה בבניין. הפורטים 1 עד 1023 שמורים, ואת זה מוסיף מפגש 9.
 :::
 
-IPv4 addresses are 32 bits, written `132.72.43.254`. IPv6 addresses are 128 bits. `0.0.0.0` is reserved. `127.0.0.1` and `::1` are loopback: a TCP or UDP conversation that never leaves the machine and skips the physical link.
+כתובות IPv4 הן 32 ביט, ונכתבות `132.72.43.254`. כתובות IPv6 הן 128 ביט. `0.0.0.0` שמורה. `127.0.0.1` ו-`::1` הן loopback: שיחת TCP או UDP שאינה יוצאת מהמחשב ומדלגת על הקישור הפיזי.
 
-Four axes describe a channel, in the lecture's table:
+ארבעה צירים מתארים ערוץ, בטבלה של ההרצאה:
 
-- Connectionless, or connection-oriented. UDP has no session and no handshake. TCP requires a handshake and then has a session.
-- Unbuffered, or buffered. Send immediately, or gather bytes and send a chunk.
-- Synchronous or asynchronous, which the slide also lines up with blocking and non-blocking. A blocking call waits. A non-blocking call returns so the thread can ask for status later.
-- Reliable or unreliable. TCP acknowledges and retransmits, keeps order, and does not flood the receiver. UDP is best effort: a datagram can disappear or arrive out of order, and what arrives is the whole datagram or nothing.
+- בלי חיבור, או מכוון חיבור. ל-UDP אין session ואין handshake. TCP דורש handshake ואז יש session.
+- בלי אגירה, או עם אגירה. שליחה מיידית, או איסוף בתים ושליחת גוש.
+- סינכרוני או אסינכרוני, והשקף גם מיישר את זה עם חסימה (blocking) ועם היעדר חסימה. קריאה חוסמת ממתינה. קריאה שאינה חוסמת חוזרת, כדי שהחוט (thread) יוכל לשאול על המצב אחר כך.
+- אמין או לא אמין. TCP מאשר ושולח מחדש, שומר על הסדר, ואינו מציף את המקבל. UDP הוא מאמץ מיטבי (best effort): דטגרם יכול להיעלם או להגיע שלא לפי הסדר, ומה שמגיע הוא הדטגרם כולו או כלום.
 
-### TCP and UDP in Java
+### TCP ו-UDP ב-Java
 
 ```java
 // TCP server
@@ -70,91 +70,108 @@ DatagramPacket p = new DatagramPacket(msg, msg.length, ip, 5000);
 ds.send(p);
 ```
 
-`accept` blocks until a client connects, and each accepted `Socket` is a different connection. Many clients can share the server's port. The stack demultiplexes by the client's address and port as well as the server's. Session 9's echo server is this loop: read a line, write it back, with `InputStreamReader` and `OutputStreamWriter` locked to UTF-8. Bytes are not characters. The session's table shows a Hebrew letter as the two UTF-8 bytes `d7 90`. If the two ends disagree on the charset, the characters come out wrong. Only the code points 0 through 127 are safe across the encodings the session mentions.
+`accept` נחסם עד שלקוח מתחבר, וכל `Socket` שהתקבל הוא חיבור אחר. הרבה לקוחות יכולים לחלוק את הפורט של השרת. מחסנית הרשת (stack) מזהה את החיבור לפי כתובת הלקוח והפורט שלו, וגם לפי אלה של השרת. שרת ההד של מפגש 9 הוא הלולאה הזו: קוראים שורה, כותבים אותה בחזרה, עם `InputStreamReader` ו-`OutputStreamWriter` שנעולים על UTF-8. בתים אינם תווים. הטבלה במפגש מראה אות עברית כשני בתי UTF-8 `d7 90`. אם שני הקצוות חלוקים על ה-charset, התווים יוצאים שגויים. רק נקודות הקוד 0 עד 127 בטוחות בין הקידודים שהמפגש מזכיר.
 
-A protocol, in the session's words, is the rules of the conversation: how a message is framed, addressed, and interpreted. The echo protocol is "a line in, the same line out." HTTP, on port 80, is a later example the session writes by hand onto a `Socket`.
+פרוטוקול, במילים של המפגש, הוא כללי השיחה: איך הודעה ממוסגרת, ממוענת, ומפורשת. פרוטוקול ההד הוא "שורה נכנסת, אותה שורה יוצאת." HTTP, על פורט 80, הוא דוגמה מאוחרת יותר שהמפגש כותב ביד על `Socket`.
 
-### Other channels, briefly
+### ערוצים אחרים, בקצרה
 
-The lecture spends the second half of the deck on mechanisms that are not all network protocols. The comparison table at the end is the one to remember.
+ההרצאה מקדישה את המחצית השנייה של המצגת למנגנונים שאינם כולם פרוטוקולי רשת. טבלת ההשוואה בסוף היא זו שכדאי לזכור.
 
-| mechanism | direction | crosses machines | reliable |
+| מנגנון | כיוון | חוצה מכונות | אמין |
 | --- | --- | --- | --- |
-| anonymous pipe | one way | no | yes |
-| named pipe | one way, sits on a file name | no | yes |
-| TCP socket | both ways | yes | yes |
-| UDP socket | datagrams | yes | no |
-| message queue | messages | no, unless a product extends it | yes |
-| memory-mapped file and shared memory | both sides see bytes | no | the memory is just memory |
-| signals, mutex, semaphore, condition variable, file lock | synchronization, not a byte stream | no | not a delivery service |
+| צינור (pipe) אנונימי | כיוון אחד | לא | כן |
+| צינור עם שם | כיוון אחד, יושב על שם קובץ | לא | כן |
+| שקע TCP | שני הכיוונים | כן | כן |
+| שקע UDP | דטגרמים | כן | לא |
+| תור הודעות | הודעות | לא, אלא אם מוצר מרחיב אותו | כן |
+| קובץ ממופה לזיכרון וזיכרון משותף | שני הצדדים רואים בתים | לא | הזיכרון הוא פשוט זיכרון |
+| signals, mutex, semaphore, משתנה תנאי, נעילת קובץ | סנכרון, לא זרם בתים | לא | לא שירות מסירה |
 
-An anonymous pipe dies with the process. A named pipe does not disappear when you close the descriptor. Shared memory is the fastest and the easiest to get wrong, which is why the concurrency chapter exists. The course's servers use TCP sockets.
+צינור אנונימי מת עם התהליך. צינור עם שם אינו נעלם כשסוגרים את המתאר. זיכרון משותף הוא המהיר ביותר והקל ביותר לטעות בו, ולכן קיים פרק המקביליות. השרתים בקורס משתמשים בשקעי TCP.
 
-C++ threads show up in session 10 because assignment 3's client is in C++. `std::thread` runs a function. You must `join` or `detach` before the `std::thread` object is destroyed. `std::mutex` is the mutex. `std::lock_guard` locks in its constructor and unlocks in its destructor, the RAII version of `synchronized`. There is no `Runnable`; you pass a function pointer or a lambda.
+חוטי C++ מופיעים במפגש 10 כי הלקוח של מטלה 3 כתוב ב-C++. `std::thread` מריץ פונקציה. חובה `join` או `detach` לפני שאובייקט ה-`std::thread` נהרס. `std::mutex` הוא ה-mutex. `std::lock_guard` נועל בבנאי ומשחרר במפרק, גרסת ה-RAII של `synchronized`. אין `Runnable`; מעבירים מצביע לפונקציה או lambda.
 
-STOMP, also session 10, is the application protocol on top of a reliable stream. A frame is a command, headers `name:value`, a blank line, a body, and a null character `'\0'`. Header order does not matter. `CONNECT` carries `accept-version` and `host`, and optionally `login` and `passcode`. The server answers `CONNECTED`. `SUBSCRIBE` needs `id` and `destination`. `SEND` needs `destination`. `DISCONNECT` may carry `receipt`, and the server then answers `RECEIPT`. `ERROR` carries a `message` header. The assignment text wins over the slides when they disagree; the session says so on the slide.
+STOMP, גם הוא מפגש 10, הוא פרוטוקול האפליקציה מעל זרם אמין. מסגרת היא פקודה, כותרות `name:value`, שורה ריקה, גוף, ותו null `'\0'`. סדר הכותרות אינו משנה. `CONNECT` נושא `accept-version` ו-`host`, ורשות גם `login` ו-`passcode`. השרת עונה `CONNECTED`. `SUBSCRIBE` צריך `id` ו-`destination`. `SEND` צריך `destination`. `DISCONNECT` רשאי לשאת `receipt`, והשרת אז עונה `RECEIPT`. `ERROR` נושא כותרת `message`. נוסח המטלה גובר על השקפים כשהם חלוקים; המפגש אומר זאת על השקף.
 
 :::problem id=worked-tcp-accept source="Classes/Chapter 10 - Networking.pptx" kind=worked solution_origin=source
-A TCP server has called `accept` once and is blocked inside `read` on that socket. A second client connects. What happens, and what changes if the server loops back to `accept`?
+לקוח שני מתחבר בזמן שהשרת הזה חסום בתוך `read`. מה קורה, ומה משתנה אם השרת חוזר בלולאה אל `accept`?
+
+```java
+ServerSocket ss = new ServerSocket(80);
+Socket first = ss.accept();          // client 1
+InputStream in = first.getInputStream();
+in.read(buf);                         // blocked here
+// client 2 connects during the read
+```
 
 :::solution
-The second connection sits in the listen backlog until somebody calls `accept`. The thread blocked in `read` is not in `accept`, so the second client is not served. A loop that `accept`s, handles one client to completion, then `accept`s again serves the second client only after the first conversation ends. That is the single-threaded server. Serving both at once needs another thread, or the non-blocking loop in the reactor chapter.
+החיבור השני יושב ב-backlog של ה-listen עד שמישהו קורא ל-`accept`. החוט החסום ב-`read` אינו בתוך `accept`, ולכן הלקוח השני אינו מקבל שירות.
+
+```java
+while (true) {
+    Socket client = ss.accept();
+    handle(client);    // returns only when this client is done
+}
+```
+
+לולאה שקוראת ל-`accept`, מטפלת בלקוח אחד עד הסוף, ואז קוראת שוב ל-`accept`, משרתת את הלקוח השני רק אחרי שהשיחה הראשונה נגמרת. זה שרת חוט אחד (single threaded server). לשרת את שניהם יחד צריך חוט נוסף, או את הלולאה ללא חסימה בפרק Reactor.
 :::
 :::
 
 :::check id=chk-tcp-udp
-Which protocol on the lecture's table keeps order and retransmits a lost segment?
+איזה פרוטוקול בטבלה של ההרצאה שומר על הסדר ושולח מחדש מקטע שאבד?
 
 - [ ] UDP
 - [x] TCP
 - [ ] IP
 
-IP does not promise delivery or order. UDP keeps the datagram boundary and still does not promise delivery. TCP is the row marked reliable, ordered, and session-oriented.
+IP אינו מבטיח מסירה או סדר. UDP שומר על גבול הדטגרם ועדיין אינו מבטיח מסירה. TCP הוא השורה שמסומנת אמינה, לפי הסדר, ומכוונת session.
 :::
 
 :::trap
-`read` on a TCP socket returns a count of bytes, not a message. A logical line may arrive in two reads, or two lines may arrive in one. The encoder-decoder, not the socket, finds the message boundary. UDP preserves the boundary and may drop the datagram.
+`read` על שקע TCP מחזיר מספר בתים, לא הודעה. שורה לוגית יכולה להגיע בשתי קריאות, או שתי שורות יכולות להגיע באחת. המקודד-מפענח, לא השקע, מוצא את גבול ההודעה. UDP שומר על הגבול ועלול להשליך את הדטגרם.
 :::
 
 :::trap
-Writing characters through an `OutputStream` with the platform default charset, and reading them as UTF-8, is the session's "bad decoding" slide. Construct the reader and the writer with the same charset name.
+כתיבת תווים דרך `OutputStream` עם ה-charset שברירת המחדל של הפלטפורמה, וקריאתם כ-UTF-8, היא שקף "הפענוח הרע" של המפגש. בונים את הקורא ואת הכותב עם אותו שם charset.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps9-tcp-udp source="Exrecises/PS9 2026.pptx" kind=exercise solution_origin=source
-From session 9's comparison: for a spell-check request of one word and one response, give one reason to choose UDP and one reason to choose TCP.
+מההשוואה של מפגש 9: לבקשת בדיקת איות של מילה אחת ותשובה אחת, תנו סיבה אחת לבחור ב-UDP וסיבה אחת לבחור ב-TCP.
 
 :::hint
-UDP skips the handshake. TCP does not lose the response quietly.
+UDP מדלג על ה-handshake. TCP אינו מאבד את התשובה בשקט.
 :::
 :::hint
-A spell-check message fits in one datagram. A file transfer does not want that gamble.
+הודעת בדיקת איות נכנסת בדטגרם אחד. העברת קובץ אינה רוצה את ההימור הזה.
 :::
 :::hint
-Name the handshake and the retransmission, not "UDP is faster" alone.
+תנו שם ל-handshake ולשליחה מחדש, לא רק "UDP מהיר יותר".
 :::
 :::solution
-UDP needs no handshake and no connection state, so one request and one reply are two datagrams. That is the reason to choose it for a tiny query. The cost is that either datagram can disappear, and the client cannot tell a lost reply from a slow server unless it adds its own timeout and retry.
+UDP אינו צריך handshake ואינו צריך מצב חיבור, ולכן בקשה אחת ותשובה אחת הן שני דטגרמים. זו הסיבה לבחור בו לשאילתה זעירה. המחיר הוא שכל אחד מהדטגרמים יכול להיעלם, והלקוח אינו יכול להבדיל בין תשובה שאבדה לבין שרת איטי אלא אם הוא מוסיף timeout וניסיון חוזר משלו.
 
-TCP establishes a session, retransmits lost segments, and delivers bytes in order. The reply arrives, or the connection fails visibly. The cost is the handshake and the stream framing: you must decide where the response ends. For anything the user will retry by hand, TCP is the session's default. For a measurement that can drop a sample, UDP matches the lecture's "best effort" row.
+TCP מקים session, שולח מחדש מקטעים שאבדו, ומוסר בתים לפי הסדר. התשובה מגיעה, או שהחיבור נכשל באופן גלוי. המחיר הוא ה-handshake ומסגור הזרם: צריך להחליט איפה התשובה נגמרת. לכל דבר שהמשתמש ינסה שוב ביד, TCP הוא ברירת המחדל של המפגש. למדידה שאפשר להשמיט ממנה דגימה, UDP מתאים לשורת "המאמץ המיטבי" של ההרצאה.
 :::
 :::
 
 :::problem id=ps9-encoding source="Exrecises/PS9 2026.pptx" kind=exercise solution_origin=source
-The session shows a Hebrew letter whose UTF-8 encoding is the bytes `D7 90`. The server writes those bytes. The client builds an `InputStreamReader` with the platform charset, which is not UTF-8. What does the client fail to do, and what constructor fixes it?
+המפגש מראה אות עברית שקידוד ה-UTF-8 שלה הוא הבתים `D7 90`. השרת כותב את הבתים האלה. הלקוח בונה `InputStreamReader` עם ה-charset של הפלטפורמה, שאינו UTF-8. מה הלקוח נכשל לעשות, ואיזה בנאי מתקן את זה?
 
 :::hint
-The socket carries bytes. Characters are an agreement above that.
+השקע נושא בתים. תווים הם הסכמה מעל זה.
 :::
 :::hint
-`InputStreamReader` is the class that applies a charset. `BufferedReader` only splits lines.
+`InputStreamReader` הוא המחלקה שמפעילה charset. `BufferedReader` רק מפצל שורות.
 :::
 :::hint
-The session's good client passes `"UTF-8"` to both the reader and the writer.
+הלקוח הטוב של המפגש מעביר `"UTF-8"` גם לקורא וגם לכותב.
 :::
 :::solution
-The client decodes `D7 90` under the wrong charset, so the letter is not the letter the server sent. The fix is the pair on the slide:
+הלקוח מפענח את `D7 90` תחת charset שגוי, ולכן האות אינה האות שהשרת שלח. התיקון הוא הזוג שעל השקף:
 
 ```java
 bufferIn = new BufferedReader(
@@ -163,21 +180,21 @@ writerOut = new PrintWriter(
     new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"), true);
 ```
 
-Both directions name UTF-8. `BufferedReader` then splits lines. It does not choose the charset.
+שני הכיוונים נוקבים ב-UTF-8. `BufferedReader` אחר כך מפצל שורות. הוא אינו בוחר את ה-charset.
 :::
 :::
 
 :::problem id=ps10-lock-guard source="Exrecises/SPL_PS10.pptx" kind=exercise solution_origin=source
-Translate a Java `synchronized (mutex)` block that prints a task id into the C++ of session 10. Include the thread launch and the wait. State the rule the session gives for destroying a `std::thread`.
+תרגמו בלוק Java של `synchronized (mutex)` שמדפיס מזהה משימה אל ה-C++ של מפגש 10. כללו את השקת החוט ואת ההמתנה. נסחו את הכלל שהמפגש נותן להשמדת `std::thread`.
 
 :::hint
-`std::lock_guard` is constructed with the mutex and destroyed at the end of the scope.
+`std::lock_guard` נבנה עם ה-mutex ונהרס בסוף הטווח.
 :::
 :::hint
-`std::thread th(&Task::run, &task)` runs the method. `join` waits.
+`std::thread th(&Task::run, &task)` מריץ את המתודה. `join` ממתין.
 :::
 :::hint
-The rule is join or detach, before the destructor.
+הכלל הוא join או detach, לפני המפרק.
 :::
 :::solution
 ```cpp
@@ -187,24 +204,24 @@ std::thread th1(&Task::run, &task1);
 th1.join();
 ```
 
-Inside `Task::run`, `std::lock_guard<std::mutex> guard(mutex);` locks at construction and unlocks when `guard` leaves the scope, including on a return. That is the session's RAII stand-in for `synchronized`. If `th1`'s destructor runs while the thread is still joinable, the program calls `std::terminate`. Every `std::thread` is joined or detached first.
+בתוך `Task::run`, `std::lock_guard<std::mutex> guard(mutex);` נועל בבנייה ומשחרר כש-`guard` יוצא מהטווח, כולל ב-return. זה התחליף של המפגש ב-RAII ל-`synchronized`. אם המפרק של `th1` רץ בזמן שהחוט עדיין ניתן ל-join, התוכנית קוראת ל-`std::terminate`. כל `std::thread` עובר join או detach קודם.
 :::
 :::
 
 :::problem id=ps10-stomp source="Exrecises/SPL_PS10.pptx" kind=exercise solution_origin=source
-A client wants to receive messages for `/topic/a`. List the STOMP frames it sends, in order, and the frame it receives if the server cannot subscribe it. Say what ends a frame.
+לקוח רוצה לקבל הודעות עבור `/topic/a`. פרטו את מסגרות ה-STOMP שהוא שולח, לפי הסדר, ואת המסגרת שהוא מקבל אם השרת אינו יכול לרשום אותו. אמרו מה מסיים מסגרת.
 
 :::hint
-The session's first client frame is `CONNECT` or `STOMP`, not `SUBSCRIBE`.
+מסגרת הלקוח הראשונה במפגש היא `CONNECT` או `STOMP`, לא `SUBSCRIBE`.
 :::
 :::hint
-`SUBSCRIBE` has two mandatory headers, `id` and `destination`.
+ל-`SUBSCRIBE` שתי כותרות חובה, `id` ו-`destination`.
 :::
 :::hint
-A frame ends with a null byte, after the body.
+מסגרת נגמרת בבית null, אחרי הגוף.
 :::
 :::solution
-The client sends `CONNECT` with `accept-version` and `host`, and reads `CONNECTED` (the `version` header is the version the session will use). It then sends
+הלקוח שולח `CONNECT` עם `accept-version` ו-`host`, וקורא `CONNECTED` (כותרת ה-`version` היא הגרסה שה-session ישתמש בה). אחר כך הוא שולח
 
 ```
 SUBSCRIBE
@@ -214,113 +231,113 @@ destination:/topic/a
 \0
 ```
 
-If the server cannot create the subscription it sends `ERROR`, with a `message` header, not a `MESSAGE` frame. A successful subscription later delivers `MESSAGE` frames whose `destination` is `/topic/a`. Each frame ends with the null character `'\0'`. Header order does not matter. `DISCONNECT`, optionally with `receipt`, is how the client leaves before closing the socket; the server answers `RECEIPT` when the receipt header was present.
+אם השרת אינו יכול ליצור את המינוי הוא שולח `ERROR`, עם כותרת `message`, לא מסגרת `MESSAGE`. מינוי שהצליח מוסר אחר כך מסגרות `MESSAGE` שה-`destination` שלהן הוא `/topic/a`. כל מסגרת נגמרת בתו ה-null `'\0'`. סדר הכותרות אינו משנה. `DISCONNECT`, עם `receipt` אם רוצים, הוא הדרך שבה הלקוח עוזב לפני סגירת השקע; השרת עונה `RECEIPT` כשכותרת ה-receipt הייתה נוכחת.
 :::
 :::
 
 
 :::examnote
-The question replaces a delimiter with a length prefix, caps the number of clients, or asks for a small command protocol on the existing server. The trap is treating a TCP read as a whole message, or forgetting that UDP has no `accept`.
+השאלה מחליפה תו מפריד בקידומת אורך, מגבילה את מספר הלקוחות, או מבקשת פרוטוקול פקודות קטן על השרת הקיים. המלכודת היא להתייחס לקריאה מ-TCP כאל הודעה שלמה, או לשכוח של-UDP אין `accept`.
 :::
 
 :::problem id=exam-15b-q3 source="Exams/15-b.pdf" kind=exam solution_origin=source
-The messaging server from the appendix is a thread per accepted socket.
+שרת ההודעות מהנספח הוא שרת חוט-לכל-לקוח (thread-per-client): חוט לכל שקע שהתקבל.
 
-a. (5) Run at most 10 threads.
-b. (5) `MessageLengthBasedTokenizer` frames a message as a length followed by that many bytes, not as a delimiter.
-c. (5) `SpellMessageEncoder` turns a `SpellMessage` into bytes and back.
-d. (8) A spell server uses `SpellMessage`, the length tokenizer, and a thread-safe `LexiconBasedSpellChecker` with an empty constructor.
-e. Update `SpellChecker` so the server in the question compiles.
-f. Finish the client `main`.
+א. להריץ לכל היותר 10 חוטים.
+ב. `MessageLengthBasedTokenizer` ממסגר הודעה כאורך ואחריו כמספר הזה של בתים, לא כתו מפריד.
+ג. `SpellMessageEncoder` הופך `SpellMessage` לבתים ובחזרה.
+ד. שרת איות משתמש ב-`SpellMessage`, בממסגר לפי אורך, וב-`LexiconBasedSpellChecker` בטוח לחוטים עם בנאי ריק.
+ה. עדכנו את `SpellChecker` כך שהשרת בשאלה יתקמפל.
+ו. סיימו את `main` של הלקוח.
 
 :::hint
-A fixed pool of 10 is the cap. Creating a `Thread` per `accept` with no pool does not cap anything.
+מאגר קבוע של 10 הוא התקרה. יצירת `Thread` לכל `accept` בלי מאגר אינה מגבילה דבר.
 :::
 :::hint
-Read the length first, then read exactly that many bytes. `hasMessage` is false until those bytes are present.
+קוראים את האורך קודם, ואז קוראים בדיוק כמספר הזה של בתים. `hasMessage` הוא false עד שהבתים האלה נוכחים.
 :::
 :::hint
-The official server submits each connection to `Executors.newFixedThreadPool(10)` instead of `new Thread(...).start()` with no bound.
+הפתרון הרשמי מגיש כל חיבור אל `Executors.newFixedThreadPool(10)` במקום `new Thread(...).start()` בלי חסם.
 :::
 :::solution
-a. The official solution builds `ExecutorService executor = Executors.newFixedThreadPool(10)` and `executor.execute(connectionHandler)` for each accepted socket. The accept loop itself stays on the main thread. At most 10 handlers run. Further connections wait in the pool's queue, or you can refuse them when the queue is what you consider "more than 10."
+א. הפתרון הרשמי בונה `ExecutorService executor = Executors.newFixedThreadPool(10)` ו-`executor.execute(connectionHandler)` לכל שקע שהתקבל. לולאת ה-accept עצמה נשארת על החוט הראשי. לכל היותר 10 מטפלים רצים. חיבורים נוספים ממתינים בתור של המאגר, או שאפשר לסרב להם כשהתור הוא מה שנחשב "יותר מ-10".
 
-b. The tokenizer accumulates bytes until it has the integer length and then that many payload bytes. Only then does `nextMessage` return. A delimiter is not consulted.
+ב. הממסגר צובר בתים עד שיש לו את אורך המספר השלם ואז כמספר הזה של בתי מטען. רק אז `nextMessage` חוזר. תו מפריד אינו נבדק.
 
-c. The encoder writes the request kind, the language, and the word in an agreed order, with the length prefix the tokenizer expects, and `fromBytes` rebuilds a `SpellMessage`.
+ג. המקודד כותב את סוג הבקשה, את השפה, ואת המילה בסדר מוסכם, עם קידומת האורך שהממסגר מצפה לה, ו-`fromBytes` בונה מחדש `SpellMessage`.
 
-d. The handler is constructed with `new SpellMessageEncoder()`, `new MessageLengthBasedTokenizer()`, and a protocol that calls `LexiconBasedSpellChecker.check` or `getCorrections` according to `SpellMessage.getRequest()`.
+ד. המטפל נבנה עם `new SpellMessageEncoder()`, `new MessageLengthBasedTokenizer()`, ופרוטוקול שקורא ל-`LexiconBasedSpellChecker.check` או ל-`getCorrections` לפי `SpellMessage.getRequest()`.
 
-e. `SpellChecker` stays the interface on the exam. The implementation is already thread-safe, so handlers may share one instance.
+ה. `SpellChecker` נשאר הממשק שבשאלה. המימוש כבר בטוח לחוטים, ולכן המטפלים רשאים לחלוק מופע אחד.
 
-f. The client opens a `Socket` to the host and port, sends one encoded `SpellMessage`, and reads one framed reply.
+ו. הלקוח פותח `Socket` אל המארח והפורט, שולח `SpellMessage` מקודד אחד, וקורא תשובה ממוסגרת אחת.
 :::
 :::
 
 :::problem id=exam-16a-q3 source="Exams/16-a.pdf" kind=exam solution_origin=derived
-A printer service was an RMI interface `Printer.print(String)`. A student replaced the generated stub and skeleton with a protocol server.
+שירות מדפסת היה ממשק RMI בשם `Printer.print(String)`. סטודנט החליף את ה-stub ואת ה-skeleton שנוצרו בשרת פרוטוקול.
 
-a. (6) At most ten handler threads.
-b. (6) Frame by a length, not by a delimiter. The length fits in a Java `int`.
-c. (6) Speak UDP instead of TCP.
-d. (6) Write a stub and a skeleton, in the same style, for `Math` with the methods on the exam.
-e. (6) Serve the printer's clients with the reactor instead of a thread per client.
+א. לכל היותר עשרה חוטי מטפל.
+ב. מסגור לפי אורך, לא לפי תו מפריד. האורך נכנס ב-`int` של Java.
+ג. לדבר UDP במקום TCP.
+ד. כתבו stub ו-skeleton, באותו סגנון, עבור `Math` עם המתודות שבשאלה.
+ה. שרתו את לקוחות המדפסת עם Reactor במקום חוט לכל לקוח.
 
 :::hint
-The cap is the same pool as 2015. The reactor part is a different server loop, not a bigger pool.
+התקרה היא אותו מאגר כמו בשרת ההודעות. חלק ה-Reactor הוא לולאת שרת אחרת, לא מאגר גדול יותר.
 :::
 :::hint
-UDP has no `accept`. Each datagram carries the sender's address, and the reply uses that address.
+ל-UDP אין `accept`. כל דטגרם נושא את כתובת השולח, והתשובה משתמשת בכתובת הזו.
 :::
 :::hint
-A stub implements `Math` by sending a method name and arguments. A skeleton reads that message and calls the real object.
+stub מממש את `Math` על ידי שליחת שם מתודה וארגומנטים. skeleton קורא את ההודעה הזו וקורא לאובייקט האמיתי.
 :::
 :::solution
-a. `Executors.newFixedThreadPool(10)` around the connection handler, as in the 2015 solution.
+א. `Executors.newFixedThreadPool(10)` סביב מטפל החיבור, כמו בפתרון הרשמי של שרת ההודעות.
 
-b. The first four bytes are the length. The following bytes are the body. `Integer.MAX_VALUE` is only the type's limit; you still refuse a length that will not fit in the buffer you chose.
+ב. ארבעת הבתים הראשונים הם האורך. הבתים שאחריהם הם הגוף. `Integer.MAX_VALUE` הוא רק גבול הטיפוס; עדיין מסרבים לאורך שלא ייכנס בחוצץ שבחרתם.
 
-c. Replace `ServerSocket` / `Socket` with `DatagramSocket`. There is no connection. `receive` returns the sender. `send` uses that `SocketAddress`. A length prefix is optional on UDP if one datagram is one message; the question still wants the length because the student kept the stream tokenizer. One datagram must then hold the whole frame.
+ג. מחליפים את `ServerSocket` / `Socket` ב-`DatagramSocket`. אין חיבור. `receive` מחזיר את השולח. `send` משתמש ב-`SocketAddress` הזה. קידומת אורך היא רשות ב-UDP אם דטגרם אחד הוא הודעה אחת; השאלה עדיין רוצה את האורך כי הסטודנט השאיר את ממסגר הזרם. דטגרם אחד חייב אז להחזיק את כל המסגרת.
 
-d. `Math_Stub` implements `Math`. Each method writes a command string such as `add 2 3` through the socket and reads the reply line. `Math_Skel` implements the protocol factory, parses the command, calls the real `Math`, and returns the decimal result. Exceptions on the server become an error line the stub turns into `RemoteException`.
+ד. `Math_Stub` מממש את `Math`. כל מתודה כותבת מחרוזת פקודה כמו `add 2 3` דרך השקע וקוראת את שורת התשובה. `Math_Skel` מממש את מפעל הפרוטוקול, מנתח את הפקודה, קורא ל-`Math` האמיתי, ומחזיר את התוצאה העשרונית. חריגות בשרת הופכות לשורת שגיאה שה-stub הופך ל-`RemoteException`.
 
-e. Register a `ServerSocketChannel` with the reactor from class, with the printer protocol as the protocol factory and the length tokenizer as the tokenizer factory. The selector thread replaces the accept loop. Handlers stop being one thread each.
+ה. רושמים `ServerSocketChannel` אצל ה-Reactor מהכיתה, עם פרוטוקול המדפסת כמפעל הפרוטוקול וממסגר האורך כמפעל הממסגר. חוט ה-selector מחליף את לולאת ה-accept. המטפלים מפסיקים להיות חוט אחד כל אחד.
 :::
 :::
 
 :::problem id=exam-17b-q3 source="Exams/17-b.pdf" kind=exam solution_origin=derived
-A bank server uses the command-invocation protocol from class. Three commands arrive as lines: `LOGIN name` (server replies `ack` and remembers the client), `DEPOSIT money` (add to that client's balance, reply `ack`), and a third command the paper uses to read the balance. Implement the commands and the server `main` that hosts them. Write the commands, then the server main.
+שרת בנק משתמש בפרוטוקול הפעלת הפקודות מהכיתה. שלוש פקודות מגיעות כשורות: `LOGIN name` (השרת עונה `ack` וזוכר את הלקוח), `DEPOSIT money` (מוסיפים ליתרה של הלקוח הזה, עונים `ack`), ופקודה שלישית שהשאלה משתמשת בה כדי לקרוא את היתרה. ממשו את הפקודות ואת `main` של השרת שמארח אותן. כתבו את הפקודות, ואחר כך את ה-main של השרת.
 
 :::hint
-Each command is an object with `execute` on the bank, not a pile of `if` statements in the socket code.
+כל פקודה היא אובייקט עם `execute` על הבנק, לא ערימת משפטי `if` בקוד השקע.
 :::
 :::hint
-`LOGIN` must happen before `DEPOSIT`, or `DEPOSIT` has no account. That is a precondition.
+`LOGIN` חייב לקרות לפני `DEPOSIT`, אחרת ל-`DEPOSIT` אין חשבון. זה תנאי מקדים.
 :::
 :::hint
-The server main constructs one bank and a reactor or a thread-per-client loop that turns a line into a command.
+ה-main של השרת בונה בנק אחד ו-Reactor או לולאת חוט-לכל-לקוח שהופכת שורה לפקודה.
 :::
 :::solution
-`LoginCommand`, `DepositCommand`, and `BalanceCommand` implement `Command<Bank>`. `execute` on a login stores the connection's name in the protocol's session and returns `"ack"`. `execute` on a deposit parses the amount, adds it to that session's account, and returns `"ack"`. A deposit before login returns an error string rather than throwing into the selector thread.
+`LoginCommand`, `DepositCommand`, ו-`BalanceCommand` מממשים `Command<Bank>`. `execute` על login שומר את שם החיבור ב-session של הפרוטוקול ומחזיר `"ack"`. `execute` על deposit מנתח את הסכום, מוסיף אותו לחשבון של ה-session הזה, ומחזיר `"ack"`. deposit לפני login מחזיר מחרוזת שגיאה במקום לזרוק אל חוט ה-selector.
 
-`Bank` is a map from name to balance, and its mutators are synchronized. The server `main` builds one `Bank`, a protocol factory that closes over it, and the reactor or thread-per-client server from the appendix on the exam's port. Each connection gets its own protocol object, so the session name is not shared across clients. The bank is shared, and the lock is what makes two deposits of the same account add both amounts.
+`Bank` הוא מיפוי משם ליתרה, והמשנים שלו מסונכרנים. ה-`main` של השרת בונה `Bank` אחד, מפעל פרוטוקול שסוגר עליו, ואת שרת ה-Reactor או חוט-לכל-לקוח מהנספח על הפורט של השאלה. כל חיבור מקבל אובייקט פרוטוקול משלו, ולכן שם ה-session אינו משותף בין לקוחות. הבנק משותף, והמנעול הוא מה שגורם לשתי הפקדות לאותו חשבון לחבר את שני הסכומים.
 :::
 :::
 
 :::problem id=exam-20b-q3 source="Exams/20-b.pdf" kind=exam solution_origin=derived
-`Stores` maps a store name to product prices. Commands arrive through the command-invocation protocol and run on one shared `Stores` object inside a reactor on port 7777.
+`Stores` ממפה שם חנות למחירי מוצרים. פקודות מגיעות דרך פרוטוקול הפעלת הפקודות ורצות על אובייקט `Stores` משותף אחד בתוך Reactor על פורט 7777.
 
-a. Implement `GetProductPrices`, which takes a product name and returns the map of store name to price.
-b. Wire `PriceServer.main` so the reactor executes those commands on the one `StoresImpl`.
+א. ממשו את `GetProductPrices`, שמקבל שם מוצר ומחזיר את המיפוי משם חנות למחיר.
+ב. חברו את `PriceServer.main` כך שה-Reactor מפעיל את הפקודות האלה על `StoresImpl` האחד.
 
 :::hint
-`execute` receives the `Stores` object. It does not open a socket.
+`execute` מקבל את אובייקט ה-`Stores`. הוא אינו פותח שקע.
 :::
 :::hint
-The reply has to be a string or a byte buffer the protocol already knows how to write. Encode the map as lines.
+התשובה צריכה להיות מחרוזת או חוצץ בתים שהפרוטוקול כבר יודע לכתוב. קודדו את המיפוי כשורות.
 :::
 :::hint
-One `StoresImpl` is constructed in `main` and captured by every command. Do not construct a store per connection.
+`StoresImpl` אחד נבנה ב-`main` ונתפס על ידי כל פקודה. אל תבנו חנות לכל חיבור.
 :::
 :::solution
 ```java
@@ -338,8 +355,8 @@ class GetProductPrices implements Command<Stores> {
 }
 ```
 
-`main` creates `Stores stores = new StoresImpl()` once, then `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`. The protocol parses a line into a `Command<Stores>` and calls `execute(stores)`. `StoresImpl`'s methods are synchronized, or the map is a concurrent map, because the reactor runs several commands at once on that one object.
+`main` יוצר `Stores stores = new StoresImpl()` פעם אחת, ואז `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`. הפרוטוקול מנתח שורה ל-`Command<Stores>` וקורא ל-`execute(stores)`. המתודות של `StoresImpl` מסונכרנות, או שהמיפוי הוא מיפוי מקבילי, כי ה-Reactor מריץ כמה פקודות בבת אחת על האובייקט האחד הזה.
 :::
 :::
 
-The socket is the blocking call a naive server gets stuck in. [The reactor](topic:reactor) is the way to wait for many sockets without a thread for each.
+השקע הוא הקריאה החוסמת ששרת נאיבי נתקע בתוכה. [Reactor](topic:reactor) הוא הדרך להמתין להרבה שקעים בלי חוט לכל אחד.

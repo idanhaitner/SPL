@@ -1,6 +1,6 @@
 ---
 id: reactor
-title: The reactor
+title: Reactor
 sources:
   - "Classes/Chapter 11 - Reactor.pptx"
   - "Exrecises/SPL_PS10.pptx"
@@ -29,34 +29,34 @@ sources:
   - "Exams/24-c-solution.pdf"
 ---
 
-A thread per client spends a stack on each connection and blocks inside `read` for most of its life. A single-threaded server accepts one client and ignores the others until that conversation ends. The reactor (ריאקטור) is the third shape: one thread waits for many channels, and a small pool runs the work that is actually slow.
+חוט (thread) לכל לקוח מוציא מחסנית (stack) על כל חיבור, ונמצא בחסימה (blocking) בתוך `read` ברוב חייו. שרת חוט אחד (single threaded server) מקבל לקוח אחד ומתעלם מהאחרים עד שהשיחה נגמרת. Reactor הוא הצורה השלישית: חוט אחד ממתין להרבה ערוצים (channel), ומאגר קטן מריץ את העבודה שבאמת איטית.
 
-## Three servers, then a fourth
+## שלושה שרתים, ואז רביעי
 
-The lecture's service returns a `BufferedImage` for a file name. The client writes the name and a newline and reads the bytes back.
+השירות בהרצאה מחזיר `BufferedImage` עבור שם קובץ. הלקוח כותב את השם ושורה חדשה וקורא את הבתים בחזרה.
 
-A single-threaded server calls `accept`, handles that socket to the end, and only then loops. One client at a time.
+שרת חוט אחד קורא ל-`accept`, מטפל בשקע (socket) הזה עד הסוף, ורק אז חוזר ללולאה. לקוח אחד בכל רגע.
 
-A thread-per-client server calls `accept` and `new Thread(() -> handle(s)).start()`. Connections overlap. Threads are expensive, most of them are blocked in `read`, and nothing stops a million clients from creating a million threads. The lecture's row for this design: uncontrolled, collapses under load, wasteful, not scalable.
+שרת חוט-לכל-לקוח (thread-per-client) קורא ל-`accept` ול-`new Thread(() -> handle(s)).start()`. החיבורים חופפים. חוטים יקרים, רובם חסומים ב-`read`, ושום דבר אינו עוצר מיליון לקוחות מליצור מיליון חוטים. השורה של ההרצאה לעיצוב הזה: בלי שליטה, קורס תחת עומס, בזבזני, אינו ניתן להרחבה.
 
-A fixed pool, `Executors.newFixedThreadPool(poolSize)`, caps the count. Extra connections wait in the queue. The threads are still blocked in I/O, so a pool of eight stuck in `read` serves nobody else.
+מאגר קבוע, `Executors.newFixedThreadPool(poolSize)`, מגביל את המספר. חיבורים עודפים ממתינים בתור. החוטים עדיין חסומים ב-I/O, ולכן מאגר של שמונה שתקוע ב-`read` אינו משרת אף אחד אחר.
 
 :::definition id=def-reactor title="Reactor" source="Classes/Chapter 11 - Reactor.pptx"
-An event-driven server does not give a thread to each client. One thread stays available for the short events. Further threads exist only for work that would block that loop. Non-blocking I/O means a slow client does not stop the loop from accepting someone else, and a cheap operation does not wait behind a slow disk read.
+שרת מונחה אירועים אינו נותן חוט לכל לקוח. חוט אחד נשאר פנוי לאירועים הקצרים. חוטים נוספים קיימים רק לעבודה שהייתה חוסמת את הלולאה הזו. קלט-פלט ללא חסימה אומר שלקוח איטי אינו עוצר את הלולאה מלקבל מישהו אחר, ופעולה זולה אינה ממתינה מאחורי קריאה איטית מהדיסק.
 :::
 
-The Java NIO names, from the lecture and from session 10:
+השמות של Java NIO, מההרצאה וממפגש 10:
 
-- A channel replaces the socket-plus-streams pair. `SocketChannel` and `ServerSocketChannel` can be non-blocking, so `read`, `write`, and `accept` return immediately with a count, which is often 0.
-- A `Selector` is the wait. A channel registers interest in `OP_ACCEPT`, `OP_READ`, or `OP_WRITE`. `select()` blocks until at least one registered channel is ready, instead of spinning on reads that return 0.
-- A `SelectionKey` is one registration. `interestOps` is what you asked to hear about. `readyOps` is what happened. `selectedKeys()` is the set `select` just marked ready. You must remove a key from that set yourself; the selector does not.
-- A `ByteBuffer` is the memory those reads and writes use. It has a position, a limit, and a capacity. After a write into the buffer, `flip()` sets the limit to the position and the position to 0, so the next operation reads what you just wrote. `clear()` prepares the buffer for another fill.
+- ערוץ מחליף את הזוג של שקע וזרמים. `SocketChannel` ו-`ServerSocketChannel` יכולים להיות ללא חסימה, ולכן `read`, `write`, ו-`accept` חוזרים מיד עם ספירה, שלעתים קרובות היא 0.
+- `Selector` הוא ההמתנה. ערוץ נרשם לעניין ב-`OP_ACCEPT`, ב-`OP_READ`, או ב-`OP_WRITE`. `select()` נחסם עד שלפחות ערוץ רשום אחד מוכן, במקום להסתובב על קריאות שמחזירות 0.
+- `SelectionKey` הוא רישום אחד. `interestOps` הוא מה שביקשתם לשמוע עליו. `readyOps` הוא מה שקרה. `selectedKeys()` הוא הקבוצה ש-`select` סימן זה עתה כמוכנה. חובה להסיר מפתח מהקבוצה הזו בעצמכם; ה-selector אינו עושה זאת.
+- `ByteBuffer` הוא הזיכרון שהקריאות והכתיבות האלה משתמשות בו. יש לו position, limit, ו-capacity. אחרי כתיבה לתוך החוצץ, `flip()` קובע את ה-limit ל-position ואת ה-position ל-0, כדי שהפעולה הבאה תקרא את מה שזה עתה נכתב. `clear()` מכין את החוצץ למילוי נוסף.
 
-Session 11's bit masks: `OP_READ` is 1, `OP_WRITE` is 4, `OP_ACCEPT` is 16. Interest in read or write is `OP_READ | OP_WRITE`. A test for readability is `(ready & OP_READ) != 0`. The bits do not overlap, which is why a mask works.
+מסכות הביטים של מפגש 11: `OP_READ` הוא 1, `OP_WRITE` הוא 4, `OP_ACCEPT` הוא 16. עניין בקריאה או בכתיבה הוא `OP_READ | OP_WRITE`. בדיקת קריאוּת היא `(ready & OP_READ) != 0`. הביטים אינם חופפים, ולכן מסכה עובדת.
 
-![The reactor loop: one selector thread, ready keys, and a pool only for protocol work](../assets/figures/reactor-loop.svg)
+![לולאת ה-Reactor: חוט selector אחד, מפתחות מוכנים, ומאגר רק לעבודת הפרוטוקול](../assets/figures/reactor-loop.svg)
 
-:::algorithm id=alg-reactor title="Reactor loop" source="Classes/Chapter 11 - Reactor.pptx" complexity="one thread waits in select; protocol work is off that thread. A quiet server blocks in select rather than spinning" invariant="Every open channel is registered for the events the server is prepared to handle, and a key in selectedKeys is removed by the loop that handles it."
+:::algorithm id=alg-reactor title="לולאת Reactor" source="Classes/Chapter 11 - Reactor.pptx" complexity="חוט אחד ממתין ב-select; עבודת הפרוטוקול יורדת מהחוט הזה. שרת שקט נחסם ב-select במקום להסתובב" invariant="כל ערוץ פתוח רשום לאירועים שהשרת מוכן לטפל בהם, והלולאה שמטפלת במפתח שב-selectedKeys מסירה אותו."
 ```text
 selector = new Selector
 register serverSocket for OP_ACCEPT
@@ -71,305 +71,323 @@ while true:
 ```
 :::
 
-Leaving `OP_WRITE` set when the queue is empty makes `select` return immediately, forever. That is the busy spin on the lecture's list of mistakes. Other mistakes on that slide: reading without a bound so buffers grow without limit, doing a heavy or blocking call on the selector thread, and calling `interestOps` from a thread that is not the selector thread. The reactor does not make the protocol correct, and it does not make a slow disk fast. It only keeps the wait off the worker threads.
+קריאה ממלאת את החוצץ מההתחלה ומשאירה את ה-position בסוף מה שהגיע. `flip` הופך את הקידומת המלאה הזו לטווח שכתיבה מאוחרת תשלח.
 
-Session 11 adds the actor pool. A plain pool may run message M2 of a client before M1, because they are two tasks. An actor pool has a queue per client and one active task per client, so that client's messages stay in order. A read-write lock shows up in the same session for the shared tables the protocol touches: many readers, one writer.
+```java
+ByteBuffer buf = ByteBuffer.allocate(16);
+int n = channel.read(buf);   // n == 5, position == 5, limit == 16
+buf.flip();                   // position == 0, limit == 5
+channel.write(buf);           // sends those five bytes
+```
 
-The connection handler in this design is not a `Runnable` per client, unlike the thread-per-client handler. It owns the buffers, the encoder-decoder, and the write queue for one channel. The selector thread calls it when the key is ready.
+![לפני flip החלון הקריא ריק כי position כבר בסוף הנתונים. flip מחזיר את limit לאותו סוף ואת position ל-0](../assets/figures/buffer-flip.svg)
+
+השארת `OP_WRITE` דלוק כשהתור ריק גורמת ל-`select` לחזור מיד, לנצח. זה הסיבוב העסוק ברשימת הטעויות של ההרצאה. טעויות אחרות על אותו שקף: קריאה בלי חסם כך שהחוצצים גדלים בלי גבול, קריאה כבדה או חוסמת על חוט ה-selector, וקריאה ל-`interestOps` מחוט שאינו חוט ה-selector. Reactor אינו עושה את הפרוטוקול נכון, ואינו עושה דיסק איטי למהיר. הוא רק מרחיק את ההמתנה מחוטי העבודה.
+
+מפגש 11 מוסיף את מאגר ה-actors (actor pool). מאגר רגיל עלול להריץ את ההודעה M2 של לקוח לפני M1, כי הן שתי משימות. למאגר actors יש תור לכל לקוח ומשימה פעילה אחת לכל לקוח, ולכן ההודעות של הלקוח הזה נשארות לפי הסדר. מנעול קריאה-כתיבה מופיע באותו מפגש עבור הטבלאות (table) המשותפות שהפרוטוקול נוגע בהן: הרבה קוראים, כותב אחד.
+
+מטפל החיבור בעיצוב הזה אינו `Runnable` לכל לקוח, בניגוד למטפל של חוט-לכל-לקוח. הוא מחזיק את החוצצים, את המקודד-מפענח, ואת תור הכתיבה של ערוץ אחד. חוט ה-selector קורא לו כשהמפתח מוכן.
 
 :::problem id=worked-flip source="Exrecises/SPL_PS10.pptx" kind=worked solution_origin=source
-A `ByteBuffer` of capacity 16 has just had 5 bytes read into it. Position is 5, limit is 16. You want to write those 5 bytes to a channel. What does `flip` change?
+רוצים לכתוב את 5 הבתים שזה עתה נקראו. מה `flip` משנה?
+
+```java
+ByteBuffer buf = ByteBuffer.allocate(16);
+channel.read(buf);    // position == 5, limit == 16
+buf.flip();
+channel.write(buf);
+```
 
 :::solution
-`flip` sets limit to 5 and position to 0. A following `channel.write(buf)` writes the five bytes. Capacity is still 16. Forgetting `flip` writes from position 5 to limit 16, which is the empty tail, and sends nothing useful. Calling `flip` twice sets limit to 0.
+`flip` קובע את limit ל-5 ואת position ל-0. `channel.write(buf)` שאחריו כותב את חמשת הבתים. ה-capacity עדיין 16. שכחת `flip` כותבת מ-position 5 עד limit 16, שזה הזנב הריק, ואינה שולחת דבר מועיל. קריאה ל-`flip` פעמיים קובעת את limit ל-0.
 :::
 :::
 
 :::check id=chk-write-interest
-The write queue for a channel is empty, and `OP_WRITE` is still set. What does the selector thread do?
+תור הכתיבה של ערוץ ריק, ו-`OP_WRITE` עדיין דלוק. מה חוט ה-selector עושה?
 
-- [ ] It blocks in `select` until the client sends a byte
-- [x] It spins, because the channel is already writable
-- [ ] It closes the channel
+- [ ] הוא נחסם ב-`select` עד שהלקוח שולח בית
+- [x] הוא מסתובב, כי הערוץ כבר כתיב
+- [ ] הוא סוגר את הערוץ
 
-A channel with space in its send buffer is writable. `select` returns at once. The lecture calls that a busy spin. Clear `OP_WRITE` until a later read queues a reply.
+ערוץ שיש מקום בחוצץ השליחה שלו הוא כתיב. `select` חוזר מיד. ההרצאה קוראת לזה סיבוב עסוק. נקו את `OP_WRITE` עד שקריאה מאוחרת יותר תעמיד תשובה בתור.
 :::
 
 :::trap
-`selectedKeys` is cumulative until you remove the key. Handling a key and leaving it in the set handles it again on the next iteration, often with `readyOps` already consumed.
+`selectedKeys` מצטבר עד שמסירים את המפתח. טיפול במפתח והשארתו בקבוצה מטפלים בו שוב באיטרציה הבאה, לעתים קרובות כש-`readyOps` כבר נצרך.
 :::
 
 :::trap
-Tokenizing and running the protocol on the selector thread is the bug behind several exam "optimizations." A slow `process` stalls `accept` for every client.
+מיסגור והרצת הפרוטוקול על חוט ה-selector הם הבאג מאחורי כמה "אופטימיזציות" בשאלות. `process` איטי עוצר את `accept` לכל לקוח.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps10-flip source="Exrecises/SPL_PS10.pptx" kind=exercise solution_origin=source
-Session 10's buffer diagram labels position, limit, and capacity, then shows Write, Read, and Flip. Starting from a cleared buffer of capacity 8, you `put` three bytes. Give position and limit before `flip` and after `flip`. Then say which range a `write` to a channel will send.
+תרשים החוצץ של מפגש 10 מסמן position, limit, ו-capacity, ואז מראה Write, Read, ו-Flip. מתחילים מחוצץ שעבר `clear` בקיבולת 8, ו-`put` של שלושה בתים. תנו position ו-limit לפני `flip` ואחרי `flip`. אחר כך אמרו איזה טווח `write` לערוץ ישלח.
 
 :::hint
-`clear` sets position 0 and limit equal to capacity.
+`clear` קובע position ל-0 ו-limit שווה ל-capacity.
 :::
 :::hint
-`put` advances position and does not move limit.
+`put` מקדם את position ואינו מזיז את limit.
 :::
 :::hint
-`flip` is what turns a buffer from "I was writing" into "read what I wrote."
+`flip` הוא מה שהופך חוצץ מ"כתבתי" ל"קרא את מה שכתבתי".
 :::
 :::solution
-After `clear`: position 0, limit 8, capacity 8. After three `put`s: position 3, limit 8, capacity 8. After `flip`: position 0, limit 3, capacity 8. `channel.write` sends the bytes in `[position, limit)`, so the three bytes. The other five are outside the limit and are not sent.
+אחרי `clear`: position 0, limit 8, capacity 8. אחרי שלושה `put`: position 3, limit 8, capacity 8. אחרי `flip`: position 0, limit 3, capacity 8. `channel.write` שולח את הבתים ב-`[position, limit)`, כלומר את שלושת הבתים. החמישה האחרים מחוץ ל-limit ואינם נשלחים.
 :::
 :::
 
 :::problem id=ps11-actor-order source="Exrecises/SPL_PS11.pptx" kind=exercise solution_origin=source
-A client sends message M1 and then M2. The server creates tasks R1 and R2. Why can a normal thread pool run R2 before R1, and what does the actor pool change?
+לקוח שולח הודעה M1 ואחר כך M2. השרת יוצר משימות R1 ו-R2. למה מאגר חוטים רגיל יכול להריץ את R2 לפני R1, ומה מאגר ה-actors משנה?
 
 :::hint
-A pool has many workers. Two submitted tasks may start on two workers.
+למאגר יש הרבה עובדים. שתי משימות שהוגשו יכולות להתחיל על שני עובדים.
 :::
 :::hint
-The session's picture is one queue per client, not one queue for the whole server.
+התמונה במפגש היא תור אחד לכל לקוח, לא תור אחד לכל השרת.
 :::
 :::hint
-The property you want is order for one client, not a single-threaded server.
+התכונה שרוצים היא סדר ללקוח אחד, לא שרת חוט אחד.
 :::
 :::solution
-`execute(R1)` and `execute(R2)` are two tasks. A pool with two free workers can start R2 first. Nothing in a plain pool remembers that both tasks belong to one channel.
+`execute(R1)` ו-`execute(R2)` הן שתי משימות. מאגר עם שני עובדים פנויים יכול להתחיל את R2 קודם. שום דבר במאגר רגיל אינו זוכר ששתי המשימות שייכות לערוץ אחד.
 
-An actor pool keeps a queue for that client and will not start R2 while R1 is still running for the same actor. Different clients still run in parallel, on the pool's threads. The selector thread only enqueues. That is why session 11 says a regular pool is not enough for a protocol that assumes in-order messages.
+מאגר actors שומר תור ללקוח הזה ולא יתחיל את R2 בזמן ש-R1 עדיין רץ לאותו actor. לקוחות שונים עדיין רצים במקביל, על חוטי המאגר. חוט ה-selector רק מכניס לתור. לכן מפגש 11 אומר שמאגר רגיל אינו מספיק לפרוטוקול שמניח הודעות לפי הסדר.
 :::
 :::
 
 :::problem id=ps11-write-interest source="Exrecises/SPL_PS11.pptx" kind=exercise solution_origin=source
-The lecture lists four mistakes. Pick the one that burns a core while no client is sending, and say the `interestOps` change that stops it.
+ההרצאה מונה ארבע טעויות. בחרו את זו ששורפת ליבה בזמן שאף לקוח אינו שולח, ואמרו את שינוי ה-`interestOps` שעוצר אותה.
 
 :::hint
-`select` returns immediately when any registered interest is already true.
+`select` חוזר מיד כשעניין רשום כלשהו כבר אמיתי.
 :::
 :::hint
-A socket you are not currently writing is still writable if the TCP window has room.
+שקע שאינכם כותבים אליו כרגע עדיין כתיב אם לחלון ה-TCP יש מקום.
 :::
 :::hint
-The flag to clear is `OP_WRITE`, not `OP_READ`.
+הדגל שצריך לנקות הוא `OP_WRITE`, לא `OP_READ`.
 :::
 :::solution
-Leaving `OP_WRITE` on an idle channel is the busy spin. The channel is writable, so `select` never blocks. After the last queued byte is written, set the interest back to `OP_READ` only:
+השארת `OP_WRITE` על ערוץ מובטל היא הסיבוב העסוק. הערוץ כתיב, ולכן `select` לעולם אינו נחסם. אחרי שנכתב הבית האחרון שבתור, החזירו את העניין ל-`OP_READ` בלבד:
 
 ```java
 key.interestOps(SelectionKey.OP_READ);
 ```
 
-Set `OP_WRITE` again only when a protocol reply has been queued and `write` did not accept every byte. Do that `interestOps` call on the selector thread. The lecture lists a cross-thread `interestOps` as a separate bug.
+הדליקו את `OP_WRITE` שוב רק כשתשובת פרוטוקול הועמדה בתור ו-`write` לא קיבל כל בית. את הקריאה הזו ל-`interestOps` עושים על חוט ה-selector. ההרצאה מונה `interestOps` מחוט אחר כבאג נפרד.
 :::
 :::
 
 
 :::examnote
-The question edits the reactor from the appendix: move tokenization off the selector, cap work per client, add a log, or serve a database query without blocking `select`. The trap is doing the heavy call on the selector thread, or waking `select` forever by leaving `OP_WRITE` set.
+השאלה עורכת את ה-Reactor מהנספח: מזיזה את המיסגור מה-selector, מגבילה עבודה לכל לקוח, מוסיפה יומן, או משרתת שאילתת בסיס נתונים בלי לחסום את `select`. המלכודת היא לעשות את הקריאה הכבדה על חוט ה-selector, או להעיר את `select` לנצח על ידי השארת `OP_WRITE` דלוק.
 :::
 
 :::problem id=exam-15a-q3 source="Exams/15-a.pdf" kind=exam solution_origin=source
-Keep the reactor, but talk to every client through one `DatagramSocketChannel` instead of a TCP `SocketChannel` per client. `send` and `receive` are non-blocking and return immediately. `receive` returns the sender's address, or null if nothing arrived.
+השאירו את ה-Reactor, אבל דברו עם כל לקוח דרך `DatagramSocketChannel` אחד במקום `SocketChannel` של TCP לכל לקוח. `send` ו-`receive` הם ללא חסימה וחוזרים מיד. `receive` מחזיר את כתובת השולח, או null אם לא הגיע דבר.
 
-a. (20) Say which methods you change. Do not rewrite methods you leave alone.
-b. Name one advantage and one disadvantage of UDP here. Can one `DatagramSocketChannel` replace the per-client channels? Does a channel per client help?
+א. אמרו אילו מתודות אתם משנים. אל תכתבו מחדש מתודות שאתם משאירים.
+ב. נקבו ביתרון אחד ובחיסרון אחד של UDP כאן. האם `DatagramSocketChannel` אחד יכול להחליף את הערוצים שלכל לקוח? האם ערוץ לכל לקוח עוזר?
 
 :::hint
-There is no connection to accept. The `ConnectionAcceptor` has nothing to do.
+אין חיבור שצריך לקבל. ל-`ConnectionAcceptor` אין מה לעשות.
 :::
 :::hint
-The reply must be sent to the address `receive` returned. Store that address with the outgoing buffer.
+את התשובה צריך לשלוח לכתובת ש-`receive` החזיר. שמרו את הכתובת הזו עם החוצץ היוצא.
 :::
 :::hint
-The official solution deletes the server socket channel and the acceptor, and registers the datagram channel for read and write.
+הפתרון הרשמי מוחק את ערוץ שקע השרת ואת ה-acceptor, ורושם את ערוץ הדטגרם לקריאה ולכתיבה.
 :::
 :::solution
-a. As in the official solution: remove `ServerSocketChannel` and `SocketChannel`, create one non-blocking `DatagramSocketChannel` bound to the port, and register it for `OP_READ | OP_WRITE`. Delete `ConnectionAcceptor`. One `ConnectionHandler` calls non-blocking `receive` into a `ByteBuffer` and learns the `SocketAddress`. Protocol tasks must carry that address, and `write` sends through the datagram channel to the stored address. The output queue holds `(address, buffer)` pairs, not bare buffers.
+א. כמו בפתרון הרשמי: מסירים את `ServerSocketChannel` ואת `SocketChannel`, יוצרים `DatagramSocketChannel` אחד ללא חסימה שקשור לפורט, ורושמים אותו ל-`OP_READ | OP_WRITE`. מוחקים את `ConnectionAcceptor`. `ConnectionHandler` אחד קורא ל-`receive` ללא חסימה לתוך `ByteBuffer` ולומד את ה-`SocketAddress`. משימות הפרוטוקול חייבות לשאת את הכתובת הזו, ו-`write` שולח דרך ערוץ הדטגרם אל הכתובת השמורה. תור הפלט מחזיק זוגות `(address, buffer)`, לא חוצצים עירומים.
 
-b. UDP avoids the handshake and the per-client socket, and it can lose or reorder datagrams. One channel is what the design uses, because UDP has no connection to demultiplex with `accept`; the remote address is the demultiplexing key. A channel per client adds state the protocol does not need and does not make delivery reliable.
+ב. UDP נמנע מה-handshake ומשקע לכל לקוח, והוא יכול לאבד דטגרמים או לשנות את סדרם. ערוץ אחד הוא מה שהעיצוב משתמש בו, כי ל-UDP אין חיבור שאפשר לפצל עם `accept`; הכתובת המרוחקת היא מפתח הפיצול. ערוץ לכל לקוח מוסיף מצב שהפרוטוקול אינו צריך ואינו עושה את המסירה לאמינה.
 :::
 :::
 
 :::problem id=exam-16b-q3 source="Exams/16-b.pdf" kind=exam solution_origin=derived
-The reactor's executor picks a task with no regard to how many bytes that client has already transferred, and no regard to how many requests that client has already had served. A busy client can be chosen forever.
+ה-executor של ה-Reactor בוחר משימה בלי להתחשב בכמה בתים הלקוח הזה כבר העביר, ובלי להתחשב בכמה בקשות של הלקוח הזה כבר קיבלו שירות. לקוח עסוק יכול להיבחר לנצח.
 
-a. (10) Give one short scenario for each unfairness.
-b. (20) Implement two policies: prefer the client with the fewest bytes so far, and prefer the client with the fewest requests so far. You may introduce a `PriorityBlockingQueue` whose order is `compareTo` at `enqueue` time. Do not copy the whole reactor.
+א. תנו תרחיש קצר אחד לכל אי-הוגנות.
+ב. ממשו שתי מדיניות: להעדיף את הלקוח עם הכי מעט בתים עד כה, ולהעדיף את הלקוח עם הכי מעט בקשות עד כה. מותר להכניס `PriorityBlockingQueue` שהסדר שלו הוא `compareTo` בזמן `enqueue`. אל תעתיקו את כל ה-Reactor.
 
 :::hint
-The selector thread is not the place to scan every client on each event. The executor's queue is.
+חוט ה-selector אינו המקום לסרוק כל לקוח בכל אירוע. התור של ה-executor הוא המקום.
 :::
 :::hint
-A priority computed only at enqueue goes stale. Say so if you still use that queue.
+עדיפות שמחושבת רק ב-enqueue מתיישנת. אמרו זאת אם אתם עדיין משתמשים בתור הזה.
 :::
 :::hint
-Each policy is a comparison key stored on the task: bytes, or request count.
+כל מדיניות היא מפתח השוואה שנשמר על המשימה: בתים, או מספר בקשות.
 :::
 :::solution
-a. Client A has sent one huge upload and client B has sent a few bytes. If the executor always prefers A, B waits behind a client who has already consumed the most bandwidth. Separately, client A has had a thousand requests and client B has had one. If the queue is FIFO among ready tasks, A stays ahead simply by arriving more often, and B's request count remains the smaller one while A is served again.
+א. לקוח A שלח העלאה ענקית אחת ולקוח B שלח כמה בתים. אם ה-executor תמיד מעדיף את A, אז B ממתין מאחורי לקוח שכבר צרך את רוב רוחב הפס. בנפרד, ללקוח A היו אלף בקשות וללקוח B הייתה אחת. אם התור הוא FIFO בין משימות מוכנות, A נשאר מקדים פשוט כי הוא מגיע לעתים קרובות יותר, ומספר הבקשות של B נשאר הקטן בזמן ש-A מקבל שירות שוב.
 
-b. Put tasks in a queue ordered by the client's byte count, ascending, for the first policy, and by the client's served-request count for the second. The worker takes the minimum. Update the client's counters when a task finishes, and enqueue the next task for that client with the new key. A `PriorityBlockingQueue` that freezes `compareTo` at insertion will not move a task when the counter later changes; either re-enqueue, or document that the key is the count at enqueue, which still prevents a brand-new heavy client from jumping a client who has been waiting with a low count. The selector thread only enqueues. It does not run the protocol.
+ב. שמים משימות בתור שמסודר לפי ספירת הבתים של הלקוח, בסדר עולה, למדיניות הראשונה, ולפי ספירת הבקשות שקיבלו שירות למדיניות השנייה. העובד לוקח את המינימום. מעדכנים את המונים של הלקוח כשמשימה מסתיימת, ומכניסים לתור את המשימה הבאה של הלקוח הזה עם המפתח החדש. `PriorityBlockingQueue` שמקפיא את `compareTo` בהכנסה לא יזיז משימה כשהמונה משתנה אחר כך; או שמכניסים מחדש, או שמתעדים שהמפתח הוא הספירה בזמן ההכנסה, וזה עדיין מונע מלקוח כבד חדש לגמרי לקפוץ לפני לקוח שהמתין עם ספירה נמוכה. חוט ה-selector רק מכניס לתור. הוא אינו מריץ את הפרוטוקול.
 :::
 :::
 
 :::problem id=exam-17a-q3 source="Exams/17-a.pdf" kind=exam solution_origin=derived
-Today the selector thread reads a `ByteBuffer` and a pool thread tokenizes and runs the message. A student wants the selector thread to tokenize as well, and to submit one `Runnable` per message.
+היום חוט ה-selector קורא `ByteBuffer` וחוט מאגר ממסגר ומריץ את ההודעה. סטודנט רוצה שגם חוט ה-selector ימסגר, ויגיש `Runnable` אחד לכל הודעה.
 
-a. (10) Apply that change.
-b. (10) Show a run where the change hurts.
-c. (10) Implement `ioThroughput` and `compThroughput` for the two stages.
+א. החילו את השינוי.
+ב. הראו ריצה שבה השינוי מזיק.
+ג. ממשו `ioThroughput` ו-`compThroughput` לשני השלבים.
 
 :::hint
-Tokenizing on the selector thread is exactly the "heavy work on the I/O thread" mistake when a message is large.
+מיסגור על חוט ה-selector הוא בדיוק טעות "עבודה כבדה על חוט ה-I/O" כשההודעה גדולה.
 :::
 :::hint
-The hurt is `accept` and other clients' reads waiting behind a tokenize of one huge buffer.
+הנזק הוא ש-`accept` וקריאות של לקוחות אחרים ממתינים מאחורי מיסגור של חוצץ ענק אחד.
 :::
 :::hint
-Throughput is bytes, or messages, per second in each stage. Count them where the stage runs.
+תפוקה היא בתים, או הודעות, לשנייה בכל שלב. סופרים אותם במקום שבו השלב רץ.
 :::
 :::solution
-a. In the read path, after `channel.read`, run the tokenizer loop on the selector thread. Each complete message becomes a `Runnable` submitted to the executor. The pool no longer sees raw bytes.
+א. במסלול הקריאה, אחרי `channel.read`, מריצים את לולאת הממסגר על חוט ה-selector. כל הודעה שלמה הופכת ל-`Runnable` שמוגש ל-executor. המאגר כבר אינו רואה בתים גולמיים.
 
-b. One client sends a large buffer that tokenizes into many messages, or a tokenizer that scans a megabyte. The selector thread does that scan before it returns to `select`. Other clients' `accept` and `read` wait. Under the old split, the selector returned to `select` after the copy, and the pool did the scan.
+ב. לקוח אחד שולח חוצץ גדול שמתמסגר להרבה הודעות, או ממסגר שסורק מגה-בית. חוט ה-selector עושה את הסריקה הזו לפני שהוא חוזר ל-`select`. `accept` ו-`read` של לקוחות אחרים ממתינים. תחת הפיצול הישן, ה-selector חזר ל-`select` אחרי ההעתקה, והמאגר עשה את הסריקה.
 
-c. `ioThroughput` is bytes read plus bytes written on the selector thread, divided by the elapsed time, using counters incremented next to `read` and `write`. `compThroughput` is messages whose protocol `process` returned, divided by elapsed time, incremented in the pool task. They are different stages, so a slow protocol drops `compThroughput` while `ioThroughput` stays high, which is the split the question wants visible.
+ג. `ioThroughput` הוא בתים שנקראו ועוד בתים שנכתבו על חוט ה-selector, מחולקים בזמן שחלף, עם מונים שעולים ליד `read` ו-`write`. `compThroughput` הוא הודעות ש-`process` של הפרוטוקול שלהן חזר, מחולקות בזמן שחלף, והמונה עולה במשימת המאגר. הם שלבים שונים, ולכן פרוטוקול איטי מוריד את `compThroughput` בזמן ש-`ioThroughput` נשאר גבוה, וזה הפיצול שהשאלה רוצה שיהיה גלוי.
 :::
 :::
 
 :::problem id=exam-18a-q3 source="Exams/18-a.pdf" kind=exam solution_origin=derived
-The selector thread is saturated.
+חוט ה-selector רווי.
 
-a. Shraga says: add workers to the actor pool, and move the server to a machine with more processors, to take load off the selector. Does that work?
-b. Nahum's team instead adds a feature to the reactor. Argue the selector-side fix.
+א. שרגא אומר: הוסיפו עובדים למאגר ה-actors, והעבירו את השרת למכונה עם יותר מעבדים, כדי להוריד עומס מה-selector. האם זה עובד?
+ב. הצוות של נחום מוסיף במקום זה יכולת ל-Reactor. נמקו את התיקון בצד ה-selector.
 
 :::hint
-The selector loop is one thread by design. More pool threads do not run `select`.
+לולאת ה-selector היא חוט אחד לפי התכנון. עוד חוטי מאגר אינם מריצים את `select`.
 :::
 :::hint
-A second processor does not split one thread.
+מעבד שני אינו מפצל חוט אחד.
 :::
 :::hint
-The legal way to lighten the selector is to move work out of it, which is the opposite of Shraga's guess if the work is already in the pool.
+הדרך החוקית להקל על ה-selector היא להוציא ממנו עבודה, וזה ההפך מהניחוש של שרגא אם העבודה כבר במאגר.
 :::
 :::solution
-a. No. `select`, `accept`, `read`, and `write` run on the one selector thread. Extra actor threads run protocol tasks. If the CPU is inside `select` and the copies, those threads sit idle. A bigger machine does not automatically shard one thread. Shraga's change helps only when the pool is the saturated part. The question says the selector is the saturated part.
+א. לא. `select`, `accept`, `read`, ו-`write` רצים על חוט ה-selector האחד. חוטי actor נוספים מריצים משימות פרוטוקול. אם המעבד נמצא בתוך `select` וההעתקות, החוטים האלה יושבים בטלים. מכונה גדולה יותר אינה מפצלת חוט אחד מעצמה. השינוי של שרגא עוזר רק כשהמאגר הוא החלק הרווי. השאלה אומרת שה-selector הוא החלק הרווי.
 
-b. Keep the selector loop to readiness and byte copies. Move tokenization and any logging off it. If one thread still cannot copy bytes fast enough, split channels across several reactors, each with its own selector and its own port or its own subset of channels. Do not take the selector lock on the pool threads.
+ב. השאירו את לולאת ה-selector למוכנות ולהעתקות בתים. הוציאו ממנה את המיסגור וכל כתיבת יומן. אם חוט אחד עדיין אינו יכול להעתיק בתים מהר מספיק, פצלו ערוצים בין כמה Reactors, לכל אחד selector משלו ופורט משלו או תת-קבוצה משלו של ערוצים. אל תיקחו את מנעול ה-selector על חוטי המאגר.
 :::
 :::
 
 :::problem id=exam-18b-q3 source="Exams/18-b.pdf" kind=exam solution_origin=derived
-Shraga benchmarks a thread-per-client server and a reactor by sending a few requests from his laptop. The thread-per-client server answers faster, so he tells the company to switch. Nahum says the conclusion is wrong. Explain Nahum, including what the benchmark failed to stress.
+שרגא מודד שרת חוט-לכל-לקוח ו-Reactor על ידי שליחת כמה בקשות מהמחשב הנייד שלו. שרת חוט-לכל-לקוח עונה מהר יותר, ולכן הוא אומר לחברה לעבור. נחום אומר שהמסקנה שגויה. הסבירו את נחום, כולל מה המדידה לא לחצה.
 
 :::hint
-A handful of clients never makes thread creation or blocked stacks the bottleneck.
+קומץ לקוחות לעולם אינו עושה את יצירת החוטים או את המחסניות החסומות לצוואר הבקבוק.
 :::
 :::hint
-The reactor's advantage shows up when many connections are idle and a few are active.
+היתרון של Reactor מופיע כשהרבה חיבורים מובטלים ומעטים פעילים.
 :::
 :::hint
-Latency of one client and throughput under many clients are different measurements.
+השהיה של לקוח אחד ותפוקה תחת הרבה לקוחות הן מדידות שונות.
 :::
 :::solution
-Shraga's client count is too small to pay for a thread per connection, and his requests are sequential enough that the accept-and-block design never has a thousand stacks parked in `read`. One thread per client can even be faster there, because the protocol runs on the connection's thread with no handoff to a pool. The reactor pays for `select`, buffers, and the queue.
+מספר הלקוחות של שרגא קטן מדי כדי לשלם על חוט לכל חיבור, והבקשות שלו סדרתיות מספיק כדי שעיצוב הקבלה-וחסימה לעולם לא יחזיק אלף מחסניות שחונות ב-`read`. חוט אחד לכל לקוח אפילו יכול להיות מהיר יותר שם, כי הפרוטוקול רץ על החוט של החיבור בלי מסירה למאגר. Reactor משלם על `select`, על חוצצים, ועל התור.
 
-Nahum is right that the conclusion does not transfer to the company's load. Under many mostly idle connections the thread-per-client server runs out of memory on stacks, and under a burst it creates threads without a cap. The reactor keeps one selector thread and a bounded pool. A fair benchmark holds thousands of connections open and measures how many requests per second survive, not the latency of five requests from a laptop.
+נחום צודק שהמסקנה אינה עוברת לעומס של החברה. תחת הרבה חיבורים שרובם מובטלים, שרת חוט-לכל-לקוח נגמר לו הזיכרון על מחסניות, ותחת פרץ הוא יוצר חוטים בלי תקרה. Reactor שומר חוט selector אחד ומאגר חסום. מדידה הוגנת מחזיקה אלפי חיבורים פתוחים ומודדת כמה בקשות לשנייה שורדות, לא את ההשהיה של חמש בקשות ממחשב נייד.
 :::
 :::
 
 :::problem id=exam-19a-q3 source="Exams/19-a.pdf" kind=exam solution_origin=derived
-The actor pool promises two things for each connection: at most one request runs at a time, and if request 1 arrived before request 2 then response 1 is sent before response 2.
+מאגר ה-actors מבטיח שני דברים לכל חיבור: לכל היותר בקשה אחת רצה בכל רגע, ואם בקשה 1 הגיעה לפני בקשה 2 אז תשובה 1 נשלחת לפני תשובה 2.
 
-a. (8) Explain how the pool does that, naming the queue.
-b. A change that hurts performance.
-c. A change you would actually want.
+א. הסבירו איך המאגר עושה זאת, ונקבו בתור.
+ב. שינוי שפוגע בביצועים.
+ג. שינוי שבאמת הייתם רוצים.
 
 :::hint
-One active task per client is the first promise. A queue per client is the second.
+משימה פעילה אחת לכל לקוח היא ההבטחה הראשונה. תור לכל לקוח הוא השנייה.
 :::
 :::hint
-The selector must enqueue in arrival order and must not start the task itself.
+ה-selector חייב להכניס לתור לפי סדר ההגעה ואסור לו להתחיל את המשימה בעצמו.
 :::
 :::hint
-The reply is written on the selector thread from a queue, so completion order of the tasks is the send order only if the tasks were started in order and each queues its reply before the next task runs.
+התשובה נכתבת על חוט ה-selector מתוך תור, ולכן סדר הסיום של המשימות הוא סדר השליחה רק אם המשימות התחילו לפי הסדר וכל אחת מעמידה את תשובתה בתור לפני שהמשימה הבאה רצה.
 :::
 :::solution
-Each client has a queue of requests and a flag or a chain meaning "a task for this client is already in the pool." The selector enqueues an arrival and submits a pool task only when the chain was idle. The task runs the protocol for the head request, queues the response bytes for the selector to write, then starts the next request for that same client if the queue is not empty. Two requests of one client therefore never run together, and they run in arrival order, so the responses are queued in that order. The selector writes them in queue order.
+לכל לקוח יש תור בקשות ודגל או שרשרת שמשמעותם "משימה ללקוח הזה כבר נמצאת במאגר". ה-selector מכניס הגעה לתור ומגיש משימת מאגר רק כשהשרשרת הייתה מובטלת. המשימה מריצה את הפרוטוקול עבור בקשת הראש, מעמידה את בתי התשובה בתור כדי שה-selector יכתוב אותם, ואז מתחילה את הבקשה הבאה של אותו לקוח אם התור אינו ריק. שתי בקשות של לקוח אחד לכן לעולם אינן רצות יחד, והן רצות לפי סדר ההגעה, ולכן התשובות מועמדות בתור לפי הסדר הזה. ה-selector כותב אותן לפי סדר התור.
 
-A change that hurts: submitting every request to a shared pool with no per-client chain. Throughput of the pool goes up and the order promise dies. A change worth making: keep the chain, and do not allocate a fresh `Runnable` per message if the same worker can pull the next request itself. That is the 2019 B edit, and it preserves both promises.
+שינוי שפוגע: הגשת כל בקשה למאגר משותף בלי שרשרת לכל לקוח. תפוקת המאגר עולה והבטחת הסדר מתה. שינוי שכדאי לעשות: להשאיר את השרשרת, ולא להקצות `Runnable` חדש לכל הודעה אם אותו עובד יכול למשוך את הבקשה הבאה בעצמו. זו העריכה שבה אותו עובד מושך את הבקשה הבאה, והיא שומרת על שתי ההבטחות.
 :::
 :::
 
 :::problem id=exam-19b-q3 source="Exams/19-b.pdf" kind=exam solution_origin=derived
-Change `execute` and `complete` so that when a worker finishes a request it runs the next waiting request of the same client on the same worker, with no new `Runnable`, until that client's queue is empty. Keep the reactor's split: the selector does I/O, workers do protocol.
+שנו את `execute` ואת `complete` כך שכשעובד מסיים בקשה הוא מריץ את הבקשה הממתינה הבאה של אותו לקוח על אותו עובד, בלי `Runnable` חדש, עד שתור הלקוח הזה ריק. שמרו על הפיצול של Reactor: ה-selector עושה קלט-פלט, העובדים עושים פרוטוקול.
 
 :::hint
-The loop belongs in the worker, after `process`, not in `select`.
+הלולאה שייכת לעובד, אחרי `process`, לא בתוך `select`.
 :::
 :::hint
-The per-client queue is what `complete` used to schedule. Pull from it directly.
+התור לכל לקוח הוא מה ש-`complete` היה מתזמן. משכו ממנו ישירות.
 :::
 :::hint
-Do not hold a client lock while calling into the protocol if the protocol can call back into the reactor.
+אל תחזיקו מנעול לקוח בזמן קריאה לפרוטוקול אם הפרוטוקול יכול לחזור אל Reactor.
 :::
 :::solution
-`execute` still submits one task when the client was idle. That task's `run` is a loop: take the next message under the client's lock, drop the lock, call `protocol.process`, queue the reply, then try again. When the queue is empty, clear the "running" flag. If a new message arrived after the flag was cleared, the selector submits one new task, as before. No second `Runnable` is allocated for a message that was already queued while the worker was alive. Replies still go out through the write queue, so the selector thread remains the only thread that touches `interestOps` and the channel.
+`execute` עדיין מגיש משימה אחת כשהלקוח היה מובטל. ה-`run` של המשימה הזו הוא לולאה: קחו את ההודעה הבאה תחת מנעול הלקוח, שחררו את המנעול, קראו ל-`protocol.process`, העמידו את התשובה בתור, ואז נסו שוב. כשהתור ריק, נקו את דגל "רץ". אם הודעה חדשה הגיעה אחרי שהדגל נוקה, ה-selector מגיש משימה חדשה אחת, כמו קודם. לא מוקצה `Runnable` שני להודעה שכבר הייתה בתור בזמן שהעובד היה חי. תשובות עדיין יוצאות דרך תור הכתיבה, ולכן חוט ה-selector נשאר החוט היחיד שנוגע ב-`interestOps` ובערוץ.
 :::
 :::
 
 :::problem id=exam-20a-q3 source="Exams/20-a.pdf" kind=exam solution_origin=derived
-Add logging of server actions to the reactor. `Logger` wraps an `OutputStream`. Say where each log call goes so the selector thread does not block on disk, and so two workers do not tear a log line.
+הוסיפו תיעוד של פעולות השרת ל-Reactor. `Logger` עוטף `OutputStream`. אמרו לאן כל קריאת יומן הולכת כדי שחוט ה-selector לא ייחסם על הדיסק, וכדי ששני עובדים לא יקרעו שורת יומן.
 
 :::hint
-A log line is a buffer, like a client reply. It can be queued.
+שורת יומן היא חוצץ, כמו תשובת לקוח. אפשר להעמיד אותה בתור.
 :::
 :::hint
-`synchronized` on the logger, or one logger thread, makes lines atomic.
+`synchronized` על ה-logger, או חוט logger אחד, עושים את השורות אטומיות.
 :::
 :::hint
-Do not call `OutputStream.write` inside `select`.
+אל תקראו ל-`OutputStream.write` בתוך `select`.
 :::
 :::solution
-Workers and the selector enqueue a finished line, a `byte[]`, on a `BlockingQueue` owned by the logger. A single logger thread `take`s and writes to the stream. Lines stay intact because one thread writes them. The selector never blocks on the disk. If the queue is bounded, a full queue drops log lines or counts them; it does not `put` from the selector thread, because that would stall `select`. `Logger` methods that workers call only enqueue. They do not format and write under a lock held across a slow disk.
+עובדים וה-selector מעמידים שורה גמורה, `byte[]`, על `BlockingQueue` שבבעלות ה-logger. חוט logger יחיד עושה `take` וכותב לזרם. השורות נשארות שלמות כי חוט אחד כותב אותן. ה-selector לעולם אינו נחסם על הדיסק. אם התור חסום, תור מלא משליך שורות יומן או סופר אותן; הוא אינו עושה `put` מחוט ה-selector, כי זה היה עוצר את `select`. מתודות `Logger` שעובדים קוראים להן רק מעמידות בתור. הן אינן מעצבות וכותבות תחת מנעול שמוחזק לאורך דיסק איטי.
 :::
 :::
 
 :::problem id=exam-24a-q3 source="Exams/24-a.pdf" kind=exam solution_origin=derived
-A student changes `Reactor.handleReadWrite` to hand the ready key to `Executors.newFixedThreadPool(2)` named `communicationThreads`.
+סטודנט משנה את `Reactor.handleReadWrite` כך שימסור את המפתח המוכן אל `Executors.newFixedThreadPool(2)` בשם `communicationThreads`.
 
-Explain why two communication threads calling `handleReadWrite` on the same selector's keys is unsafe, and what work, if any, may move to that pool. The question continues into a database; keep the selector correct first.
+הסבירו למה שני חוטי תקשורת שקוראים ל-`handleReadWrite` על המפתחות של אותו selector אינם בטוחים, ואיזו עבודה, אם בכלל, מותר להעביר למאגר הזה. השאלה ממשיכה לבסיס נתונים; שמרו קודם על תקינות ה-selector.
 
 :::hint
-`SelectionKey` and `Selector` are documented for use by one thread. `interestOps` from two threads races.
+`SelectionKey` ו-`Selector` מתועדים לשימוש של חוט אחד. `interestOps` משני חוטים הוא מרוץ.
 :::
 :::hint
-`selectedKeys` is not a concurrent collection.
+`selectedKeys` אינו אוסף מקבילי.
 :::
 :::hint
-The pool can run the protocol. It should not run `select` or `interestOps`.
+המאגר יכול להריץ את הפרוטוקול. אסור לו להריץ את `select` או את `interestOps`.
 :::
 :::solution
-`selector.selectedKeys()`, `key.interestOps`, and `channel.read` registered on that selector are the selector thread's job. Two pool threads pulling keys race on the key set and can change interest while `select` is using it. The selector can throw or miss an event. A write and a read on the same channel from two threads also tear the `ByteBuffer` the handler keeps.
+`selector.selectedKeys()`, `key.interestOps`, ו-`channel.read` שנרשמו על ה-selector הזה הם העבודה של חוט ה-selector. שני חוטי מאגר שמושכים מפתחות רצים על קבוצת המפתחות ויכולים לשנות עניין בזמן ש-`select` משתמש בה. ה-selector יכול לזרוק או לפספס אירוע. כתיבה וקריאה על אותו ערוץ משני חוטים גם קורעות את ה-`ByteBuffer` שהמטפל מחזיק.
 
-Leave `select`, `accept`, `read`, `write`, and `interestOps` on one thread. The pool of two, if you want it, receives an already-copied message and runs the protocol, then enqueues reply bytes. That is the actor pool you already have. Pointing `handleReadWrite` itself at a pool of two is the change to reject. A database query belongs in that protocol task, not in `handleReadWrite`, so a slow query does not stop `select`.
+השאירו את `select`, את `accept`, את `read`, את `write`, ואת `interestOps` על חוט אחד. המאגר של שניים, אם רוצים אותו, מקבל הודעה שכבר הועתקה ומריץ את הפרוטוקול, ואז מעמיד בתי תשובה בתור. זה מאגר ה-actors שכבר יש. להפנות את `handleReadWrite` עצמו אל מאגר של שניים זה השינוי שצריך לדחות. שאילתת בסיס נתונים שייכת למשימת הפרוטוקול הזו, לא ל-`handleReadWrite`, כדי ששאילתה איטית לא תעצור את `select`.
 :::
 :::
 
 :::problem id=exam-24b-q3 source="Exams/24-b.pdf" kind=exam solution_origin=derived
-A logistics warehouse stores volunteers, evacuated families, and food portions. `DB` is thread-safe, has an empty constructor, and `executeQuery` returns the rows or throws `SQLException`.
+מחסן לוגיסטי שומר מתנדבים, משפחות מפונות, ומנות מזון. `DB` בטוח לחוטים, יש לו בנאי ריק, ו-`executeQuery` מחזיר את הרשומות (record/row) או זורק `SQLException`.
 
-Build `DBServer`: a reactor with ten worker threads. A client sends a query string. The server runs it on the one `DB` and replies with the first row, or `"Result No"` when there are no rows, or the error text when the query throws. Do not construct a `DB` per connection.
+בנו את `DBServer`: Reactor עם עשרה חוטי עבודה. לקוח שולח מחרוזת שאילתה. השרת מריץ אותה על ה-`DB` האחד ועונה ברשומה הראשונה, או ב-`"Result No"` כשאין רשומות, או בטקסט השגיאה כשהשאילתה זורקת. אל תבנו `DB` לכל חיבור.
 
 :::hint
-One `DB` is created in `main` and captured by the protocol.
+`DB` אחד נוצר ב-`main` ונתפס על ידי הפרוטוקול.
 :::
 :::hint
-`executeQuery` is the slow call. It runs on a pool thread.
+`executeQuery` היא הקריאה האיטית. היא רצה על חוט מאגר.
 :::
 :::hint
-The reply is one string. The selector writes it. The protocol does not touch the channel.
+התשובה היא מחרוזת אחת. ה-selector כותב אותה. הפרוטוקול אינו נוגע בערוץ.
 :::
 :::solution
 ```java
@@ -383,32 +401,32 @@ public class DBServer {
 }
 ```
 
-`DBProtocol.process` calls `db.executeQuery(msg)` inside try. On a non-empty list it returns `rows.get(0)`. On an empty list it returns `"Result No"`. On `SQLException` it returns `e.getMessage()`. The reactor from class submits `process` to the pool of 10, so a slow query does not run on the selector thread. `DB` is thread-safe, so ten workers may call it. Constructing it inside the protocol factory would build one database per connection, which the question forbids because startup is heavy.
+`DBProtocol.process` קורא ל-`db.executeQuery(msg)` בתוך try. על רשימה לא ריקה הוא מחזיר `rows.get(0)`. על רשימה ריקה הוא מחזיר `"Result No"`. על `SQLException` הוא מחזיר `e.getMessage()`. ה-Reactor מהכיתה מגיש את `process` למאגר של 10, ולכן שאילתה איטית אינה רצה על חוט ה-selector. `DB` בטוח לחוטים, ולכן עשרה עובדים רשאים לקרוא לו. בנייה שלו בתוך מפעל הפרוטוקול הייתה בונה בסיס נתונים אחד לכל חיבור, והשאלה אוסרת זאת כי ההתנעה כבדה.
 :::
 :::
 
 :::problem id=exam-24c-q3 source="Exams/24-c.pdf" kind=exam solution_origin=derived
 
-a. (10) Change the server template so a client sends a message of type A and receives a reply of type B. Name the spots you edit. Do not rewrite whole classes.
-b. Complete `Command` and `RemoteCommandInvocationProtocol`.
-c. `DB.executeQuery` returns `ArrayList<String>` and is thread-safe. `DBServer` uses `BaseServer` with a pool of 11 and an `ObjectEncoderDecoder` that already exists. One `DB` serves every client.
+א. שנו את תבנית השרת כך שלקוח שולח הודעה מטיפוס A ומקבל תשובה מטיפוס B. נקבו במקומות שאתם עורכים. אל תכתבו מחדש מחלקות שלמות.
+ב. השלימו את `Command` ואת `RemoteCommandInvocationProtocol`.
+ג. `DB.executeQuery` מחזיר `ArrayList<String>` ובטוח לחוטים. `DBServer` משתמש ב-`BaseServer` עם מאגר של 11 וב-`ObjectEncoderDecoder` שכבר קיים. `DB` אחד משרת כל לקוח.
 
 :::hint
-The encoder-decoder is generic. The protocol's input type and output type do not have to match.
+המקודד-מפענח גנרי. טיפוס הקלט של הפרוטוקול וטיפוס הפלט אינם חייבים להתאים.
 :::
 :::hint
-A command object is what the decoder produces. `execute` is what the protocol calls.
+אובייקט פקודה הוא מה שהמפענח מייצר. `execute` הוא מה שהפרוטוקול קורא לו.
 :::
 :::hint
-Eleven is the pool size passed to the server, not eleven selector threads.
+אחת-עשרה הוא גודל המאגר שמועבר לשרת, לא אחד-עשר חוטי selector.
 :::
 :::solution
-a. Change `MessagingProtocol<T>` into `MessagingProtocol<T, R>`, `process` returning `R`. The connection handler reads with `MessageEncoderDecoder<T>` and writes with `MessageEncoderDecoder<R>`, or one decoder that understands both if the exam's class is a single `MessageEncoderDecoder`. The reactor's type arguments follow. The selector loop does not change.
+א. משנים את `MessagingProtocol<T>` ל-`MessagingProtocol<T, R>`, ו-`process` מחזיר `R`. מטפל החיבור קורא עם `MessageEncoderDecoder<T>` וכותב עם `MessageEncoderDecoder<R>`, או מפענח אחד שמבין את שניהם אם המחלקה בשאלה היא `MessageEncoderDecoder` יחיד. ארגומנטי הטיפוס של Reactor הולכים בעקבות זה. לולאת ה-selector אינה משתנה.
 
-b. `Command` is `R execute(Context ctx)`. `RemoteCommandInvocationProtocol` holds the shared context, decodes a message into a `Command`, calls `execute`, and returns the result as the reply message.
+ב. `Command` הוא `R execute(Context ctx)`. `RemoteCommandInvocationProtocol` מחזיק את ההקשר המשותף, מפענח הודעה ל-`Command`, קורא ל-`execute`, ומחזיר את התוצאה כהודעת התשובה.
 
-c. `main` builds one `DB` and one `BaseServer` with pool size 11, protocol factory `() -> new RemoteCommandInvocationProtocol(db)`, and encoder factory `ObjectEncoderDecoder::new`. A query command's `execute` calls `db.executeQuery`. The returned list is the reply object. The encoder writes it. The selector thread never calls `executeQuery`.
+ג. `main` בונה `DB` אחד ו-`BaseServer` אחד עם גודל מאגר 11, מפעל פרוטוקול `() -> new RemoteCommandInvocationProtocol(db)`, ומפעל מקודד `ObjectEncoderDecoder::new`. `execute` של פקודת שאילתה קורא ל-`db.executeQuery`. הרשימה שחוזרת היא אובייקט התשובה. המקודד כותב אותה. חוט ה-selector לעולם אינו קורא ל-`executeQuery`.
 :::
 :::
 
-The reactor moves bytes. [Serialization](topic:serialization) is how those bytes become an object, and [Persistence](topic:persistence) is the database those protocol tasks call.
+Reactor מזיז בתים. [סיריאליזציה](topic:serialization) היא הדרך שבה הבתים האלה הופכים לאובייקט, ו[אחסון](topic:persistence) הוא בסיס הנתונים שמשימות הפרוטוקול האלה קוראות לו.

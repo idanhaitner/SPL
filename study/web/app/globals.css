@@ -18,9 +18,9 @@
   --ok: oklch(0.42 0.1 155);
   --code: oklch(0.18 0.02 265);
   --shadow: 0 1px 2px oklch(0.22 0.02 265 / 0.06), 0 16px 40px oklch(0.22 0.02 265 / 0.06);
-  --sans: var(--font-sans), "Segoe UI", "Helvetica Neue", sans-serif;
-  --serif: var(--font-serif), Palatino, "Palatino Linotype", serif;
-  --mono: var(--font-mono), ui-monospace, monospace;
+  --sans: var(--font-sans), sans-serif;
+  --serif: var(--font-sans), sans-serif;
+  --mono: var(--font-mono), var(--font-sans), ui-monospace, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -101,6 +101,8 @@ code {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 0.05em 0.35em;
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 .sr-only {
   position: absolute;
@@ -573,6 +575,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   background: #1e1e1e;
   border-radius: 14px;
   overflow: hidden;
+  direction: ltr;
   box-shadow: 0 1px 2px oklch(0.22 0.02 265 / 0.08);
 }
 .code-panel .lang {
@@ -609,13 +612,14 @@ button:disabled { opacity: 0.45; cursor: default; }
   padding: 0;
   color: inherit;
   font-size: 0.88rem;
-  line-height: 1.55;
+  line-height: 0;
   white-space: pre;
 }
 .code-panel .line {
   display: block;
   padding-inline-start: 3.6rem;
-  min-height: 1.55em;
+  line-height: 1.45;
+  min-height: 1.45em;
 }
 .code-panel .line::before {
   counter-increment: line;
@@ -632,6 +636,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   background: #1e1e1e;
 }
 .math-display {
+  direction: ltr;
   overflow-x: auto;
   max-width: 100%;
   margin: 1.1rem 0;
@@ -840,6 +845,21 @@ blockquote {
   .pager-prev .pager-copy { text-align: start; }
   .masthead { padding-inline-end: 3.4rem; }
   .masthead-num { font-size: 3.4rem; }
+}
+
+[dir="rtl"] body { line-height: 1.75; }
+[dir="rtl"] :is(h1, h2, h3, h4, .course-name, .fold-toggle, .continue strong, .pager a strong, .part-next strong, .chapter-list .num, .masthead-num) {
+  font-family: var(--sans);
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+[dir="rtl"] h1 { font-weight: 700; line-height: 1.2; }
+[dir="rtl"] :is(h2, h3, .course-name, .fold-toggle, .continue strong, .pager a strong, .part-next strong) {
+  font-weight: 650;
+}
+[dir="rtl"] :is(.kicker, .rail-label, .search-results span, .continue-copy span, .fold-open, .part-next span, .pager-copy span, th, .glossary-card a, .code-panel .lang) {
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -24,7 +24,7 @@ export function Continue({ courseId, chapters }: { courseId: string; chapters: C
   return (
     <Link className="continue" href={`/topics/${target.id}`}>
       <span className="continue-copy">
-        <span>{resuming ? "Continue" : "Start"}</span>
+        <span>{resuming ? "המשך" : "התחלה"}</span>
         <strong>{target.title}</strong>
       </span>
       <span className="continue-arrow" aria-hidden="true" />

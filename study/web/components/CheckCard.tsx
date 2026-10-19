@@ -48,11 +48,11 @@ export function CheckCard({
         ))}
       </div>
       <div className="actions">
-        <button type="submit">Check</button>
+        <button type="submit">בדיקה</button>
       </div>
-      {graded && picked == null && <p className="check-result">Choose an answer first.</p>}
-      {correct && <p className="check-result is-yes">Yes. That is the one.</p>}
-      {wrong && <p className="check-result is-no">Not this one. The reason is below.</p>}
+      {graded && picked == null && <p className="check-result">קודם בוחרים תשובה.</p>}
+      {correct && <p className="check-result is-yes">כן. זו התשובה.</p>}
+      {wrong && <p className="check-result is-no">לא זו. הסיבה למטה.</p>}
       {graded && picked != null && <div className="check-why">{why}</div>}
     </form>
   );

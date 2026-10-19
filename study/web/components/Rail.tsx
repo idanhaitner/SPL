@@ -67,10 +67,10 @@ export function Rail({
       <p className="course-name"><Link href="/">{title}</Link></p>
       <SearchBox hits={hits} />
       <nav className="rail-nav">
-        <Link className={pathname === "/" ? "is-current" : ""} href="/">Overview</Link>
-        <Link className={pathname === "/glossary" ? "is-current" : ""} href="/glossary">Glossary</Link>
+        <Link className={pathname === "/" ? "is-current" : ""} href="/">סקירה</Link>
+        <Link className={pathname === "/glossary" ? "is-current" : ""} href="/glossary">מונחים</Link>
       </nav>
-      <p className="rail-label">Chapters</p>
+      <p className="rail-label">פרקים</p>
       <nav className="chapters-nav" ref={chaptersRef}>
         {mark && <span className="rail-mark" style={{ top: mark.top, height: mark.height }} />}
         {chapters.map((chapter, index) => {
@@ -85,7 +85,7 @@ export function Rail({
           );
         })}
       </nav>
-      <p className="progress-count">{total ? `${done} / ${total} practice solved` : ""}</p>
+      <p className="progress-count">{total ? `${done} / ${total} תרגילים שנפתרו` : ""}</p>
     </aside>
   );
 }

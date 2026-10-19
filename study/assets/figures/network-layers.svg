@@ -10,22 +10,22 @@
   <rect width="640" height="340" fill="#f6f1e7"/>
   <g class="draw">
     <rect x="80" y="24" width="480" height="64" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
-    <text x="320" y="52" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Application</text>
-    <text x="320" y="72" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">the message, for example a line of echo</text>
+    <text x="320" y="52" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">שכבת היישום</text>
+    <text x="320" y="72" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">ההודעה, למשל שורת echo</text>
   </g>
   <g class="draw d2">
     <rect x="80" y="100" width="480" height="64" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
-    <text x="320" y="128" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Transport</text>
-    <text x="320" y="148" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">port to port, TCP or UDP</text>
+    <text x="320" y="128" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">שכבת התעבורה</text>
+    <text x="320" y="148" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">מפורט לפורט, TCP או UDP</text>
   </g>
   <g class="draw d3">
     <rect x="80" y="176" width="480" height="64" rx="12" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5"/>
-    <text x="320" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Internet</text>
-    <text x="320" y="224" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">IP address to IP address</text>
+    <text x="320" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">שכבת האינטרנט</text>
+    <text x="320" y="224" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">מכתובת IP לכתובת IP</text>
   </g>
   <g class="draw d4">
     <rect x="80" y="252" width="480" height="64" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
-    <text x="320" y="280" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Link</text>
-    <text x="320" y="300" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">frames on the wire</text>
+    <text x="320" y="280" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">שכבת הקו</text>
+    <text x="320" y="300" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">מסגרות על הכבל</text>
   </g>
 </svg>

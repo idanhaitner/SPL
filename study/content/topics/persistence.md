@@ -1,6 +1,6 @@
 ---
 id: persistence
-title: Persistence and SQL
+title: אחסון ו-SQL
 sources:
   - "Classes/Chapter 13 - Persistance.pptx"
   - "Exrecises/SPL_PS12.pptx"
@@ -31,19 +31,19 @@ sources:
   - "Exams/20-b-solution.pdf"
 ---
 
-RAM forgets. It needs power, it is wiped on reboot, it dies with the process, and it is the expensive, smaller store. A disk keeps bytes until somebody deletes them, and it is large. Serialization can put an object on that disk. Chapter 13 lists why that is not yet a database: a lookup deserializes whole objects, there is no index, an update rewrites the file, concurrency is a lock you invent, and there are no transactions.
+RAM שוכח. הוא צריך חשמל, הוא נמחק באתחול, הוא מת עם התהליך (process), והוא המאגר היקר והקטן יותר. דיסק שומר בתים עד שמישהו מוחק אותם, והוא גדול. סיריאליזציה (serialization) יכולה לשים אובייקט על הדיסק הזה. פרק 13 מונה למה זה עדיין אינו בסיס נתונים: חיפוש עושה דה-סיריאליזציה (deserialization) לאובייקטים שלמים, אין אינדקס, עדכון כותב את הקובץ מחדש, מקביליות היא מנעול שאתם ממציאים, ואין טרנזקציות.
 
-A database management system is the runtime for that data. The lecture names MS SQL Server, MySQL, Oracle, and SQLite. Underneath, the layers are disk access, file access, operations on rows, and queries.
+DBMS הוא סביבת הריצה של הנתונים האלה. ההרצאה נוקבת ב-MS SQL Server, ב-MySQL, ב-Oracle, וב-SQLite. מתחת, השכבות הן גישה לדיסק, גישה לקבצים, פעולות על רשומות (record/row), ושאילתות.
 
-## The relational model
+## המודל הרילציוני
 
-:::definition id=def-relational title="Relational database" source="Classes/Chapter 13 - Persistance.pptx"
-A relational database (בסיס נתונים רלציוני) stores rows in tables. A column has a name and a type. A primary key (מפתח ראשי) identifies one row. A foreign key (מפתח זר) is a reference to a key in another table, and it should be unique at the target, usually that table's primary key. A column may be `NOT NULL` or `UNIQUE`.
+:::definition id=def-relational title="בסיס נתונים רילציוני" source="Classes/Chapter 13 - Persistance.pptx"
+בסיס נתונים רילציוני (Relational Database) שומר רשומות בטבלאות (table). לשדה (field) יש שם וטיפוס. מפתח ראשי (primary key) מזהה רשומה אחת. מפתח זר (foreign key) הוא הפניה למפתח בטבלה אחרת, והוא צריך להיות ייחודי ביעד, בדרך כלל המפתח הראשי של אותה טבלה. בשקפים, מצביע או הפניה הם מפתח זר. שדה יכול להיות `NOT NULL` או `UNIQUE`.
 
-The design rule on the slides: a class becomes a table, a reference becomes a foreign key, and a list becomes another table. The pair `(student id, course id)` in that extra table is the primary key of the link, and each column is a foreign key.
+כלל העיצוב בשקפים: מחלקה הופכת לטבלה, הפניה הופכת למפתח זר, ורשימה הופכת לטבלה נוספת. הזוג `(student id, course id)` בטבלה הנוספת הזו הוא המפתח הראשי של הקישור, וכל אחד משני השדות האלה הוא מפתח זר.
 :::
 
-The lecture's university:
+האוניברסיטה של ההרצאה:
 
 | students | | | |
 | --- | --- | --- | --- |
@@ -60,13 +60,13 @@ The lecture's university:
 | id | name | teacher |
 | 1 | prog | Gil |
 
-A student's list of courses is not a column of arrays. It is `StudentsCourses(StudId, CourseId, Year, Grade)` with primary key `(StudId, CourseId, Year)`.
+רשימת הקורסים של סטודנט אינה שדה של מערכים. היא `StudentsCourses(StudId, CourseId, Year, Grade)` עם מפתח ראשי `(StudId, CourseId, Year)`.
 
-NoSQL, on one slide, is the other family: a key-value store, closer to a hash table, with MongoDB and Redis as the examples. The rest of the chapter, and every exam, is relational SQL.
+NoSQL, על שקף אחד, הוא המשפחה האחרת: מאגר מפתח-ערך, קרוב לטבלת גיבוב, עם MongoDB ו-Redis כדוגמאות. שאר הפרק, וכל שאלה, הם SQL רילציוני.
 
 ### DDL
 
-SQL's data definition language creates and destroys the shape.
+שפת הגדרת הנתונים של SQL יוצרת והורסת את הצורה.
 
 ```sql
 CREATE TABLE Students (
@@ -92,11 +92,11 @@ CREATE TABLE StudentsCourses (
 );
 ```
 
-A schema (סכימה) is a namespace of tables. `CREATE SCHEMA University;` and `DROP SCHEMA`. `DROP TABLE Students;`, `DROP INDEX ...`, and `ALTER TABLE Students ADD COLUMN Email VARCHAR(50);` are the other DDL commands on the slides.
+סכימה (schema) היא מרחב שמות של טבלאות. `CREATE SCHEMA University;` ו-`DROP SCHEMA`. `DROP TABLE Students;`, `DROP INDEX ...`, ו-`ALTER TABLE Students ADD COLUMN Email VARCHAR(50);` הן פקודות ה-DDL האחרות בשקפים.
 
 ### DML
 
-Data manipulation language changes and reads rows.
+שפת הטיפול בנתונים משנה וקוראת רשומות.
 
 ```sql
 INSERT INTO Departments (Id, Name, Building) VALUES (1, 'science', 37);
@@ -104,17 +104,17 @@ INSERT INTO Students (Id, DeptId) VALUES (2485, 2);          -- fails: Name is N
 INSERT INTO Students (Id, Name, DeptId) VALUES (2485, 'Bob', 2);  -- Login may be omitted
 ```
 
-Omitting the column list, `INSERT INTO Courses VALUES (1, 'prog', 'Gil')`, works only while the table's column order matches. The lecture advises against it.
+השמטת רשימת השדות, `INSERT INTO Courses VALUES (1, 'prog', 'Gil')`, עובדת רק כל עוד סדר השדות בטבלה תואם את סדר הערכים. ההרצאה מייעצת נגד זה.
 
 ```sql
 UPDATE Students SET Login = 'bob12' WHERE Id = 2485;   -- one row, Id is unique
 UPDATE Students SET Login = 'x';                        -- every row
 DELETE FROM Students WHERE Id = 2485;
 DELETE FROM Students WHERE Id < 3000;
-DELETE FROM Students;                                   -- every row, the table remains
+DELETE FROM Students;                                   -- every row, the table stays
 ```
 
-`SELECT` is the read.
+`SELECT` הוא הקריאה.
 
 ```sql
 SELECT * FROM Students;
@@ -122,7 +122,7 @@ SELECT Id, Name FROM Students;
 SELECT * FROM Students WHERE Id = 3984;
 ```
 
-`SELECT Students.Name, Courses.Name FROM Students, Courses` with no join condition is the Cartesian product: every student paired with every course. Alice appears once per course. The repair is an inner join.
+`SELECT Students.Name, Courses.Name FROM Students, Courses` בלי תנאי חיבור הוא המכפלה הקרטזית: כל סטודנט מזווג עם כל קורס. Alice מופיעה פעם לכל קורס. התיקון הוא inner join.
 
 ```sql
 SELECT S.name, C.name
@@ -131,53 +131,60 @@ INNER JOIN StudentsCourses SC ON S.id = SC.student_id
 INNER JOIN Courses C ON SC.course_id = C.id;
 ```
 
-![Students, the enrollment table, and courses. Alice links to prog. Bob and systems have no link row](../assets/figures/sql-join.svg)
+![Students, טבלת ההרשמה, ו-Courses. Alice מקושרת ל-prog. ל-Bob ול-systems אין רשומת קישור](../assets/figures/sql-join.svg)
 
-`INNER JOIN` keeps only rows that match. `LEFT JOIN` keeps every student, with null course columns when the student has no enrollment. `RIGHT JOIN` keeps every course, with null student columns when nobody took it. `FULL JOIN` keeps both. Session 12's teaching-assistant tables are the same pattern: `PRACTICAL_SESSIONS.TA_ID` references `TEACHING_ASSISTANTS.ID`, and a left join shows Matan and Yair with null session columns because they have no group.
+`INNER JOIN` שומר רק רשומות שמתאימות. `LEFT JOIN` שומר כל סטודנט, עם שדות קורס שהם null כשאין לסטודנט הרשמה. `RIGHT JOIN` שומר כל קורס, עם שדות סטודנט שהם null כשאף אחד לא למד אותו. `FULL JOIN` שומר את שני הצדדים. טבלאות המתרגלים של מפגש 12 הן אותו דפוס: `PRACTICAL_SESSIONS.TA_ID` מפנה אל `TEACHING_ASSISTANTS.ID`, ו-left join מראה את Matan ואת Yair עם שדות מפגש תרגול שהם null כי אין להם קבוצה.
 
-Session 13 puts a Python program in front of these tables. A DTO is one row as an object (`Student` for table `students`). A DAO is the object that `insert`s and `find`s that DTO, usually one table, often a singleton. A repository holds several DAOs and the methods that join tables, including `create_tables`. An ORM is the generic version: `row_map` builds a DTO from a row by column order, and one DAO class serves every table. The assignment-grader example stores `students`, `assignments`, and `grades`, runs a submitted file, and writes a grade row. Bob fails because his function returns `"main"` and the expected output is `"Main"`.
+מפגש 13 שם תוכנית Python לפני הטבלאות האלה. DTO הוא רשומה אחת כאובייקט (`Student` עבור הטבלה `students`). DAO הוא האובייקט שעושה `insert` ו-`find` ל-DTO הזה, בדרך כלל טבלה אחת, לעתים קרובות singleton. repository מחזיק כמה DAO ואת המתודות שמחברות טבלאות, כולל `create_tables`. ORM הוא הגרסה הגנרית: `row_map` בונה DTO מרשומה לפי סדר השדות, ומחלקת DAO אחת משרתת כל טבלה. דוגמת בודק המטלות שומרת `students`, `assignments`, ו-`grades`, מריצה קובץ שהוגש, וכותבת רשומת ציון. Bob נכשל כי הפונקציה שלו מחזירה `"main"` והפלט הצפוי הוא `"Main"`.
 
 :::problem id=worked-inner-join source="Classes/Chapter 13 - Persistance.pptx" kind=worked solution_origin=source
-Alice is enrolled in `prog`. Bob is enrolled in nothing. `prog` and `systems` both exist. What does the inner join of students to courses through `StudentsCourses` return, and what does a left join add?
+Alice רשומה ל-`prog`. Bob אינו רשום לכלום. `prog` ו-`systems` שניהם קיימים. מה השאילתה הזו מחזירה, ומה left join מוסיף?
+
+```sql
+SELECT S.name, C.name
+FROM Students S
+INNER JOIN StudentsCourses SC ON S.id = SC.student_id
+INNER JOIN Courses C ON SC.course_id = C.id;
+```
 
 :::solution
-The inner join returns one row, Alice with `prog`. Bob has no link row, so he disappears. A course nobody takes disappears too.
+ה-inner join מחזיר רשומה אחת, Alice עם `prog`. ל-Bob אין רשומת קישור, ולכן הוא נעלם. גם קורס שאף אחד אינו לומד נעלם.
 
-The left join from students still returns Alice with `prog`, and it returns Bob with a null course name. Bob is kept because the left table is kept. `systems` still does not appear, because the join started from students. A right join from students to courses would show `systems` with a null student and would drop Bob.
+ה-left join מסטודנטים עדיין מחזיר את Alice עם `prog`, והוא מחזיר את Bob עם שם קורס שהוא null. Bob נשמר כי הטבלה השמאלית נשמרת. `systems` עדיין אינו מופיע, כי החיבור התחיל מסטודנטים. right join מסטודנטים לקורסים היה מראה את `systems` עם סטודנט שהוא null והיה משמיט את Bob.
 :::
 :::
 
 :::check id=chk-fk
-A `Students.DeptId` value of 9, when `Departments` has ids 1 and 2, violates which constraint?
+ערך 9 ב-`Students.DeptId`, כשב-`Departments` יש מזהים 1 ו-2, מפר איזה אילוץ?
 
-- [ ] `PRIMARY KEY` on `Students.Id`
-- [x] The foreign key from `DeptId` to `Departments.Id`
-- [ ] `NOT NULL` on `Students.Name`
+- [ ] `PRIMARY KEY` על `Students.Id`
+- [x] המפתח הזר מ-`DeptId` אל `Departments.Id`
+- [ ] `NOT NULL` על `Students.Name`
 
-A foreign key says every `DeptId` is some department's id. Uniqueness of `Students.Id` is a different constraint.
+מפתח זר אומר שכל `DeptId` הוא מזהה של רשומה כלשהי ב-`Departments`. הייחודיות של `Students.Id` היא אילוץ אחר.
 :::
 
 :::trap
-`SELECT * FROM A, B` looks like a join and is a product. On a table of a thousand rows against another thousand, you get a million rows. The lecture's Alice-times-every-course listing is that bug at small scale.
+`SELECT * FROM A, B` נראה כמו join והוא מכפלה. על טבלה של אלף רשומות מול אלף אחרות מתקבלות מיליון רשומות. הרשימה של Alice כפול כל קורס בהרצאה היא הבאג הזה בקנה מידה קטן.
 :::
 
 :::trap
-A list stored as one comma-separated column cannot be a foreign key, and it cannot be indexed as membership. The lecture's rule is another table.
+רשימה שנשמרת כשדה אחד מופרד בפסיקים אינה יכולה להיות מפתח זר, ואי אפשר לאנדקס אותה כשייכות. הכלל של ההרצאה הוא טבלה נוספת.
 :::
 
-## Practice
+## תרגול
 
 :::problem id=ps12-foreign-key source="Exrecises/SPL_PS12.pptx" kind=exercise solution_origin=source
-Session 12's `PRACTICAL_SESSIONS` has columns `TA_ID`, `GroupNum`, `Location`, `Time`. `TEACHING_ASSISTANTS` has `ID`, `Name`, `OfficeHours`. Write the two `CREATE TABLE` statements. `GroupNum` is the primary key of a session. `ID` is the primary key of an assistant. A session's `TA_ID` refers to an assistant.
+ב-`PRACTICAL_SESSIONS` של מפגש 12 יש שדות `TA_ID`, `GroupNum`, `Location`, `Time`. ב-`TEACHING_ASSISTANTS` יש `ID`, `Name`, `OfficeHours`. כתבו את שני משפטי ה-`CREATE TABLE`. `GroupNum` הוא המפתח הראשי של מפגש תרגול. `ID` הוא המפתח הראשי של מתרגל. `TA_ID` של מפגש תרגול מפנה למתרגל.
 
 :::hint
-The foreign key is the column whose meaning is "the id of a row over there."
+המפתח הזר הוא השדה שמשמעותו "המזהה של רשומה שם".
 :::
 :::hint
-`OfficeHours` and `Time` can be text. `ID` and `GroupNum` are integers.
+`OfficeHours` ו-`Time` יכולים להיות טקסט. `ID` ו-`GroupNum` הם מספרים שלמים.
 :::
 :::hint
-Declare the referenced table's primary key before you rely on it, or declare the foreign key after both tables exist.
+הצהירו על המפתח הראשי של הטבלה שאליה מפנים לפני שמסתמכים עליו, או הצהירו על המפתח הזר אחרי ששתי הטבלאות קיימות.
 :::
 :::solution
 ```sql
@@ -194,21 +201,21 @@ CREATE TABLE PRACTICAL_SESSIONS (
 );
 ```
 
-Inserting a session with `TA_ID = 8` fails if no assistant has `ID` 8. That is the constraint the session's insert example is about to bump into.
+הכנסת מפגש תרגול עם `TA_ID = 8` נכשלת אם אין מתרגל עם `ID` 8. זה האילוץ שדוגמת ה-insert של מפגש 12 עומדת להתנגש בו.
 :::
 :::
 
 :::problem id=ps12-join source="Exrecises/SPL_PS12.pptx" kind=exercise solution_origin=source
-Using the tables above, write a query that returns `Time`, `Location`, `GroupNum`, and the assistant's `Name` for every session that has an assistant. Then say what a left join from assistants adds that this query hides. The session's sample has Shaked on two groups and Matan on none.
+בעזרת הטבלאות למעלה, כתבו שאילתה שמחזירה `Time`, `Location`, `GroupNum`, ואת `Name` של המתרגל, לכל מפגש תרגול שיש לו מתרגל. אחר כך אמרו מה left join ממתרגלים מוסיף שהשאילתה הזו מסתירה. בדוגמה של מפגש 12, Shaked על שתי קבוצות ו-Matan על אף אחת.
 
 :::hint
-Match `PRACTICAL_SESSIONS.TA_ID` to `TEACHING_ASSISTANTS.ID`.
+התאימו את `PRACTICAL_SESSIONS.TA_ID` ל-`TEACHING_ASSISTANTS.ID`.
 :::
 :::hint
-An inner join drops the assistant with no session.
+inner join משמיט את המתרגל שאין לו מפגש תרגול.
 :::
 :::hint
-Qualify the columns both tables share, or alias the tables.
+הגדירו במפורש את השדות ששתי הטבלאות חולקות, או תנו כינוי לטבלאות.
 :::
 :::solution
 ```sql
@@ -217,65 +224,65 @@ FROM PRACTICAL_SESSIONS ps
 INNER JOIN TEACHING_ASSISTANTS ta ON ps.TA_ID = ta.ID;
 ```
 
-Shaked appears twice, once for each group. Matan does not appear. A `LEFT JOIN` from `TEACHING_ASSISTANTS` to sessions keeps Matan and Yair, with null `Time`, `Location`, and `GroupNum`, which is the second result table on the session's slide.
+Shaked מופיע פעמיים, פעם לכל קבוצה. Matan אינו מופיע. `LEFT JOIN` מ-`TEACHING_ASSISTANTS` אל מפגשי התרגול שומר את Matan ואת Yair, עם `Time`, `Location`, ו-`GroupNum` שהם null, וזו טבלת התוצאה השנייה על השקף של מפגש 12.
 :::
 :::
 
 :::problem id=ps13-dto-dao source="Exrecises/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
-Session 13's grader has tables `students(id, name)`, `assignments(num, expected_output)`, and `grades(student_id, assignment_num, grade)`. Name the DTO, the DAO, and the repository method that returns a grade together with the student's name. Say why that last method is not on the grades DAO.
+לבודק של מפגש 13 יש טבלאות `students(id, name)`, `assignments(num, expected_output)`, ו-`grades(student_id, assignment_num, grade)`. נקבו ב-DTO, ב-DAO, ובמתודת ה-repository שמחזירה ציון יחד עם שם הסטודנט. אמרו למה המתודה האחרונה אינה על ה-DAO של הציונים.
 
 :::hint
-A DTO is one row. Its name is the table's row, singular.
+DTO הוא רשומה אחת. שמו הוא רשומת הטבלה, ביחיד.
 :::
 :::hint
-A DAO's methods mention one table.
+המתודות של DAO מזכירות טבלה אחת.
 :::
 :::hint
-A join crosses tables, so it lives on the repository.
+join חוצה טבלאות, ולכן הוא חי על ה-repository.
 :::
 :::solution
-`Student`, `Assignment`, and `Grade` are the DTOs. `_Students`, `_Assignments`, and `_Grades` are the DAOs, each holding the connection and implementing `insert` and `find` for one table. `repo.get_grades_with_names()` joins `grades` to `students` and returns rows that have both `assignment_num` and `name`. That method is on the repository because it is not about one table. `create_tables` is also on the repository, for the same reason: it creates all three.
+`Student`, `Assignment`, ו-`Grade` הם ה-DTO. `_Students`, `_Assignments`, ו-`_Grades` הם ה-DAO, כל אחד מחזיק את החיבור ומממש `insert` ו-`find` לטבלה אחת. `repo.get_grades_with_names()` מחבר את `grades` אל `students` ומחזיר רשומות שיש בהן גם `assignment_num` וגם `name`. המתודה הזו על ה-repository כי היא אינה עוסקת בטבלה אחת. גם `create_tables` על ה-repository, מאותה סיבה: הוא יוצר את שלושתן.
 
-Bob's submission returns `"main"` and the assignment's `expected_output` is `"Main"`, so his grade row records the mismatch. The comparison is case-sensitive because the session prints that he failed for exactly that reason.
+ההגשה של Bob מחזירה `"main"` ו-`expected_output` של המטלה הוא `"Main"`, ולכן רשומת הציון שלו רושמת את אי-ההתאמה. ההשוואה רגישה לאותיות גדולות כי המפגש מדפיס שהוא נכשל בדיוק מהסיבה הזו.
 :::
 :::
 
 :::problem id=ps13-orm-find source="Exrecises/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
-The session replaces a hand-written `find` with `row_map(row, col_mapping, dto_type)`, which builds constructor arguments by column index and calls the DTO constructor. `Assignment.find` used to be `return Assignment(*c.fetchone())`. What must `col_mapping` contain so the generic `find` still constructs `Assignment(num, expected_output)`?
+המפגש מחליף `find` שנכתב ביד ב-`row_map(row, col_mapping, dto_type)`, שבונה ארגומנטים לבנאי לפי אינדקס שדה וקורא לבנאי של ה-DTO. `Assignment.find` היה `return Assignment(*c.fetchone())`. מה `col_mapping` חייב להכיל כדי שה-`find` הגנרי עדיין יבנה `Assignment(num, expected_output)`?
 
 :::hint
-The constructor argument order is the DTO's order, not whatever order `SELECT *` happens to use, unless you made those orders match.
+סדר ארגומנטי הבנאי הוא הסדר של ה-DTO, לא כל סדר ש-`SELECT *` במקרה משתמש בו, אלא אם עשיתם את הסדרים האלה תואמים.
 :::
 :::hint
-`row_map` indexes the row with each entry of `col_mapping`.
+`row_map` מאנדקס את הרשומה עם כל איבר של `col_mapping`.
 :::
 :::hint
-`Assignment` takes `num` then `expected_output`.
+`Assignment` מקבל `num` ואחר כך `expected_output`.
 :::
 :::solution
-`col_mapping` is the list of indexes in constructor order. If the row is `(num, expected_output)`, the mapping is `[0, 1]`. If a query selected `expected_output` before `num`, the mapping is `[1, 0]`, so the constructor still receives `num` first. `dto_type(*ctor_args)` is `Assignment(num, expected_output)`. A mapping that follows `SELECT *` blindly breaks as soon as the table's column order changes, which is the same warning the SQL lecture gave about `INSERT` without a column list.
+`col_mapping` הוא רשימת האינדקסים לפי סדר הבנאי. אם הרשומה היא `(num, expected_output)`, המיפוי הוא `[0, 1]`. אם שאילתה בחרה `expected_output` לפני `num`, המיפוי הוא `[1, 0]`, כדי שהבנאי עדיין יקבל את `num` ראשון. `dto_type(*ctor_args)` הוא `Assignment(num, expected_output)`. מיפוי שהולך אחרי `SELECT *` בעיניים עצומות נשבר ברגע שסדר השדות בטבלה משתנה, וזו אותה אזהרה שהרצאת ה-SQL נתנה על `INSERT` בלי רשימת שדות.
 :::
 :::
 
 
 :::examnote
-The question describes a small business in sentences and asks for tables, keys, and one `SELECT`. The trap is a list crammed into one column, or a join that multiplies rows because the link table was left out.
+השאלה מתארת עסק קטן במשפטים ומבקשת טבלאות, מפתחות, ו-`SELECT` אחד. המלכודת היא רשימה שנדחסה לשדה אחד, או join שמכפיל רשומות כי טבלת הקישור הושמטה.
 :::
 
 :::problem id=exam-15a-q4 source="Exams/15-a.pdf" kind=exam solution_origin=derived
-BigApple stores a customer (name, phone, join date, and links to other customers who are family) and each action on the account (a date and a kind: sent message, outgoing call, missed call, received message, with the other phone number).
+BigApple שומר לקוח (שם, טלפון, תאריך הצטרפות, וקישורים ללקוחות אחרים שהם משפחה) וכל פעולה על החשבון (תאריך וסוג: הודעה שנשלחה, שיחה יוצאת, שיחה שלא נענתה, הודעה שהתקבלה, עם מספר הטלפון האחר).
 
-a. Define the tables.
-b. SQL for the messages received by members of Ringo Starr's family.
+א. הגדירו את הטבלאות.
+ב. SQL להודעות שהתקבלו על ידי בני המשפחה של Ringo Starr.
 
 :::hint
-Family is a relation between two customers, so it is a table, not a column of names.
+משפחה היא יחס בין שני לקוחות, ולכן היא טבלה, לא שדה של שמות.
 :::
 :::hint
-An action's kind is either a column or a small table. The other phone number is a column of the action.
+הסוג של פעולה הוא שדה או טבלה קטנה. מספר הטלפון האחר הוא שדה של הפעולה.
 :::
 :::hint
-"Family of Ringo" is a join from Ringo through the family table, then to received-message actions.
+"המשפחה של Ringo" היא join מ-Ringo דרך טבלת המשפחה, ואז אל פעולות של הודעה שהתקבלה.
 :::
 :::solution
 ```sql
@@ -303,27 +310,27 @@ JOIN Actions a ON a.phone = f.relative AND a.kind = 'received'
 WHERE c.name = 'Ringo Starr';
 ```
 
-Store both directions in `Family`, or insert the pair in both orders, if "family" is symmetric. A single `relatives` text column on `Customers` cannot be joined.
+שמרו את שני הכיוונים ב-`Family`, או הכניסו את הזוג בשני הסדרים, אם "משפחה" סימטרית. שדה טקסט יחיד `relatives` על `Customers` אינו ניתן ל-join.
 :::
 :::
 
 :::problem id=exam-15b-q4 source="Exams/15-b.pdf" kind=exam solution_origin=derived
-Extend BigApple with the kind of family relation (parent, sibling, child), a table of competing carriers, and a history of number portability: the date the customer left, and the carrier they left to.
+הרחיבו את BigApple עם סוג קשר המשפחה (הורה, אח, ילד), טבלה של מפעילות מתחרות, והיסטוריה של ניידות מספר: התאריך שבו הלקוח עזב, והמפעילה שאליה עזב.
 
-a. (5) The extra tables.
-b. (5) Every carrier Ringo Starr has moved to, with the date.
+א. הטבלאות הנוספות.
+ב. כל מפעילה ש-Ringo Starr עבר אליה, עם התאריך.
 
 :::hint
-Do not add a column to `Actions` for this. Portability is not a call.
+אל תוסיפו שדה ל-`Actions` בשביל זה. ניידות אינה שיחה.
 :::
 :::hint
-A customer can leave more than once, so the history is a table, not two columns on `Customers`.
+לקוח יכול לעזוב יותר מפעם אחת, ולכן ההיסטוריה היא טבלה, לא שני שדות על `Customers`.
 :::
 :::hint
-The family kind is a column on the existing family table.
+סוג המשפחה הוא שדה על טבלת המשפחה הקיימת.
 :::
 :::solution
-Add `kind TEXT` to `Family`. Add `Carriers(id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL)`. Add `Portings(phone TEXT REFERENCES Customers(phone), left_on DATE, carrier_id INTEGER REFERENCES Carriers(id), PRIMARY KEY (phone, left_on))`.
+מוסיפים `kind TEXT` ל-`Family`. מוסיפים `Carriers(id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL)`. מוסיפים `Portings(phone TEXT REFERENCES Customers(phone), left_on DATE, carrier_id INTEGER REFERENCES Carriers(id), PRIMARY KEY (phone, left_on))`.
 
 ```sql
 SELECT car.name, p.left_on
@@ -337,19 +344,19 @@ ORDER BY p.left_on;
 :::
 
 :::problem id=exam-16a-q4 source="Exams/16-a.pdf" kind=exam solution_origin=derived
-Abbey Road stores recording sessions. A session has a date, a song, a band, and many takes. A take has people in roles: players (a person may play several instruments on one take), singers, and engineers.
+Abbey Road שומר מפגשי הקלטה. למפגש יש תאריך, שיר, להקה, והרבה טייקים. בטייק יש אנשים בתפקידים: נגנים (אדם רשאי לנגן כמה כלים בטייק אחד), זמרים, וטכנאים.
 
-a. (5) Tables.
-b. (5) The take numbers and song names where Billy Preston played keyboards during the Beatles' Get Back sessions, from January 1969, ordered by date ascending.
+א. טבלאות.
+ב. מספרי הטייק ושמות השירים שבהם Billy Preston ניגן בקלידים במהלך מפגשי Get Back של ה-Beatles, מינואר 1969, ממוינים לפי תאריך עולה.
 
 :::hint
-A take belongs to a session. A participation belongs to a take and a person and a role, and the instrument is a column of that participation.
+טייק שייך למפגש. השתתפות שייכת לטייק ולאדם ולתפקיד, והכלי הוא שדה של ההשתתפות הזו.
 :::
 :::hint
-"Several instruments" means several participation rows, not one instruments column.
+"כמה כלים" פירושו כמה רשומות השתתפות, לא שדה כלים אחד.
 :::
 :::hint
-Filter band, date, person, and instrument, then project take number and song.
+סננו להקה, תאריך, אדם, וכלי, ואז הקרינו מספר טייק ושם שיר.
 :::
 :::solution
 ```sql
@@ -388,40 +395,40 @@ ORDER BY s.on_date;
 :::
 
 :::problem id=exam-16b-q4 source="Exams/16-b.pdf" kind=exam solution_origin=derived
-The Abbey Road schema is given.
+סכמת Abbey Road נתונה.
 
-a. Show how Kim Philby can appear as a participant in the role of double agent.
-b. Restrict roles to a fixed set: player, singer, engineer.
+א. הראו איך Kim Philby יכול להופיע כמשתתף בתפקיד סוכן כפול.
+ב. הגבילו תפקידים לקבוצה קבועה: נגן, זמר, טכנאי.
 
 :::hint
-If `role` is free text, the row is just another participation. The restriction is a table of legal roles or a check.
+אם `role` הוא טקסט חופשי, הרשומה היא עוד השתתפות. ההגבלה היא טבלת תפקידים חוקיים או check.
 :::
 :::hint
-A foreign key to a `Roles` table rejects a role that was not inserted.
+מפתח זר אל טבלת `Roles` דוחה תפקיד שלא הוכנס.
 :::
 :::hint
-Do not add a boolean column per role. A new role would be a schema change.
+אל תוסיפו שדה בוליאני לכל תפקיד. תפקיד חדש היה שינוי סכמה.
 :::
 :::solution
-a. Insert Kim into `People` and a `Participations` row with `role = 'double agent'`. The schema allows any role text, so this is data, not a new table.
+א. מכניסים את Kim ל-`People` ורשומת `Participations` עם `role = 'double agent'`. הסכמה מתירה כל טקסט תפקיד, ולכן זה נתון, לא טבלה חדשה.
 
-b. `CREATE TABLE Roles (name TEXT PRIMARY KEY);` insert `player`, `singer`, `engineer`. Change `Participations.role` to `REFERENCES Roles(name)`. The double-agent insert then fails until that role is added on purpose. A `CHECK (role IN (...))` is the alternative when the exam wants the constraint in one column.
+ב. `CREATE TABLE Roles (name TEXT PRIMARY KEY);` מכניסים `player`, `singer`, `engineer`. משנים את `Participations.role` ל-`REFERENCES Roles(name)`. הכנסת הסוכן הכפול אז נכשלת עד שמוסיפים את התפקיד הזה בכוונה. `CHECK (role IN (...))` הוא החלופה כשהשאלה רוצה את האילוץ בשדה אחד.
 :::
 :::
 
 :::problem id=exam-17a-q4 source="Exams/17-a.pdf" kind=exam solution_origin=derived
-An online glasses shop. Stock a model (model number, price). Register a customer (name, id). A purchase records the customer id and the model, and the shop issues a receipt with a unique number and the purchase details. A customer can ask the price of a model. The owner can list every receipt.
+חנות משקפיים מקוונת. מחסנים דגם (מספר דגם, מחיר). רושמים לקוח (שם, מזהה). רכישה רושמת את מזהה הלקוח ואת הדגם, והחנות מנפיקה קבלה עם מספר ייחודי ופרטי הרכישה. לקוח יכול לשאול את המחיר של דגם. הבעלים יכול לרשום כל קבלה.
 
-Give the tables and the two queries: price of a model, and all receipts.
+תנו את הטבלאות ואת שתי השאילתות: מחיר של דגם, וכל הקבלות.
 
 :::hint
-A receipt is a row, not a printout. Its primary key is the receipt number.
+קבלה היא רשומה, לא תדפיס. המפתח הראשי שלה הוא מספר הקבלה.
 :::
 :::hint
-The model number on a purchase is a foreign key. Typing it twice invites a mismatch with the price.
+מספר הדגם על רכישה הוא מפתח זר. הקלדתו פעמיים מזמינה אי-התאמה עם המחיר.
 :::
 :::hint
-The price query does not touch receipts.
+שאילתת המחיר אינה נוגעת בקבלות.
 :::
 :::solution
 ```sql
@@ -442,23 +449,23 @@ SELECT price FROM Models WHERE model_no = ?;
 SELECT * FROM Receipts;
 ```
 
-The price lives only on `Models`, so a later price change does not require editing old receipts if the question wanted the price at sale time. If it did, copy `price` onto `Receipts` at insert. The question's "price of a model" reads the catalog.
+המחיר חי רק על `Models`, ולכן שינוי מחיר מאוחר יותר אינו דורש עריכת קבלות ישנות אם השאלה רצתה את המחיר בזמן המכירה. אם היא רצתה, מעתיקים את `price` אל `Receipts` בהכנסה. "המחיר של דגם" בשאלה קורא את הקטלוג.
 :::
 :::
 
 :::problem id=exam-17b-q4 source="Exams/17-b.pdf" kind=exam solution_origin=derived
-A garage. A job has a car number, a fault description, and a job id. A worker has a name and an id. Assigning a worker to a job records the worker, the job, and that it is not finished. Finishing a job marks it done.
+מוסך. לעבודה יש מספר רכב, תיאור תקלה, ומזהה עבודה. לעובד יש שם ומזהה. שיוך עובד לעבודה רושם את העובד, את העבודה, ושהיא לא הסתיימה. סיום עבודה מסמן אותה כגמורה.
 
-Tables, plus the query for a worker's unfinished jobs.
+טבלאות, ובנוסף השאילתה לעבודות שלא הסתיימו של עובד.
 
 :::hint
-"Not finished" is a column on the assignment, or a null `finished_at`.
+"לא הסתיימה" הוא שדה על השיוך, או `finished_at` שהוא null.
 :::
 :::hint
-One job can exist before it has a worker, so the job table and the assignment table are not the same.
+עבודה יכולה להתקיים לפני שיש לה עובד, ולכן טבלת העבודה וטבלת השיוך אינן אותה טבלה.
 :::
 :::hint
-The query filters the worker and the unfinished flag.
+השאילתה מסננת את העובד ואת דגל "לא הסתיימה".
 :::
 :::solution
 ```sql
@@ -483,21 +490,21 @@ JOIN Jobs j ON j.job_id = a.job_id
 WHERE a.worker_id = ? AND a.finished = 0;
 ```
 
-Finishing is `UPDATE Assignments SET finished = 1 WHERE job_id = ? AND worker_id = ?`.
+הסיום הוא `UPDATE Assignments SET finished = 1 WHERE job_id = ? AND worker_id = ?`.
 :::
 :::
 
 :::problem id=exam-18a-q4 source="Exams/18-a.pdf" kind=exam solution_origin=derived
-A question bank stores each question's text, and a record of every year it was set, in either sitting of that year. A question may repeat in a later year and must not be used twice in the same year. Choose the schema that enforces that, and say which key does the work.
+בנק שאלות שומר את הטקסט של כל שאלה, ורשומה של כל שנה שבה היא ניתנה, באחד משני המושבים של אותה שנה. שאלה רשאית לחזור בשנה מאוחרת ואסור להשתמש בה פעמיים באותה שנה. בחרו את הסכמה שאוכפת את זה, ואמרו איזה מפתח עושה את העבודה.
 
 :::hint
-One row per question, and one row per (question, year, moed), is the shape that can repeat across years.
+רשומה אחת לכל שאלה, ורשומה אחת לכל (שאלה, שנה, מושב), זו הצורה שיכולה לחזור בין שנים.
 :::
 :::hint
-"Not twice in one year" is a primary key that includes the year.
+"לא פעמיים בשנה אחת" הוא מפתח ראשי שכולל את השנה.
 :::
 :::hint
-A pair of columns `year_a` and `year_b` on the question cannot store a third year.
+זוג שדות `year_a` ו-`year_b` על השאלה אינו יכול לשמור שנה שלישית.
 :::
 :::solution
 ```sql
@@ -513,14 +520,14 @@ CREATE TABLE asked (
 );
 ```
 
-The primary key `(question_id, year)` rejects a second insert of the same question in the same year, whichever moed. A later year is a new row. Columns `year_a` and `year_b` on `questions` only remember two uses and cannot express the constraint for a third sitting. If the paper's option uses `question_id_A` and `question_id_B` as two foreign keys in a year table, that remembers one pair of questions per year and is the wrong grain.
+המפתח הראשי `(question_id, year)` דוחה הכנסה שנייה של אותה שאלה באותה שנה, בכל אחד משני המושבים. שנה מאוחרת יותר היא רשומה חדשה. שדות `year_a` ו-`year_b` על `questions` זוכרים רק שני שימושים ואינם יכולים לבטא את האילוץ למושב שלישי. אם אפשרות בשאלה משתמשת ב-`question_id_A` וב-`question_id_B` כשני מפתחות זרים בטבלת שנה, זה זוכר זוג שאלות אחד לשנה וזה הגרגר הלא נכון.
 :::
 :::
 
 :::problem id=exam-18b-q4 source="Exams/18-b.pdf" kind=exam solution_origin=derived
-Police wiretaps. A recording stores the text, the caller's number, the callee's number, and the date. Each phone number has an owner name and address.
+האזנות משטרה. הקלטה שומרת את הטקסט, את מספר המתקשר, את מספר היעד, ואת התאריך. לכל מספר טלפון יש שם בעלים וכתובת.
 
-The paper starts:
+השאלה מתחילה:
 
 ```sql
 CREATE TABLE phone (
@@ -530,16 +537,16 @@ CREATE TABLE phone (
 );
 ```
 
-Finish the schema and write a query for the recordings of a given number, with both owners' names.
+השלימו את הסכמה וכתבו שאילתה להקלטות של מספר נתון, עם שמות שני הבעלים.
 
 :::hint
-A call has two foreign keys into `phone`, so you join `phone` twice.
+לשיחה שני מפתחות זרים אל `phone`, ולכן מצטרפים ל-`phone` פעמיים.
 :::
 :::hint
-Alias the two joins. Otherwise `name` is ambiguous.
+תנו כינוי לשני ה-join. אחרת `name` דו-משמעי.
 :::
 :::hint
-The recording's primary key can be a surrogate id.
+המפתח הראשי של ההקלטה יכול להיות מזהה מלאכותי.
 :::
 :::solution
 ```sql
@@ -560,18 +567,18 @@ WHERE r.from_num = ? OR r.to_num = ?;
 :::
 
 :::problem id=exam-19a-q4 source="Exams/19-a.pdf" kind=exam solution_origin=derived
-Airbnb. A user has an id and may be a guest, a host, or both. A property has an id, one host, a nightly price, and a description. A rental has a guest, a property (and therefore that property's host), a check-in, and a check-out. After checkout, the host writes a recommendation of the guest and the guest writes one of the host.
+Airbnb. למשתמש יש מזהה והוא רשאי להיות אורח, מארח (host), או שניהם. לנכס יש מזהה, מארח אחד, מחיר ללילה, ותיאור. להשכרה יש אורח, נכס (ולכן את המארח של הנכס הזה), צ'ק-אין, וצ'ק-אאוט. אחרי הצ'ק-אאוט המארח כותב המלצה על האורח והאורח כותב אחת על המארח.
 
-Three parts on the paper ask you to complete the schema and one query. Give the tables.
+שלושה חלקים בשאלה מבקשים להשלים את הסכמה ושאילתה אחת. תנו את הטבלאות.
 
 :::hint
-"Guest or host or both" is not two subclasses with two primary keys. One `users` table, and a property points at a host id.
+"אורח או מארח או שניהם" אינו שתי תת-מחלקות עם שני מפתחות ראשיים. טבלת `users` אחת, ונכס מצביע על מזהה מארח.
 :::
 :::hint
-A recommendation is a row written at the end of a rental, with an author and a subject.
+המלצה היא רשומה שנכתבת בסוף השכרה, עם מחבר ונושא.
 :::
 :::hint
-One host, many properties: the foreign key lives on the property.
+מארח אחד, הרבה נכסים: המפתח הזר חי על הנכס.
 :::
 :::solution
 ```sql
@@ -598,24 +605,24 @@ CREATE TABLE recommendations (
 );
 ```
 
-A user who both hosts and travels is just a user who appears as `host_id` on some property and as `guest_id` on some rental. No second table.
+משתמש שגם מארח וגם נוסע הוא פשוט משתמש שמופיע כ-`host_id` על נכס כלשהו וכ-`guest_id` על השכרה כלשהי. אין טבלה שנייה.
 :::
 :::
 
 :::problem id=exam-19b-q4 source="Exams/19-b.pdf" kind=exam solution_origin=derived
-The same Airbnb facts, plus: two guests cannot share a property on the same night. Enforce that in the schema, not in a comment.
+אותן עובדות של Airbnb, ובנוסף: שני אורחים אינם יכולים לחלוק נכס באותו לילה. אכפו את זה בסכמה, לא בהערה.
 
 :::hint
-The forbidden case is two rental rows with the same property and overlapping dates. A primary key does not express overlap.
+המקרה האסור הוא שתי רשומות השכרה עם אותו נכס ותאריכים חופפים. מפתח ראשי אינו מבטא חפיפה.
 :::
 :::hint
-If the exam accepts a simpler reading, one row per (property, night) does express it.
+אם השאלה מקבלת קריאה פשוטה יותר, רשומה אחת לכל (נכס, לילה) כן מבטאת את זה.
 :::
 :::hint
-A link table `stay(property_id, night, rental_id)` with primary key `(property_id, night)` makes the conflict an insert failure.
+טבלת קישור `stay(property_id, night, rental_id)` עם מפתח ראשי `(property_id, night)` הופכת את ההתנגשות לכישלון הכנסה.
 :::
 :::solution
-Keep the 2019 A tables. Add
+שומרים את הטבלאות של Airbnb מהשאלה על המשתמשים, הנכסים וההשכרות. מוסיפים
 
 ```sql
 CREATE TABLE nights (
@@ -626,23 +633,23 @@ CREATE TABLE nights (
 );
 ```
 
-Booking writes one `nights` row per night of the stay. A second guest on an occupied night hits the primary key and the insert fails. A `CHECK` constraint cannot see other rows in the SQL the lecture taught; the extra table can. The query for "who stays at property P on night D" is a join from `nights` to `rentals` to `users`.
+הזמנה כותבת רשומת `nights` אחת לכל לילה של השהייה. אורח שני בלילה תפוס פוגע במפתח הראשי וההכנסה נכשלת. אילוץ `CHECK` אינו יכול לראות רשומות אחרות ב-SQL שההרצאה לימדה; הטבלה הנוספת יכולה. השאילתה "מי שוהה בנכס P בלילה D" היא join מ-`nights` אל `rentals` אל `users`.
 :::
 :::
 
 :::problem id=exam-20a-q4 source="Exams/20-a.pdf" kind=exam solution_origin=derived
-A DVD service. Users have an id and a name. Movies have an id, a name, a description, any number of categories from {Action, Drama, Romance, kids}, an average `score`, and `num_scorers`. A watch records the user, the movie, and the date.
+שירות DVD. למשתמשים יש מזהה ושם. לסרטים יש מזהה, שם, תיאור, כל מספר קטגוריות מתוך {Action, Drama, Romance, kids}, ממוצע `score`, ו-`num_scorers`. צפייה רושמת את המשתמש, את הסרט, ואת התאריך.
 
-Tables, and a query for the movies a user watched, with their categories.
+טבלאות, ושאילתה לסרטים שמשתמש צפה בהם, עם הקטגוריות שלהם.
 
 :::hint
-"Any number of categories" is a link table. A single category column is wrong.
+"כל מספר קטגוריות" הוא טבלת קישור. שדה קטגוריה יחיד שגוי.
 :::
 :::hint
-`score` and `num_scorers` are columns of the movie only if you accept a stored aggregate. The lecture would rather compute them.
+`score` ו-`num_scorers` הם שדות של הסרט רק אם מקבלים צבירה שמורה. ההרצאה תעדיף לחשב אותם.
 :::
 :::hint
-The watch table is the many-to-many between users and movies, plus a date.
+טבלת הצפייה היא הרבים-לרבים בין משתמשים לסרטים, ועוד תאריך.
 :::
 :::solution
 ```sql
@@ -672,21 +679,21 @@ LEFT JOIN categories c ON c.movie_id = m.id
 WHERE w.user_id = ?;
 ```
 
-A movie with two categories appears twice, once per category, which is the link table doing its job. `LEFT JOIN` keeps a movie that has no category row.
+סרט עם שתי קטגוריות מופיע פעמיים, פעם לכל קטגוריה, וזו טבלת הקישור שעושה את עבודתה. `LEFT JOIN` שומר סרט שאין לו רשומת קטגוריה.
 :::
 :::
 
 :::problem id=exam-20b-q4 source="Exams/20-b.pdf" kind=exam solution_origin=derived
-The same DVD service. Write the query that updates a movie's average when a user submits a new score `s`, using the stored `score` and `num_scorers`, and the query that lists movies in a category ordered by score.
+אותו שירות DVD. כתבו את השאילתה שמעדכנת את הממוצע של סרט כשמשתמש מגיש ציון חדש `s`, באמצעות `score` ו-`num_scorers` השמורים, ואת השאילתה שמפרטת סרטים בקטגוריה ממוינים לפי ציון.
 
 :::hint
-The new average is `(score * num_scorers + s) / (num_scorers + 1)`.
+הממוצע החדש הוא `(score * num_scorers + s) / (num_scorers + 1)`.
 :::
 :::hint
-Both columns change in one `UPDATE`.
+שני השדות משתנים ב-`UPDATE` אחד.
 :::
 :::hint
-The category filter joins `categories`.
+מסנן הקטגוריה מצטרף ל-`categories`.
 :::
 :::solution
 ```sql
@@ -702,8 +709,8 @@ WHERE c.category = 'Drama'
 ORDER BY m.score DESC;
 ```
 
-The update is one statement so a reader does not see a new count with the old average. Two statements would need the transaction the lecture said serialization does not give you. The join is inner, so a movie with no Drama row is absent, which is what the filter means.
+העדכון הוא משפט אחד כדי שקורא לא יראה ספירה חדשה עם הממוצע הישן. שני משפטים היו צריכים את הטרנזקציה שההרצאה אמרה שסיריאליזציה אינה נותנת. ה-join הוא פנימי, ולכן סרט בלי רשומת Drama נעדר, וזה מה שהמסנן אומר.
 :::
 :::
 
-The persistence layer in session 13 is how a Java or Python server from [The reactor](topic:reactor) calls these statements without scattering SQL through the protocol.
+שכבת האחסון במפגש 13 היא הדרך שבה שרת Java או Python מתוך [Reactor](topic:reactor) קורא להוראות האלה בלי לפזר SQL לאורך הפרוטוקול.

@@ -9,17 +9,17 @@
   <rect width="680" height="300" fill="#f6f1e7"/>
   <g class="draw">
     <rect x="36" y="28" width="608" height="72" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
-    <text x="56" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Precondition</text>
-    <text x="56" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">the crop rectangle lies inside the picture</text>
+    <text x="56" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">תנאי קדם</text>
+    <text x="56" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">מלבן החיתוך בתוך התמונה</text>
   </g>
   <g class="draw d2">
     <rect x="36" y="112" width="608" height="72" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
-    <text x="56" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Invariant</text>
-    <text x="56" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">width and height stay positive, bytes match</text>
+    <text x="56" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">תנאי פנימי</text>
+    <text x="56" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">width ו-height חיוביים, הבתים תואמים</text>
   </g>
   <g class="draw d3">
     <rect x="36" y="196" width="608" height="72" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
-    <text x="56" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">Postcondition</text>
-    <text x="56" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">size is the crop, buffer holds those pixels</text>
+    <text x="56" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">תנאי סיום</text>
+    <text x="56" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">הגודל הוא החיתוך, החוצץ מחזיק את הפיקסלים</text>
   </g>
 </svg>
