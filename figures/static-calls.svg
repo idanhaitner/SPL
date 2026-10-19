@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300">
+  <style>
+    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
+    .d2 { animation-delay: 0.4s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="760" height="300" fill="#f6f1e7"/>
+  <text x="190" y="34" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">הקריאה הראשונה, בחזרה</text>
+  <text x="570" y="34" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">הקריאה השנייה, בכניסה</text>
+  <g class="draw">
+    <rect x="28" y="56" width="324" height="96" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="48" y="88" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">אזור ה-static</text>
+    <text x="48" y="116" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">c = 1</text>
+    <text x="130" y="116" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">אותחל פעם אחת, ונשמר</text>
+    <rect x="28" y="168" width="324" height="96" rx="12" fill="none" stroke="#b7ab9c" stroke-width="1.5" stroke-dasharray="7 6"/>
+    <text x="48" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">מחסנית</text>
+    <text x="48" y="236" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348">x כבר נעלם</text>
+  </g>
+  <g class="draw d2">
+    <rect x="408" y="56" width="324" height="96" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="428" y="88" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">אזור ה-static</text>
+    <text x="428" y="116" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">c = 1</text>
+    <text x="510" y="116" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">לא מאופס ל-0</text>
+    <rect x="408" y="168" width="324" height="96" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="428" y="200" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">מחסנית, מסגרת חדשה</text>
+    <text x="428" y="228" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">x = 1</text>
+    <text x="510" y="228" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">מקומי חדש</text>
+  </g>
+</svg>

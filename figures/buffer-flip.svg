@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300">
+  <style>
+    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
+    .d2 { animation-delay: 0.45s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="760" height="300" fill="#f6f1e7"/>
+  <g class="draw">
+    <text x="36" y="36" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">אחרי קריאה של 5 בתים</text>
+    <text x="36" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">position 5, limit 16, capacity 16</text>
+    <rect x="36" y="76" width="688" height="48" rx="8" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <rect x="36" y="76" width="215" height="48" rx="8" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="143" y="106" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#2a3142">5 בתים שכבר נקראו</text>
+    <text x="470" y="106" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">זנב ריק, לא לכתיבה</text>
+    <text x="251" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22">position</text>
+    <text x="724" y="146" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22">limit</text>
+  </g>
+  <g class="draw d2">
+    <text x="36" y="186" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">אחרי flip</text>
+    <text x="36" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">position 0, limit 5, capacity עדיין 16</text>
+    <rect x="36" y="224" width="215" height="48" rx="8" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
+    <text x="143" y="254" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#2a3142">5 הבתים שכתיבה שולחת</text>
+    <text x="36" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22">position</text>
+    <text x="251" y="292" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22">limit</text>
+  </g>
+</svg>

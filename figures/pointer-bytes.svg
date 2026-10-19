@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280">
+  <style>
+    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
+    .d2 { animation-delay: 0.4s; }
+    .d3 { animation-delay: 0.8s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="720" height="280" fill="#f6f1e7"/>
+  <g class="draw">
+    <rect x="36" y="64" width="250" height="150" rx="14" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="161" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142">short s</text>
+    <text x="161" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">17978</text>
+    <text x="161" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">כתובת 0x04</text>
+    <text x="161" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">שני בתים</text>
+  </g>
+  <g class="draw d2">
+    <rect x="430" y="64" width="254" height="150" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="557" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142">short* ps</text>
+    <text x="557" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">0x04</text>
+    <text x="557" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">תא המצביע</text>
+    <text x="557" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">שמונה בתים</text>
+  </g>
+  <g class="draw d3">
+    <line x1="414" y1="128" x2="302" y2="128" stroke="#c47b2b" stroke-width="2"/>
+    <polygon points="294,128 308,122 308,134" fill="#c47b2b"/>
+    <text x="354" y="112" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#8a5a22">*ps</text>
+  </g>
+</svg>

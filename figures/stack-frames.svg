@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 460" width="780" height="460">
+  <style>
+    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
+    .d2 { animation-delay: 0.35s; }
+    .d3 { animation-delay: 0.7s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
+  <rect width="780" height="460" fill="#f6f1e7"/>
+  <text x="200" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">בזמן ש-foo רץ</text>
+  <text x="580" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">אחרי ש-foo חוזר</text>
+  <g class="draw">
+    <text x="48" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22">כתובות גבוהות</text>
+    <rect x="36" y="80" width="328" height="92" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="56" y="110" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">המסגרת של main</text>
+    <text x="56" y="136" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">a = 4</text>
+    <text x="56" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">נשאר לכל הקריאה</text>
+    <rect x="36" y="184" width="328" height="168" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="56" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">המסגרת של foo</text>
+    <text x="56" y="242" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">כתובת חזרה</text>
+    <text x="56" y="268" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">n = 4</text>
+    <text x="200" y="268" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">הפרמטר</text>
+    <text x="56" y="294" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">x = 8</text>
+    <text x="200" y="294" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">המקומי</text>
+    <text x="56" y="328" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">נדחף בקריאה foo(a)</text>
+    <text x="48" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22">כתובות נמוכות</text>
+  </g>
+  <g class="draw d2">
+    <text x="428" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22">כתובות גבוהות</text>
+    <rect x="416" y="80" width="328" height="92" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
+    <text x="436" y="110" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">המסגרת של main</text>
+    <text x="436" y="136" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">a = 4</text>
+    <text x="436" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">עדיין כאן</text>
+    <rect x="416" y="184" width="328" height="168" rx="12" fill="none" stroke="#b7ab9c" stroke-width="1.5" stroke-dasharray="7 6"/>
+    <text x="436" y="228" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">המסגרת של foo נעלמה</text>
+    <text x="436" y="258" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348">n לא קיים</text>
+    <text x="436" y="284" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348">x לא קיים</text>
+    <text x="436" y="320" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">החזרה שלפה את המסגרת</text>
+    <text x="428" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22">כתובות נמוכות</text>
+  </g>
+  <text class="draw d3" x="390" y="428" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">new בתוך foo היה משאיר את הבלוק בערימה. המצביע אליו במסגרת לא היה נשאר.</text>
+</svg>
