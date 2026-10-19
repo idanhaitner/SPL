@@ -27,19 +27,25 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
       </header>
       <Chapter blocks={topic.blocks} courseId={course.id} />
       {(previous || next) && (
-        <nav className="endpaper" aria-label="פרקים">
+        <nav className="pager" aria-label="פרקים">
           {previous && (
-            <Link className="endpaper-prev" href={`/topics/${previous.id}`}>
-              <span className="endpaper-num">{String(index).padStart(2, "0")}</span>
-              <span className="endpaper-title"><Mixed text={previous.title} /></span>
-              <span className="endpaper-label">הפרק הקודם</span>
+            <Link className="pager-link pager-prev" href={`/topics/${previous.id}`}>
+              <span className="pager-label">הפרק הקודם</span>
+              <span className="pager-line">
+                <span className="pager-arrow" aria-hidden="true" />
+                <span className="pager-num">{String(index).padStart(2, "0")}</span>
+                <span className="pager-title"><Mixed text={previous.title} /></span>
+              </span>
             </Link>
           )}
           {next && (
-            <Link className="endpaper-next" href={`/topics/${next.id}`}>
-              <span className="endpaper-num">{String(index + 2).padStart(2, "0")}</span>
-              <span className="endpaper-title"><Mixed text={next.title} /></span>
-              <span className="endpaper-label">הפרק הבא</span>
+            <Link className="pager-link pager-next" href={`/topics/${next.id}`}>
+              <span className="pager-label">הפרק הבא</span>
+              <span className="pager-line">
+                <span className="pager-num">{String(index + 2).padStart(2, "0")}</span>
+                <span className="pager-title"><Mixed text={next.title} /></span>
+                <span className="pager-arrow" aria-hidden="true" />
+              </span>
             </Link>
           )}
         </nav>

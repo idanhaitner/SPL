@@ -26,6 +26,8 @@ changelog:
     note: "Practice cards use a short title, and a question that depended on a slide or a previous card now carries that code or table."
   - date: 2026-10-19
     note: "The memory chapter now explains in full sentences why a call frame fits the stack, what is still correct when a heap block leaks, and why delete and delete[] are not the same."
+  - date: 2026-10-19
+    note: "The memory chapter's explanation of why the stack and the heap are split no longer repeats the leak, recursion, and delete examples already shown above it."
 
 sources:
   - path: "Classes/Chapter 1 - The Memory Model.pptx"
