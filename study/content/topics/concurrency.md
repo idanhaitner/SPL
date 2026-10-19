@@ -146,7 +146,7 @@ public final class Counter {
 
 התנאי הפנימי (invariant) נכון בכל פעם שחוט נכנס לבלוק או יוצא ממנו, והוא נכון גם לחוטים שבחוץ: הם אינם בתוך הבלוק. הוא אינו אומר דבר על מתודה שנייה שנוגעת ב-`count` בלי נעילה.
 
-:::problem id=worked-counter-race source="Exrecises/PS6-2026-1.pptx" kind=worked solution_origin=source
+:::problem id=worked-counter-race title="שזירה שמפסידה עדכון" source="Exrecises/PS6-2026-1.pptx" kind=worked solution_origin=source
 שני חוטים קוראים כל אחד ל-`increment` פעם אחת. המונה מתחיל ב-0. תן שזירה (interleaving) שהתוצאה שלה היא 1.
 
 ```java
@@ -250,8 +250,8 @@ final class VersionedIterator<T> implements Iterator<T> {
 
 ## תרגול
 
-:::problem id=ps6-counter-race source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=source
-תרגול 6 שואל מה `cnt.increment()` עושה אם שני חוטים קוראים לו "באותו זמן" על המחלקה הזאת, ומה שלושת צעדי המכונה של הגוף.
+:::problem id=ps6-counter-race title="מונה בלי מנעול" source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=source
+שני חוטים קוראים ל-`cnt.increment()` על המחלקה הזו. מה יכול לקרות, ומה שלושת צעדי המכונה של הגוף?
 
 ```java
 public class Counter {
@@ -276,8 +276,17 @@ public class Counter {
 :::
 :::
 
-:::problem id=ps6-average-safe source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=derived
-השקף האחרון של התרגול שואל אם ממוצע מקבילי בטוח. כל עובד סוכם פרוסה לתוך `total` משותף עם `total += part`, ואז החוט הראשי קורא ל-`join` ומחלק באורך. האם זה נכון?
+:::problem id=ps6-average-safe title="ממוצע מקבילי" source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=derived
+כל עובד סוכם פרוסה לתוך `total` משותף, ואז החוט הראשי קורא ל-`join` ומחלק באורך. האם זה נכון?
+
+```java
+int total = 0;
+// each worker, on its own slice:
+total += part;
+// main, after every worker has been started:
+for (Thread worker : workers) worker.join();
+return total / data.length;
+```
 
 :::hint
 `join` מחכה לעובדים. הוא אינו הופך את `+=` לאטומי.
@@ -293,8 +302,8 @@ public class Counter {
 :::
 :::
 
-:::problem id=ps7-wait-vs-spin source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
-תרגול 7 מונה שלוש דרכים שבהן חוט יכול לחכות לתנאי: המתנה עסוקה, שינה-ובדיקה, ו-`wait`/`notify`. אמור מה כל אחת עולה, ואיזו מהן יכולה לחסום בלי סריקה (polling).
+:::problem id=ps7-wait-vs-spin title="שלוש דרכי המתנה" source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
+חוט יכול לחכות לתנאי בשלוש דרכים: המתנה עסוקה, שינה-ובדיקה, ו-`wait`/`notify`. אמור מה כל אחת עולה, ואיזו מהן יכולה לחסום בלי סריקה (polling).
 
 :::hint
 המתנה עסוקה היא זו שהתרגול מרשה רק כשההמתנה צפויה להיות זעירה.
@@ -314,7 +323,7 @@ public class Counter {
 :::
 :::
 
-:::problem id=ps7-liveness-names source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
+:::problem id=ps7-liveness-names title="שמות לכישלונות חיות" source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
 תן שם לכישלון: (1) שני חוטים מחזיקים כל אחד מנעול אחד ומחכים לזה של האחר, (2) חוט בעדיפות נמוכה לעולם אינו מקבל את המנעול כי חוט בעדיפות גבוהה ממשיך לקחת אותו, (3) שני חוטים נועלים שוב ושוב, שמים לב שהמנעול האחר תפוס, משחררים, ומנסים שוב, לנצח.
 
 :::hint
@@ -335,8 +344,8 @@ public class Counter {
 :::
 :::
 
-:::problem id=ps8-singleton source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
-התרגול מראה סינגלטון עצל:
+:::problem id=ps8-singleton title="סינגלטון עצל" source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
+סינגלטון עצל נכתב כך:
 
 ```java
 if (instance == null)
@@ -363,7 +372,7 @@ if (instance == null)
 :::
 :::
 
-:::problem id=ps8-interrupt source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
+:::problem id=ps8-interrupt title="דגל עצירה מול interrupt" source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
 עובד רץ בלולאה עד ש-`shouldStop` אמיתי. חוט אחר מדליק את הדגל. העובד נמצא בתוך `sleep`. הסבר למה הדגל אינו מספיק, ומה `interrupt` משנה.
 
 :::hint
@@ -385,7 +394,7 @@ if (instance == null)
 השאלה נותנת מבנה משותף ומבקשת מרוץ, נעילה הדדית, או תיקון עם `synchronized`, מנעול אתת, או אטומי. המלכודת היא נעילה בסדר שמחכה לנצח, או הגנה על העדכון בלי הקריאה שמפרסמת אותו.
 :::
 
-:::problem id=exam-15a-q1 source="Exams/15-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-15a-q1 title="גלגלי שיניים" source="Exams/15-a.pdf" kind=exam solution_origin=derived
 `Gear` יודע את המרכז שלו, את הרדיוס, ואת השכנים משמאל ומימין. `move` מסובב את הגלגל הזה ואת שני השכנים, בכיוון ההפוך. `SimpleGear` שומר זווית `_state`.
 
 a. הגדר תנאי פנימי.
@@ -419,7 +428,7 @@ f. חוט `Spinner` קורא ל-`move` על גלגל. האם ריצה של כמ�
 :::
 :::
 
-:::problem id=exam-15b-q1 source="Exams/15-b.pdf" kind=exam solution_origin=source
+:::problem id=exam-15b-q1 title="נעילה הדדית של גלגלים" source="Exams/15-b.pdf" kind=exam solution_origin=source
 המתודות הציבוריות של `SimpleGear` כולן `synchronized`. שכנים קוראים זה ל-`moveLeft` / `moveRight` של זה, וגם אלה צריכים את המנעול של השכן.
 
 a. הראה נעילה הדדית של כמה גלגלי שיניים.
@@ -444,7 +453,7 @@ c. הפתרון הרשמי אומר שצמצום הסנכרון הוא זה שכ
 :::
 :::
 
-:::problem id=exam-16b-q1 source="Exams/16-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16b-q1 title="תור מסונכרן" source="Exams/16-b.pdf" kind=exam solution_origin=derived
 `SynchQueue` מממש `Queue` כשכל מתודה `synchronized` על `this`. `ExtIntQueue` מוסיף `sum()` על השלמים.
 
 a. תנאי קדם ותנאי סיום של `sum`.
@@ -472,7 +481,7 @@ d. מזלג שאוכלים איתו מוחזק בלעדית, כמו בפתרון
 :::
 :::
 
-:::problem id=exam-17a-q1 source="Exams/17-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17a-q1 title="לוח עם גביע" source="Exams/17-a.pdf" kind=exam solution_origin=derived
 לוח של `N` על `N` מתחיל עם גביע אחד וכמה שחקנים. לכל שחקן יש `Strategy` שבוחר `Direction`. שחקן שמגיע לגביע מסיים את המשחק. השאלה מבקשת לסיים את ההפעלה ב-`main` ולהגן על הלוח כך ששני שחקנים אינם יכולים לתפוס תא אחד או לפספס את הניצחון. נדרשים מנעולים; אל תכתוב את כל המחלקה מחדש.
 
 :::hint
@@ -491,7 +500,7 @@ d. מזלג שאוכלים איתו מוחזק בלעדית, כמו בפתרון
 :::
 :::
 
-:::problem id=exam-17b-q1 source="Exams/17-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17b-q1 title="מבט קדימה על הלוח" source="Exams/17-b.pdf" kind=exam solution_origin=derived
 שחקנים על לוח של `N` על `N` יכולים `move` צעד אחד או `lookAhead`, שמחזיר את המרחק לאובייקט הקרוב או לשפה. `Segment` יכול לבדוק חיתוך והוא כבר ממומש.
 
 a. תנאי קדם ותנאי סיום של `lookAhead`.
@@ -513,7 +522,7 @@ a. תנאי קדם ותנאי סיום של `lookAhead`.
 :::
 :::
 
-:::problem id=exam-18b-q2 source="Exams/18-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18b-q2 title="שני מחסניות בנעילה" source="Exams/18-b.pdf" kind=exam solution_origin=derived
 ל-`Stack` חסום יש התנאי הפנימי `0 <= size() <= capacity()`. `push` ו-`pop` עלולים להיכשל בתנאי הקדם שלהם במימוש שניתן לך.
 
 הראה שני חוטים `T1` ו-`T2`, ושני `Stack` `S1` ו-`S2`, שנכנסים לנעילה הדדית. כל חוט רשאי לקרוא ל-`push` ול-`pop` על שני ה-`Stack`. המתודות נועלות את ה-`Stack` שהן שייכות אליו, ו-`push` של `Stack` לתוך ה-`Stack` האחר נועל את שניהם.
@@ -534,7 +543,7 @@ a. תנאי קדם ותנאי סיום של `lookAhead`.
 :::
 :::
 
-:::problem id=exam-19b-q2 source="Exams/19-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19b-q2 title="עץ ממוין" source="Exams/19-b.pdf" kind=exam solution_origin=derived
 `SortedBinaryTree` מפרסם את התנאי הפנימי הזה:
 
 ```java
@@ -561,28 +570,49 @@ a. תנאי קדם ותנאי סיום של `lookAhead`.
 :::
 :::
 
-:::problem id=exam-20a-q2 source="Exams/20-a.pdf" kind=exam solution_origin=derived
-שני חוטים חולקים אובייקט ומריצים מתודה שקוראת שדה, מחליטה, וכותבת אותו חזרה, בלי מנעול. מנה כל פלט חוקי של התוכנית ונמק כל אחד. חלק שני שואל אילו פלטים נעלמים אם המתודה היא `synchronized`.
+:::problem id=exam-20a-q2 title="פלטים של שני חוטים" source="Exams/20-a.pdf" kind=exam solution_origin=derived
+כתבו את כל הפלטים האפשריים, ונמקו.
 
-צורת התוכנית על הנייר היא שני חוטים שקוראים לאותה מתודה בלי `synchronized` על אובייקט אחד שהשדה שלו מתחיל בערך ידוע, וכל חוט מדפיס את מה שראה.
+```java
+public class A {
+    public int i;
+    public A(int i) { this.i = i; }
+}
+
+public class Task implements Runnable {
+    public A a;
+    public Task(A a) { this.a = a; }
+
+    public void run() {
+        System.out.print(a.i);
+    }
+
+    public static void main(String[] args) {
+        A a = new A(2);
+        Thread t1 = new Thread(new Task(a));
+        Thread t2 = new Thread(new Task(a));
+        t1.start();
+        t2.start();
+        a = new A(3);
+    }
+}
+```
 
 :::hint
-מנה קודם את ההיסטוריות הטוריות. אלה תמיד חוקיות.
+כל `Task` שומר את האובייקט שקיבל. השמה ל-`a` ב-`main` אינה משנה את השדה הזה.
 :::
 :::hint
-אחר כך מנה את ההיסטוריות שקורעות את הקריאה-שינוי-כתיבה. אלה חוקיות רק כל עוד המתודה אינה אטומית.
+`Thread.start` רץ אחרי הבנאי שכתב `i = 2`, ולכן הקריאה ב-`run` רואה את 2.
 :::
 :::hint
-`synchronized` על המתודה שומר בדיוק את ההיסטוריות הטוריות.
+שתי ההדפסות הן אותה ספרה. אין ערך שלישי שהחוטים מחזיקים.
 :::
 :::solution
-כל שזירה שבה המשפטים של כל חוט נשארים בסדר התוכנית היא חוקית. אם כל חוט מדפיס את הערך שקרא ואז כותב חדש, ההדפסות האפשריות הן הטוריות (החוט השני רואה את הכתיבה של הראשון) והמרוץ (שני החוטים קוראים את הערך המקורי ושניהם מדפיסים אותו). כתיבות של `int` יחיד אטומיות, ולכן לא רואים שלם קרוע; רואים עדכון שאבד.
-
-אחרי `synchronized`, כל קריאה מחזיקה את המוניטור של האובייקט במשך כל המתודה. קריאה אחת נגמרת לפני שהאחרת מתחילה. נשארים רק שני הפלטים הטוריים, בכל סדר. הפלט שבו שניהם קוראים את המקורי נעלם.
+שני החוטים מחזיקים את ה-`A` שה-`i` שלו הוא 2. השורה `a = new A(3)` שומרת אובייקט אחר במשתנה המקומי של `main`. אף חוט אינו קורא את המשתנה הזה. כתיבת הבנאי קורית לפני `start`, ו-`start` קורה לפני `run`, ולכן שניהם מדפיסים 2. הפלט היחיד הוא `22`.
 :::
 :::
 
-:::problem id=exam-20b-q2 source="Exams/20-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20b-q2 title="עדכון אטומי" source="Exams/20-b.pdf" kind=exam solution_origin=derived
 סנכרון עם משתנים אטומיים. שני חוטים `t1` ו-`t2` קוראים שניהם ל-`f()`. הראה את המרוצים אם `f` מעדכן `int` רגיל, וכתוב מחדש את העדכון עם `AtomicInteger` כך שהתנאי הפנימי שפורסם מתקיים. לולאת CAS היא הכלי שהשאלה מצפה לו כשהערך החדש תלוי בישן.
 
 :::hint
@@ -609,7 +639,7 @@ do {
 :::
 :::
 
-:::problem id=exam-24b-q2 source="Exams/24-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24b-q2 title="מחסום חוטים" source="Exams/24-b.pdf" kind=exam solution_origin=derived
 `Barrier` נותן לקבוצה קבועה של חוטים להתקדם בפאזות. `await` אומר "סיימתי את הפאזה הזאת". הקורא נחסם עד שכל משתתף סיים אותה, ואז כולם נכנסים לפאזה הבאה.
 
 ממש את `await` כך שמונה דור (generation) מונע מחוט מהיר להתגנב לפאזה הבאה ולשחרר את הקודמת מוקדם. `InterruptedException` חייבת להשאיר את המחסום שמיש.
@@ -649,7 +679,7 @@ public class Barrier {
 :::
 :::
 
-:::problem id=exam-24c-q2 source="Exams/24-c.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24c-q2 title="קבוצה בטוחה לחוטים" source="Exams/24-c.pdf" kind=exam solution_origin=derived
 `Set` מוסיף `iterator()` ו-`clone()` ל-`contains` ול-`add`. `SetImpl` היא רשימה מקושרת. איטרטור שהולך על מצביעי `next` רץ מול `add`. הפוך את `iterator` ואת `add` לבטוחים. שכפול אינו מפרסם מבנה שחוט אחר נמצא באמצע שינוי שלו.
 
 :::hint

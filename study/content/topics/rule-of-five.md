@@ -111,7 +111,7 @@ Image myPicture() {
 
 `std::move` כופה את בנאי-ההעברה וחוסם NRVO. `return pic;` פשוט נותן למהדר לבנות את `pic` אצל הקורא, כך שאין מה להעביר.
 
-:::problem id=worked-move-image source="Classes/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
+:::problem id=worked-move-image title="העברת תמונה" source="Classes/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
 `avi` הבעלים של חוצץ פיקסלים. מה `benny._bytes` מחזיק, מה `avi._bytes` מחזיק, ומה `~Image` על `avi` משחרר?
 
 ```cpp
@@ -155,8 +155,19 @@ Image::Image(Image&& other)
 
 ## תרגול
 
-:::problem id=ps4-copy-count source="Exrecises/SPL_PS4.pptx" kind=exercise solution_origin=derived
-תרגול 4 שואל כמה פעמים בנאי ההעתקה רץ לפונקציה שמקבלת `MyClass` לפי ערך ומחזירה `MyClass` לפי ערך, ומה משתנה כשהפרמטר הופך ל-`const MyClass&`. הניחו שאין העלמת העתקה, כדי שאפשר לספור את ההעתקות שכללי השפה מכניסים. אחר כך אמרו אילו מאותן העתקות NRVO רשאי להסיר.
+:::problem id=ps4-copy-count title="כמה העתקות" source="Exrecises/SPL_PS4.pptx" kind=exercise solution_origin=derived
+כמה פעמים בנאי ההעתקה רץ, אם אין העלמת העתקה, ומה משתנה כשהפרמטר הופך ל-`const MyClass&`? אחר כך אמרו אילו מאותן העתקות NRVO רשאי להסיר.
+
+```cpp
+MyClass pass(MyClass value) {
+    return value;
+}
+
+MyClass passRef(const MyClass& value) {
+    MyClass local(value);
+    return local;
+}
+```
 
 :::hint
 כל פרמטר לפי ערך הוא העתקה אחת בקריאה. כל החזרה לפי ערך היא העתקה אחת בחזרה, אלא אם העלמת העתקה חלה.
@@ -174,8 +185,20 @@ Image::Image(Image&& other)
 :::
 :::
 
-:::problem id=ps4-unique-vs-shared source="Exrecises/SPL_PS4.pptx" kind=exercise solution_origin=source
-דוגמאות הסיום בתרגול מבקשות לחזות שתי תוכניות. `sp2` הוא `shared_ptr` שהועתק מ-`sp1`, ואז `sp2` מושמד. `up2` הוא `unique_ptr` שמאותחל מ-`up1` באתחול בהעתקה. מה קורה בכל מקרה?
+:::problem id=ps4-unique-vs-shared title="shared מול unique" source="Exrecises/SPL_PS4.pptx" kind=exercise solution_origin=source
+מה קורה בכל אחת משתי התוכניות?
+
+```cpp
+auto sp1 = std::make_shared<int>(1);
+{
+    auto sp2 = sp1;
+}
+```
+
+```cpp
+auto up1 = std::make_unique<int>(1);
+auto up2 = up1;
+```
 
 :::hint
 העתקה של `shared_ptr` משנה מונה. השמדת בעלים אחד אינה הבעלים האחרון אם נשאר אחר.
@@ -198,7 +221,7 @@ Image::Image(Image&& other)
 השאלה אומרת «חוק החמישה» או «מצביע חכם» ומבקשת לגנוב חוצץ במקום לשכפל אותו, או לדחות את השכפול עד לכתיבה. המלכודת היא להשאיר את מצביע המקור חי, כך ששני דיסטרקטורים משחררים בלוק אחד, או להעתיק `unique_ptr`.
 :::
 
-:::problem id=exam-16b-q2 source="Exams/16-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16b-q2 title="אוסף לפי ערך" source="Exams/16-b.pdf" kind=exam solution_origin=derived
 `ITEM_COLLECTION<T>` שומר פריטי `T`. `byVal` מקבל את האוסף לפי ערך.
 
 א. כתבו בנאי העתקה עמוק. שימו לב לתחביר ה-template.
@@ -229,7 +252,7 @@ Image::Image(Image&& other)
 :::
 :::
 
-:::problem id=exam-20b-q1 source="Exams/20-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20b-q1 title="מצביע חכם" source="Exams/20-b.pdf" kind=exam solution_origin=derived
 השאלה היא תבנית המצביע החכם מהכיתה. אפי מממש `SmartPointer<T>` עם `T* ptr_`, וחלקים מהמחלקה נמחקו. השלימו אותו כמו ה-`shared_ptr` של ההרצאה: מונה רפרנסים, העתקה שחולקת את האובייקט, השמדה שמשחררת רק כשהמונה אפס, ובלי שחרור כפול. מותר עזרים.
 
 :::hint
@@ -275,7 +298,7 @@ public:
 :::
 :::
 
-:::problem id=exam-24a-q1 source="Exams/24-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24a-q1 title="עץ תחת חוק החמישה" source="Exams/24-a.pdf" kind=exam solution_origin=derived
 `BinaryTree<T extends Comparable<T>>` ב-Java שומר `data`, `left` ו-`right`, ו-`insert` הולך שמאלה כש-`compareTo` חיובי וימינה אחרת, ומתעלם מכפילויות. `compareTo` מחזיר 1 כש-`this` גדול מ-`other`, ו-1- כשהוא קטן. הניחו ש-`T` תומך באופרטורים שצריך.
 
 א. כתבו את מחלקת ה-C++ הבסיסית: שדות, שני הבנאים, גטרים, ו-`insert`.
@@ -313,7 +336,7 @@ void f(BinaryTree<int> t) {
 :::
 :::
 
-:::problem id=exam-24c-q1 source="Exams/24-c.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24c-q1 title="העתקה בעת כתיבה" source="Exams/24-c.pdf" kind=exam solution_origin=derived
 העתקה בעת כתיבה (copy-on-write): שיבוט חולק את האובייקט עד שקורה כתיבה. רק השינוי הראשון מקצה עותק פרטי.
 
 א. השלימו את `copy_on_write<T>`. הוא מחזיק `T* ptr`. ל-`T` יש `clone()`. `on_write()` נקרא לפני ההשמה הראשונה דרך העטיפה הזאת, וזה הרגע שבו השיבוט חייב לקרות אם האובייקט עדיין משותף.

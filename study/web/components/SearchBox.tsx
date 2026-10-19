@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Mixed } from "@/lib/bidi";
 import type { SearchHit } from "@/lib/types";
 
 const KINDS: Record<string, string> = {
@@ -48,7 +49,7 @@ export function SearchBox({ hits }: { hits: SearchHit[] }) {
           {matches.map((hit) => (
             <Link key={hit.href + hit.title} href={hit.href} onClick={() => setOpen(false)}>
               <span>{KINDS[hit.kind] ?? hit.kind}</span>
-              {hit.title}
+              <Mixed text={hit.title} />
             </Link>
           ))}
         </div>

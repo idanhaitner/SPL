@@ -22,6 +22,8 @@ changelog:
     note: "The guide is in Hebrew, with the lecture names for each idea and the English terms the slides keep."
   - date: 2026-10-19
     note: "Adler's lecture notes: runtime environment and process states, the i = i + j machine trace, pass-by choice, client-side locking, and the versioned iterator."
+  - date: 2026-10-19
+    note: "Practice cards use a short title, and a question that depended on a slide or a previous card now carries that code or table."
 
 sources:
   - path: "Classes/Chapter 1 - The Memory Model.pptx"

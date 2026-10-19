@@ -88,7 +88,7 @@ int d = pb - pa;       // 10, a distance in ints
 
 ![px מכוון לכתובת 16. px + 1 מכוון ארבעה בתים אחר כך, לכתובת 20](../assets/figures/pointer-step.svg)
 
-:::problem id=worked-pointer-step source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
+:::problem id=worked-pointer-step title="צעד של מצביע" source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 `sizeof(int)` הוא 4 ו-`x` בכתובת 16. איזו כתובת `px + 1` מציין?
 
 ```cpp
@@ -164,7 +164,7 @@ dec(a);                // a == 2
 
 `*ps = 3` דורס את ה-short, לא את המצביע. `ps = &other` דורס את המצביע, לא את ה-short.
 
-:::problem id=worked-pointer-trace source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
+:::problem id=worked-pointer-trace title="מצביע למצביע" source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 מה מדפיסים `i`, `*pi`, `*ppi` ו-`**ppi`, ולמה שווה `&i`?
 
 ```cpp
@@ -213,8 +213,8 @@ const short* ps1 = &s1;
 
 ## תרגול
 
-:::problem id=ps2-pointer-dangers source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-לכל קטע מהתרגול, נקבו בתקלה. אל "תתקנו" אותו על ידי מחיקת שורה שהתרגול אומר שעדיין מתקמפלת.
+:::problem id=ps2-pointer-dangers title="ארבע תקלות מצביע" source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+לכל קטע, נקבו בתקלה. אל תמחקו שורה שעדיין מתקמפלת.
 
 ```cpp
 int* p = nullptr;
@@ -253,8 +253,8 @@ delete b;
 :::
 :::
 
-:::problem id=ps2-delete-2d source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-זו ההקצאה הדו-ממדית של התרגול. שחררו כל בלוק שהיא השיגה. אל תשחררו שורה פעמיים.
+:::problem id=ps2-delete-2d title="שחרור מערך דו-ממדי" source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+שחררו כל בלוק שההקצאה הזו השיגה. אל תשחררו שורה פעמיים.
 
 ```cpp
 int** arry = new int*[rowCount];
@@ -288,7 +288,7 @@ arry = nullptr;
 השאלה בונה מאגר תמונות מאחורי מערך מצביעים, ואז מחזירה את המאגר לפי ערך מפונקציה שבנתה מקומי בברירת מחדל. המלכודת היא להתייחס לאובייקט המוחזר כאל עותק של הפיקסלים, ולהתייחס ל-`sizeof` של מצביע כאורך.
 :::
 
-:::problem id=exam-20a-q1 source="Exams/20-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20a-q1 title="מאגר תמונות" source="Exams/20-a.pdf" kind=exam solution_origin=derived
 כתבו תוכנית C++ ששומרת שני סוגים של תמונה, `Portrait` ו-`Scenery`. כל פיקסל הוא רמת אפור ב-`0..255`. הפיקסלים של תמונה אחת נשמרים במערך `BYTES` חד-ממדי, שורה אחרי שורה. `ImageRepository` מחזיק תמונות רבות במערך בשם `_images`.
 
 א. ממשו את הבנאי (constructor) ואת `Insert`. הבנאי מקצה מערך של `capacity` מצביעים. `Insert` מקבל מערך של תמונות, מעתיק עמוקות (deep copy) את מערך המצביעים הזה, ולא מעתיק עמוקות את מערכי הבתים של התמונות. הוסיפו שדות או מתודות רק אם אתם צריכים אותם.

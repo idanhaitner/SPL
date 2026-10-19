@@ -7,29 +7,29 @@
     @keyframes appear { to { opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
-  <rect width="720" height="420" fill="#f6f1e7"/>
-  <text x="684" y="32" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22">כתובות גבוהות</text>
+  <rect width="720" height="420" fill="#f6f1e7" />
+  <text x="684" y="32" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">כתובות גבוהות</text>
   <g class="draw">
-    <rect x="36" y="48" width="520" height="72" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
-    <text x="56" y="78" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">main</text>
-    <text x="56" y="102" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">ממתין לקריאה הראשונה</text>
+    <rect x="36" y="48" width="520" height="72" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <text x="536" y="78" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end">main</text>
+    <text x="536" y="102" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">ממתין לקריאה הראשונה</text>
   </g>
   <g class="draw d2">
-    <rect x="36" y="132" width="520" height="72" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
-    <text x="56" y="162" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">forever  n = 0, pad[256]</text>
-    <text x="56" y="186" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">כתובת חזרה אל main</text>
+    <rect x="36" y="132" width="520" height="72" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <text x="536" y="162" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">forever  n = 0, pad[256]</text>
+    <text x="536" y="186" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">כתובת חזרה אל <tspan direction="ltr" unicode-bidi="embed">main</tspan></text>
   </g>
   <g class="draw d3">
-    <rect x="36" y="216" width="520" height="72" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
-    <text x="56" y="246" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">forever  n = 1, pad[256]</text>
-    <text x="56" y="270" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">מסגרת מלאה נוספת, לא שימוש חוזר</text>
+    <rect x="36" y="216" width="520" height="72" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <text x="536" y="246" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">forever  n = 1, pad[256]</text>
+    <text x="536" y="270" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">מסגרת מלאה נוספת, לא שימוש חוזר</text>
   </g>
   <g class="draw d4">
-    <rect x="36" y="300" width="520" height="72" rx="12" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5"/>
-    <text x="56" y="330" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">forever  n = 2, pad[256]</text>
-    <text x="56" y="354" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348">ממשיך עד שאזור המחסנית מלא</text>
+    <rect x="36" y="300" width="520" height="72" rx="12" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5" />
+    <text x="536" y="330" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">forever  n = 2, pad[256]</text>
+    <text x="536" y="354" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">ממשיך עד שאזור המחסנית מלא</text>
   </g>
-  <text x="590" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">גדל</text>
-  <text x="590" y="272" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">למטה</text>
-  <text x="684" y="400" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22">כתובות נמוכות</text>
+  <text x="684" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="start" direction="rtl" unicode-bidi="embed">גדל</text>
+  <text x="684" y="272" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="start" direction="rtl" unicode-bidi="embed">למטה</text>
+  <text x="684" y="400" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">כתובות נמוכות</text>
 </svg>

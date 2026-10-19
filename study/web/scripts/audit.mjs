@@ -10,7 +10,7 @@ function textBoxes(svg) {
   let match;
   while ((match = pattern.exec(svg))) {
     const attrs = match[1];
-    const text = match[2].replace(/<[^>]+>/g, "").trim();
+    const text = match[2].replace(/<[^>]+>/g, "").replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "").trim();
     if (!text) continue;
     const attr = (name, fallback) => {
       const found = attrs.match(new RegExp(`${name}="([^"]*)"`));

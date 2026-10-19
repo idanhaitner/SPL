@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SearchBox } from "@/components/SearchBox";
+import { Mixed } from "@/lib/bidi";
 import { readProgress } from "@/lib/progress";
 import type { SearchHit } from "@/lib/types";
 
@@ -69,7 +70,7 @@ export function Rail({
 
   return (
     <aside className="rail">
-      <p className="course-name"><Link href="/">{title}</Link></p>
+      <p className="course-name"><Link href="/"><Mixed text={title} /></Link></p>
       <SearchBox hits={hits} />
       <nav className="rail-nav">
         <Link className={samePath(pathname, "/") ? "is-current" : ""} href="/">סקירה</Link>
@@ -85,12 +86,12 @@ export function Rail({
           return (
             <Link key={chapter.id} href={href} className={current ? "is-current" : ""}>
               <span className={`dot${finished ? " is-done" : ""}`}>{String(index + 1).padStart(2, "0")}</span>
-              <span>{chapter.title}</span>
+              <span><Mixed text={chapter.title} /></span>
             </Link>
           );
         })}
       </nav>
-      <p className="progress-count">{total ? `${done} / ${total} תרגילים שנפתרו` : ""}</p>
+      <p className="progress-count">{total ? <><bdi dir="ltr">{done} / {total}</bdi> תרגילים שנפתרו</> : ""}</p>
     </aside>
   );
 }

@@ -74,7 +74,7 @@ public interface Stack<T> {
 
 תנאי פנימי שנכון רק בחוט (thread) יחיד אינו תנאי פנימי של אובייקט במקביליות (concurrency). כבר ראית את השזירה ב[מקביליות](topic:concurrency). כתוב את התנאי הפנימי כעובדה על הנתונים, לא כמשפט "המתודה היא `synchronized`".
 
-:::problem id=worked-crop-contract source="Classes/Chapter 9 - Design by Contract.pptx" kind=worked solution_origin=source
+:::problem id=worked-crop-contract title="חוזה של crop" source="Classes/Chapter 9 - Design by Contract.pptx" kind=worked solution_origin=source
 נסח את תנאי הקדם, תנאי פנימי אחד, ואת תנאי הסיום של המתודה הזאת, כפי שההרצאה ממסגרת אותם.
 
 ```java
@@ -114,8 +114,8 @@ void crop(int x, int y, int w, int h);
 
 ## תרגול
 
-:::problem id=ps5-stack-contract source="Exrecises/SPL_PS5.pptx" kind=exercise solution_origin=source
-לפי כללי התרגול, כתוב את התנאי הפנימי של `Stack`, את תנאי הקדם ואת תנאי הסיום של `push`, ואת תנאי הקדם של `top`. `push` דוחה null. `top` מחזיר את הרכיב האחרון שנדחף ואינו מסיר אותו. `size` לעולם אינו שלילי, ול-`Stack` ריק יש גודל 0.
+:::problem id=ps5-stack-contract title="חוזה של Stack" source="Exrecises/SPL_PS5.pptx" kind=exercise solution_origin=source
+כתוב את התנאי הפנימי של `Stack`, את תנאי הקדם ואת תנאי הסיום של `push`, ואת תנאי הקדם של `top`. `push` דוחה null. `top` מחזיר את הרכיב האחרון שנדחף ואינו מסיר אותו. `size` לעולם אינו שלילי, ול-`Stack` ריק יש גודל 0.
 
 :::hint
 `top` היא שאילתה. תנאי הסיום שלה אינו אומר ש-`size` משתנה.
@@ -142,7 +142,7 @@ void crop(int x, int y, int w, int h);
 השאלה מדביקה אינטרפייס (interface) ואומרת "הגדר את התנאי הפנימי, ואת תנאי הקדם ואת תנאי הסיום של המתודה הזאת." המלכודת היא תנאי פנימי ששוכח את מקרה הריק, או תנאי סיום שנכון רק כשאף אחד אחר אינו משנה את האובייקט.
 :::
 
-:::problem id=exam-16a-q1 source="Exams/16-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16a-q1 title="חוזה של תור" source="Exams/16-a.pdf" kind=exam solution_origin=derived
 ל-`Queue<T>` יש `add(T item)` ו-`remove()`.
 
 a. הגדר תנאי פנימי לאינטרפייס, ותנאי קדם ותנאי סיום למתודות. הוסף מתודות לאינטרפייס אם צריך אותן כדי לנסח את החוזה.
@@ -173,7 +173,7 @@ c. השאלה מראה אחר כך את הפילוסופים הסועדים עם
 :::
 :::
 
-:::problem id=exam-18a-q2 source="Exams/18-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18a-q2 title="מחסנית חסומה" source="Exams/18-a.pdf" kind=exam solution_origin=derived
 `Stack<T>` חסום. `push` רשאי לשמור null. `pop` מסיר. `size` הוא המספר הנוכחי. `capacity` הוא המקסימום.
 
 a. הגדר תנאי פנימי.
@@ -200,7 +200,7 @@ a. הגדר תנאי פנימי.
 :::
 :::
 
-:::problem id=exam-19a-q2 source="Exams/19-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19a-q2 title="תנאי פנימי של עץ" source="Exams/19-a.pdf" kind=exam solution_origin=derived
 ל-`SortedBinaryTree<T extends Comparable<T>>` יש `getData`, `getLeft`, `getRight`, ו-`insert`.
 
 a. הגדר את התנאי הפנימי.
@@ -225,7 +225,7 @@ a. הגדר את התנאי הפנימי.
 :::
 :::
 
-:::problem id=exam-24a-q2 source="Exams/24-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24a-q2 title="חוזה של קבוצה" source="Exams/24-a.pdf" kind=exam solution_origin=derived
 ל-`Set<T>` יש `contains` ו-`add`.
 
 a. הגדר תנאי פנימי. הגדר תנאי קדם ותנאי סיום ל-`add`. הרחב את האינטרפייס אם צריך שאילתה כדי לנסח אותם.

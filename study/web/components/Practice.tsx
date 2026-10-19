@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Mixed } from "@/lib/bidi";
 import { readProgress, writeProgress } from "@/lib/progress";
 
 type Props = {
@@ -52,7 +53,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
       <article className={`card practice is-folded${solved ? " is-solved" : ""}`} id={id}>
         <button type="button" className="fold-row" aria-expanded={false} onClick={() => setOpen(true)}>
           <span className="kicker">תרגול</span>
-          <span className="fold-line">{summary}</span>
+          <span className="fold-line"><Mixed text={summary} /></span>
           <span className="fold-open">פתיחה</span>
         </button>
       </article>
@@ -72,6 +73,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
           </div>
         )}
       </header>
+      <h3 className="practice-title"><Mixed text={summary} /></h3>
       <div className="statement">{statement}</div>
       {hints.slice(0, openHints).map((hint, index) => (
         <div className="reveal" key={index}>

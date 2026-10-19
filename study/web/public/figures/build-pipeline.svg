@@ -7,35 +7,35 @@
     @keyframes appear { to { opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
-  <rect width="760" height="220" fill="#f6f1e7"/>
+  <rect width="760" height="220" fill="#f6f1e7" />
   <g class="draw">
-    <rect x="20" y="48" width="150" height="110" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
-    <text x="95" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">קדם-מעבד</text>
+    <rect x="20" y="48" width="150" height="110" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
+    <text x="95" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">קדם-מעבד</text>
     <text x="95" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">#include, macros</text>
   </g>
   <g class="draw d2">
-    <rect x="206" y="48" width="150" height="110" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
-    <text x="281" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">קומפיילר</text>
-    <text x="281" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">קובץ .cpp אחד ל-asm</text>
+    <rect x="206" y="48" width="150" height="110" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
+    <text x="281" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">קומפיילר</text>
+    <text x="281" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">קובץ <tspan direction="ltr" unicode-bidi="embed">.cpp</tspan> אחד ל-<tspan direction="ltr" unicode-bidi="embed">asm</tspan></text>
   </g>
   <g class="draw d3">
-    <rect x="392" y="48" width="150" height="110" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
-    <text x="467" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">אסמבלר</text>
-    <text x="467" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">כותב קובץ .o</text>
+    <rect x="392" y="48" width="150" height="110" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <text x="467" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">אסמבלר</text>
+    <text x="467" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">כותב קובץ <tspan direction="ltr" unicode-bidi="embed">.o</tspan></text>
   </g>
   <g class="draw d4">
-    <rect x="578" y="48" width="160" height="110" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5"/>
-    <text x="658" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">מקשר</text>
-    <text x="658" y="114" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">מוצא את main</text>
-    <text x="658" y="134" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">קובץ הרצה אחד</text>
+    <rect x="578" y="48" width="160" height="110" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <text x="658" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">מקשר</text>
+    <text x="658" y="114" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">מוצא את <tspan direction="ltr" unicode-bidi="embed">main</tspan></text>
+    <text x="658" y="134" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">קובץ הרצה אחד</text>
   </g>
   <g class="draw d2">
-    <polygon points="198,103 184,96 184,110" fill="#c47b2b"/>
+    <polygon points="198,103 184,96 184,110" fill="#c47b2b" />
   </g>
   <g class="draw d3">
-    <polygon points="384,103 370,96 370,110" fill="#c47b2b"/>
+    <polygon points="384,103 370,96 370,110" fill="#c47b2b" />
   </g>
   <g class="draw d4">
-    <polygon points="570,103 556,96 556,110" fill="#c47b2b"/>
+    <polygon points="570,103 556,96 556,110" fill="#c47b2b" />
   </g>
 </svg>

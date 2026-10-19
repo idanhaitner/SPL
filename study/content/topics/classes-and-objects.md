@@ -32,7 +32,7 @@ Java עוברת קומפילציה ל-bytecode ומקשרת כשהתוכנית �
 
 ![ארבעה שלבי בנייה לפי הסדר: קדם-מעבד, קומפיילר, אסמבלר, ואז המקשר שמייצר קובץ הרצה אחד](../assets/figures/build-pipeline.svg)
 
-:::problem id=worked-compile-vs-link source="Exrecises/SPL_PS1 (1).pptx" kind=worked solution_origin=source
+:::problem id=worked-compile-vs-link title="קישור בלי main" source="Exrecises/SPL_PS1 (1).pptx" kind=worked solution_origin=source
 הפקודה הראשונה מצליחה. השנייה נכשלת כי `main` לא מוגדר. איזה שלב נכשל, ולמה `-c` לא תפס את זה?
 
 ```text
@@ -141,7 +141,7 @@ Image& myPicture() {
 `pb` הוא מצביע. החץ ניגש לאובייקט ואז בוחר את האיבר. `(*pb).print()` היא אותה קריאה כתובה במפורש.
 :::
 
-:::problem id=worked-initializer source="Classes/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
+:::problem id=worked-initializer title="רשימת אתחול" source="Classes/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
 למה `Point` צריך `: x(x), y(y)`, ולמה `Line` קורא לפונקציה `static` כדי לאתחל את `len`?
 
 ```cpp
@@ -176,8 +176,8 @@ struct Line {
 
 ## תרגול
 
-:::problem id=ps1-link-vs-java source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-טבלת ההשוואה של תרגול 1 שואלת איפה הקישור קורה. ציינו, עבור Java ועבור C++, מתי קריאות שלא נפתרו נקשרות להגדרות שלהן, ואיזה קובץ `g++ -c` מייצר.
+:::problem id=ps1-link-vs-java title="איפה הקישור קורה" source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
+ציינו, עבור Java ועבור C++, מתי קריאות שלא נפתרו נקשרות להגדרות שלהן, ואיזה קובץ `g++ -c` מייצר.
 
 :::hint
 הקומפיילר של Java לא פולט קוד מכונה למערכת הפעלה אחת.
@@ -195,8 +195,16 @@ Java עוברת קומפילציה ל-bytecode ומקשרת בזמן ריצה, �
 :::
 :::
 
-:::problem id=ps1-makefile-first-target source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-קובץ makefile רושם את `clean` ראשון ואת `hello` שני. `hello` תלוי ב-`helloWorld.o` וב-`run.o`. מקלידים `make` בתיקייה הזו. מה רץ, ומה הייתם מקלידים כדי לבנות את `hello`?
+:::problem id=ps1-makefile-first-target title="המטרה הראשונה של make" source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
+זה הקובץ. מקלידים `make` בתיקייה הזו. מה רץ, ומה הייתם מקלידים כדי לבנות את `hello`?
+
+```makefile
+clean:
+	rm -rf bin
+
+hello: helloWorld.o run.o
+	g++ -o bin/hello bin/helloWorld.o bin/run.o
+```
 
 :::hint
 `make` בלי ארגומנטים לא מחפש מטרה בשם `all` אלא אם זו המטרה שהוא מוצא ראשונה.
@@ -212,8 +220,8 @@ Java עוברת קומפילציה ל-bytecode ומקשרת בזמן ריצה, �
 :::
 :::
 
-:::problem id=ps3-pass-by-value source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
-`emphasize` צריך לשרשר שלושה סימני קריאה למחרוזת של הקורא. התרגול מראה שלוש חתימות. אילו מהן משנות את המחרוזת של הקורא, ואיזו אפשר לתת לה null?
+:::problem id=ps3-pass-by-value title="שלוש חתימות של emphasize" source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
+`emphasize` צריך לשרשר שלושה סימני קריאה למחרוזת של הקורא. אילו מהחתימות משנות את המחרוזת של הקורא, ואיזו אפשר לתת לה null?
 
 ```cpp
 void emphasize(std::string word);

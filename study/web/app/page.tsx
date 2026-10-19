@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Continue } from "@/components/Continue";
+import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
 
 export default function HomePage() {
@@ -7,8 +8,8 @@ export default function HomePage() {
   return (
     <article className="page">
       <p className="kicker">קורס</p>
-      <h1>{course.title}</h1>
-      <p className="lead">{course.summary}</p>
+      <h1><Mixed text={course.title} /></h1>
+      <p className="lead"><Mixed text={course.summary} /></p>
       <Continue
         courseId={course.id}
         chapters={course.topics.map((topic) => ({ id: topic.id, title: topic.title }))}
@@ -19,8 +20,8 @@ export default function HomePage() {
             <Link href={`/topics/${topic.id}`}>
               <span className="num">{String(index + 1).padStart(2, "0")}</span>
               <span>
-                <strong>{topic.title}</strong>
-                {topic.blurb && <em>{topic.blurb}</em>}
+                <strong><Mixed text={topic.title} /></strong>
+                {topic.blurb && <em><Mixed text={topic.blurb} /></em>}
               </span>
             </Link>
           </li>

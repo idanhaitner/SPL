@@ -1,3 +1,4 @@
+import { Mixed } from "@/lib/bidi";
 import { CheckCard } from "@/components/CheckCard";
 import { CodeBlock } from "@/components/CodeBlock";
 import { PracticeCard } from "@/components/Practice";
@@ -26,6 +27,18 @@ function preview(blocks: Block[]) {
     if (block.type === "code") return block.text.trim().split("\n")[0] || "שאלה";
   }
   return "שאלה";
+}
+
+function fallbackTitle(text: string) {
+  const sentence = plain(text).split(/(?<=[.!?׃])\s/)[0] || "שאלה";
+  if (sentence.length <= 72) return sentence;
+  let title = "";
+  for (const word of sentence.split(/\s+/)) {
+    const next = title ? `${title} ${word}` : word;
+    if (next.length > 72) break;
+    title = next;
+  }
+  return title || "שאלה";
 }
 
 function plain(text: string) {
@@ -75,7 +88,7 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
         id={attrs.id || ""}
         courseId={courseId}
         kind={attrs.kind || "exercise"}
-        summary={plain(preview(parts.statement))}
+        summary={attrs.title?.trim() || fallbackTitle(preview(parts.statement))}
         statement={<Blocks blocks={parts.statement} courseId={courseId} />}
         hints={parts.hints.map((hint, index) => (
           <Blocks key={index} blocks={hint} courseId={courseId} />
@@ -111,8 +124,8 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
       <section className="formal" id={attrs.id}>
         <p className="kicker">{label}</p>
         {attrs.title && <h3><Inline text={attrs.title} /></h3>}
-        {name === "algorithm" && attrs.complexity && <p className="meta">סיבוכיות. {attrs.complexity}</p>}
-        {name === "algorithm" && attrs.invariant && <p className="meta">תנאי פנימי. {attrs.invariant}</p>}
+        {name === "algorithm" && attrs.complexity && <p className="meta">סיבוכיות. <Mixed text={attrs.complexity} /></p>}
+        {name === "algorithm" && attrs.invariant && <p className="meta">תנאי פנימי. <Mixed text={attrs.invariant} /></p>}
         <Blocks blocks={body} courseId={courseId} />
         {proof.map((item, index) => (
           <div className="proof" key={index}>

@@ -64,7 +64,7 @@ private transient Integer hash;
 
 לא תואם: הסרה או שינוי הטיפוס של שדה שאינו `transient`, שינוי המחלקה בהיררכיה בדרכים שההרצאה מונה כשוברות. אי-התאמה של `serialVersionUID` מכשילה את הקריאה גם אם השדות היו מתאימים.
 
-:::problem id=worked-transient-hash source="Classes/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
+:::problem id=worked-transient-hash title="שדה transient" source="Classes/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
 `pet` עבר סיריאליזציה אחרי ש-`hashCode` כבר מילא את המטמון. מה `hash` מכיל באובייקט ש-`readObject` מחזיר, ומה `name` מכיל?
 
 ```java

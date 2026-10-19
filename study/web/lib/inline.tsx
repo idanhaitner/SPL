@@ -1,6 +1,7 @@
 import katex from "katex";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Mixed } from "@/lib/bidi";
 
 function mathHtml(tex: string, display: boolean) {
   return katex.renderToString(tex, {
@@ -32,7 +33,7 @@ export function Paragraph({ text }: { text: string }) {
         <figure className="figure">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={src} alt={only[1]} />
-          {only[1] ? <figcaption>{only[1]}</figcaption> : null}
+          {only[1] ? <figcaption><Mixed text={only[1]} /></figcaption> : null}
         </figure>
       );
     }
@@ -51,7 +52,7 @@ function richText(text: string, keyBase: string): ReactNode[] {
   let match: RegExpExecArray | null;
   let index = 0;
   while ((match = pattern.exec(text))) {
-    if (match.index > last) nodes.push(text.slice(last, match.index));
+    if (match.index > last) nodes.push(<Mixed key={`${keyBase}-t${index}`} text={text.slice(last, match.index)} />);
     const key = `${keyBase}-${index++}`;
     if (match[1] != null) {
       const src = hrefOf(match[2]);
@@ -63,16 +64,16 @@ function richText(text: string, keyBase: string): ReactNode[] {
       }
     } else if (match[3] != null) {
       const href = hrefOf(match[4]);
-      if (href) nodes.push(<Link key={key} href={href}>{match[3]}</Link>);
-      else nodes.push(<span key={key}>{match[3]}</span>);
+      if (href) nodes.push(<Link key={key} href={href}><Mixed text={match[3]} /></Link>);
+      else nodes.push(<span key={key}><Mixed text={match[3]} /></span>);
     } else if (match[5] != null) {
-      nodes.push(<strong key={key}>{match[5]}</strong>);
+      nodes.push(<strong key={key}><Mixed text={match[5]} /></strong>);
     } else if (match[6] != null) {
-      nodes.push(<em key={key}>{match[6]}</em>);
+      nodes.push(<em key={key}><Mixed text={match[6]} /></em>);
     }
     last = match.index + match[0].length;
   }
-  if (last < text.length) nodes.push(text.slice(last));
+  if (last < text.length) nodes.push(<Mixed key={`${keyBase}-t${index}`} text={text.slice(last)} />);
   return nodes;
 }
 

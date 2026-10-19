@@ -140,7 +140,7 @@ int main() {
 
 ![בזמן ש-foo רצה, n ו-x יושבים במסגרת של foo מתחת ל-main. אחרי החזרה נשארות רק המסגרת של main, ו-a](../assets/figures/stack-frames.svg)
 
-:::problem id=worked-frame-call source="Classes/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+:::problem id=worked-frame-call title="מסגרת של קריאה" source="Classes/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
 איפה `n` ו-`x` חיים בזמן ש-`foo` רצה, ומה נשאר אחרי ש-`foo` חוזרת?
 
 ```cpp
@@ -307,7 +307,7 @@ int main() {
 
 למעבד יש ערכת הוראות (instruction set). `ADD R1 R2 R3` מחבר את הרגיסטרים `R1` ו-`R2` ושם את הסכום ב-`R3`. `READ 100 R1` מעתיק את תא 100 אל `R1`. `WRITE R2 200` מעתיק את `R2` אל תא 200. השפה מתורגמת אל שלוש ההוראות האלה.
 
-:::problem id=worked-add-trace source="Notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+:::problem id=worked-add-trace title="עקבות של חיבור" source="Notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
 `i` יושב בתא 3000 ו-`j` בתא 4000. תרגם את שלוש השורות להוראות `READ`, `WRITE` ו-`ADD`.
 
 ```java
@@ -368,7 +368,7 @@ pi[0] = 1;
 
 כשהפונקציה חוזרת, התא בשם `pi` נעלם. עשרת ה-int נשארים עד שמשהו מבצע `delete[]` על הכתובת הזו. אם הכתובת לא נשמרה במקום אחר, אין מי שיעשה את זה.
 
-:::problem id=worked-stack-array source="Classes/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+:::problem id=worked-stack-array title="מצביע על המחסנית" source="Classes/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
 אמרו איפה `ps` חי, איפה ה-`Student` חי, ומה נשאר אחרי ש-`main` חוזרת אם אף אחד לא קורא ל-`delete`.
 
 ```cpp
@@ -402,8 +402,8 @@ heap:                        v
 
 ## תרגול
 
-:::problem id=ps2-stack-vs-heap source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-תרגול 2 מצייר את אותו פיצול. לכל שורה, אמרו אם האחסון ששמו מופיע הוא על המחסנית או על הערימה, ואיזה `delete` נדרש.
+:::problem id=ps2-stack-vs-heap title="מחסנית מול ערימה" source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+לכל שורה, אמרו אם האחסון ששמו מופיע הוא על המחסנית או על הערימה, ואיזה `delete` נדרש.
 
 ```cpp
 void demo() {
@@ -441,7 +441,7 @@ void demo() {
 שאלת הזיכרון נותנת מכולה קטנה ב-C++ ו-`main` שמעביר אותה לפי ערך אל `foo`, ומבקשת לצייר את המחסנית ואת הערימה בשורה מסומנת. המלכודת היא לצייר את החוצץ כאילו הוא חי במסגרת, או לצייר פרמטר לפי ערך כאילו הוא אותו אובייקט של הקורא.
 :::
 
-:::problem id=exam-15a-q2 source="Exams/15-a.pdf" kind=exam solution_origin=source
+:::problem id=exam-15a-q2 title="וקטור כרשימה" source="Exams/15-a.pdf" kind=exam solution_origin=source
 `vector` שומר איברים במערך רציף ויכול לשנות גודל. הקורס קובע שזה בזבזני, ומבקש `mvector<T>`, שהזיכרון שלו הוא בדיוק התאים שהוא צריך, שמורים כרשימה מקושרת.
 
 א. ממשו את הפונקציות. מותר להוסיף עזרים. אסור להוסיף שדות או לשנות חתימות. `insertAt` תמיד מצליח, מקצה אם הוא חייב, ומכניס ב-`pos`. `removeAt` מקטין את המבנה, ואם `pos` ריק מחזיר איזשהו `T` דמה. גישה לתא ברשימה מקושרת אינה O(1).
@@ -476,7 +476,7 @@ void demo() {
 :::
 :::
 
-:::problem id=exam-15b-q2 source="Exams/15-b.pdf" kind=exam solution_origin=source
+:::problem id=exam-15b-q2 title="וקטור שגדל" source="Exams/15-b.pdf" kind=exam solution_origin=source
 `mvector` הוא עכשיו מערך של `node`, לא רשימה. `insertAt` ב-`pos` מעבר לסוף מגדיל את המערך לחזקה הקטנה ביותר של 2 שגדולה ממש מ-`pos` (וקטור ריק, הכנסה ב-5, נעשה באורך 8). `removeAt` מקטין בחצי אחרי שכל איבר בחצי העליון הוסר (אורך 8, אחרי שארבעת האיברים הגבוהים נעלמו, נעשה 4). האיברים שומרים על האינדקסים שלהם. ל-`node` יש `duplicate()` וירטואלית טהורה.
 
 א. ממשו את הפעולות המסומנות, כולל בנאי העתקה עמוקה. מותר עזרים. אסור להוסיף שדות או לשנות חתימות.

@@ -69,7 +69,7 @@ class Circle extends Shape {
 
 אוסף-האשפה עובר על אובייקטים שנגישים ממחסניות וממשתנים סטטיים. אובייקט בלי מסלול מפונה. אין `delete`. דליפה במודל הזה היא רפרנס שעדיין מחזיקים.
 
-:::problem id=worked-array-layout source="Classes/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
+:::problem id=worked-array-layout title="מערך על הערימה" source="Classes/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
 מה על המחסנית, ומה על הערימה?
 
 ```java
@@ -103,8 +103,8 @@ b[0] = new String("Avi");
 
 ## תרגול
 
-:::problem id=ps5-checked-exception source="Exrecises/SPL_PS5.pptx" kind=exercise solution_origin=source
-תרגול 5 מנגיד חריגה בדוקה עם חריגה לא-בדוקה. `FileNotFoundException` בדוקה. `ArithmeticException` אינה בדוקה. לכל אחת, אמור אם התוכנית מתקמפלת כשהקורא מתעלם ממנה, ולאן חריגה שנזרקה הולכת אם אף מסגרת אינה מטפלת בה.
+:::problem id=ps5-checked-exception title="חריגה בדוקה" source="Exrecises/SPL_PS5.pptx" kind=exercise solution_origin=source
+`FileNotFoundException` בדוקה. `ArithmeticException` אינה בדוקה. לכל אחת, אמור אם התוכנית מתקמפלת כשהקורא מתעלם ממנה, ולאן חריגה שנזרקה הולכת אם אף מסגרת אינה מטפלת בה.
 
 :::hint
 הטבלה של התרגול: חריגה לא-בדוקה מתקמפלת גם כשמתעלמים ממנה. חריגה בדוקה אינה מתקמפלת כשמתעלמים ממנה.

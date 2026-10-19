@@ -117,7 +117,7 @@ p->apply(img);     // prints "Apply BlurFilter"
 | `blur.apply(img)` | `BlurFilter` | `BlurFilter::apply` | `BlurFilter::apply` |
 | `Filter* p = &blur; p->apply(img)` | `Filter` | `BlurFilter::apply` | `Filter::apply` |
 
-:::problem id=worked-virtual-call source="Classes/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
+:::problem id=worked-virtual-call title="קריאה וירטואלית" source="Classes/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
 `apply` הוא virtual. איזו פונקציה רצה, ומה משתנה אם מסירים את `virtual`?
 
 ```cpp
@@ -159,8 +159,13 @@ filter->apply(img)
 
 ## תרגול
 
-:::problem id=ps3-virtual-destructor source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
-תרגול 3: אובייקט נגזר עובר `delete` דרך מצביע של הבסיס, והדיסטרקטור אינו virtual. מה התוצאה, ומה הכלל שהתרגול מציין למחלקה שנועדה להיות בסיס?
+:::problem id=ps3-virtual-destructor title="מחיקה דרך מצביע בסיס" source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
+אובייקט נגזר עובר `delete` דרך מצביע של הבסיס, והדיסטרקטור אינו virtual. מה התוצאה, ומה הכלל למחלקה שנועדה להיות בסיס?
+
+```cpp
+Base* p = new Derived();
+delete p;
+```
 
 :::hint
 הטיפוס הסטטי של המצביע הוא הבסיס. קריאות לא-virtual משתמשות בטיפוס הזה.
@@ -181,7 +186,7 @@ filter->apply(img)
 השאלה שמה שני טיפוסים נגזרים מאחורי מצביע בסיס אחד ושואלת למה קריאה לא-virtual, דיסטרקטור לא-virtual, או העמסה (overload) במקום override משתמשים בבסיס. המלכודת היא ציור זיכרון שמחסיר את ה-vptr, או `delete` דרך הבסיס שאף פעם לא מריץ את הדיסטרקטור של הנגזרת.
 :::
 
-:::problem id=exam-16a-q2 source="Exams/16-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16a-q2 title="מבקר לצורות" source="Exams/16-a.pdf" kind=exam solution_origin=derived
 למנוע משחק יש `SHAPE`ים (`SPHERE`, `BOX`) שמצוירים על ידי `SHADER`ים (`BASIC_SHADER`, `COMPLEX_SHADER`). לכל shader יש `Render(SPHERE*)` ו-`Render(BOX*)`. `RENDER_MGR::Render` עובר על הצורות ועל ה-shaders. בחירת העמסה על `SHAPE*` לא יכולה לבחור את `Render(SPHERE*)`.
 
 א. ממשו את תבנית המבקר (visitor) כדי שהלולאה תשלח לזוג הנכון. `SHAPE` ו-`SHADER` חייבים להיות מופשטים. הוסיפו קוד רק במחלקות ששמן מופיע בשאלה.
@@ -220,7 +225,7 @@ struct Box : Shape {
 :::
 :::
 
-:::problem id=exam-18a-q1 source="Exams/18-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18a-q1 title="דיסטרקטור של תמונה" source="Exams/18-a.pdf" kind=exam solution_origin=derived
 `Image` הוא בסיס מופשט עם `int n_pixels` ו-`virtual void show() = 0`. `ColorImage` יורש ממנו ומחזיק מערך פיקסלים. הטענות לבחירה כוללות: התוכנית דולפת (leak) כי `~ColorImage` אף פעם לא רץ; התיקון הוא `virtual ~Image() {}`; גם ל-`ColorImage` צריך דיסטרקטור משלו שמבצע `delete[]` על המערך; אין דליפה. בחרו את הטענה הנכונה, ואמרו מה העתקה לפי ערך של `ColorImage` עושה למערך תחת חוק השלושה (rule of three).
 
 :::hint
@@ -237,8 +242,8 @@ struct Box : Shape {
 :::
 :::
 
-:::problem id=exam-18b-q1 source="Exams/18-b.pdf" kind=exam solution_origin=derived
-אותה היררכיית תמונות, כתובה מחדש כך שתמונות שחור-לבן וצבע חולקות בסיס מופשט אחד ונבדלות בטיפוס הפיקסל. ציירו את המחסנית ואת הערימה (heap) בהערה שבתוך `show`, כולל vptrים. סעיף מאוחר יותר שואל איזו המרה מוצאת את הטיפוס הדינמי. הדיון בשאלה כולל את `dynamic_cast`.
+:::problem id=exam-18b-q1 title="זיכרון של היררכיית תמונות" source="Exams/18-b.pdf" kind=exam solution_origin=derived
+`Image` הוא בסיס מופשט עם `int n_pixels` ו-`virtual void show() = 0`. `GrayImage` ו-`ColorImage` יורשים ממנו ונבדלים בטיפוס הפיקסל, וכל אחד מחזיק מערך פיקסלים משלו. ציירו את המחסנית ואת הערימה (heap) בהערה שבתוך `show`, כולל vptrים. סעיף מאוחר יותר שואל איזו המרה מוצאת את הטיפוס הדינמי. הדיון בשאלה כולל את `dynamic_cast`.
 
 :::hint
 אובייקט נגזר אחד הוא בלוק אחד: תת-אובייקט של הבסיס, ואז האיברים הנגזרים, ועוד vptr כי המחלקה פולימורפית.
@@ -254,7 +259,7 @@ struct Box : Shape {
 :::
 :::
 
-:::problem id=exam-19a-q1 source="Exams/19-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19a-q1 title="מאגר אפליקציות" source="Exams/19-a.pdf" kind=exam solution_origin=derived
 `APP` מופשט עם `virtual void run() = 0`. `PAY_APP` ו-`PLAY_APP` דורסים אותו. `MY_APPS_REPO` חייב לשמור את שני הסוגים במערך אחד.
 
 א. תנו ל-`apps_repo_arr_` טיפוס יחיד שיכול להחזיק את שניהם.
@@ -285,7 +290,7 @@ struct Box : Shape {
 :::
 :::
 
-:::problem id=exam-19b-q1 source="Exams/19-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19b-q1 title="העמסה מול טיפוס דינמי" source="Exams/19-b.pdf" kind=exam solution_origin=derived
 `TESTER` מכריז על שלוש העמסות, `test(APP*)`, `test(PAY_APP*)`, `test(PLAY_APP*)`, כולן virtual במובן של הבסיס, אבל קריאה `tester->test(app)` שבה ל-`app` יש טיפוס סטטי `APP*` קושרת את העמסת ה-`APP*` בזמן הידור. בחירת העמסה לא משתמשת בטיפוס הדינמי. ציירו את הזיכרון של הריצה עד ההערה, והסבירו למה אובייקט `PAY_APP` עדיין פוגע ב-`test(APP*)`.
 
 :::hint
@@ -302,7 +307,7 @@ struct Box : Shape {
 :::
 :::
 
-:::problem id=exam-24b-q1 source="Exams/24-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24b-q1 title="עץ בסריקה תוכית" source="Exams/24-b.pdf" kind=exam solution_origin=derived
 ל-`BinaryTree<T>` יש `left` ו-`right`. `InorderBinaryTree` יורש ממנו וגם מממש ממשק סריקה. ציירו זיכרון בסוף:
 
 ```cpp

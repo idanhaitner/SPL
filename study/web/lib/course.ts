@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { Course } from "./types";
+import type { Block, Course } from "./types";
 
 const repoRoot = path.resolve(process.cwd(), "../..");
 
@@ -35,9 +35,37 @@ export function loadCourse(): Course {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
-  const course = JSON.parse(raw) as Course;
+  const course = withPracticeTitles(JSON.parse(raw) as Course);
   memo = { stamp, course };
   return course;
+}
+
+function problemTitles(blocks: Block[], into: Map<string, string>) {
+  for (const block of blocks) {
+    if (block.type === "directive") {
+      if (block.name === "problem" && block.attrs.id && block.attrs.title) {
+        into.set(block.attrs.id, block.attrs.title);
+      }
+      problemTitles(block.children, into);
+    }
+    if (block.type === "list") {
+      for (const item of block.items) problemTitles(item.children, into);
+    }
+  }
+}
+
+function withPracticeTitles(course: Course): Course {
+  const titles = new Map<string, string>();
+  for (const topic of course.topics) problemTitles(topic.blocks, titles);
+  return {
+    ...course,
+    search: course.search.map((hit) => {
+      if (hit.kind !== "Practice") return hit;
+      const id = decodeURIComponent(hit.href.split("#")[1] ?? "");
+      const title = titles.get(id);
+      return title ? { ...hit, title } : hit;
+    }),
+  };
 }
 
 export function repoRootPath() {

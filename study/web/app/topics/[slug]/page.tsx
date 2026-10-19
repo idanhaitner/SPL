@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Chapter } from "@/components/Chapter";
 import { Visit } from "@/components/Visit";
+import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
 
 export function generateStaticParams() {
@@ -21,30 +22,28 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
       <Visit courseId={course.id} slug={topic.id} />
       <header className="masthead">
         <p className="kicker">פרק {String(index + 1).padStart(2, "0")}</p>
-        <h1>{topic.title}</h1>
+        <h1><Mixed text={topic.title} /></h1>
         <span className="masthead-num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
       </header>
       <Chapter blocks={topic.blocks} courseId={course.id} />
-      <nav className={`pager${previous && next ? " is-pair" : " is-single"}`} aria-label="פרקים">
-        {previous && (
-          <Link className="pager-prev" href={`/topics/${previous.id}`}>
-            <span className="pager-arrow" aria-hidden="true" />
-            <span className="pager-copy">
-              <span>הקודם</span>
-              <strong>{previous.title}</strong>
-            </span>
-          </Link>
-        )}
-        {next && (
-          <Link className="pager-next" href={`/topics/${next.id}`}>
-            <span className="pager-copy">
-              <span>הבא</span>
-              <strong>{next.title}</strong>
-            </span>
-            <span className="pager-arrow" aria-hidden="true" />
-          </Link>
-        )}
-      </nav>
+      {(previous || next) && (
+        <nav className="endpaper" aria-label="פרקים">
+          {previous && (
+            <Link className="endpaper-prev" href={`/topics/${previous.id}`}>
+              <span className="endpaper-num">{String(index).padStart(2, "0")}</span>
+              <span className="endpaper-title"><Mixed text={previous.title} /></span>
+              <span className="endpaper-label">הפרק הקודם</span>
+            </Link>
+          )}
+          {next && (
+            <Link className="endpaper-next" href={`/topics/${next.id}`}>
+              <span className="endpaper-num">{String(index + 2).padStart(2, "0")}</span>
+              <span className="endpaper-title"><Mixed text={next.title} /></span>
+              <span className="endpaper-label">הפרק הבא</span>
+            </Link>
+          )}
+        </nav>
+      )}
     </article>
   );
 }

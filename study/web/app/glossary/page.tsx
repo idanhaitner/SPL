@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
 
 export default function GlossaryPage() {
@@ -25,7 +26,7 @@ export default function GlossaryPage() {
       {groups.length > 0 && (
         <nav className="glossary-jump" aria-label="פרקים במונחים">
           {groups.map((group) => (
-            <a key={group.id} href={`#glossary-${group.id}`}>{group.title}</a>
+            <a key={group.id} href={`#glossary-${group.id}`}><Mixed text={group.title} /></a>
           ))}
         </nav>
       )}
@@ -33,13 +34,13 @@ export default function GlossaryPage() {
         <section className="glossary-group" id={`glossary-${group.id}`} key={group.id}>
           <h2>
             <span className="num">{group.number}</span>
-            {group.title}
+            <Mixed text={group.title} />
           </h2>
           <div className="glossary-grid">
             {group.entries.map((entry) => (
               <article className="glossary-card" id={entry.anchor} key={entry.anchor}>
-                <h3>{entry.term}</h3>
-                <p>{entry.definition}</p>
+                <h3><Mixed text={entry.term} /></h3>
+                <p><Mixed text={entry.definition} /></p>
                 <Link href={`/topics/${entry.topic}`}>לפתיחת הפרק</Link>
               </article>
             ))}
@@ -51,8 +52,8 @@ export default function GlossaryPage() {
           <div className="glossary-grid">
             {loose.map((entry) => (
               <article className="glossary-card" id={entry.anchor} key={entry.anchor}>
-                <h3>{entry.term}</h3>
-                <p>{entry.definition}</p>
+                <h3><Mixed text={entry.term} /></h3>
+                <p><Mixed text={entry.definition} /></p>
               </article>
             ))}
           </div>

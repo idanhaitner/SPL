@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Mixed } from "@/lib/bidi";
 import { readProgress } from "@/lib/progress";
 
 type Chapter = { id: string; title: string };
@@ -25,7 +26,7 @@ export function Continue({ courseId, chapters }: { courseId: string; chapters: C
     <Link className="continue" href={`/topics/${target.id}`}>
       <span className="continue-copy">
         <span>{resuming ? "המשך" : "התחלה"}</span>
-        <strong>{target.title}</strong>
+        <strong><Mixed text={target.title} /></strong>
       </span>
       <span className="continue-arrow" aria-hidden="true" />
     </Link>
