@@ -3,10 +3,20 @@ name: Publish study site
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - index.html
+      - 404.html
+      - index.txt
+      - .nojekyll
+      - glossary/**
+      - topics/**
+      - figures/**
+      - _next/**
+      - "404/**"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -19,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -37,6 +49,21 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: study/web/out
+      - name: Publish the static site at the repository root
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf glossary topics figures _next 404
+          rm -f index.html 404.html index.txt
+          cp -R study/web/out/. .
+          touch .nojekyll
+          git add index.html 404.html index.txt .nojekyll glossary topics figures _next 404
+          if git diff --cached --quiet; then
+            echo "Published site is already current."
+          else
+            git commit -m "Update the published study site."
+            git push
+          fi
 
   deploy:
     needs: build
