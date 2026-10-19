@@ -2,17 +2,17 @@
 id: networking
 title: תקשורת
 sources:
-  - "Classes/Chapter 10 - Networking.pptx"
-  - "Exrecises/PS9 2026.pptx"
-  - "Exrecises/SPL_PS10.pptx"
-  - "Exams/15-b.pdf"
-  - "Exams/15-b-solution.pdf"
-  - "Exams/16-a.pdf"
-  - "Exams/16-a-solution.pdf"
-  - "Exams/17-b.pdf"
-  - "Exams/17-b-solution.pdf"
-  - "Exams/20-b.pdf"
-  - "Exams/20-b-solution.pdf"
+  - "materials/lectures/Chapter 10 - Networking.pptx"
+  - "materials/sessions/PS9 2026.pptx"
+  - "materials/sessions/SPL_PS10.pptx"
+  - "materials/exams/15-b.pdf"
+  - "materials/exams/15-b-solution.pdf"
+  - "materials/exams/16-a.pdf"
+  - "materials/exams/16-a-solution.pdf"
+  - "materials/exams/17-b.pdf"
+  - "materials/exams/17-b-solution.pdf"
+  - "materials/exams/20-b.pdf"
+  - "materials/exams/20-b-solution.pdf"
 ---
 
 תהליך (process) אינו יכול לקרוא את הזיכרון של תהליך אחר. פרק 10 בתקשורת (networking) יוצא מהבידוד הזה, כולל המקרה של שני מחשבים, ובונה את הערוץ (channel) ששאר הקורס יתכנת מולו: פורט, שקע (socket), ובחירה בין TCP ל-UDP.
@@ -34,7 +34,7 @@ sources:
 
 הקורס אחר כך מתעלם מהתחתית ומתכנת את שתי השכבות העליונות.
 
-:::definition id=def-host-port title="מארח, כתובת IP, פורט" source="Classes/Chapter 10 - Networking.pptx"
+:::definition id=def-host-port title="מארח, כתובת IP, פורט" source="materials/lectures/Chapter 10 - Networking.pptx"
 מארח (host) הוא מחשב ברשת שמריץ תהליכים ושולח ומקבל תעבורה. כתובת IP מזהה את המארח לצורך ניתוב, לא את התהליך. פורט הוא המספר שמזהה את התהליך, או את השירות, על המארח הזה. האנלוגיה בהרצאה היא מספר דירה בבניין. הפורטים 1 עד 1023 שמורים, ואת זה מוסיף מפגש 9.
 :::
 
@@ -94,7 +94,7 @@ ds.send(p);
 
 STOMP, גם הוא מפגש 10, הוא פרוטוקול האפליקציה מעל זרם אמין. מסגרת היא פקודה, כותרות `name:value`, שורה ריקה, גוף, ותו null `'\0'`. סדר הכותרות אינו משנה. `CONNECT` נושא `accept-version` ו-`host`, ורשות גם `login` ו-`passcode`. השרת עונה `CONNECTED`. `SUBSCRIBE` צריך `id` ו-`destination`. `SEND` צריך `destination`. `DISCONNECT` רשאי לשאת `receipt`, והשרת אז עונה `RECEIPT`. `ERROR` נושא כותרת `message`. נוסח המטלה גובר על השקפים כשהם חלוקים; המפגש אומר זאת על השקף.
 
-:::problem id=worked-tcp-accept title="accept אחד" source="Classes/Chapter 10 - Networking.pptx" kind=worked solution_origin=source
+:::problem id=worked-tcp-accept title="accept אחד" source="materials/lectures/Chapter 10 - Networking.pptx" kind=worked solution_origin=source
 לקוח שני מתחבר בזמן שהשרת הזה חסום בתוך `read`. מה קורה, ומה משתנה אם השרת חוזר בלולאה אל `accept`?
 
 ```java
@@ -139,7 +139,7 @@ IP אינו מבטיח מסירה או סדר. UDP שומר על גבול הדט
 
 ## תרגול
 
-:::problem id=ps9-tcp-udp title="TCP או UDP" source="Exrecises/PS9 2026.pptx" kind=exercise solution_origin=source
+:::problem id=ps9-tcp-udp title="TCP או UDP" source="materials/sessions/PS9 2026.pptx" kind=exercise solution_origin=source
 לבקשת בדיקת איות של מילה אחת ותשובה אחת, תנו סיבה אחת לבחור ב-UDP וסיבה אחת לבחור ב-TCP.
 
 :::hint
@@ -158,7 +158,7 @@ TCP מקים session, שולח מחדש מקטעים שאבדו, ומוסר בת
 :::
 :::
 
-:::problem id=ps9-encoding title="קידוד בין הקצוות" source="Exrecises/PS9 2026.pptx" kind=exercise solution_origin=source
+:::problem id=ps9-encoding title="קידוד בין הקצוות" source="materials/sessions/PS9 2026.pptx" kind=exercise solution_origin=source
 אות עברית מקודדת ב-UTF-8 כבתים `D7 90`. השרת כותב את הבתים האלה. הלקוח בונה `InputStreamReader` עם ה-charset של הפלטפורמה, שאינו UTF-8. מה הלקוח נכשל לעשות, ואיזה בנאי מתקן את זה?
 
 :::hint
@@ -184,7 +184,7 @@ writerOut = new PrintWriter(
 :::
 :::
 
-:::problem id=ps10-lock-guard title="מנעול ב-C++" source="Exrecises/SPL_PS10.pptx" kind=exercise solution_origin=source
+:::problem id=ps10-lock-guard title="מנעול ב-C++" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
 תרגמו את הבלוק הזה ל-C++. כללו את השקת החוט ואת ההמתנה, ונסחו את הכלל להשמדת `std::thread`.
 
 ```java
@@ -217,7 +217,7 @@ th1.join();
 :::
 :::
 
-:::problem id=ps10-stomp title="מסגרות STOMP" source="Exrecises/SPL_PS10.pptx" kind=exercise solution_origin=source
+:::problem id=ps10-stomp title="מסגרות STOMP" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
 לקוח רוצה לקבל הודעות עבור `/topic/a`. פרטו את מסגרות ה-STOMP שהוא שולח, לפי הסדר, ואת המסגרת שהוא מקבל אם השרת אינו יכול לרשום אותו. אמרו מה מסיים מסגרת.
 
 :::hint
@@ -249,7 +249,7 @@ destination:/topic/a
 השאלה מחליפה תו מפריד בקידומת אורך, מגבילה את מספר הלקוחות, או מבקשת פרוטוקול פקודות קטן על השרת הקיים. המלכודת היא להתייחס לקריאה מ-TCP כאל הודעה שלמה, או לשכוח של-UDP אין `accept`.
 :::
 
-:::problem id=exam-15b-q3 title="שרת איות" source="Exams/15-b.pdf" kind=exam solution_origin=source
+:::problem id=exam-15b-q3 title="שרת איות" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
 שרת ההודעות מהנספח הוא שרת חוט-לכל-לקוח (thread-per-client): חוט לכל שקע שהתקבל.
 
 א. להריץ לכל היותר 10 חוטים.
@@ -283,7 +283,7 @@ destination:/topic/a
 :::
 :::
 
-:::problem id=exam-16a-q3 title="פרוטוקול מדפסת" source="Exams/16-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16a-q3 title="פרוטוקול מדפסת" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 שירות מדפסת היה ממשק RMI בשם `Printer.print(String)`. סטודנט החליף את ה-stub ואת ה-skeleton שנוצרו בשרת פרוטוקול.
 
 א. לכל היותר עשרה חוטי מטפל.
@@ -314,7 +314,7 @@ stub מממש את `Math` על ידי שליחת שם מתודה וארגומנ�
 :::
 :::
 
-:::problem id=exam-17b-q3 title="פקודות בנק" source="Exams/17-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17b-q3 title="פקודות בנק" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
 שרת בנק משתמש בפרוטוקול הפעלת הפקודות מהכיתה. שלוש פקודות מגיעות כשורות: `LOGIN name` (השרת עונה `ack` וזוכר את הלקוח), `DEPOSIT money` (מוסיפים ליתרה של הלקוח הזה, עונים `ack`), ופקודה שלישית שהשאלה משתמשת בה כדי לקרוא את היתרה. ממשו את הפקודות ואת `main` של השרת שמארח אותן. כתבו את הפקודות, ואחר כך את ה-main של השרת.
 
 :::hint
@@ -333,7 +333,7 @@ stub מממש את `Math` על ידי שליחת שם מתודה וארגומנ�
 :::
 :::
 
-:::problem id=exam-20b-q3 title="מחירי חנויות" source="Exams/20-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20b-q3 title="מחירי חנויות" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 `Stores` ממפה שם חנות למחירי מוצרים. פקודות מגיעות דרך פרוטוקול הפעלת הפקודות ורצות על אובייקט `Stores` משותף אחד בתוך Reactor על פורט 7777.
 
 א. ממשו את `GetProductPrices`, שמקבל שם מוצר ומחזיר את המיפוי משם חנות למחיר.

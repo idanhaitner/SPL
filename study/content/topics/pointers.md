@@ -2,11 +2,11 @@
 id: pointers
 title: מצביעים ורפרנסים
 sources:
-  - "Classes/Chapter 2 - Pointers.pptx"
-  - "Notes/lecture-notes.docx.pdf"
-  - "Exrecises/SPL_PS2 (1).pptx"
-  - "Exams/20-a.pdf"
-  - "Exams/20-a-solution.pdf"
+  - "materials/lectures/Chapter 2 - Pointers.pptx"
+  - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/sessions/SPL_PS2 (1).pptx"
+  - "materials/exams/20-a.pdf"
+  - "materials/exams/20-a-solution.pdf"
 ---
 
 מצביע (pointer) הוא משתנה שהערך שלו הוא הכתובת של תא אחר. המכונה לא מכירה את השם `s`. היא מכירה "לקרוא 2 בתים מכתובת 4" או "לכתוב 4 בתים בכתובת 8, ולהתייחס אליהם כאל int עם סימן." הטיפוס שעל המצביע אומר לקומפיילר (compiler) כמה בתים זה אומר, ואיך לחשב את גודל הצעד באריתמטיקה.
@@ -15,7 +15,7 @@ sources:
 
 ## מהו מצביע
 
-:::definition id=def-pointer title="מצביע" source="Classes/Chapter 2 - Pointers.pptx"
+:::definition id=def-pointer title="מצביע" source="materials/lectures/Chapter 2 - Pointers.pptx"
 מצביע הוא משתנה ששומר כתובת. דרכו התוכנית יכולה לקרוא או לכתוב בכתובת הזו ומה ששאחריה. ההצהרה `short* ps` אומרת ש-`ps` מצביע אל `short`. אופרטור כתובת-של `&` מפיק את הכתובת של אובייקט (object). אופרטור הכוכבית `*` קורא או כותב את האובייקט בכתובת השמורה.
 
 ```cpp
@@ -41,7 +41,7 @@ int* p = nullptr;   // safe to test
 *p = 3;             // segmentation fault
 ```
 
-:::definition id=def-void-pointer title="מצביע void" source="Classes/Chapter 2 - Pointers.pptx"
+:::definition id=def-void-pointer title="מצביע void" source="materials/lectures/Chapter 2 - Pointers.pptx"
 `void*` שומר כתובת ובלי טיפוס איבר. אי אפשר להפעיל עליו את אופרטור הכוכבית. כדי להשתמש בתא ממירים אותו חזרה למצביע עם טיפוס.
 
 ```cpp
@@ -88,7 +88,7 @@ int d = pb - pa;       // 10, a distance in ints
 
 ![px מכוון לכתובת 16. px + 1 מכוון ארבעה בתים אחר כך, לכתובת 20](../assets/figures/pointer-step.svg)
 
-:::problem id=worked-pointer-step title="צעד של מצביע" source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
+:::problem id=worked-pointer-step title="צעד של מצביע" source="materials/lectures/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 `sizeof(int)` הוא 4 ו-`x` בכתובת 16. איזו כתובת `px + 1` מציין?
 
 ```cpp
@@ -164,7 +164,7 @@ dec(a);                // a == 2
 
 `*ps = 3` דורס את ה-short, לא את המצביע. `ps = &other` דורס את המצביע, לא את ה-short.
 
-:::problem id=worked-pointer-trace title="מצביע למצביע" source="Classes/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
+:::problem id=worked-pointer-trace title="מצביע למצביע" source="materials/lectures/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 מה מדפיסים `i`, `*pi`, `*ppi` ו-`**ppi`, ולמה שווה `&i`?
 
 ```cpp
@@ -213,7 +213,7 @@ const short* ps1 = &s1;
 
 ## תרגול
 
-:::problem id=ps2-pointer-dangers title="ארבע תקלות מצביע" source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+:::problem id=ps2-pointer-dangers title="ארבע תקלות מצביע" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
 לכל קטע, נקבו בתקלה. אל תמחקו שורה שעדיין מתקמפלת.
 
 ```cpp
@@ -253,7 +253,7 @@ delete b;
 :::
 :::
 
-:::problem id=ps2-delete-2d title="שחרור מערך דו-ממדי" source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+:::problem id=ps2-delete-2d title="שחרור מערך דו-ממדי" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
 שחררו כל בלוק שההקצאה הזו השיגה. אל תשחררו שורה פעמיים.
 
 ```cpp
@@ -288,7 +288,7 @@ arry = nullptr;
 השאלה בונה מאגר תמונות מאחורי מערך מצביעים, ואז מחזירה את המאגר לפי ערך מפונקציה שבנתה מקומי בברירת מחדל. המלכודת היא להתייחס לאובייקט המוחזר כאל עותק של הפיקסלים, ולהתייחס ל-`sizeof` של מצביע כאורך.
 :::
 
-:::problem id=exam-20a-q1 title="מאגר תמונות" source="Exams/20-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20a-q1 title="מאגר תמונות" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 כתבו תוכנית C++ ששומרת שני סוגים של תמונה, `Portrait` ו-`Scenery`. כל פיקסל הוא רמת אפור ב-`0..255`. הפיקסלים של תמונה אחת נשמרים במערך `BYTES` חד-ממדי, שורה אחרי שורה. `ImageRepository` מחזיק תמונות רבות במערך בשם `_images`.
 
 א. ממשו את הבנאי (constructor) ואת `Insert`. הבנאי מקצה מערך של `capacity` מצביעים. `Insert` מקבל מערך של תמונות, מעתיק עמוקות (deep copy) את מערך המצביעים הזה, ולא מעתיק עמוקות את מערכי הבתים של התמונות. הוסיפו שדות או מתודות רק אם אתם צריכים אותם.

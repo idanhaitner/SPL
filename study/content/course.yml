@@ -28,308 +28,430 @@ changelog:
     note: "The memory chapter now explains in full sentences why a call frame fits the stack, what is still correct when a heap block leaks, and why delete and delete[] are not the same."
   - date: 2026-10-19
     note: "The memory chapter's explanation of why the stack and the heap are split no longer repeats the leak, recursion, and delete examples already shown above it."
+  - date: 2026-10-19
+    note: "Lectures, session decks, exams, and notes live under materials/. The runnable practice files live under practice/."
 
 sources:
-  - path: "Classes/Chapter 1 - The Memory Model.pptx"
+  - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
     type: lecture
     status: incorporated
     note: "מרחב הכתובות, המחסנית, הערימה, המשתנים הסטטיים, אזור הקוד, ומחזור פון נוימן."
     problems: [worked-stack-array, worked-frame-call]
-  - path: "Classes/Chapter 2 - Pointers.pptx"
+  - path: "materials/lectures/Chapter 2 - Pointers.pptx"
     type: lecture
     status: incorporated
     note: "כתובות, אריתמטיקה של מצביעים, רפרנסים, ו-lvalue."
     problems: [worked-pointer-trace, worked-pointer-step]
-  - path: "Classes/Chapter 3 - Classes and Objects.pptx"
+  - path: "materials/lectures/Chapter 3 - Classes and Objects.pptx"
     type: lecture
     status: incorporated
     note: "מבנה מחלקה, בנאים, ורשימות אתחול."
     problems: [worked-initializer]
-  - path: "Classes/Chapter 4 - Rule of Thee.pptx"
+  - path: "materials/lectures/Chapter 4 - Rule of Thee.pptx"
     type: lecture
     status: incorporated
     note: "דיסטרקטור, בנאי העתקה, ואופרטור השמה."
     problems: [worked-copy-and-swap]
-  - path: "Classes/Chapter 5 - Rule of Five and Zero.pptx"
+  - path: "materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
     type: lecture
     status: incorporated
     note: "העברה, RAII, ומצביעים חכמים."
     problems: [worked-move-image]
-  - path: "Classes/Chapter 6 - Inheritance.pptx"
+  - path: "materials/lectures/Chapter 6 - Inheritance.pptx"
     type: lecture
     status: incorporated
     note: "מחלקות נגזרות, פונקציות וירטואליות, וה-vtable."
     problems: [worked-virtual-call]
-  - path: "Classes/Chapter 7 - Back to Java.pptx"
+  - path: "materials/lectures/Chapter 7 - Back to Java.pptx"
     type: lecture
     status: incorporated
     note: "מבנה אובייקט ב-Java, מערכים, וסביבת הריצה של הפרקים הבאים."
     problems: [worked-array-layout]
-  - path: "Classes/Chapter 8 - Concurrency.pptx"
+  - path: "materials/lectures/Chapter 8 - Concurrency.pptx"
     type: lecture
     status: incorporated
     note: "חוטים, מרוצים, מנעולים, ובעיות סנכרון."
-  - path: "Classes/Chapter 9 - Design by Contract.pptx"
+  - path: "materials/lectures/Chapter 9 - Design by Contract.pptx"
     type: lecture
     status: incorporated
     note: "תנאי קדם, תנאי סיום, ותנאים פנימיים."
     problems: [worked-crop-contract]
-  - path: "Classes/Chapter 10 - Networking.pptx"
+  - path: "materials/lectures/Chapter 10 - Networking.pptx"
     type: lecture
     status: incorporated
     note: "TCP, UDP, ולולאת accept."
     problems: [worked-tcp-accept]
-  - path: "Classes/Chapter 11 - Reactor.pptx"
+  - path: "materials/lectures/Chapter 11 - Reactor.pptx"
     type: lecture
     status: incorporated
     note: "לולאת selector בחוט אחד, וערוצים בלי חסימה."
-  - path: "Classes/Chapter 12 - Serialization.pptx"
+  - path: "materials/lectures/Chapter 12 - Serialization.pptx"
     type: lecture
     status: incorporated
     note: "Serializable ב-Java, שדות transient, ו-serialVersionUID."
     problems: [worked-transient-hash]
-  - path: "Classes/Chapter 13 - Persistance.pptx"
+  - path: "materials/lectures/Chapter 13 - Persistance.pptx"
     type: lecture
     status: incorporated
     note: "טבלאות רילציוניות, SQL, ו-join."
     problems: [worked-inner-join]
-  - path: "Notes/lecture-notes.docx.pdf"
+  - path: "materials/notes/lecture-notes.docx.pdf"
     type: lecture
     status: incorporated
     note: "סיכומי מני אדלר. סביבת זמן ריצה, מצבי תהליך, אפיקי כתובת ונתונים, תרגום i = i + j, בחירת העברה לפי ערך או לפי כתובת, נעילה מצד הלקוח, איטרטור עם גרסה, ואלגברה רלציונית."
     problems: [worked-add-trace]
-  - path: "Exrecises/SPL_PS1 (1).pptx"
+  - path: "materials/sessions/SPL_PS1 (1).pptx"
     type: exercise
     status: incorporated
     note: "Compile and link, makefiles, and the contrast with Java."
     problems: [ps1-link-vs-java, ps1-makefile-first-target, worked-compile-vs-link]
-  - path: "Exrecises/SPL_PS2 (1).pptx"
+  - path: "materials/sessions/SPL_PS2 (1).pptx"
     type: exercise
     status: incorporated
     note: "Stack versus heap, pointer mistakes, and deleting a two-dimensional array."
     problems: [ps2-stack-vs-heap, ps2-pointer-dangers, ps2-delete-2d]
-  - path: "Exrecises/SPL_PS3.pptx"
+  - path: "materials/sessions/SPL_PS3.pptx"
     type: exercise
     status: incorporated
     note: "Pass by value, the rule of three, and virtual destructors."
     problems: [ps3-pass-by-value, ps3-rule-of-three, ps3-virtual-destructor]
-  - path: "Exrecises/SPL_PS4.pptx"
+  - path: "materials/sessions/SPL_PS4.pptx"
     type: exercise
     status: incorporated
     note: "How many copies a call makes, and unique_ptr versus shared_ptr."
     problems: [ps4-copy-count, ps4-unique-vs-shared]
-  - path: "Exrecises/SPL_PS5.pptx"
+  - path: "materials/sessions/SPL_PS5.pptx"
     type: exercise
     status: incorporated
     note: "Checked exceptions and a stack written as a contract."
     problems: [ps5-checked-exception, ps5-stack-contract]
-  - path: "Exrecises/PS6-2026-1.pptx"
+  - path: "materials/sessions/PS6-2026-1.pptx"
     type: exercise
     status: incorporated
     note: "A race on a shared counter, and a safe average."
     problems: [worked-counter-race, ps6-counter-race, ps6-average-safe]
-  - path: "Exrecises/SPL_PS7.pptx"
+  - path: "materials/sessions/SPL_PS7.pptx"
     type: exercise
     status: incorporated
     note: "wait versus spinning, and the names of the liveness failures."
     problems: [ps7-wait-vs-spin, ps7-liveness-names]
-  - path: "Exrecises/SPL_PS8.pptx"
+  - path: "materials/sessions/SPL_PS8.pptx"
     type: exercise
     status: incorporated
     note: "A lazy singleton and interrupting a thread."
     problems: [ps8-singleton, ps8-interrupt]
-  - path: "Exrecises/PS9 2026.pptx"
+  - path: "materials/sessions/PS9 2026.pptx"
     type: exercise
     status: incorporated
     note: "TCP versus UDP, and character encodings."
     problems: [ps9-tcp-udp, ps9-encoding]
-  - path: "Exrecises/SPL_PS10.pptx"
+  - path: "materials/sessions/SPL_PS10.pptx"
     type: exercise
     status: incorporated
     note: "lock_guard, the reactor flip, and STOMP frames."
     problems: [ps10-lock-guard, worked-flip, ps10-flip, ps10-stomp]
-  - path: "Exrecises/SPL_PS11.pptx"
+  - path: "materials/sessions/SPL_PS11.pptx"
     type: exercise
     status: incorporated
     note: "Actor-pool ordering and when to keep OP_WRITE."
     problems: [ps11-actor-order, ps11-write-interest]
-  - path: "Exrecises/SPL_PS12.pptx"
+  - path: "materials/sessions/SPL_PS12.pptx"
     type: exercise
     status: incorporated
     note: "Foreign keys and inner versus left joins on the teaching-assistant tables."
     problems: [ps12-foreign-key, ps12-join]
-  - path: "Exrecises/SPL_PS13_PRES.pptx"
+  - path: "materials/sessions/SPL_PS13_PRES.pptx"
     type: exercise
     status: incorporated
     note: "DTO, DAO, repository, and a generic row mapper."
     problems: [ps13-dto-dao, ps13-orm-find]
-  - path: "Exams/15-a.pdf"
+  - path: "materials/exams/15-a.pdf"
     type: exam
     status: incorporated
     note: "2015 moed A. Threads, a vector drawing, a UDP reactor edit, and BigApple."
     problems: [exam-15a-q1, exam-15a-q2, exam-15a-q3, exam-15a-q4]
-  - path: "Exams/15-a-solution.pdf"
+  - path: "materials/exams/15-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2015 moed A."
     problems: [exam-15a-q1, exam-15a-q2, exam-15a-q3, exam-15a-q4]
-  - path: "Exams/15-b.pdf"
+  - path: "materials/exams/15-b.pdf"
     type: exam
     status: incorporated
     note: "2015 moed B. Synchronization, the vector again, a length-prefix protocol, and BigApple extended."
     problems: [exam-15b-q1, exam-15b-q2, exam-15b-q3, exam-15b-q4]
-  - path: "Exams/15-b-solution.pdf"
+  - path: "materials/exams/15-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2015 moed B."
     problems: [exam-15b-q1, exam-15b-q2, exam-15b-q3, exam-15b-q4]
-  - path: "Exams/16-a.pdf"
+  - path: "materials/exams/16-a.pdf"
     type: exam
     status: incorporated
     note: "2016 moed A. A contract, virtual dispatch, a protocol change, and Abbey Road."
     problems: [exam-16a-q1, exam-16a-q2, exam-16a-q3, exam-16a-q4]
-  - path: "Exams/16-a-solution.pdf"
+  - path: "materials/exams/16-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2016 moed A."
     problems: [exam-16a-q1, exam-16a-q2, exam-16a-q3, exam-16a-q4]
-  - path: "Exams/16-b.pdf"
+  - path: "materials/exams/16-b.pdf"
     type: exam
     status: incorporated
     note: "2016 moed B. Threads, move and copy, a reactor edit, and Abbey Road roles."
     problems: [exam-16b-q1, exam-16b-q2, exam-16b-q3, exam-16b-q4]
-  - path: "Exams/16-b-solution.pdf"
+  - path: "materials/exams/16-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2016 moed B."
     problems: [exam-16b-q1, exam-16b-q2, exam-16b-q3, exam-16b-q4]
-  - path: "Exams/17-a.pdf"
+  - path: "materials/exams/17-a.pdf"
     type: exam
     status: incorporated
     note: "2017 moed A. Threads, the rule of three, a reactor edit, and a glasses shop."
     problems: [exam-17a-q1, exam-17a-q2, exam-17a-q3, exam-17a-q4]
-  - path: "Exams/17-a-solution.pdf"
+  - path: "materials/exams/17-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2017 moed A."
     problems: [exam-17a-q1, exam-17a-q2, exam-17a-q3, exam-17a-q4]
-  - path: "Exams/17-b.pdf"
+  - path: "materials/exams/17-b.pdf"
     type: exam
     status: incorporated
     note: "2017 moed B. Threads, the rule of three, a protocol, and a garage."
     problems: [exam-17b-q1, exam-17b-q2, exam-17b-q3, exam-17b-q4]
-  - path: "Exams/17-b-solution.pdf"
+  - path: "materials/exams/17-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2017 moed B."
     problems: [exam-17b-q1, exam-17b-q2, exam-17b-q3, exam-17b-q4]
-  - path: "Exams/18-a.pdf"
+  - path: "materials/exams/18-a.pdf"
     type: exam
     status: incorporated
     note: "2018 moed A. Virtual dispatch, a contract, a reactor edit, and an exam-question schema."
     problems: [exam-18a-q1, exam-18a-q2, exam-18a-q3, exam-18a-q4]
-  - path: "Exams/18-a-solution.pdf"
+  - path: "materials/exams/18-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2018 moed A."
     problems: [exam-18a-q1, exam-18a-q2, exam-18a-q3, exam-18a-q4]
-  - path: "Exams/18-b.pdf"
+  - path: "materials/exams/18-b.pdf"
     type: exam
     status: incorporated
     note: "2018 moed B. Virtual dispatch, threads, a reactor edit, and wiretap tables."
     problems: [exam-18b-q1, exam-18b-q2, exam-18b-q3, exam-18b-q4]
-  - path: "Exams/18-b-solution.pdf"
+  - path: "materials/exams/18-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2018 moed B."
     problems: [exam-18b-q1, exam-18b-q2, exam-18b-q3, exam-18b-q4]
-  - path: "Exams/19-a.pdf"
+  - path: "materials/exams/19-a.pdf"
     type: exam
     status: incorporated
     note: "2019 moed A. Virtual dispatch, a contract, a reactor edit, and Airbnb."
     problems: [exam-19a-q1, exam-19a-q2, exam-19a-q3, exam-19a-q4]
-  - path: "Exams/19-a-solution.pdf"
+  - path: "materials/exams/19-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2019 moed A."
     problems: [exam-19a-q1, exam-19a-q2, exam-19a-q3, exam-19a-q4]
-  - path: "Exams/19-b.pdf"
+  - path: "materials/exams/19-b.pdf"
     type: exam
     status: incorporated
     note: "2019 moed B. Virtual dispatch, threads, a reactor edit, and Airbnb nights."
     problems: [exam-19b-q1, exam-19b-q2, exam-19b-q3, exam-19b-q4]
-  - path: "Exams/19-b-solution.pdf"
+  - path: "materials/exams/19-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2019 moed B."
     problems: [exam-19b-q1, exam-19b-q2, exam-19b-q3, exam-19b-q4]
-  - path: "Exams/20-a.pdf"
+  - path: "materials/exams/20-a.pdf"
     type: exam
     status: incorporated
     note: "2020 moed A. A pointer repository, threads, a reactor edit, and a DVD service."
     problems: [exam-20a-q1, exam-20a-q2, exam-20a-q3, exam-20a-q4]
-  - path: "Exams/20-a-solution.pdf"
+  - path: "materials/exams/20-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2020 moed A."
     problems: [exam-20a-q1, exam-20a-q2, exam-20a-q3, exam-20a-q4]
-  - path: "Exams/20-b.pdf"
+  - path: "materials/exams/20-b.pdf"
     type: exam
     status: incorporated
     note: "2020 moed B. Smart pointers, threads, a protocol, and DVD scores."
     problems: [exam-20b-q1, exam-20b-q2, exam-20b-q3, exam-20b-q4]
-  - path: "Exams/20-b-solution.pdf"
+  - path: "materials/exams/20-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2020 moed B."
     problems: [exam-20b-q1, exam-20b-q2, exam-20b-q3, exam-20b-q4]
-  - path: "Exams/24-a.pdf"
+  - path: "materials/exams/24-a.pdf"
     type: exam
     status: incorporated
     note: "2024 moed A. The rule of five, a contract, and a reactor with a database."
     problems: [exam-24a-q1, exam-24a-q2, exam-24a-q3]
-  - path: "Exams/24-a-solution.pdf"
+  - path: "materials/exams/24-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2024 moed A."
     problems: [exam-24a-q1, exam-24a-q2, exam-24a-q3]
-  - path: "Exams/24-b.pdf"
+  - path: "materials/exams/24-b.pdf"
     type: exam
     status: incorporated
     note: "2024 moed B. Virtual dispatch, threads, and a reactor with a database."
     problems: [exam-24b-q1, exam-24b-q2, exam-24b-q3]
-  - path: "Exams/24-b-solution.pdf"
+  - path: "materials/exams/24-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2024 moed B."
     problems: [exam-24b-q1, exam-24b-q2, exam-24b-q3]
-  - path: "Exams/24-c.pdf"
+  - path: "materials/exams/24-c.pdf"
     type: exam
     status: incorporated
     note: "2024 moed C. The rule of five, threads, and a reactor with a database."
     problems: [exam-24c-q1, exam-24c-q2, exam-24c-q3]
-  - path: "Exams/24-c-solution.pdf"
+  - path: "materials/exams/24-c-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2024 moed C."
     problems: [exam-24c-q1, exam-24c-q2, exam-24c-q3]
-  - path: "Exams/ppl252-a.pdf"
+  - path: "materials/exams/ppl252-a.pdf"
     type: exam
     status: intentionally_excluded
     note: "Principles of Programming Languages (202-1-2051), not Systems Programming. Syntax, type systems, functional programming, and logic programming."
-  - path: "Exams/ppl252-a-solution.pdf"
+  - path: "materials/exams/ppl252-a-solution.pdf"
     type: exam_solution
     status: intentionally_excluded
     note: "Solutions for the Principles of Programming Languages paper, course 202-1-2051."
-  - path: "Exams/ppl252-b.pdf"
+  - path: "materials/exams/ppl252-b.pdf"
     type: exam
     status: intentionally_excluded
     note: "Second Principles of Programming Languages paper (202-1-2051), not Systems Programming."
-  - path: "Exams/ppl252-b-solution.pdf"
+  - path: "materials/exams/ppl252-b-solution.pdf"
     type: exam_solution
     status: intentionally_excluded
     note: "Solutions for the second Principles of Programming Languages paper."
 
+  - path: "practice/PS01_IntroCpp.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS02_Memory.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS03_Classes.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS04_AdvancedOop.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS05_GenericsDbc.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS06_Threads.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS07_Synchronization.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS08_MoreConcurrency.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS09_Sockets.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS10_CppThreads.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS10_NioAndStomp.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS11_Reactor.java"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS12_SqlAndPython.py"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/PS13_Persistence.py"
+    type: other
+    status: intentionally_excluded
+    note: "Runnable practice file for a session deck. Not a course source."
+  - path: "practice/README.md"
+    type: other
+    status: intentionally_excluded
+    note: "How to compile and run the practice files."
+  - path: "practice/check.sh"
+    type: other
+    status: intentionally_excluded
+    note: "Compiles and runs every practice file."
+  - path: "practice/solutions/PS01_IntroCpp_solution.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS02_Memory_solution.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS03_Classes_solution.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS04_AdvancedOop_solution.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS05_GenericsDbc_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS06_Threads_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS07_Synchronization_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS08_MoreConcurrency_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS09_Sockets_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS10_CppThreads_solution.cpp"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS10_NioAndStomp_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS11_Reactor_solution.java"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS12_SqlAndPython_solution.py"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
+  - path: "practice/solutions/PS13_Persistence_solution.py"
+    type: other
+    status: intentionally_excluded
+    note: "Finished copy of a practice file. Not a course source."
 topics:
   - id: memory-model
     file: topics/memory-model.md
@@ -514,7 +636,7 @@ glossary:
 
 exams:
   - year: 2015
-    source: "Exams/15-a.pdf"
+    source: "materials/exams/15-a.pdf"
     pattern: "Threads, a stack-and-heap drawing of a vector, a UDP edit of the reactor, and a BigApple schema."
     questions:
       - id: exam-15a-q1
@@ -526,7 +648,7 @@ exams:
       - id: exam-15a-q4
         topic: persistence
   - year: 2015
-    source: "Exams/15-b.pdf"
+    source: "materials/exams/15-b.pdf"
     pattern: "Narrowed synchronization, the vector again, a length-prefix tokenizer, and number portability."
     questions:
       - id: exam-15b-q1
@@ -538,7 +660,7 @@ exams:
       - id: exam-15b-q4
         topic: persistence
   - year: 2016
-    source: "Exams/16-a.pdf"
+    source: "materials/exams/16-a.pdf"
     pattern: "A contract, virtual dispatch, a protocol change, and Abbey Road sessions."
     questions:
       - id: exam-16a-q1
@@ -550,7 +672,7 @@ exams:
       - id: exam-16a-q4
         topic: persistence
   - year: 2016
-    source: "Exams/16-b.pdf"
+    source: "materials/exams/16-b.pdf"
     pattern: "Threads, move and copy, a reactor edit, and a restricted set of roles."
     questions:
       - id: exam-16b-q1
@@ -562,7 +684,7 @@ exams:
       - id: exam-16b-q4
         topic: persistence
   - year: 2017
-    source: "Exams/17-a.pdf"
+    source: "materials/exams/17-a.pdf"
     pattern: "Threads, the rule of three, a reactor edit, and a glasses shop."
     questions:
       - id: exam-17a-q1
@@ -574,7 +696,7 @@ exams:
       - id: exam-17a-q4
         topic: persistence
   - year: 2017
-    source: "Exams/17-b.pdf"
+    source: "materials/exams/17-b.pdf"
     pattern: "Threads, the rule of three, a command protocol, and a garage."
     questions:
       - id: exam-17b-q1
@@ -586,7 +708,7 @@ exams:
       - id: exam-17b-q4
         topic: persistence
   - year: 2018
-    source: "Exams/18-a.pdf"
+    source: "materials/exams/18-a.pdf"
     pattern: "Virtual dispatch, a contract, a reactor edit, and a schema for reused exam questions."
     questions:
       - id: exam-18a-q1
@@ -598,7 +720,7 @@ exams:
       - id: exam-18a-q4
         topic: persistence
   - year: 2018
-    source: "Exams/18-b.pdf"
+    source: "materials/exams/18-b.pdf"
     pattern: "Virtual dispatch, threads, a reactor edit, and wiretap recordings."
     questions:
       - id: exam-18b-q1
@@ -610,7 +732,7 @@ exams:
       - id: exam-18b-q4
         topic: persistence
   - year: 2019
-    source: "Exams/19-a.pdf"
+    source: "materials/exams/19-a.pdf"
     pattern: "Virtual dispatch, a contract, a reactor edit, and Airbnb."
     questions:
       - id: exam-19a-q1
@@ -622,7 +744,7 @@ exams:
       - id: exam-19a-q4
         topic: persistence
   - year: 2019
-    source: "Exams/19-b.pdf"
+    source: "materials/exams/19-b.pdf"
     pattern: "Virtual dispatch, threads, a reactor edit, and a night that cannot be double-booked."
     questions:
       - id: exam-19b-q1
@@ -634,7 +756,7 @@ exams:
       - id: exam-19b-q4
         topic: persistence
   - year: 2020
-    source: "Exams/20-a.pdf"
+    source: "materials/exams/20-a.pdf"
     pattern: "A pointer repository, threads, a reactor edit, and a DVD catalog."
     questions:
       - id: exam-20a-q1
@@ -646,7 +768,7 @@ exams:
       - id: exam-20a-q4
         topic: persistence
   - year: 2020
-    source: "Exams/20-b.pdf"
+    source: "materials/exams/20-b.pdf"
     pattern: "Smart pointers, threads, a protocol, and an updating average score."
     questions:
       - id: exam-20b-q1
@@ -658,7 +780,7 @@ exams:
       - id: exam-20b-q4
         topic: persistence
   - year: 2024
-    source: "Exams/24-a.pdf"
+    source: "materials/exams/24-a.pdf"
     pattern: "The rule of five, a contract, and a reactor that also talks to a database."
     questions:
       - id: exam-24a-q1
@@ -668,7 +790,7 @@ exams:
       - id: exam-24a-q3
         topic: reactor
   - year: 2024
-    source: "Exams/24-b.pdf"
+    source: "materials/exams/24-b.pdf"
     pattern: "Virtual dispatch, threads, and a reactor that also talks to a database."
     questions:
       - id: exam-24b-q1
@@ -678,7 +800,7 @@ exams:
       - id: exam-24b-q3
         topic: reactor
   - year: 2024
-    source: "Exams/24-c.pdf"
+    source: "materials/exams/24-c.pdf"
     pattern: "The rule of five, threads, and a reactor that also talks to a database."
     questions:
       - id: exam-24c-q1

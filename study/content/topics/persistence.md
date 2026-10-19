@@ -2,34 +2,34 @@
 id: persistence
 title: אחסון ו-SQL
 sources:
-  - "Classes/Chapter 13 - Persistance.pptx"
-  - "Notes/lecture-notes.docx.pdf"
-  - "Exrecises/SPL_PS12.pptx"
-  - "Exrecises/SPL_PS13_PRES.pptx"
-  - "Exams/15-a.pdf"
-  - "Exams/15-a-solution.pdf"
-  - "Exams/15-b.pdf"
-  - "Exams/15-b-solution.pdf"
-  - "Exams/16-a.pdf"
-  - "Exams/16-a-solution.pdf"
-  - "Exams/16-b.pdf"
-  - "Exams/16-b-solution.pdf"
-  - "Exams/17-a.pdf"
-  - "Exams/17-a-solution.pdf"
-  - "Exams/17-b.pdf"
-  - "Exams/17-b-solution.pdf"
-  - "Exams/18-a.pdf"
-  - "Exams/18-a-solution.pdf"
-  - "Exams/18-b.pdf"
-  - "Exams/18-b-solution.pdf"
-  - "Exams/19-a.pdf"
-  - "Exams/19-a-solution.pdf"
-  - "Exams/19-b.pdf"
-  - "Exams/19-b-solution.pdf"
-  - "Exams/20-a.pdf"
-  - "Exams/20-a-solution.pdf"
-  - "Exams/20-b.pdf"
-  - "Exams/20-b-solution.pdf"
+  - "materials/lectures/Chapter 13 - Persistance.pptx"
+  - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/sessions/SPL_PS12.pptx"
+  - "materials/sessions/SPL_PS13_PRES.pptx"
+  - "materials/exams/15-a.pdf"
+  - "materials/exams/15-a-solution.pdf"
+  - "materials/exams/15-b.pdf"
+  - "materials/exams/15-b-solution.pdf"
+  - "materials/exams/16-a.pdf"
+  - "materials/exams/16-a-solution.pdf"
+  - "materials/exams/16-b.pdf"
+  - "materials/exams/16-b-solution.pdf"
+  - "materials/exams/17-a.pdf"
+  - "materials/exams/17-a-solution.pdf"
+  - "materials/exams/17-b.pdf"
+  - "materials/exams/17-b-solution.pdf"
+  - "materials/exams/18-a.pdf"
+  - "materials/exams/18-a-solution.pdf"
+  - "materials/exams/18-b.pdf"
+  - "materials/exams/18-b-solution.pdf"
+  - "materials/exams/19-a.pdf"
+  - "materials/exams/19-a-solution.pdf"
+  - "materials/exams/19-b.pdf"
+  - "materials/exams/19-b-solution.pdf"
+  - "materials/exams/20-a.pdf"
+  - "materials/exams/20-a-solution.pdf"
+  - "materials/exams/20-b.pdf"
+  - "materials/exams/20-b-solution.pdf"
 ---
 
 RAM שוכח. הוא צריך חשמל, הוא נמחק באתחול, הוא מת עם התהליך (process), והוא המאגר היקר והקטן יותר. דיסק שומר בתים עד שמישהו מוחק אותם, והוא גדול. סיריאליזציה (serialization) יכולה לשים אובייקט על הדיסק הזה. פרק 13 מונה למה זה עדיין אינו בסיס נתונים: חיפוש עושה דה-סיריאליזציה (deserialization) לאובייקטים שלמים, אין אינדקס, עדכון כותב את הקובץ מחדש, מקביליות היא מנעול שאתם ממציאים, ואין טרנזקציות.
@@ -38,7 +38,7 @@ DBMS הוא סביבת הריצה של הנתונים האלה. ההרצאה נ�
 
 ## המודל הרילציוני
 
-:::definition id=def-relational title="בסיס נתונים רילציוני" source="Classes/Chapter 13 - Persistance.pptx"
+:::definition id=def-relational title="בסיס נתונים רילציוני" source="materials/lectures/Chapter 13 - Persistance.pptx"
 בסיס נתונים רילציוני (Relational Database) שומר רשומות בטבלאות (table). לשדה (field) יש שם וטיפוס. מפתח ראשי (primary key) מזהה רשומה אחת. מפתח זר (foreign key) הוא הפניה למפתח בטבלה אחרת, והוא צריך להיות ייחודי ביעד, בדרך כלל המפתח הראשי של אותה טבלה. בשקפים, מצביע או הפניה הם מפתח זר. שדה יכול להיות `NOT NULL` או `UNIQUE`.
 
 כלל העיצוב בשקפים: מחלקה הופכת לטבלה, הפניה הופכת למפתח זר, ורשימה הופכת לטבלה נוספת. הזוג `(student id, course id)` בטבלה הנוספת הזו הוא המפתח הראשי של הקישור, וכל אחד משני השדות האלה הוא מפתח זר.
@@ -142,7 +142,7 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 
 מפגש 13 שם תוכנית Python לפני הטבלאות האלה. DTO הוא רשומה אחת כאובייקט (`Student` עבור הטבלה `students`). DAO הוא האובייקט שעושה `insert` ו-`find` ל-DTO הזה, בדרך כלל טבלה אחת, לעתים קרובות singleton. repository מחזיק כמה DAO ואת המתודות שמחברות טבלאות, כולל `create_tables`. ORM הוא הגרסה הגנרית: `row_map` בונה DTO מרשומה לפי סדר השדות, ומחלקת DAO אחת משרתת כל טבלה. דוגמת בודק המטלות שומרת `students`, `assignments`, ו-`grades`, מריצה קובץ שהוגש, וכותבת רשומת ציון. Bob נכשל כי הפונקציה שלו מחזירה `"main"` והפלט הצפוי הוא `"Main"`.
 
-:::problem id=worked-inner-join title="מה inner join מחזיר" source="Classes/Chapter 13 - Persistance.pptx" kind=worked solution_origin=source
+:::problem id=worked-inner-join title="מה inner join מחזיר" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=worked solution_origin=source
 Alice רשומה ל-`prog`. Bob אינו רשום לכלום. `prog` ו-`systems` שניהם קיימים. מה השאילתה הזו מחזירה, ומה left join מוסיף?
 
 ```sql
@@ -179,7 +179,7 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 
 ## תרגול
 
-:::problem id=ps12-foreign-key title="מפתח זר של מתרגל" source="Exrecises/SPL_PS12.pptx" kind=exercise solution_origin=source
+:::problem id=ps12-foreign-key title="מפתח זר של מתרגל" source="materials/sessions/SPL_PS12.pptx" kind=exercise solution_origin=source
 ב-`PRACTICAL_SESSIONS` של מפגש 12 יש שדות `TA_ID`, `GroupNum`, `Location`, `Time`. ב-`TEACHING_ASSISTANTS` יש `ID`, `Name`, `OfficeHours`. כתבו את שני משפטי ה-`CREATE TABLE`. `GroupNum` הוא המפתח הראשי של מפגש תרגול. `ID` הוא המפתח הראשי של מתרגל. `TA_ID` של מפגש תרגול מפנה למתרגל.
 
 :::hint
@@ -210,7 +210,7 @@ CREATE TABLE PRACTICAL_SESSIONS (
 :::
 :::
 
-:::problem id=ps12-join title="join של מפגש ומתרגל" source="Exrecises/SPL_PS12.pptx" kind=exercise solution_origin=source
+:::problem id=ps12-join title="join של מפגש ומתרגל" source="materials/sessions/SPL_PS12.pptx" kind=exercise solution_origin=source
 אלה שתי הטבלאות. כתבו שאילתה שמחזירה `Time`, `Location`, `GroupNum`, ואת `Name` של המתרגל, לכל מפגש תרגול שיש לו מתרגל. אחר כך אמרו מה left join ממתרגלים מוסיף שהשאילתה הזו מסתירה. בדוגמה, Shaked על שתי קבוצות ו-Matan על אף אחת.
 
 ```sql
@@ -247,7 +247,7 @@ Shaked מופיע פעמיים, פעם לכל קבוצה. Matan אינו מופ�
 :::
 :::
 
-:::problem id=ps13-dto-dao title="DTO מול DAO" source="Exrecises/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
+:::problem id=ps13-dto-dao title="DTO מול DAO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
 לבודק של מפגש 13 יש טבלאות `students(id, name)`, `assignments(num, expected_output)`, ו-`grades(student_id, assignment_num, grade)`. נקבו ב-DTO, ב-DAO, ובמתודת ה-repository שמחזירה ציון יחד עם שם הסטודנט. אמרו למה המתודה האחרונה אינה על ה-DAO של הציונים.
 
 :::hint
@@ -266,7 +266,7 @@ join חוצה טבלאות, ולכן הוא חי על ה-repository.
 :::
 :::
 
-:::problem id=ps13-orm-find title="מיפוי עמודות ל-DTO" source="Exrecises/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
+:::problem id=ps13-orm-find title="מיפוי עמודות ל-DTO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
 המפגש מחליף `find` שנכתב ביד ב-`row_map(row, col_mapping, dto_type)`, שבונה ארגומנטים לבנאי לפי אינדקס שדה וקורא לבנאי של ה-DTO. `Assignment.find` היה `return Assignment(*c.fetchone())`. מה `col_mapping` חייב להכיל כדי שה-`find` הגנרי עדיין יבנה `Assignment(num, expected_output)`?
 
 :::hint
@@ -288,7 +288,7 @@ join חוצה טבלאות, ולכן הוא חי על ה-repository.
 השאלה מתארת עסק קטן במשפטים ומבקשת טבלאות, מפתחות, ו-`SELECT` אחד. המלכודת היא רשימה שנדחסה לשדה אחד, או join שמכפיל רשומות כי טבלת הקישור הושמטה.
 :::
 
-:::problem id=exam-15a-q4 title="סכמת BigApple" source="Exams/15-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-15a-q4 title="סכמת BigApple" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
 BigApple שומר לקוח (שם, טלפון, תאריך הצטרפות, וקישורים ללקוחות אחרים שהם משפחה) וכל פעולה על החשבון (תאריך וסוג: הודעה שנשלחה, שיחה יוצאת, שיחה שלא נענתה, הודעה שהתקבלה, עם מספר הטלפון האחר).
 
 א. הגדירו את הטבלאות.
@@ -333,7 +333,7 @@ WHERE c.name = 'Ringo Starr';
 :::
 :::
 
-:::problem id=exam-15b-q4 title="ניידות מספר" source="Exams/15-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-15b-q4 title="ניידות מספר" source="materials/exams/15-b.pdf" kind=exam solution_origin=derived
 הרחיבו את BigApple עם סוג קשר המשפחה (הורה, אח, ילד), טבלה של מפעילות מתחרות, והיסטוריה של ניידות מספר: התאריך שבו הלקוח עזב, והמפעילה שאליה עזב.
 
 א. הטבלאות הנוספות.
@@ -362,7 +362,7 @@ ORDER BY p.left_on;
 :::
 :::
 
-:::problem id=exam-16a-q4 title="מפגשי Abbey Road" source="Exams/16-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16a-q4 title="מפגשי Abbey Road" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 Abbey Road שומר מפגשי הקלטה. למפגש יש תאריך, שיר, להקה, והרבה טייקים. בטייק יש אנשים בתפקידים: נגנים (אדם רשאי לנגן כמה כלים בטייק אחד), זמרים, וטכנאים.
 
 א. טבלאות.
@@ -413,7 +413,7 @@ ORDER BY s.on_date;
 :::
 :::
 
-:::problem id=exam-16b-q4 title="תפקידים קבועים" source="Exams/16-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16b-q4 title="תפקידים קבועים" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
 סכמת Abbey Road: למפגש הקלטה יש תאריך, שיר, להקה, והרבה טייקים. בטייק יש אנשים בתפקידים (נגן, זמר, טכנאי), והתפקיד שמור כטקסט.
 
 א. הראו איך Kim Philby יכול להופיע כמשתתף בתפקיד סוכן כפול.
@@ -435,7 +435,7 @@ ORDER BY s.on_date;
 :::
 :::
 
-:::problem id=exam-17a-q4 title="חנות משקפיים" source="Exams/17-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17a-q4 title="חנות משקפיים" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
 חנות משקפיים מקוונת. מחסנים דגם (מספר דגם, מחיר). רושמים לקוח (שם, מזהה). רכישה רושמת את מזהה הלקוח ואת הדגם, והחנות מנפיקה קבלה עם מספר ייחודי ופרטי הרכישה. לקוח יכול לשאול את המחיר של דגם. הבעלים יכול לרשום כל קבלה.
 
 תנו את הטבלאות ואת שתי השאילתות: מחיר של דגם, וכל הקבלות.
@@ -472,7 +472,7 @@ SELECT * FROM Receipts;
 :::
 :::
 
-:::problem id=exam-17b-q4 title="עבודות מוסך" source="Exams/17-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17b-q4 title="עבודות מוסך" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
 מוסך. לעבודה יש מספר רכב, תיאור תקלה, ומזהה עבודה. לעובד יש שם ומזהה. שיוך עובד לעבודה רושם את העובד, את העבודה, ושהיא לא הסתיימה. סיום עבודה מסמן אותה כגמורה.
 
 טבלאות, ובנוסף השאילתה לעבודות שלא הסתיימו של עובד.
@@ -513,7 +513,7 @@ WHERE a.worker_id = ? AND a.finished = 0;
 :::
 :::
 
-:::problem id=exam-18a-q4 title="שאלת מבחן חוזרת" source="Exams/18-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18a-q4 title="שאלת מבחן חוזרת" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
 בנק שאלות שומר את הטקסט של כל שאלה, ורשומה של כל שנה שבה היא ניתנה, באחד משני המושבים של אותה שנה. שאלה רשאית לחזור בשנה מאוחרת ואסור להשתמש בה פעמיים באותה שנה. בחרו את הסכמה שאוכפת את זה, ואמרו איזה מפתח עושה את העבודה.
 
 :::hint
@@ -543,7 +543,7 @@ CREATE TABLE asked (
 :::
 :::
 
-:::problem id=exam-18b-q4 title="האזנות משטרה" source="Exams/18-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18b-q4 title="האזנות משטרה" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
 האזנות משטרה. הקלטה שומרת את הטקסט, את מספר המתקשר, את מספר היעד, ואת התאריך. לכל מספר טלפון יש שם בעלים וכתובת.
 
 השאלה מתחילה:
@@ -585,7 +585,7 @@ WHERE r.from_num = ? OR r.to_num = ?;
 :::
 :::
 
-:::problem id=exam-19a-q4 title="סכמת Airbnb" source="Exams/19-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19a-q4 title="סכמת Airbnb" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
 Airbnb. למשתמש יש מזהה והוא רשאי להיות אורח, מארח (host), או שניהם. לנכס יש מזהה, מארח אחד, מחיר ללילה, ותיאור. להשכרה יש אורח, נכס (ולכן את המארח של הנכס הזה), צ'ק-אין, וצ'ק-אאוט. אחרי הצ'ק-אאוט המארח כותב המלצה על האורח והאורח כותב אחת על המארח.
 
 שלושה חלקים בשאלה מבקשים להשלים את הסכמה ושאילתה אחת. תנו את הטבלאות.
@@ -628,7 +628,7 @@ CREATE TABLE recommendations (
 :::
 :::
 
-:::problem id=exam-19b-q4 title="לילה אחד לנכס" source="Exams/19-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19b-q4 title="לילה אחד לנכס" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
 למשתמש יש מזהה והוא רשאי להיות אורח, מארח, או שניהם. לנכס יש מזהה, מארח אחד, מחיר ללילה, ותיאור. להשכרה יש אורח, נכס, צ'ק-אין, וצ'ק-אאוט. בנוסף: שני אורחים אינם יכולים לחלוק נכס באותו לילה. אכפו את זה בסכמה, לא בהערה.
 
 :::hint
@@ -656,7 +656,7 @@ CREATE TABLE nights (
 :::
 :::
 
-:::problem id=exam-20a-q4 title="סכמת DVD" source="Exams/20-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20a-q4 title="סכמת DVD" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 שירות DVD. למשתמשים יש מזהה ושם. לסרטים יש מזהה, שם, תיאור, כל מספר קטגוריות מתוך {Action, Drama, Romance, kids}, ממוצע `score`, ו-`num_scorers`. צפייה רושמת את המשתמש, את הסרט, ואת התאריך.
 
 טבלאות, ושאילתה לסרטים שמשתמש צפה בהם, עם הקטגוריות שלהם.
@@ -702,7 +702,7 @@ WHERE w.user_id = ?;
 :::
 :::
 
-:::problem id=exam-20b-q4 title="ממוצע ציונים" source="Exams/20-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20b-q4 title="ממוצע ציונים" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 למשתמשים יש מזהה ושם. לסרטים יש מזהה, שם, תיאור, כל מספר קטגוריות מתוך {Action, Drama, Romance, kids}, ממוצע `score`, ו-`num_scorers`. צפייה רושמת את המשתמש, את הסרט, ואת התאריך. כתבו את השאילתה שמעדכנת את הממוצע של סרט כשמשתמש מגיש ציון חדש `s`, באמצעות `score` ו-`num_scorers` השמורים, ואת השאילתה שמפרטת סרטים בקטגוריה ממוינים לפי ציון.
 
 :::hint

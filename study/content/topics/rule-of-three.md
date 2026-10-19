@@ -2,19 +2,19 @@
 id: rule-of-three
 title: חוק השלושה
 sources:
-  - "Classes/Chapter 4 - Rule of Thee.pptx"
-  - "Exrecises/SPL_PS3.pptx"
-  - "Exams/17-a.pdf"
-  - "Exams/17-a-solution.pdf"
-  - "Exams/17-b.pdf"
-  - "Exams/17-b-solution.pdf"
+  - "materials/lectures/Chapter 4 - Rule of Thee.pptx"
+  - "materials/sessions/SPL_PS3.pptx"
+  - "materials/exams/17-a.pdf"
+  - "materials/exams/17-a-solution.pdf"
+  - "materials/exams/17-b.pdf"
+  - "materials/exams/17-b-solution.pdf"
 ---
 
 אם מחלקה (class) מחזיקה משאב, העתקה איבר-איבר (memberwise copy) היא שקר. ה-`Image` של ההרצאה מחזיק `char* _bytes` שהוקצה בבנאי (constructor). העתקת האובייקט (object) מעתיקה את המצביע (pointer). שני האובייקטים מאמינים אז שהם הבעלים של חוצץ אחד, והדיסטרקטור (destructor) הראשון משחרר אותו מתחת לשני.
 
 ## שלוש הפעולות
 
-:::definition id=def-rule-of-three title="חוק השלושה (rule of three)" source="Classes/Chapter 4 - Rule of Thee.pptx"
+:::definition id=def-rule-of-three title="חוק השלושה (rule of three)" source="materials/lectures/Chapter 4 - Rule of Thee.pptx"
 אם מחלקה צריכה דיסטרקטור שכתב המתכנת, בנאי העתקה (copy constructor) שכתב המתכנת, או אופרטור השמה (assignment operator) שכתב המתכנת, היא כמעט תמיד צריכה את שלושתם.
 
 - הדיסטרקטור משחרר את המשאב.
@@ -90,7 +90,7 @@ Image& Image::operator=(const Image& other) {
 | השמה עצמית | לא יכולה לקרות | חייבת להיות לא מזיקה |
 | משחרר חוצץ ישן | לא | כן |
 
-:::problem id=worked-copy-and-swap title="השמה בהעתקה והחלפה" source="Classes/Chapter 4 - Rule of Thee.pptx" kind=worked solution_origin=source
+:::problem id=worked-copy-and-swap title="השמה בהעתקה והחלפה" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=worked solution_origin=source
 `avi` מחזיק את החוצץ A. `benni` מחזיק את החוצץ B. עקבו אחרי `avi = benni` ואמרו איזה חוצץ משוחרר.
 
 ```cpp
@@ -132,7 +132,7 @@ b = a;
 
 ## תרגול
 
-:::problem id=ps3-rule-of-three title="שלוש הפונקציות של List" source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
+:::problem id=ps3-rule-of-three title="שלוש הפונקציות של List" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
 אם מחלקה צריכה דיסטרקטור, בנאי העתקה, או אופרטור השמה שמוגדרים על ידי המשתמש, היא כמעט תמיד צריכה את שלושתם. `List` מחזיק `Node* head` שהוקצה עם `new`, והפונקציות המיוחדות שהמהדר מייצר עדיין במקום. מה נשבר, ואילו שלוש פונקציות כותבים?
 
 ```cpp
@@ -164,7 +164,7 @@ class List {
 השאלה נותנת מחלקה קטנה עם מצביע גולמי או מערך גולמי ומבקשת את הדיסטרקטור ובנאי העתקה עמוק, לפעמים את שני הבנאים של לוח דו-ממדי. המלכודת היא העתקת ברירת המחדל איבר-איבר, או השמה שמשחררת את החוצץ לפני שיש לה חוצץ חדש.
 :::
 
-:::problem id=exam-17a-q2 title="בעלות על תיאור" source="Exams/17-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17a-q2 title="בעלות על תיאור" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
 סטודנטים ב-«C-Kalkel» שומרים תוצאות מבחנים ב-C++. `TestRes` מחזיק `char* description_`. `Test` מנהל אוסף של התוצאות האלה. השאלה מבקשת להפוך את המחלקות לנכונות תחת העתקה והשמדה: חוצץ התיאור בבעלות התוצאה, ומבחן שהועתק לא יכול לחלוק את החוצץ הזה. ממשו את הפונקציות המיוחדות שהבעלות דורשת. אל תדליפו את התיאור הקודם בהשמה.
 
 :::hint
@@ -200,7 +200,7 @@ public:
 :::
 :::
 
-:::problem id=exam-17b-q2 title="העתקה עמוקה של לוח" source="Exams/17-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17b-q2 title="העתקה עמוקה של לוח" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
 `Terrain<T>` שומר לוח כבלוק `T*` של `height_ * width_` תאים. ממשו את שני הבנאים ואת הדיסטרקטור. בנאי ההעתקה חייב להיות העתקה עמוקה.
 
 ```cpp

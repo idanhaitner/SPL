@@ -2,9 +2,9 @@
 id: classes-and-objects
 title: מחלקות ועצמים
 sources:
-  - "Classes/Chapter 3 - Classes and Objects.pptx"
-  - "Exrecises/SPL_PS1 (1).pptx"
-  - "Exrecises/SPL_PS3.pptx"
+  - "materials/lectures/Chapter 3 - Classes and Objects.pptx"
+  - "materials/sessions/SPL_PS1 (1).pptx"
+  - "materials/sessions/SPL_PS3.pptx"
 ---
 
 מחלקה (class) ב-C++ היא פריסה ועוד פונקציות שמקבלות מצביע (pointer) סמוי אל הפריסה הזו. התרגולים מתחילים צעד אחד קודם, כי מחלקה לא שווה כלום עד שהקומפיילר (compiler) ושלב הקישור (link) הפכו שני קבצים לתוכנית אחת. הנושא הזה הוא המסלול הזה: איך תוכנית נבנית, איך אובייקט (object) נבנה, ואיך קריאה רואה את האובייקט.
@@ -24,7 +24,7 @@ sources:
 
 לבנייה יש ארבעה שלבים, מתרגול 1.
 
-:::definition id=def-build title="קומפילציה (compilation) וקישור" source="Exrecises/SPL_PS1 (1).pptx"
+:::definition id=def-build title="קומפילציה (compilation) וקישור" source="materials/sessions/SPL_PS1 (1).pptx"
 הקדם-מעבד (preprocessor) לוקח קובץ `.cpp`, מסיר הערות, ומציית להנחיות `#` (`#include`, `#ifndef`, `#define`). הקומפיילר הופך את זה לאסמבלי. האסמבלר (assembler) מייצר קובץ אובייקט (object file, `.o`). המקשר פותר קריאות לקובצי אובייקט אחרים, מוצא את `main`, וכותב קובץ הרצה אחד.
 :::
 
@@ -32,7 +32,7 @@ Java עוברת קומפילציה ל-bytecode ומקשרת כשהתוכנית �
 
 ![ארבעה שלבי בנייה לפי הסדר: קדם-מעבד, קומפיילר, אסמבלר, ואז המקשר שמייצר קובץ הרצה אחד](../assets/figures/build-pipeline.svg)
 
-:::problem id=worked-compile-vs-link title="קישור בלי main" source="Exrecises/SPL_PS1 (1).pptx" kind=worked solution_origin=source
+:::problem id=worked-compile-vs-link title="קישור בלי main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
 הפקודה הראשונה מצליחה. השנייה נכשלת כי `main` לא מוגדר. איזה שלב נכשל, ולמה `-c` לא תפס את זה?
 
 ```text
@@ -58,7 +58,7 @@ hello: helloWorld.o run.o
 
 ## אובייקט הוא ערך
 
-:::definition id=def-class title="פריסת מחלקה" source="Classes/Chapter 3 - Classes and Objects.pptx"
+:::definition id=def-class title="פריסת מחלקה" source="materials/lectures/Chapter 3 - Classes and Objects.pptx"
 מחלקה היא סדרה של איברים עם בקרת גישה. הגישה שברירת המחדל ב-`class` היא `private`. `struct` הוא אותה פריסה עם ברירת מחדל `public`. ההגדרה נגמרת בנקודה-פסיק, כי הדקדוק מרשה להצהיר על אובייקטים באותו משפט:
 
 ```cpp
@@ -141,7 +141,7 @@ Image& myPicture() {
 `pb` הוא מצביע. החץ ניגש לאובייקט ואז בוחר את האיבר. `(*pb).print()` היא אותה קריאה כתובה במפורש.
 :::
 
-:::problem id=worked-initializer title="רשימת אתחול" source="Classes/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
+:::problem id=worked-initializer title="רשימת אתחול" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
 למה `Point` צריך `: x(x), y(y)`, ולמה `Line` קורא לפונקציה `static` כדי לאתחל את `len`?
 
 ```cpp
@@ -176,7 +176,7 @@ struct Line {
 
 ## תרגול
 
-:::problem id=ps1-link-vs-java title="איפה הקישור קורה" source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
+:::problem id=ps1-link-vs-java title="איפה הקישור קורה" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
 ציינו, עבור Java ועבור C++, מתי קריאות שלא נפתרו נקשרות להגדרות שלהן, ואיזה קובץ `g++ -c` מייצר.
 
 :::hint
@@ -195,7 +195,7 @@ Java עוברת קומפילציה ל-bytecode ומקשרת בזמן ריצה, �
 :::
 :::
 
-:::problem id=ps1-makefile-first-target title="המטרה הראשונה של make" source="Exrecises/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
+:::problem id=ps1-makefile-first-target title="המטרה הראשונה של make" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
 זה הקובץ. מקלידים `make` בתיקייה הזו. מה רץ, ומה הייתם מקלידים כדי לבנות את `hello`?
 
 ```makefile
@@ -220,7 +220,7 @@ hello: helloWorld.o run.o
 :::
 :::
 
-:::problem id=ps3-pass-by-value title="שלוש חתימות של emphasize" source="Exrecises/SPL_PS3.pptx" kind=exercise solution_origin=source
+:::problem id=ps3-pass-by-value title="שלוש חתימות של emphasize" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
 `emphasize` צריך לשרשר שלושה סימני קריאה למחרוזת של הקורא. אילו מהחתימות משנות את המחרוזת של הקורא, ואיזו אפשר לתת לה null?
 
 ```cpp

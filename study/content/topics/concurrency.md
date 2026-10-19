@@ -2,33 +2,33 @@
 id: concurrency
 title: מקביליות
 sources:
-  - "Classes/Chapter 8 - Concurrency.pptx"
-  - "Notes/lecture-notes.docx.pdf"
-  - "Exrecises/PS6-2026-1.pptx"
-  - "Exrecises/SPL_PS7.pptx"
-  - "Exrecises/SPL_PS8.pptx"
-  - "Exams/15-a.pdf"
-  - "Exams/15-a-solution.pdf"
-  - "Exams/15-b.pdf"
-  - "Exams/15-b-solution.pdf"
-  - "Exams/16-b.pdf"
-  - "Exams/16-b-solution.pdf"
-  - "Exams/17-a.pdf"
-  - "Exams/17-a-solution.pdf"
-  - "Exams/17-b.pdf"
-  - "Exams/17-b-solution.pdf"
-  - "Exams/18-b.pdf"
-  - "Exams/18-b-solution.pdf"
-  - "Exams/19-b.pdf"
-  - "Exams/19-b-solution.pdf"
-  - "Exams/20-a.pdf"
-  - "Exams/20-a-solution.pdf"
-  - "Exams/20-b.pdf"
-  - "Exams/20-b-solution.pdf"
-  - "Exams/24-b.pdf"
-  - "Exams/24-b-solution.pdf"
-  - "Exams/24-c.pdf"
-  - "Exams/24-c-solution.pdf"
+  - "materials/lectures/Chapter 8 - Concurrency.pptx"
+  - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/sessions/PS6-2026-1.pptx"
+  - "materials/sessions/SPL_PS7.pptx"
+  - "materials/sessions/SPL_PS8.pptx"
+  - "materials/exams/15-a.pdf"
+  - "materials/exams/15-a-solution.pdf"
+  - "materials/exams/15-b.pdf"
+  - "materials/exams/15-b-solution.pdf"
+  - "materials/exams/16-b.pdf"
+  - "materials/exams/16-b-solution.pdf"
+  - "materials/exams/17-a.pdf"
+  - "materials/exams/17-a-solution.pdf"
+  - "materials/exams/17-b.pdf"
+  - "materials/exams/17-b-solution.pdf"
+  - "materials/exams/18-b.pdf"
+  - "materials/exams/18-b-solution.pdf"
+  - "materials/exams/19-b.pdf"
+  - "materials/exams/19-b-solution.pdf"
+  - "materials/exams/20-a.pdf"
+  - "materials/exams/20-a-solution.pdf"
+  - "materials/exams/20-b.pdf"
+  - "materials/exams/20-b-solution.pdf"
+  - "materials/exams/24-b.pdf"
+  - "materials/exams/24-b-solution.pdf"
+  - "materials/exams/24-c.pdf"
+  - "materials/exams/24-c-solution.pdf"
 ---
 
 מקביליות (concurrency) מתחילה כשמהירות השעון הפסיקה להיות הדרך להאיץ מחשב. השיפור הזול הוא יותר מעבדים. מכונה טיפוסית כבר מריצה עשרות או מאות תהליכים (process) בבת אחת. בתוך תהליך אחד, אותו רעיון הוא חוט-ביצוע (thread): מחסנית (stack) נוספת, אותה ערימה (heap).
@@ -41,7 +41,7 @@ sources:
 
 ## חוט הוא מחסנית ועוד מטלה
 
-:::definition id=def-thread title="חוט-ביצוע" source="Classes/Chapter 8 - Concurrency.pptx"
+:::definition id=def-thread title="חוט-ביצוע" source="materials/lectures/Chapter 8 - Concurrency.pptx"
 חוט-ביצוע הוא ביצוע עצמאי בתוך תהליך. לכל חוט יש מחסנית פרטית. התהליך מתחיל עם חוט אחד ויכול ליצור עוד. על כמה ליבות החוטים רצים באותו זמן. על ליבה אחת הם מתחלפים. הם חולקים את הערימה.
 :::
 
@@ -75,7 +75,7 @@ public void increment() { count++; }
 
 ![שני חוטים קוראים שניהם 0, מחברים שניהם 1, וכותבים שניהם 1, ולכן תוספת אחת אובדת](../assets/figures/race-interleaving.svg)
 
-:::definition id=def-critical-section title="אזור קריטי (critical section)" source="Classes/Chapter 8 - Concurrency.pptx"
+:::definition id=def-critical-section title="אזור קריטי (critical section)" source="materials/lectures/Chapter 8 - Concurrency.pptx"
 אזור קריטי הוא קוד שלכל היותר חוט אחד רשאי לבצע בזמן נתון. המניעה ההדדית שמאכפת אותו היא מנעול מניעה הדדית (mutex). ב-Java, `synchronized` הוא המנעול הזה. מתודה שהיא `synchronized` נועלת את `this`. בלוק `synchronized` נועל את האובייקט שנוקבים בשמו.
 
 ```java
@@ -122,7 +122,7 @@ public synchronized void put(int v) throws InterruptedException {
 
 תוכנית חיה כשחוטים ממשיכים להתקדם. שלושה כישלונות, עם אותן הגדרות בהרצאה ובתרגולים 7 ו-8:
 
-:::definition id=def-liveness title="נעילה הדדית (deadlock, חבק), חסימת livelock, הרעבה (starvation)" source="Classes/Chapter 8 - Concurrency.pptx"
+:::definition id=def-liveness title="נעילה הדדית (deadlock, חבק), חסימת livelock, הרעבה (starvation)" source="materials/lectures/Chapter 8 - Concurrency.pptx"
 נעילה הדדית: חוטים חסומים, כל אחד מחכה למנעול שחוט אחר מהם מחזיק. המנעולים `red`/`blue` של ההרצאה, ו-`Image.mix` שנועל את `this` ואז את `other`, הם התמונות. תיקון אחד הוא סדר גלובלי: כל חוט נועל קודם את הכתובת הנמוכה.
 
 חסימת livelock: החוטים אינם חסומים, אבל כל אחד מבלה את זמנו בתגובה לאחר, ולכן שום עבודה אינה נגמרת. התפיסה המנומסת נועלת את מנעול המניעה ההדדית הראשון, רואה שהשני תפוס, משחררת את הראשון, ומנסה שוב לנצח.
@@ -134,7 +134,7 @@ public synchronized void put(int v) throws InterruptedException {
 
 השקפים של הסינגלטון (singleton) הם מרוץ על פרסום. בדיקת null ואז `new` נותנים לשני חוטים לבנות שני מופעים. סנכרון של כל `getInstance` נכון, ומסדר בטור כל קריאה מאוחרת. נעילה בבדיקה כפולה (double-checked locking) בלי `volatile` נשברת בגלל סידור מחדש: חוט אחר יכול לראות את הרפרנס לפני הכתיבות של הבנאי. הצורה העצלה הבטוחה של התרגול היא מחלקת המחזיק (holder class). ה-JVM מאתחל את המחלקה הזאת, ואת השדה הסטטי שלה, פעם אחת, בשימוש הראשון.
 
-:::algorithm id=alg-synchronized-increment title="הפיכת קריאה-שינוי-כתיבה לאטומית" source="Classes/Chapter 8 - Concurrency.pptx" complexity="עבודה של O(1), אבל חוט עלול לחכות למוניטור זמן לא חסום" invariant="לכל היותר חוט אחד נמצא בבלוק ה-synchronized על המוניטור הזה."
+:::algorithm id=alg-synchronized-increment title="הפיכת קריאה-שינוי-כתיבה לאטומית" source="materials/lectures/Chapter 8 - Concurrency.pptx" complexity="עבודה של O(1), אבל חוט עלול לחכות למוניטור זמן לא חסום" invariant="לכל היותר חוט אחד נמצא בבלוק ה-synchronized על המוניטור הזה."
 ```java
 public final class Counter {
     private int count = 0;
@@ -146,7 +146,7 @@ public final class Counter {
 
 התנאי הפנימי (invariant) נכון בכל פעם שחוט נכנס לבלוק או יוצא ממנו, והוא נכון גם לחוטים שבחוץ: הם אינם בתוך הבלוק. הוא אינו אומר דבר על מתודה שנייה שנוגעת ב-`count` בלי נעילה.
 
-:::problem id=worked-counter-race title="שזירה שמפסידה עדכון" source="Exrecises/PS6-2026-1.pptx" kind=worked solution_origin=source
+:::problem id=worked-counter-race title="שזירה שמפסידה עדכון" source="materials/sessions/PS6-2026-1.pptx" kind=worked solution_origin=source
 שני חוטים קוראים כל אחד ל-`increment` פעם אחת. המונה מתחיל ב-0. תן שזירה (interleaving) שהתוצאה שלה היא 1.
 
 ```java
@@ -250,7 +250,7 @@ final class VersionedIterator<T> implements Iterator<T> {
 
 ## תרגול
 
-:::problem id=ps6-counter-race title="מונה בלי מנעול" source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=source
+:::problem id=ps6-counter-race title="מונה בלי מנעול" source="materials/sessions/PS6-2026-1.pptx" kind=exercise solution_origin=source
 שני חוטים קוראים ל-`cnt.increment()` על המחלקה הזו. מה יכול לקרות, ומה שלושת צעדי המכונה של הגוף?
 
 ```java
@@ -276,7 +276,7 @@ public class Counter {
 :::
 :::
 
-:::problem id=ps6-average-safe title="ממוצע מקבילי" source="Exrecises/PS6-2026-1.pptx" kind=exercise solution_origin=derived
+:::problem id=ps6-average-safe title="ממוצע מקבילי" source="materials/sessions/PS6-2026-1.pptx" kind=exercise solution_origin=derived
 כל עובד סוכם פרוסה לתוך `total` משותף, ואז החוט הראשי קורא ל-`join` ומחלק באורך. האם זה נכון?
 
 ```java
@@ -302,7 +302,7 @@ return total / data.length;
 :::
 :::
 
-:::problem id=ps7-wait-vs-spin title="שלוש דרכי המתנה" source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
+:::problem id=ps7-wait-vs-spin title="שלוש דרכי המתנה" source="materials/sessions/SPL_PS7.pptx" kind=exercise solution_origin=source
 חוט יכול לחכות לתנאי בשלוש דרכים: המתנה עסוקה, שינה-ובדיקה, ו-`wait`/`notify`. אמור מה כל אחת עולה, ואיזו מהן יכולה לחסום בלי סריקה (polling).
 
 :::hint
@@ -323,7 +323,7 @@ return total / data.length;
 :::
 :::
 
-:::problem id=ps7-liveness-names title="שמות לכישלונות חיות" source="Exrecises/SPL_PS7.pptx" kind=exercise solution_origin=source
+:::problem id=ps7-liveness-names title="שמות לכישלונות חיות" source="materials/sessions/SPL_PS7.pptx" kind=exercise solution_origin=source
 תן שם לכישלון: (1) שני חוטים מחזיקים כל אחד מנעול אחד ומחכים לזה של האחר, (2) חוט בעדיפות נמוכה לעולם אינו מקבל את המנעול כי חוט בעדיפות גבוהה ממשיך לקחת אותו, (3) שני חוטים נועלים שוב ושוב, שמים לב שהמנעול האחר תפוס, משחררים, ומנסים שוב, לנצח.
 
 :::hint
@@ -344,7 +344,7 @@ return total / data.length;
 :::
 :::
 
-:::problem id=ps8-singleton title="סינגלטון עצל" source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
+:::problem id=ps8-singleton title="סינגלטון עצל" source="materials/sessions/SPL_PS8.pptx" kind=exercise solution_origin=source
 סינגלטון עצל נכתב כך:
 
 ```java
@@ -372,7 +372,7 @@ if (instance == null)
 :::
 :::
 
-:::problem id=ps8-interrupt title="דגל עצירה מול interrupt" source="Exrecises/SPL_PS8.pptx" kind=exercise solution_origin=source
+:::problem id=ps8-interrupt title="דגל עצירה מול interrupt" source="materials/sessions/SPL_PS8.pptx" kind=exercise solution_origin=source
 עובד רץ בלולאה עד ש-`shouldStop` אמיתי. חוט אחר מדליק את הדגל. העובד נמצא בתוך `sleep`. הסבר למה הדגל אינו מספיק, ומה `interrupt` משנה.
 
 :::hint
@@ -394,7 +394,7 @@ if (instance == null)
 השאלה נותנת מבנה משותף ומבקשת מרוץ, נעילה הדדית, או תיקון עם `synchronized`, מנעול אתת, או אטומי. המלכודת היא נעילה בסדר שמחכה לנצח, או הגנה על העדכון בלי הקריאה שמפרסמת אותו.
 :::
 
-:::problem id=exam-15a-q1 title="גלגלי שיניים" source="Exams/15-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-15a-q1 title="גלגלי שיניים" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
 `Gear` יודע את המרכז שלו, את הרדיוס, ואת השכנים משמאל ומימין. `move` מסובב את הגלגל הזה ואת שני השכנים, בכיוון ההפוך. `SimpleGear` שומר זווית `_state`.
 
 a. הגדר תנאי פנימי.
@@ -428,7 +428,7 @@ f. חוט `Spinner` קורא ל-`move` על גלגל. האם ריצה של כמ�
 :::
 :::
 
-:::problem id=exam-15b-q1 title="נעילה הדדית של גלגלים" source="Exams/15-b.pdf" kind=exam solution_origin=source
+:::problem id=exam-15b-q1 title="נעילה הדדית של גלגלים" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
 המתודות הציבוריות של `SimpleGear` כולן `synchronized`. שכנים קוראים זה ל-`moveLeft` / `moveRight` של זה, וגם אלה צריכים את המנעול של השכן.
 
 a. הראה נעילה הדדית של כמה גלגלי שיניים.
@@ -453,7 +453,7 @@ c. הפתרון הרשמי אומר שצמצום הסנכרון הוא זה שכ
 :::
 :::
 
-:::problem id=exam-16b-q1 title="תור מסונכרן" source="Exams/16-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16b-q1 title="תור מסונכרן" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
 `SynchQueue` מממש `Queue` כשכל מתודה `synchronized` על `this`. `ExtIntQueue` מוסיף `sum()` על השלמים.
 
 a. תנאי קדם ותנאי סיום של `sum`.
@@ -481,7 +481,7 @@ d. מזלג שאוכלים איתו מוחזק בלעדית, כמו בפתרון
 :::
 :::
 
-:::problem id=exam-17a-q1 title="לוח עם גביע" source="Exams/17-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17a-q1 title="לוח עם גביע" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
 לוח של `N` על `N` מתחיל עם גביע אחד וכמה שחקנים. לכל שחקן יש `Strategy` שבוחר `Direction`. שחקן שמגיע לגביע מסיים את המשחק. השאלה מבקשת לסיים את ההפעלה ב-`main` ולהגן על הלוח כך ששני שחקנים אינם יכולים לתפוס תא אחד או לפספס את הניצחון. נדרשים מנעולים; אל תכתוב את כל המחלקה מחדש.
 
 :::hint
@@ -500,7 +500,7 @@ d. מזלג שאוכלים איתו מוחזק בלעדית, כמו בפתרון
 :::
 :::
 
-:::problem id=exam-17b-q1 title="מבט קדימה על הלוח" source="Exams/17-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17b-q1 title="מבט קדימה על הלוח" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
 שחקנים על לוח של `N` על `N` יכולים `move` צעד אחד או `lookAhead`, שמחזיר את המרחק לאובייקט הקרוב או לשפה. `Segment` יכול לבדוק חיתוך והוא כבר ממומש.
 
 a. תנאי קדם ותנאי סיום של `lookAhead`.
@@ -522,7 +522,7 @@ a. תנאי קדם ותנאי סיום של `lookAhead`.
 :::
 :::
 
-:::problem id=exam-18b-q2 title="שני מחסניות בנעילה" source="Exams/18-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18b-q2 title="שני מחסניות בנעילה" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
 ל-`Stack` חסום יש התנאי הפנימי `0 <= size() <= capacity()`. `push` ו-`pop` עלולים להיכשל בתנאי הקדם שלהם במימוש שניתן לך.
 
 הראה שני חוטים `T1` ו-`T2`, ושני `Stack` `S1` ו-`S2`, שנכנסים לנעילה הדדית. כל חוט רשאי לקרוא ל-`push` ול-`pop` על שני ה-`Stack`. המתודות נועלות את ה-`Stack` שהן שייכות אליו, ו-`push` של `Stack` לתוך ה-`Stack` האחר נועל את שניהם.
@@ -543,7 +543,7 @@ a. תנאי קדם ותנאי סיום של `lookAhead`.
 :::
 :::
 
-:::problem id=exam-19b-q2 title="עץ ממוין" source="Exams/19-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19b-q2 title="עץ ממוין" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
 `SortedBinaryTree` מפרסם את התנאי הפנימי הזה:
 
 ```java
@@ -570,7 +570,7 @@ a. תנאי קדם ותנאי סיום של `lookAhead`.
 :::
 :::
 
-:::problem id=exam-20a-q2 title="פלטים של שני חוטים" source="Exams/20-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20a-q2 title="פלטים של שני חוטים" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 כתבו את כל הפלטים האפשריים, ונמקו.
 
 ```java
@@ -612,7 +612,7 @@ public class Task implements Runnable {
 :::
 :::
 
-:::problem id=exam-20b-q2 title="עדכון אטומי" source="Exams/20-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20b-q2 title="עדכון אטומי" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 סנכרון עם משתנים אטומיים. שני חוטים `t1` ו-`t2` קוראים שניהם ל-`f()`. הראה את המרוצים אם `f` מעדכן `int` רגיל, וכתוב מחדש את העדכון עם `AtomicInteger` כך שהתנאי הפנימי שפורסם מתקיים. לולאת CAS היא הכלי שהשאלה מצפה לו כשהערך החדש תלוי בישן.
 
 :::hint
@@ -639,7 +639,7 @@ do {
 :::
 :::
 
-:::problem id=exam-24b-q2 title="מחסום חוטים" source="Exams/24-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24b-q2 title="מחסום חוטים" source="materials/exams/24-b.pdf" kind=exam solution_origin=derived
 `Barrier` נותן לקבוצה קבועה של חוטים להתקדם בפאזות. `await` אומר "סיימתי את הפאזה הזאת". הקורא נחסם עד שכל משתתף סיים אותה, ואז כולם נכנסים לפאזה הבאה.
 
 ממש את `await` כך שמונה דור (generation) מונע מחוט מהיר להתגנב לפאזה הבאה ולשחרר את הקודמת מוקדם. `InterruptedException` חייבת להשאיר את המחסום שמיש.
@@ -679,7 +679,7 @@ public class Barrier {
 :::
 :::
 
-:::problem id=exam-24c-q2 title="קבוצה בטוחה לחוטים" source="Exams/24-c.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24c-q2 title="קבוצה בטוחה לחוטים" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
 `Set` מוסיף `iterator()` ו-`clone()` ל-`contains` ול-`add`. `SetImpl` היא רשימה מקושרת. איטרטור שהולך על מצביעי `next` רץ מול `add`. הפוך את `iterator` ואת `add` לבטוחים. שכפול אינו מפרסם מבנה שחוט אחר נמצא באמצע שינוי שלו.
 
 :::hint

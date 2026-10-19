@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Chapter } from "@/components/Chapter";
 import { Visit } from "@/components/Visit";
@@ -25,31 +24,12 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         <h1><Mixed text={topic.title} /></h1>
         <span className="masthead-num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
       </header>
-      <Chapter blocks={topic.blocks} courseId={course.id} />
-      {(previous || next) && (
-        <nav className="pager" aria-label="פרקים">
-          {previous && (
-            <Link className="pager-link pager-prev" href={`/topics/${previous.id}`}>
-              <span className="pager-label">הפרק הקודם</span>
-              <span className="pager-line">
-                <span className="pager-arrow" aria-hidden="true" />
-                <span className="pager-num">{String(index).padStart(2, "0")}</span>
-                <span className="pager-title"><Mixed text={previous.title} /></span>
-              </span>
-            </Link>
-          )}
-          {next && (
-            <Link className="pager-link pager-next" href={`/topics/${next.id}`}>
-              <span className="pager-label">הפרק הבא</span>
-              <span className="pager-line">
-                <span className="pager-num">{String(index + 2).padStart(2, "0")}</span>
-                <span className="pager-title"><Mixed text={next.title} /></span>
-                <span className="pager-arrow" aria-hidden="true" />
-              </span>
-            </Link>
-          )}
-        </nav>
-      )}
+      <Chapter
+        blocks={topic.blocks}
+        courseId={course.id}
+        previousChapter={previous ? { href: `/topics/${previous.id}`, title: previous.title, num: String(index).padStart(2, "0") } : null}
+        nextChapter={next ? { href: `/topics/${next.id}`, title: next.title, num: String(index + 2).padStart(2, "0") } : null}
+      />
     </article>
   );
 }

@@ -2,31 +2,31 @@
 id: reactor
 title: Reactor
 sources:
-  - "Classes/Chapter 11 - Reactor.pptx"
-  - "Exrecises/SPL_PS10.pptx"
-  - "Exrecises/SPL_PS11.pptx"
-  - "Exams/15-a.pdf"
-  - "Exams/15-a-solution.pdf"
-  - "Exams/16-b.pdf"
-  - "Exams/16-b-solution.pdf"
-  - "Exams/17-a.pdf"
-  - "Exams/17-a-solution.pdf"
-  - "Exams/18-a.pdf"
-  - "Exams/18-a-solution.pdf"
-  - "Exams/18-b.pdf"
-  - "Exams/18-b-solution.pdf"
-  - "Exams/19-a.pdf"
-  - "Exams/19-a-solution.pdf"
-  - "Exams/19-b.pdf"
-  - "Exams/19-b-solution.pdf"
-  - "Exams/20-a.pdf"
-  - "Exams/20-a-solution.pdf"
-  - "Exams/24-a.pdf"
-  - "Exams/24-a-solution.pdf"
-  - "Exams/24-b.pdf"
-  - "Exams/24-b-solution.pdf"
-  - "Exams/24-c.pdf"
-  - "Exams/24-c-solution.pdf"
+  - "materials/lectures/Chapter 11 - Reactor.pptx"
+  - "materials/sessions/SPL_PS10.pptx"
+  - "materials/sessions/SPL_PS11.pptx"
+  - "materials/exams/15-a.pdf"
+  - "materials/exams/15-a-solution.pdf"
+  - "materials/exams/16-b.pdf"
+  - "materials/exams/16-b-solution.pdf"
+  - "materials/exams/17-a.pdf"
+  - "materials/exams/17-a-solution.pdf"
+  - "materials/exams/18-a.pdf"
+  - "materials/exams/18-a-solution.pdf"
+  - "materials/exams/18-b.pdf"
+  - "materials/exams/18-b-solution.pdf"
+  - "materials/exams/19-a.pdf"
+  - "materials/exams/19-a-solution.pdf"
+  - "materials/exams/19-b.pdf"
+  - "materials/exams/19-b-solution.pdf"
+  - "materials/exams/20-a.pdf"
+  - "materials/exams/20-a-solution.pdf"
+  - "materials/exams/24-a.pdf"
+  - "materials/exams/24-a-solution.pdf"
+  - "materials/exams/24-b.pdf"
+  - "materials/exams/24-b-solution.pdf"
+  - "materials/exams/24-c.pdf"
+  - "materials/exams/24-c-solution.pdf"
 ---
 
 חוט (thread) לכל לקוח מוציא מחסנית (stack) על כל חיבור, ונמצא בחסימה (blocking) בתוך `read` ברוב חייו. שרת חוט אחד (single threaded server) מקבל לקוח אחד ומתעלם מהאחרים עד שהשיחה נגמרת. Reactor הוא הצורה השלישית: חוט אחד ממתין להרבה ערוצים (channel), ומאגר קטן מריץ את העבודה שבאמת איטית.
@@ -41,7 +41,7 @@ sources:
 
 מאגר קבוע, `Executors.newFixedThreadPool(poolSize)`, מגביל את המספר. חיבורים עודפים ממתינים בתור. החוטים עדיין חסומים ב-I/O, ולכן מאגר של שמונה שתקוע ב-`read` אינו משרת אף אחד אחר.
 
-:::definition id=def-reactor title="Reactor" source="Classes/Chapter 11 - Reactor.pptx"
+:::definition id=def-reactor title="Reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
 שרת מונחה אירועים אינו נותן חוט לכל לקוח. חוט אחד נשאר פנוי לאירועים הקצרים. חוטים נוספים קיימים רק לעבודה שהייתה חוסמת את הלולאה הזו. קלט-פלט ללא חסימה אומר שלקוח איטי אינו עוצר את הלולאה מלקבל מישהו אחר, ופעולה זולה אינה ממתינה מאחורי קריאה איטית מהדיסק.
 :::
 
@@ -56,7 +56,7 @@ sources:
 
 ![לולאת ה-Reactor: חוט selector אחד, מפתחות מוכנים, ומאגר רק לעבודת הפרוטוקול](../assets/figures/reactor-loop.svg)
 
-:::algorithm id=alg-reactor title="לולאת Reactor" source="Classes/Chapter 11 - Reactor.pptx" complexity="חוט אחד ממתין ב-select; עבודת הפרוטוקול יורדת מהחוט הזה. שרת שקט נחסם ב-select במקום להסתובב" invariant="כל ערוץ פתוח רשום לאירועים שהשרת מוכן לטפל בהם, והלולאה שמטפלת במפתח שב-selectedKeys מסירה אותו."
+:::algorithm id=alg-reactor title="לולאת Reactor" source="materials/lectures/Chapter 11 - Reactor.pptx" complexity="חוט אחד ממתין ב-select; עבודת הפרוטוקול יורדת מהחוט הזה. שרת שקט נחסם ב-select במקום להסתובב" invariant="כל ערוץ פתוח רשום לאירועים שהשרת מוכן לטפל בהם, והלולאה שמטפלת במפתח שב-selectedKeys מסירה אותו."
 ```text
 selector = new Selector
 register serverSocket for OP_ACCEPT
@@ -88,7 +88,7 @@ channel.write(buf);           // sends those five bytes
 
 מטפל החיבור בעיצוב הזה אינו `Runnable` לכל לקוח, בניגוד למטפל של חוט-לכל-לקוח. הוא מחזיק את החוצצים, את המקודד-מפענח, ואת תור הכתיבה של ערוץ אחד. חוט ה-selector קורא לו כשהמפתח מוכן.
 
-:::problem id=worked-flip title="היפוך חוצץ" source="Exrecises/SPL_PS10.pptx" kind=worked solution_origin=source
+:::problem id=worked-flip title="היפוך חוצץ" source="materials/sessions/SPL_PS10.pptx" kind=worked solution_origin=source
 רוצים לכתוב את 5 הבתים שזה עתה נקראו. מה `flip` משנה?
 
 ```java
@@ -123,7 +123,7 @@ channel.write(buf);
 
 ## תרגול
 
-:::problem id=ps10-flip title="position אחרי flip" source="Exrecises/SPL_PS10.pptx" kind=exercise solution_origin=source
+:::problem id=ps10-flip title="position אחרי flip" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
 חוצץ עבר `clear` בקיבולת 8, ואז `put` של שלושה בתים. תנו position ו-limit לפני `flip` ואחרי `flip`. אחר כך אמרו איזה טווח `write` לערוץ ישלח.
 
 :::hint
@@ -140,7 +140,7 @@ channel.write(buf);
 :::
 :::
 
-:::problem id=ps11-actor-order title="סדר משימות" source="Exrecises/SPL_PS11.pptx" kind=exercise solution_origin=source
+:::problem id=ps11-actor-order title="סדר משימות" source="materials/sessions/SPL_PS11.pptx" kind=exercise solution_origin=source
 לקוח שולח הודעה M1 ואחר כך M2. השרת יוצר משימות R1 ו-R2. למה מאגר חוטים רגיל יכול להריץ את R2 לפני R1, ומה מאגר ה-actors משנה?
 
 :::hint
@@ -159,7 +159,7 @@ channel.write(buf);
 :::
 :::
 
-:::problem id=ps11-write-interest title="עניין כתיבה" source="Exrecises/SPL_PS11.pptx" kind=exercise solution_origin=source
+:::problem id=ps11-write-interest title="עניין כתיבה" source="materials/sessions/SPL_PS11.pptx" kind=exercise solution_origin=source
 אלה ארבע טעויות של Reactor. בחרו את זו ששורפת ליבה בזמן שאף לקוח אינו שולח, ואמרו את שינוי ה-`interestOps` שעוצר אותה.
 
 1. `OP_WRITE` נשאר דלוק כשתור הכתיבה ריק.
@@ -192,7 +192,7 @@ key.interestOps(SelectionKey.OP_READ);
 השאלה עורכת את ה-Reactor מהנספח: מזיזה את המיסגור מה-selector, מגבילה עבודה לכל לקוח, מוסיפה יומן, או משרתת שאילתת בסיס נתונים בלי לחסום את `select`. המלכודת היא לעשות את הקריאה הכבדה על חוט ה-selector, או להעיר את `select` לנצח על ידי השארת `OP_WRITE` דלוק.
 :::
 
-:::problem id=exam-15a-q3 title="Reactor על UDP" source="Exams/15-a.pdf" kind=exam solution_origin=source
+:::problem id=exam-15a-q3 title="Reactor על UDP" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
 השאירו את ה-Reactor, אבל דברו עם כל לקוח דרך `DatagramSocketChannel` אחד במקום `SocketChannel` של TCP לכל לקוח. `send` ו-`receive` הם ללא חסימה וחוזרים מיד. `receive` מחזיר את כתובת השולח, או null אם לא הגיע דבר.
 
 א. אמרו אילו מתודות אתם משנים. אל תכתבו מחדש מתודות שאתם משאירים.
@@ -214,7 +214,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-16b-q3 title="הוגנות של executor" source="Exams/16-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16b-q3 title="הוגנות של executor" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
 ה-executor של ה-Reactor בוחר משימה בלי להתחשב בכמה בתים הלקוח הזה כבר העביר, ובלי להתחשב בכמה בקשות של הלקוח הזה כבר קיבלו שירות. לקוח עסוק יכול להיבחר לנצח.
 
 א. תנו תרחיש קצר אחד לכל אי-הוגנות.
@@ -236,7 +236,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-17a-q3 title="מי ממסגר" source="Exams/17-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-17a-q3 title="מי ממסגר" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
 היום חוט ה-selector קורא `ByteBuffer` וחוט מאגר ממסגר ומריץ את ההודעה. סטודנט רוצה שגם חוט ה-selector ימסגר, ויגיש `Runnable` אחד לכל הודעה.
 
 א. החילו את השינוי.
@@ -261,7 +261,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-18a-q3 title="selector רווי" source="Exams/18-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18a-q3 title="selector רווי" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
 חוט ה-selector רווי.
 
 א. שרגא אומר: הוסיפו עובדים למאגר ה-actors, והעבירו את השרת למכונה עם יותר מעבדים, כדי להוריד עומס מה-selector. האם זה עובד?
@@ -283,7 +283,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-18b-q3 title="מדידה מטעה" source="Exams/18-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18b-q3 title="מדידה מטעה" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
 שרגא מודד שרת חוט-לכל-לקוח ו-Reactor על ידי שליחת כמה בקשות מהמחשב הנייד שלו. שרת חוט-לכל-לקוח עונה מהר יותר, ולכן הוא אומר לחברה לעבור. נחום אומר שהמסקנה שגויה. הסבירו את נחום, כולל מה המדידה לא לחצה.
 
 :::hint
@@ -302,7 +302,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-19a-q3 title="הבטחות של מאגר actors" source="Exams/19-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19a-q3 title="הבטחות של מאגר actors" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
 מאגר ה-actors מבטיח שני דברים לכל חיבור: לכל היותר בקשה אחת רצה בכל רגע, ואם בקשה 1 הגיעה לפני בקשה 2 אז תשובה 1 נשלחת לפני תשובה 2.
 
 א. הסבירו איך המאגר עושה זאת, ונקבו בתור.
@@ -325,7 +325,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-19b-q3 title="הבקשה הבאה על אותו עובד" source="Exams/19-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-19b-q3 title="הבקשה הבאה על אותו עובד" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
 שנו את `execute` ואת `complete` כך שכשעובד מסיים בקשה הוא מריץ את הבקשה הממתינה הבאה של אותו לקוח על אותו עובד, בלי `Runnable` חדש, עד שתור הלקוח הזה ריק. שמרו על הפיצול של Reactor: ה-selector עושה קלט-פלט, העובדים עושים פרוטוקול.
 
 :::hint
@@ -342,7 +342,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-20a-q3 title="יומן שלא חוסם" source="Exams/20-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20a-q3 title="יומן שלא חוסם" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 הוסיפו תיעוד של פעולות השרת ל-Reactor. `Logger` עוטף `OutputStream`. אמרו לאן כל קריאת יומן הולכת כדי שחוט ה-selector לא ייחסם על הדיסק, וכדי ששני עובדים לא יקרעו שורת יומן.
 
 :::hint
@@ -359,7 +359,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-24a-q3 title="חוטי תקשורת" source="Exams/24-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24a-q3 title="חוטי תקשורת" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
 סטודנט משנה את `Reactor.handleReadWrite` כך שימסור את המפתח המוכן אל `Executors.newFixedThreadPool(2)` בשם `communicationThreads`.
 
 הסבירו למה שני חוטי תקשורת שקוראים ל-`handleReadWrite` על המפתחות של אותו selector אינם בטוחים, ואיזו עבודה, אם בכלל, מותר להעביר למאגר הזה. השאלה ממשיכה לבסיס נתונים; שמרו קודם על תקינות ה-selector.
@@ -380,7 +380,7 @@ key.interestOps(SelectionKey.OP_READ);
 :::
 :::
 
-:::problem id=exam-24b-q3 title="שרת מחסן" source="Exams/24-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24b-q3 title="שרת מחסן" source="materials/exams/24-b.pdf" kind=exam solution_origin=derived
 מחסן לוגיסטי שומר מתנדבים, משפחות מפונות, ומנות מזון. `DB` בטוח לחוטים, יש לו בנאי ריק, ו-`executeQuery` מחזיר את הרשומות (record/row) או זורק `SQLException`.
 
 בנו את `DBServer`: Reactor עם עשרה חוטי עבודה. לקוח שולח מחרוזת שאילתה. השרת מריץ אותה על ה-`DB` האחד ועונה ברשומה הראשונה, או ב-`"Result No"` כשאין רשומות, או בטקסט השגיאה כשהשאילתה זורקת. אל תבנו `DB` לכל חיבור.
@@ -410,7 +410,7 @@ public class DBServer {
 :::
 :::
 
-:::problem id=exam-24c-q3 title="תשובה מטיפוס אחר" source="Exams/24-c.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24c-q3 title="תשובה מטיפוס אחר" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
 
 א. שנו את תבנית השרת כך שלקוח שולח הודעה מטיפוס A ומקבל תשובה מטיפוס B. נקבו במקומות שאתם עורכים. אל תכתבו מחדש מחלקות שלמות.
 ב. השלימו את `Command` ואת `RemoteCommandInvocationProtocol`.

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Blocks } from "@/components/Blocks";
-import { SectionSwitch } from "@/components/SectionSwitch";
+import { ReadingFooter, SectionSwitch, type ChapterHop } from "@/components/SectionSwitch";
 import type { Block } from "@/lib/types";
 
 type Slice = { title: string; blocks: Block[] };
@@ -42,9 +42,26 @@ function renderBlocks(blocks: Block[], courseId: string) {
   return <Blocks blocks={blocks} courseId={courseId} />;
 }
 
-export function Chapter({ blocks, courseId }: { blocks: Block[]; courseId: string }) {
+export function Chapter({
+  blocks,
+  courseId,
+  previousChapter,
+  nextChapter,
+}: {
+  blocks: Block[];
+  courseId: string;
+  previousChapter: ChapterHop | null;
+  nextChapter: ChapterHop | null;
+}) {
   const { intro, slices } = splitAt(blocks, 2);
-  if (slices.length === 0) return renderBlocks(blocks, courseId);
+  if (slices.length === 0) {
+    return (
+      <>
+        {renderBlocks(blocks, courseId)}
+        <ReadingFooter previousChapter={previousChapter} nextChapter={nextChapter} />
+      </>
+    );
+  }
 
   const parts = slices.map((slice) => {
     const inner = splitAt(slice.blocks, 3);
@@ -64,5 +81,12 @@ export function Chapter({ blocks, courseId }: { blocks: Block[]; courseId: strin
     };
   });
 
-  return <SectionSwitch intro={renderBlocks(intro, courseId)} parts={parts} />;
+  return (
+    <SectionSwitch
+      intro={renderBlocks(intro, courseId)}
+      parts={parts}
+      previousChapter={previousChapter}
+      nextChapter={nextChapter}
+    />
+  );
 }

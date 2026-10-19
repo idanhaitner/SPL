@@ -2,9 +2,9 @@
 id: java-runtime
 title: חזרה ל-Java
 sources:
-  - "Classes/Chapter 7 - Back to Java.pptx"
-  - "Notes/lecture-notes.docx.pdf"
-  - "Exrecises/SPL_PS5.pptx"
+  - "materials/lectures/Chapter 7 - Back to Java.pptx"
+  - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/sessions/SPL_PS5.pptx"
 ---
 
 החצי השני של הקורס כותב שרתים, חוטי-ביצוע (thread) ומסדי נתונים ב-Java. פרק 7 הוא האיפוס: מה המכונה הווירטואלית (virtual machine) באמת שומרת, אילו מתודות וירטואליות (virtual), ואיך כישלון יוצא ממתודה.
@@ -21,7 +21,7 @@ Java נבחרה כאן כי התוכנית רצה על מכונה וירטואל
 
 ב-C++ אין את הפיצול הזה. `g++ A.cpp` כותב `A.o` כבר בשפת המעבד של המכונה שקימפלה, והקישור קושר אותו אל מערכת ההפעלה הזאת. הרצה על Windows דורשת קומפילציה שם, `cl A.cpp`, ומפיקה `A.exe`. אותו מקור, שני קבצי הרצה, כי התרגום למעבד קרה לפני הריצה ולא בתוכה.
 
-:::definition id=def-java-storage title="איפה Java שומרת ערך" source="Classes/Chapter 7 - Back to Java.pptx"
+:::definition id=def-java-storage title="איפה Java שומרת ערך" source="materials/lectures/Chapter 7 - Back to Java.pptx"
 משתנה מקומי שהוא טיפוס פרימיטיבי (primitive type), או רפרנס (reference) שאינו שדה, חי על המחסנית (stack). אובייקטים חיים על הערימה (heap), וכך גם השדות שלהם, גם שדות שהם טיפוסים פרימיטיביים או רפרנסים. אובייקטים נפרדים הם בלוקים נפרדים בערימה. מחלקה נטענת כאובייקט `Class` אחד שמתאר שדות, מתודות והיררכיה, והאובייקט הזה הוא מה שרפלקשן ו-`new` בודקים.
 :::
 
@@ -59,7 +59,7 @@ class Circle extends Shape {
 
 מחלקה אבסטרקטית מערבבת מתודות אמיתיות עם מתודות מופשטות, ואי אפשר ליצור ממנה מופע. אינטרפייס הוא ה"מה" הטהור, ומתודות ברירת מחדל הן החריג המאוחר.
 
-:::definition id=def-exception title="חריגות" source="Classes/Chapter 7 - Back to Java.pptx"
+:::definition id=def-exception title="חריגות" source="materials/lectures/Chapter 7 - Back to Java.pptx"
 חריגה היא כישלון שהמכונה הווירטואלית מדווחת עליו בזמן ריצה על ידי זריקת אובייקט. חריגות בדוקות יורשות מ-`Exception`, יכולות להיות כישלונות לגיטימיים כמו קובץ חסר, וחייבות להיתפס או להיות מוצהרות עם `throws`. חריגות לא-בדוקות (unchecked exception) יורשות מ-`RuntimeException` ומייצגות באגים: גישה דרך null, אינדקס שגוי, חלוקה באפס. `Error` יורש מ-`java.lang.Error` והוא כישלון של סביבת הריצה עצמה, כמו `StackOverflowError` או `OutOfMemoryError`. לא תופסים אותן בקוד רגיל.
 :::
 
@@ -69,7 +69,7 @@ class Circle extends Shape {
 
 אוסף-האשפה עובר על אובייקטים שנגישים ממחסניות וממשתנים סטטיים. אובייקט בלי מסלול מפונה. אין `delete`. דליפה במודל הזה היא רפרנס שעדיין מחזיקים.
 
-:::problem id=worked-array-layout title="מערך על הערימה" source="Classes/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
+:::problem id=worked-array-layout title="מערך על הערימה" source="materials/lectures/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
 מה על המחסנית, ומה על הערימה?
 
 ```java
@@ -103,7 +103,7 @@ b[0] = new String("Avi");
 
 ## תרגול
 
-:::problem id=ps5-checked-exception title="חריגה בדוקה" source="Exrecises/SPL_PS5.pptx" kind=exercise solution_origin=source
+:::problem id=ps5-checked-exception title="חריגה בדוקה" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
 `FileNotFoundException` בדוקה. `ArithmeticException` אינה בדוקה. לכל אחת, אמור אם התוכנית מתקמפלת כשהקורא מתעלם ממנה, ולאן חריגה שנזרקה הולכת אם אף מסגרת אינה מטפלת בה.
 
 :::hint

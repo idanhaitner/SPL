@@ -2,13 +2,13 @@
 id: memory-model
 title: מודל הזיכרון
 sources:
-  - "Classes/Chapter 1 - The Memory Model.pptx"
-  - "Notes/lecture-notes.docx.pdf"
-  - "Exrecises/SPL_PS2 (1).pptx"
-  - "Exams/15-a.pdf"
-  - "Exams/15-a-solution.pdf"
-  - "Exams/15-b.pdf"
-  - "Exams/15-b-solution.pdf"
+  - "materials/lectures/Chapter 1 - The Memory Model.pptx"
+  - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/sessions/SPL_PS2 (1).pptx"
+  - "materials/exams/15-a.pdf"
+  - "materials/exams/15-a-solution.pdf"
+  - "materials/exams/15-b.pdf"
+  - "materials/exams/15-b-solution.pdf"
 ---
 
 תוכנית C++ לא מקבלת שק אחד אחיד של זיכרון. לתהליך יש מרחב כתובות משלו, והשפה שמה את הקוד, את המשתנים הגלובליים, את מסגרות הקריאה ואת הבלוקים של `new` באזורים שונים בתוכו. כל ציור בהמשך הקורס — מצביע (pointer) על המחסנית (stack), חוצץ על הערימה (heap), ארגומנט שמועבר לפי ערך — הוא ציור של האזורים האלה.
@@ -19,7 +19,7 @@ Java, C# ו-Python מסתירות את אותה מכונה. הזיכרון אצ�
 
 הסיכומים של אדלר פותחים לפני חמשת האזורים. השאלה שם היא למה תוכנית לא פונה אל המעבד בעצמה. הדוגמה היא מערכת שמחפשת סרט, מורידה אותו, ומקרינה אותו. חיפוש ברשת, עבודה עם קבצים, ופענוח של הווידאו הם שלושה שירותים. המעבד לבדו לא נותן אף אחד מהם בנוחות. מישהו צריך לשבת בין התוכנית לחומרה.
 
-:::definition id=def-runtime title="מחשב, תוכנית, תהליך, וסביבת זמן ריצה" source="Notes/lecture-notes.docx.pdf"
+:::definition id=def-runtime title="מחשב, תוכנית, תהליך, וסביבת זמן ריצה" source="materials/notes/lecture-notes.docx.pdf"
 מחשב (computer) הוא יחידה לוגית שמבצעת משימה בעצמה, באמצעות ערכת הפעולות שלה. תוכנית (program) היא הגדרה פורמלית של משימה. תהליך (process) הוא תוכנית בזמן שמחשב מריץ אותה.
 
 סביבת זמן ריצה (runtime environment) מתווכת בין התוכנית לתשתית. יש לה ארבעה תפקידים: היא משמרת את תכונות התשתית, היא מוסיפה הפשטה, היא נותנת ממשק נוח יותר אל התשתית, והיא נותנת שירותים שאין לתשתית עצמה.
@@ -27,7 +27,7 @@ Java, C# ו-Python מסתירות את אותה מכונה. הזיכרון אצ�
 
 מערכת ההפעלה היא סביבת זמן הריצה הראשונה בסיכומים. היא יושבת בין התהליך לחומרה. כשמריצים תוכנית, מערכת ההפעלה בונה את התהליך, ואז מזיזה אותו בין המצבים. מונה התוכנית (program counter, PC) הוא הכתובת של השורה הבאה שהמעבד יבצע.
 
-:::definition id=def-process-states title="מצבי תהליך" source="Notes/lecture-notes.docx.pdf"
+:::definition id=def-process-states title="מצבי תהליך" source="materials/notes/lecture-notes.docx.pdf"
 לתהליך יש חמישה מצבים:
 
 | מצב | מה נכון עכשיו | לאן עוברים |
@@ -52,7 +52,7 @@ Java, C# ו-Python מסתירות את אותה מכונה. הזיכרון אצ�
 
 פרק 1 מצייר את מרחב הכתובות מכתובות גבוהות כלפי מטה, אל כתובות נמוכות. השמות בשקפים הם השמות שכדאי לשמור.
 
-:::definition id=def-address-space title="מרחב הכתובות של תהליך" source="Classes/Chapter 1 - The Memory Model.pptx"
+:::definition id=def-address-space title="מרחב הכתובות של תהליך" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
 לתהליך רץ יש טווח כתובות משלו. בתוך הטווח הזה הקורס מפריד חמישה אזורים:
 
 | אזור | השם בשקפים | גודל | מי משחרר | גישה |
@@ -115,7 +115,7 @@ int main() {
 
 ### מסגרת המחסנית
 
-:::definition id=def-stack-frame title="מסגרת מחסנית" source="Classes/Chapter 1 - The Memory Model.pptx"
+:::definition id=def-stack-frame title="מסגרת מחסנית" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
 מסגרת מחסנית, שנקראת גם מסגרת הפעלה (activation frame), נדחפת בכל קריאה לפונקציה. היא מחזיקה את כתובת החזרה, את הפרמטרים שהועברו, ואת המשתנים המקומיים. המסגרות יוצאות בסדר LIFO כשהקריאה חוזרת.
 :::
 
@@ -148,7 +148,7 @@ int main() {
 
 ![בזמן ש-foo רצה, n ו-x יושבים במסגרת של foo מתחת ל-main. אחרי החזרה נשארות רק המסגרת של main, ו-a](../assets/figures/stack-frames.svg)
 
-:::problem id=worked-frame-call title="מסגרת של קריאה" source="Classes/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+:::problem id=worked-frame-call title="מסגרת של קריאה" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
 איפה `n` ו-`x` חיים בזמן ש-`foo` רצה, ומה נשאר אחרי ש-`foo` חוזרת?
 
 ```cpp
@@ -300,7 +300,7 @@ int main() {
 
 אותו RAM מחזיק גם את ההוראות וגם את הנתונים. זו ארכיטקטורת פון נוימן: זיכרון אחד, יחידת עיבוד מרכזית, וערוץ העברת נתונים ביניהם.
 
-:::definition id=def-von-neumann title="מכונת פון נוימן" source="Classes/Chapter 1 - The Memory Model.pptx"
+:::definition id=def-von-neumann title="מכונת פון נוימן" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
 המכונה בהרצאה היא מעבד, ערוץ העברת נתונים, ו-RAM. טקסט התוכנית והנתונים יושבים שניהם ב-RAM הזה. המעבד חוזר על מחזור הבאה-פענוח-ביצוע (fetch-decode-execute): מביא הוראה מהזיכרון, מפענח אותה, ומבצע אותה.
 :::
 
@@ -331,7 +331,7 @@ int main() {
 
 למעבד יש ערכת הוראות (instruction set). `ADD R1 R2 R3` מחבר את הרגיסטרים `R1` ו-`R2` ושם את הסכום ב-`R3`. `READ 100 R1` מעתיק את תא 100 אל `R1`. `WRITE R2 200` מעתיק את `R2` אל תא 200. השפה מתורגמת אל שלוש ההוראות האלה.
 
-:::problem id=worked-add-trace title="עקבות של חיבור" source="Notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+:::problem id=worked-add-trace title="עקבות של חיבור" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
 `i` יושב בתא 3000 ו-`j` בתא 4000. תרגם את שלוש השורות להוראות `READ`, `WRITE` ו-`ADD`.
 
 ```java
@@ -400,7 +400,7 @@ pi[0] = 1;
 
 כשהפונקציה חוזרת, התא בשם `pi` נעלם עם המסגרת. עשרת ה-`int` יושבים על הערימה. הם נשארים שם עד שמישהו מבצע `delete[]` על הכתובת הזו. אם הכתובת לא נשמרה במקום שממשיך לחיות, אין בתוכנית שם שאפשר לכתוב ב-`delete[]`. הבלוק נשאר מסומן כמוקצה. זו זליגת זיכרון של המערך, מאותו סוג ש-`leaky` מציירת.
 
-:::problem id=worked-stack-array title="מצביע על המחסנית" source="Classes/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+:::problem id=worked-stack-array title="מצביע על המחסנית" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
 אמרו איפה `ps` חי, איפה ה-`Student` חי, ומה נשאר אחרי ש-`main` חוזרת אם אף אחד לא קורא ל-`delete`.
 
 ```cpp
@@ -434,7 +434,7 @@ heap:                        v
 
 ## תרגול
 
-:::problem id=ps2-stack-vs-heap title="מחסנית מול ערימה" source="Exrecises/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+:::problem id=ps2-stack-vs-heap title="מחסנית מול ערימה" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
 לכל שורה, אמרו אם האחסון ששמו מופיע הוא על המחסנית או על הערימה, ואיזה `delete` נדרש.
 
 ```cpp
@@ -473,7 +473,7 @@ void demo() {
 שאלת הזיכרון נותנת מכולה קטנה ב-C++ ו-`main` שמעביר אותה לפי ערך אל `foo`, ומבקשת לצייר את המחסנית ואת הערימה בשורה מסומנת. המלכודת היא לצייר את החוצץ כאילו הוא חי במסגרת, או לצייר פרמטר לפי ערך כאילו הוא אותו אובייקט של הקורא.
 :::
 
-:::problem id=exam-15a-q2 title="וקטור כרשימה" source="Exams/15-a.pdf" kind=exam solution_origin=source
+:::problem id=exam-15a-q2 title="וקטור כרשימה" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
 `vector` שומר איברים במערך רציף ויכול לשנות גודל. הקורס קובע שזה בזבזני, ומבקש `mvector<T>`, שהזיכרון שלו הוא בדיוק התאים שהוא צריך, שמורים כרשימה מקושרת.
 
 א. ממשו את הפונקציות. מותר להוסיף עזרים. אסור להוסיף שדות או לשנות חתימות. `insertAt` תמיד מצליח, מקצה אם הוא חייב, ומכניס ב-`pos`. `removeAt` מקטין את המבנה, ואם `pos` ריק מחזיר איזשהו `T` דמה. גישה לתא ברשימה מקושרת אינה O(1).
@@ -508,7 +508,7 @@ void demo() {
 :::
 :::
 
-:::problem id=exam-15b-q2 title="וקטור שגדל" source="Exams/15-b.pdf" kind=exam solution_origin=source
+:::problem id=exam-15b-q2 title="וקטור שגדל" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
 `mvector` הוא עכשיו מערך של `node`, לא רשימה. `insertAt` ב-`pos` מעבר לסוף מגדיל את המערך לחזקה הקטנה ביותר של 2 שגדולה ממש מ-`pos` (וקטור ריק, הכנסה ב-5, נעשה באורך 8). `removeAt` מקטין בחצי אחרי שכל איבר בחצי העליון הוסר (אורך 8, אחרי שארבעת האיברים הגבוהים נעלמו, נעשה 4). האיברים שומרים על האינדקסים שלהם. ל-`node` יש `duplicate()` וירטואלית טהורה.
 
 א. ממשו את הפעולות המסומנות, כולל בנאי העתקה עמוקה. מותר עזרים. אסור להוסיף שדות או לשנות חתימות.

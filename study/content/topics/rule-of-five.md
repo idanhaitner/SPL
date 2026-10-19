@@ -2,23 +2,23 @@
 id: rule-of-five
 title: חוק החמישה וחוק האפס
 sources:
-  - "Classes/Chapter 5 - Rule of Five and Zero.pptx"
-  - "Exrecises/SPL_PS4.pptx"
-  - "Exams/16-b.pdf"
-  - "Exams/16-b-solution.pdf"
-  - "Exams/20-b.pdf"
-  - "Exams/20-b-solution.pdf"
-  - "Exams/24-a.pdf"
-  - "Exams/24-a-solution.pdf"
-  - "Exams/24-c.pdf"
-  - "Exams/24-c-solution.pdf"
+  - "materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
+  - "materials/sessions/SPL_PS4.pptx"
+  - "materials/exams/16-b.pdf"
+  - "materials/exams/16-b-solution.pdf"
+  - "materials/exams/20-b.pdf"
+  - "materials/exams/20-b-solution.pdf"
+  - "materials/exams/24-a.pdf"
+  - "materials/exams/24-a-solution.pdf"
+  - "materials/exams/24-c.pdf"
+  - "materials/exams/24-c-solution.pdf"
 ---
 
 העתקה היא הדרך הישרה לתת לשני אובייקטים (object) את אותה תמונה. היא הדרך היקרה להחזיר תמונה מפונקציה. C++11 מוסיף ערוץ שני: סמנטיקת העברה (move semantics). אפשר לרוקן זמני. המשאב עובר, הבתים לא.
 
 ## ערכים שיש להם כתובת, וערכים שאין להם
 
-:::definition id=def-value-category title="ערך מיקום (lvalue) וערך זמני (rvalue)" source="Classes/Chapter 5 - Rule of Five and Zero.pptx"
+:::definition id=def-value-category title="ערך מיקום (lvalue) וערך זמני (rvalue)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 ערך מיקום הוא אובייקט שיש לו כתובת שאפשר לקחת, לבצע דרכה השמה, ולקשור אליו רפרנס (reference). היסטורית זה ערך שיכול לעמוד בצד שמאל. ערך זמני הוא זמני. הוא יכול להופיע מימין להשמה, והוא עומד להיעלם: תוצאה של חישוב, או אובייקט שחזר מפונקציה.
 
 רפרנס `const` לערך מיקום נקשר לשניהם. הוא מאריך את חיי הערך הזמני עד לתחום הרפרנס, ומסרב לשינוי.
@@ -35,7 +35,7 @@ void convert(Image&& img);        // binds only a temporary, may steal
 
 ### פעולות העברה
 
-:::definition id=def-rule-of-five title="חוק החמישה (rule of five)" source="Classes/Chapter 5 - Rule of Five and Zero.pptx"
+:::definition id=def-rule-of-five title="חוק החמישה (rule of five)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 חוק השלושה (rule of three), מורחב. אם כותבים אחד מבין הדיסטרקטור (destructor), בנאי העתקה (copy constructor), אופרטור השמה (assignment operator), בנאי-העברה, או אופרטור העברה, כותבים את הקבוצה שבאמת צריך. ההרצאה קוראת לשלוש האלה חובה ברגע שמנהלים משאב, ולשתי פעולות ההעברה החוזה ששומר על התוכנית מהירה.
 
 ```cpp
@@ -65,7 +65,7 @@ Image& Image::operator=(Image&& other) {
 
 ### חוק האפס (rule of zero)
 
-:::definition id=def-raii title="RAII וחוק האפס" source="Classes/Chapter 5 - Rule of Five and Zero.pptx"
+:::definition id=def-raii title="RAII וחוק האפס" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 RAII הוא Resource Acquisition Is Initialization. הסיסמה הזוגית בשקף היא RRID, Resource Release Is Destruction. משיגים את המשאב בבנאי ומשחררים אותו בדיסטרקטור.
 
 חוק האפס: אל תנהלו את המשאב בעצמכם. החזיקו איבר שכבר מממש את חמש הפעולות. אז החמש שהמהדר מייצר למחלקה (class) שלכם נכונות, ואתם לא כותבים אף אחת מהן.
@@ -75,7 +75,7 @@ RAII הוא Resource Acquisition Is Initialization. הסיסמה הזוגית ב
 
 כשכן צריך מצביע, הכלים בשקף הם המצביעים החכמים.
 
-:::definition id=def-smart-pointers title="מצביע חכם ייחודי (unique_ptr) ומצביע חכם משותף (shared_ptr)" source="Classes/Chapter 5 - Rule of Five and Zero.pptx"
+:::definition id=def-smart-pointers title="מצביע חכם ייחודי (unique_ptr) ומצביע חכם משותף (shared_ptr)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 `std::unique_ptr<T>` הוא בעלות בלעדית. אי אפשר להעתיק אותו. אפשר להעביר אותו. אחרי אופטימיזציות הוא זול כמו מצביע גולמי (raw pointer). `std::shared_ptr<T>` הוא בעלות משותפת. העתקה שלו מגדילה מונה. הדיסטרקטור האחרון שמוריד את המונה משחרר את האובייקט. הוא קצת יותר איטי ממצביע גולמי.
 
 העדיפו את `std::make_unique<T>(...)` ואת `std::make_shared<T>(...)` על פני `unique_ptr<T>(new T(...))`. ההרצאה דוחה את הסיבה לבטיחות חריגות (exception safety): ביטוי ה-`new` כארגומנט לפונקציה יכול לדלוף אם ארגומנט אחר זורק. `make_shared` גם שם את האובייקט ואת המונה בהקצאה אחת.
@@ -111,7 +111,7 @@ Image myPicture() {
 
 `std::move` כופה את בנאי-ההעברה וחוסם NRVO. `return pic;` פשוט נותן למהדר לבנות את `pic` אצל הקורא, כך שאין מה להעביר.
 
-:::problem id=worked-move-image title="העברת תמונה" source="Classes/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
+:::problem id=worked-move-image title="העברת תמונה" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
 `avi` הבעלים של חוצץ פיקסלים. מה `benny._bytes` מחזיק, מה `avi._bytes` מחזיק, ומה `~Image` על `avi` משחרר?
 
 ```cpp
@@ -155,7 +155,7 @@ Image::Image(Image&& other)
 
 ## תרגול
 
-:::problem id=ps4-copy-count title="כמה העתקות" source="Exrecises/SPL_PS4.pptx" kind=exercise solution_origin=derived
+:::problem id=ps4-copy-count title="כמה העתקות" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=derived
 כמה פעמים בנאי ההעתקה רץ, אם אין העלמת העתקה, ומה משתנה כשהפרמטר הופך ל-`const MyClass&`? אחר כך אמרו אילו מאותן העתקות NRVO רשאי להסיר.
 
 ```cpp
@@ -185,7 +185,7 @@ MyClass passRef(const MyClass& value) {
 :::
 :::
 
-:::problem id=ps4-unique-vs-shared title="shared מול unique" source="Exrecises/SPL_PS4.pptx" kind=exercise solution_origin=source
+:::problem id=ps4-unique-vs-shared title="shared מול unique" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=source
 מה קורה בכל אחת משתי התוכניות?
 
 ```cpp
@@ -221,7 +221,7 @@ auto up2 = up1;
 השאלה אומרת «חוק החמישה» או «מצביע חכם» ומבקשת לגנוב חוצץ במקום לשכפל אותו, או לדחות את השכפול עד לכתיבה. המלכודת היא להשאיר את מצביע המקור חי, כך ששני דיסטרקטורים משחררים בלוק אחד, או להעתיק `unique_ptr`.
 :::
 
-:::problem id=exam-16b-q2 title="אוסף לפי ערך" source="Exams/16-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-16b-q2 title="אוסף לפי ערך" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
 `ITEM_COLLECTION<T>` שומר פריטי `T`. `byVal` מקבל את האוסף לפי ערך.
 
 א. כתבו בנאי העתקה עמוק. שימו לב לתחביר ה-template.
@@ -252,7 +252,7 @@ auto up2 = up1;
 :::
 :::
 
-:::problem id=exam-20b-q1 title="מצביע חכם" source="Exams/20-b.pdf" kind=exam solution_origin=derived
+:::problem id=exam-20b-q1 title="מצביע חכם" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 השאלה היא תבנית המצביע החכם מהכיתה. אפי מממש `SmartPointer<T>` עם `T* ptr_`, וחלקים מהמחלקה נמחקו. השלימו אותו כמו ה-`shared_ptr` של ההרצאה: מונה רפרנסים, העתקה שחולקת את האובייקט, השמדה שמשחררת רק כשהמונה אפס, ובלי שחרור כפול. מותר עזרים.
 
 :::hint
@@ -298,7 +298,7 @@ public:
 :::
 :::
 
-:::problem id=exam-24a-q1 title="עץ תחת חוק החמישה" source="Exams/24-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24a-q1 title="עץ תחת חוק החמישה" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
 `BinaryTree<T extends Comparable<T>>` ב-Java שומר `data`, `left` ו-`right`, ו-`insert` הולך שמאלה כש-`compareTo` חיובי וימינה אחרת, ומתעלם מכפילויות. `compareTo` מחזיר 1 כש-`this` גדול מ-`other`, ו-1- כשהוא קטן. הניחו ש-`T` תומך באופרטורים שצריך.
 
 א. כתבו את מחלקת ה-C++ הבסיסית: שדות, שני הבנאים, גטרים, ו-`insert`.
@@ -336,7 +336,7 @@ void f(BinaryTree<int> t) {
 :::
 :::
 
-:::problem id=exam-24c-q1 title="העתקה בעת כתיבה" source="Exams/24-c.pdf" kind=exam solution_origin=derived
+:::problem id=exam-24c-q1 title="העתקה בעת כתיבה" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
 העתקה בעת כתיבה (copy-on-write): שיבוט חולק את האובייקט עד שקורה כתיבה. רק השינוי הראשון מקצה עותק פרטי.
 
 א. השלימו את `copy_on_write<T>`. הוא מחזיק `T* ptr`. ל-`T` יש `clone()`. `on_write()` נקרא לפני ההשמה הראשונה דרך העטיפה הזאת, וזה הרגע שבו השיבוט חייב לקרות אם האובייקט עדיין משותף.

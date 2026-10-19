@@ -2,14 +2,14 @@
 id: serialization
 title: סיריאליזציה
 sources:
-  - "Classes/Chapter 12 - Serialization.pptx"
+  - "materials/lectures/Chapter 12 - Serialization.pptx"
 ---
 
 שרת התמונות ב-Reactor דיבר פרוטוקול פרטי: שם קובץ נכנס, בתי הקובץ יוצאים. השרת הבא שולח אובייקטים. אובייקט אינו מערך בתים עד שמשהו עובר על השדות (field) שלו וכותב אותם. ההליכה הזו היא סיריאליזציה (serialization).
 
 ## מה נכתב
 
-:::definition id=def-serialization title="סיריאליזציה" source="Classes/Chapter 12 - Serialization.pptx"
+:::definition id=def-serialization title="סיריאליזציה" source="materials/lectures/Chapter 12 - Serialization.pptx"
 סיריאליזציה היא ייצוג של אובייקט כרצף של בתים. היא כוללת את טיפוס האובייקט, את צורת השדות שלו, ואת ערכי השדות. דה-סיריאליזציה (deserialization) בונה אובייקט מחדש מהרצף הזה.
 
 הזוג שומר שדות פרימיטיביים ושדות אובייקט. הוא יכול להעביר ערך בין מכונות ובין JVM-ים, והבתים יכולים לנוע בקובץ או על שקע (socket). מה שהוא אינו שומר הוא הזהות של אובייקט הערימה (heap) המקורי. תוצאת קריאת הבתים היא אובייקט חדש עם אותם ערכי שדות.
@@ -64,7 +64,7 @@ private transient Integer hash;
 
 לא תואם: הסרה או שינוי הטיפוס של שדה שאינו `transient`, שינוי המחלקה בהיררכיה בדרכים שההרצאה מונה כשוברות. אי-התאמה של `serialVersionUID` מכשילה את הקריאה גם אם השדות היו מתאימים.
 
-:::problem id=worked-transient-hash title="שדה transient" source="Classes/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
+:::problem id=worked-transient-hash title="שדה transient" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
 `pet` עבר סיריאליזציה אחרי ש-`hashCode` כבר מילא את המטמון. מה `hash` מכיל באובייקט ש-`readObject` מחזיר, ומה `name` מכיל?
 
 ```java
