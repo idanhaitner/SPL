@@ -90,7 +90,7 @@ ds.send(p);
 
 צינור אנונימי מת עם התהליך. צינור עם שם אינו נעלם כשסוגרים את המתאר. זיכרון משותף הוא המהיר ביותר והקל ביותר לטעות בו, ולכן קיים פרק המקביליות. השרתים בקורס משתמשים בשקעי TCP.
 
-חוטי C++ מופיעים במפגש 10 כי הלקוח של מטלה 3 כתוב ב-C++. `std::thread` מריץ פונקציה. חובה `join` או `detach` לפני שאובייקט ה-`std::thread` נהרס. `std::mutex` הוא ה-mutex. `std::lock_guard` נועל בבנאי ומשחרר במפרק, גרסת ה-RAII של `synchronized`. אין `Runnable`; מעבירים מצביע לפונקציה או lambda.
+חוטי C++ מופיעים במפגש 10 כי הלקוח של מטלה 3 כתוב ב-C++. `std::thread` מריץ פונקציה. חובה `join` או `detach` לפני שאובייקט ה-`std::thread` נהרס. `std::mutex` הוא ה-mutex. `std::lock_guard` נועל בבנאי ומשחרר בהורס, גרסת ה-RAII של `synchronized`. אין `Runnable`; מעבירים מצביע לפונקציה או lambda.
 
 STOMP, גם הוא מפגש 10, הוא פרוטוקול האפליקציה מעל זרם אמין. מסגרת היא פקודה, כותרות `name:value`, שורה ריקה, גוף, ותו null `'\0'`. סדר הכותרות אינו משנה. `CONNECT` נושא `accept-version` ו-`host`, ורשות גם `login` ו-`passcode`. השרת עונה `CONNECTED`. `SUBSCRIBE` צריך `id` ו-`destination`. `SEND` צריך `destination`. `DISCONNECT` רשאי לשאת `receipt`, והשרת אז עונה `RECEIPT`. `ERROR` נושא כותרת `message`. נוסח המטלה גובר על השקפים כשהם חלוקים; המפגש אומר זאת על השקף.
 
@@ -203,7 +203,7 @@ worker.join();
 `std::thread th(&Task::run, &task)` מריץ את המתודה. `join` ממתין.
 :::
 :::hint
-הכלל הוא join או detach, לפני המפרק.
+הכלל הוא join או detach, לפני ההורס.
 :::
 :::solution
 ```cpp
@@ -213,7 +213,7 @@ std::thread th1(&Task::run, &task1);
 th1.join();
 ```
 
-בתוך `Task::run`, `std::lock_guard<std::mutex> guard(mutex);` נועל בבנייה ומשחרר כש-`guard` יוצא מהטווח, כולל ב-return. זה התחליף של המפגש ב-RAII ל-`synchronized`. אם המפרק של `th1` רץ בזמן שהחוט עדיין ניתן ל-join, התוכנית קוראת ל-`std::terminate`. כל `std::thread` עובר join או detach קודם.
+בתוך `Task::run`, `std::lock_guard<std::mutex> guard(mutex);` נועל בבנייה ומשחרר כש-`guard` יוצא מהטווח, כולל ב-return. זה התחליף של המפגש ב-RAII ל-`synchronized`. אם ההורס של `th1` רץ בזמן שהחוט עדיין ניתן ל-join, התוכנית קוראת ל-`std::terminate`. כל `std::thread` עובר join או detach קודם.
 :::
 :::
 

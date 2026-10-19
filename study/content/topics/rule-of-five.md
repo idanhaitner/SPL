@@ -78,7 +78,7 @@ RAII הוא Resource Acquisition Is Initialization. הסיסמה הזוגית ב
 :::definition id=def-smart-pointers title="מצביע חכם ייחודי (unique_ptr) ומצביע חכם משותף (shared_ptr)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 `std::unique_ptr<T>` הוא בעלות בלעדית. אי אפשר להעתיק אותו. אפשר להעביר אותו. אחרי אופטימיזציות הוא זול כמו מצביע גולמי (raw pointer). `std::shared_ptr<T>` הוא בעלות משותפת. העתקה שלו מגדילה מונה. הדיסטרקטור האחרון שמוריד את המונה משחרר את האובייקט. הוא קצת יותר איטי ממצביע גולמי.
 
-העדיפו את `std::make_unique<T>(...)` ואת `std::make_shared<T>(...)` על פני `unique_ptr<T>(new T(...))`. ההרצאה דוחה את הסיבה לבטיחות חריגות (exception safety): ביטוי ה-`new` כארגומנט לפונקציה יכול לדלוף אם ארגומנט אחר זורק. `make_shared` גם שם את האובייקט ואת המונה בהקצאה אחת.
+העדיפו את `std::make_unique<T>(...)` ואת `std::make_shared<T>(...)` על פני `unique_ptr<T>(new T(...))`. ההרצאה נותנת את הסיבה הזו מתוך בטיחות חריגות (exception safety): ביטוי ה-`new` כארגומנט לפונקציה יכול לדלוף אם ארגומנט אחר זורק. `make_shared` גם שם את האובייקט ואת המונה בהקצאה אחת.
 :::
 
 ```cpp

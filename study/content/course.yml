@@ -7,7 +7,7 @@ summary: >
   תכנות מערכות (202-1-2031) מפרק תוכנית אל המכונה שהיא באמת רצה עליה.
   מציירים את המחסנית ואת הערימה, כותבים את הפונקציות המיוחדות שמחלקה ב-C++
   צריכה כשהיא מחזיקה זיכרון, ואז עוברים ל-Java, לחוטים, לשקעים, ל-Reactor,
-  ולבסיס נתונים רילציוני.
+  ולבסיס נתונים רלציוני.
 
 changelog:
   - date: 2026-10-17
@@ -93,7 +93,7 @@ sources:
   - path: "materials/lectures/Chapter 13 - Persistance.pptx"
     type: lecture
     status: incorporated
-    note: "טבלאות רילציוניות, SQL, ו-join."
+    note: "טבלאות רלציוניות, SQL, ו-join."
     problems: [worked-inner-join]
   - path: "materials/notes/lecture-notes.docx.pdf"
     type: lecture
@@ -608,7 +608,7 @@ glossary:
     definition: "זרם בתים אמין מעל חיבור. קריאה מחזירה חלק מהבתים, לא בהכרח הודעה שלמה."
   - term: UDP
     topic: networking
-    definition: "פרוטוקול דאטאגרמות בלי חיבור. אין accept, ודאטאגרמה מגיעה שלמה או בכלל לא."
+    definition: "פרוטוקול דטגרמים בלי חיבור. אין accept, ודטגרם מגיע שלם או בכלל לא."
   - term: reactor
     topic: reactor
     definition: "חוט אחד שממתין ב-select ומפנה ערוצים לא חוסמים שמוכנים."
@@ -623,7 +623,7 @@ glossary:
     definition: "מפתח ראשי. העמודה או העמודות שמזהות שורה אחת בטבלה."
   - term: foreign key
     topic: persistence
-    definition: "מפתח זר. עמודה שהערכים שלה חייבים להיות שווים למפתח של טבלה אחרת. הצורה הרילציונית של מצביע."
+    definition: "מפתח זר. עמודה שהערכים שלה חייבים להיות שווים למפתח של טבלה אחרת. הצורה הרלציונית של מצביע."
   - term: process
     topic: memory-model
     definition: "תהליך. תוכנית בזמן שהיא רצה על מחשב, עם מרחב כתובות משלה ומצב ריצה משלה."

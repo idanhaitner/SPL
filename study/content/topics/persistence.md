@@ -36,10 +36,10 @@ RAM שוכח. הוא צריך חשמל, הוא נמחק באתחול, הוא מ�
 
 DBMS הוא סביבת הריצה של הנתונים האלה. ההרצאה נוקבת ב-MS SQL Server, ב-MySQL, ב-Oracle, וב-SQLite. מתחת, השכבות הן גישה לדיסק, גישה לקבצים, פעולות על רשומות (record/row), ושאילתות.
 
-## המודל הרילציוני
+## המודל הרלציוני
 
-:::definition id=def-relational title="בסיס נתונים רילציוני" source="materials/lectures/Chapter 13 - Persistance.pptx"
-בסיס נתונים רילציוני (Relational Database) שומר רשומות בטבלאות (table). לשדה (field) יש שם וטיפוס. מפתח ראשי (primary key) מזהה רשומה אחת. מפתח זר (foreign key) הוא הפניה למפתח בטבלה אחרת, והוא צריך להיות ייחודי ביעד, בדרך כלל המפתח הראשי של אותה טבלה. בשקפים, מצביע או הפניה הם מפתח זר. שדה יכול להיות `NOT NULL` או `UNIQUE`.
+:::definition id=def-relational title="בסיס נתונים רלציוני" source="materials/lectures/Chapter 13 - Persistance.pptx"
+בסיס נתונים רלציוני (Relational Database) שומר רשומות בטבלאות (table). לשדה (field) יש שם וטיפוס. מפתח ראשי (primary key) מזהה רשומה אחת. מפתח זר (foreign key) הוא הפניה למפתח בטבלה אחרת, והוא צריך להיות ייחודי ביעד, בדרך כלל המפתח הראשי של אותה טבלה. בשקפים, מצביע או הפניה הם מפתח זר. שדה יכול להיות `NOT NULL` או `UNIQUE`.
 
 כלל העיצוב בשקפים: מחלקה הופכת לטבלה, הפניה הופכת למפתח זר, ורשימה הופכת לטבלה נוספת. הזוג `(student id, course id)` בטבלה הנוספת הזו הוא המפתח הראשי של הקישור, וכל אחד משני השדות האלה הוא מפתח זר.
 
@@ -67,7 +67,7 @@ DBMS הוא סביבת הריצה של הנתונים האלה. ההרצאה נ�
 
 רשימת הקורסים של סטודנט אינה שדה של מערכים. היא `StudentsCourses(StudId, CourseId, Year, Grade)` עם מפתח ראשי `(StudId, CourseId, Year)`.
 
-NoSQL, על שקף אחד, הוא המשפחה האחרת: מאגר מפתח-ערך, קרוב לטבלת גיבוב, עם MongoDB ו-Redis כדוגמאות. שאר הפרק, וכל שאלה, הם SQL רילציוני.
+NoSQL, על שקף אחד, הוא המשפחה האחרת: מאגר מפתח-ערך, קרוב לטבלת גיבוב, עם MongoDB ו-Redis כדוגמאות. שאר הפרק, וכל שאלה, הם SQL רלציוני.
 
 ### DDL
 
@@ -260,7 +260,7 @@ DTO הוא רשומה אחת. שמו הוא רשומת הטבלה, ביחיד.
 join חוצה טבלאות, ולכן הוא חי על ה-repository.
 :::
 :::solution
-`Student`, `Assignment`, ו-`Grade` הם ה-DTO. `_Students`, `_Assignments`, ו-`_Grades` הם ה-DAO, כל אחד מחזיק את החיבור ומממש `insert` ו-`find` לטבלה אחת. `repo.get_grades_with_names()` מחבר את `grades` אל `students` ומחזיר רשומות שיש בהן גם `assignment_num` וגם `name`. המתודה הזו על ה-repository כי היא אינה עוסקת בטבלה אחת. גם `create_tables` על ה-repository, מאותה סיבה: הוא יוצר את שלושתן.
+`Student`, `Assignment`, ו-`Grade` הם ה-DTO. `_Students`, `_Assignments`, ו-`_Grades` הם ה-DAO, כל אחד מחזיק את החיבור ומממש `insert` ו-`find` לטבלה אחת. `repo.get_grades_with_names()` מחבר את `grades` אל `students` ומחזיר רשומות שיש בהן גם `assignment_num` וגם `name`. המתודה הזו שייכת ל-repository, כי היא אינה עוסקת בטבלה אחת. גם `create_tables` נמצא ב-repository, מאותה סיבה: הוא יוצר את שלושתן.
 
 ההגשה של Bob מחזירה `"main"` ו-`expected_output` של המטלה הוא `"Main"`, ולכן רשומת הציון שלו רושמת את אי-ההתאמה. ההשוואה רגישה לאותיות גדולות כי המפגש מדפיס שהוא נכשל בדיוק מהסיבה הזו.
 :::
