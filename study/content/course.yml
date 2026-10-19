@@ -20,6 +20,8 @@ changelog:
     note: "Worked examples now open on a real code block, with call, leak, static, and recursion pictures in the memory chapter."
   - date: 2026-10-18
     note: "The guide is in Hebrew, with the lecture names for each idea and the English terms the slides keep."
+  - date: 2026-10-19
+    note: "Adler's lecture notes: runtime environment and process states, the i = i + j machine trace, pass-by choice, client-side locking, and the versioned iterator."
 
 sources:
   - path: "Classes/Chapter 1 - The Memory Model.pptx"
@@ -85,6 +87,11 @@ sources:
     status: incorporated
     note: "טבלאות רילציוניות, SQL, ו-join."
     problems: [worked-inner-join]
+  - path: "Notes/lecture-notes.docx.pdf"
+    type: lecture
+    status: incorporated
+    note: "סיכומי מני אדלר. סביבת זמן ריצה, מצבי תהליך, אפיקי כתובת ונתונים, תרגום i = i + j, בחירת העברה לפי ערך או לפי כתובת, נעילה מצד הלקוח, איטרטור עם גרסה, ואלגברה רלציונית."
+    problems: [worked-add-trace]
   - path: "Exrecises/SPL_PS1 (1).pptx"
     type: exercise
     status: incorporated
@@ -489,6 +496,15 @@ glossary:
   - term: foreign key
     topic: persistence
     definition: "מפתח זר. עמודה שהערכים שלה חייבים להיות שווים למפתח של טבלה אחרת. הצורה הרילציונית של מצביע."
+  - term: process
+    topic: memory-model
+    definition: "תהליך. תוכנית בזמן שהיא רצה על מחשב, עם מרחב כתובות משלה ומצב ריצה משלה."
+  - term: runtime environment
+    topic: memory-model
+    definition: "סביבת זמן ריצה. השכבה בין התוכנית לתשתית: היא שומרת על תכונות התשתית, מוסיפה הפשטה, ממשק נוח, ושירותים שאין לחומרה."
+  - term: system call
+    topic: memory-model
+    definition: "קריאת מערכת. פונקציה שמערכת ההפעלה נותנת לתהליך כדי לגשת לחומרה, במקום שהתהליך ייגע בחומרה בעצמו."
 
 exams:
   - year: 2015

@@ -4,7 +4,9 @@ import { Chapter } from "@/components/Chapter";
 import { Visit } from "@/components/Visit";
 import { loadCourse } from "@/lib/course";
 
-export const dynamic = "force-dynamic";
+export function generateStaticParams() {
+  return loadCourse().topics.map((topic) => ({ slug: topic.id }));
+}
 
 export default async function TopicPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

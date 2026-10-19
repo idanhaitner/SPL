@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { loadCourse } from "@/lib/course";
 
-export const dynamic = "force-dynamic";
-
 export default function GlossaryPage() {
   const course = loadCourse();
   const known = new Set(course.topics.map((topic) => topic.id));

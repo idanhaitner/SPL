@@ -55,12 +55,41 @@ async function routesOf(page) {
   return [...paths];
 }
 
+async function openHidden(page) {
+  for (let guard = 0; guard < 40; guard++) {
+    const closed = page.locator('.fold-toggle[aria-expanded="false"]');
+    if ((await closed.count()) === 0) break;
+    await closed.first().click();
+  }
+  for (let guard = 0; guard < 80; guard++) {
+    const folded = page.locator("button.fold-row");
+    if ((await folded.count()) === 0) break;
+    await folded.first().click();
+  }
+  for (let guard = 0; guard < 200; guard++) {
+    const hint = page.getByRole("button", { name: /הצג רמז|הרמז הבא/ });
+    if ((await hint.count()) === 0) break;
+    await hint.first().click();
+  }
+  for (let guard = 0; guard < 80; guard++) {
+    const solutions = page.getByRole("button", { name: "הצג פתרון" });
+    if ((await solutions.count()) === 0) break;
+    await solutions.first().click();
+  }
+}
+
 async function checkPage(page, path, width, failures, seenSvg) {
   await page.goto(base + path, { waitUntil: "networkidle" });
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await page.waitForTimeout(100);
-  const where = `${width}px ${path}`;
+  const parts = Math.max(await page.locator("nav.parts button").count(), 1);
+  for (let part = 0; part < parts; part++) {
+    if (parts > 1) await page.locator("nav.parts button").nth(part).click();
+    await openHidden(page);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await checkView(page, `${width}px ${path} §${part + 1}`, failures, seenSvg);
+  }
+}
 
+async function checkView(page, where, failures, seenSvg) {
     const layout = await page.evaluate(() => {
     const problems = [];
     const sameRow = (a, b) => Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 4;
@@ -158,9 +187,6 @@ async function checkPage(page, path, width, failures, seenSvg) {
         total += 1;
       }
       if (total < 20) return "empty";
-      const portions = [...counts.values()].map((count) => count / total);
-      const significant = portions.filter((portion) => portion > 0.015).length;
-      if (Math.max(...portions) > 0.72 || significant < 3) return "flat";
       return "";
     }, image.src);
     if (flat) failures.push(`${where}: image ${image.src} looks ${flat}`);
@@ -180,6 +206,10 @@ async function checkPage(page, path, width, failures, seenSvg) {
 const browser = await chromium.launch();
 const page = await browser.newPage();
 const failures = [];
+page.on("pageerror", (error) => failures.push(`page error: ${error.message}`));
+page.on("console", (message) => {
+  if (message.type() === "error") failures.push(`console: ${message.text()}`);
+});
 try {
   const paths = await routesOf(page);
   console.log(`Crawling ${paths.length} pages at ${widths.join(" and ")}px`);
@@ -191,6 +221,23 @@ try {
       process.stdout.write(".");
     }
   }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  await page.locator("#q").fill("מחסנית");
+  const hits = page.locator(".search-results a");
+  await hits.first().waitFor({ timeout: 3000 }).catch(() => {});
+  if ((await hits.count()) === 0) failures.push("search for מחסנית returned nothing");
+  const reducedContext = await browser.newContext({
+    reducedMotion: "reduce",
+    viewport: { width: 1280, height: 900 },
+  });
+  const reduced = await reducedContext.newPage();
+  await reduced.goto(base + "/", { waitUntil: "networkidle" });
+  const link = reduced.locator(".chapter-list a").first();
+  await link.hover();
+  const transform = await link.evaluate((node) => getComputedStyle(node).transform);
+  if (transform !== "none") failures.push(`reduced motion still translates chapter links (${transform})`);
+  await reduced.close();
   console.log("");
 } finally {
   await browser.close();

@@ -10,12 +10,14 @@ function mathHtml(tex: string, display: boolean) {
   });
 }
 
+const assetBase = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 function hrefOf(url: string): string | null {
   if (url.startsWith("topic:")) return `/topics/${url.slice(6)}`;
   if (url === "study:glossary") return "/glossary";
   if (url === "study:index" || url === "study:drill") return "/";
   if (url.startsWith("repo:")) return null;
-  if (url.startsWith("../assets/figures/")) return `/figures/${url.slice("../assets/figures/".length)}`;
+  if (url.startsWith("../assets/figures/")) return `${assetBase}/figures/${url.slice("../assets/figures/".length)}`;
   return url;
 }
 

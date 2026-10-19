@@ -6,26 +6,26 @@
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
   <rect width="760" height="340" fill="#f6f1e7"/>
-  <text x="190" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">inside leaky</text>
-  <text x="570" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">after leaky returns</text>
+  <text x="190" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">בתוך leaky</text>
+  <text x="570" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22">אחרי ש-leaky חוזרת</text>
   <g class="draw">
     <rect x="28" y="64" width="324" height="100" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5"/>
-    <text x="48" y="96" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">stack</text>
+    <text x="48" y="96" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">מחסנית</text>
     <text x="48" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">box</text>
-    <text x="120" y="124" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">points at the heap int</text>
-    <text x="48" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">this slot is the only name</text>
+    <text x="120" y="124" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">מצביע ל-int בערימה</text>
+    <text x="48" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">זה השם היחיד</text>
     <rect x="28" y="180" width="324" height="100" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5"/>
-    <text x="48" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">heap</text>
+    <text x="48" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">ערימה</text>
     <text x="48" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">int 9</text>
-    <text x="130" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">alive, reachable</text>
+    <text x="130" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">חי, נגיש</text>
   </g>
   <g class="draw d2">
     <rect x="408" y="64" width="324" height="100" rx="12" fill="none" stroke="#b7ab9c" stroke-width="1.5" stroke-dasharray="7 6"/>
-    <text x="428" y="104" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">stack</text>
-    <text x="428" y="132" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348">box is gone</text>
+    <text x="428" y="104" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">מחסנית</text>
+    <text x="428" y="132" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348">box נעלם</text>
     <rect x="408" y="180" width="324" height="100" rx="12" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5"/>
-    <text x="428" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">heap</text>
+    <text x="428" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142">ערימה</text>
     <text x="428" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">int 9</text>
-    <text x="510" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">still rented, no name</text>
+    <text x="510" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348">עדיין תפוס, בלי שם</text>
   </g>
 </svg>

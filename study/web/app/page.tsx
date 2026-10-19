@@ -2,8 +2,6 @@ import Link from "next/link";
 import { Continue } from "@/components/Continue";
 import { loadCourse } from "@/lib/course";
 
-export const dynamic = "force-dynamic";
-
 export default function HomePage() {
   const course = loadCourse();
   return (

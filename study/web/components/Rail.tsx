@@ -9,6 +9,11 @@ import type { SearchHit } from "@/lib/types";
 
 type Chapter = { id: string; title: string; practiceIds: string[] };
 
+function samePath(pathname: string, href: string) {
+  const trim = (path: string) => (path.length > 1 ? path.replace(/\/+$/, "") : path);
+  return trim(pathname) === trim(href);
+}
+
 export function Rail({
   courseId,
   title,
@@ -67,15 +72,15 @@ export function Rail({
       <p className="course-name"><Link href="/">{title}</Link></p>
       <SearchBox hits={hits} />
       <nav className="rail-nav">
-        <Link className={pathname === "/" ? "is-current" : ""} href="/">סקירה</Link>
-        <Link className={pathname === "/glossary" ? "is-current" : ""} href="/glossary">מונחים</Link>
+        <Link className={samePath(pathname, "/") ? "is-current" : ""} href="/">סקירה</Link>
+        <Link className={samePath(pathname, "/glossary") ? "is-current" : ""} href="/glossary">מונחים</Link>
       </nav>
       <p className="rail-label">פרקים</p>
       <nav className="chapters-nav" ref={chaptersRef}>
         {mark && <span className="rail-mark" style={{ top: mark.top, height: mark.height }} />}
         {chapters.map((chapter, index) => {
           const href = `/topics/${chapter.id}`;
-          const current = pathname === href;
+          const current = samePath(pathname, href);
           const finished = chapter.practiceIds.length > 0 && chapter.practiceIds.every((id) => solved.includes(id));
           return (
             <Link key={chapter.id} href={href} className={current ? "is-current" : ""}>
