@@ -28,20 +28,20 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
       <nav className={`pager${previous && next ? " is-pair" : " is-single"}`} aria-label="פרקים">
         {previous && (
           <Link className="pager-prev" href={`/topics/${previous.id}`}>
-            <span className="pager-arrow" aria-hidden="true" />
-            <span className="pager-copy">
-              <span>הקודם</span>
+            <span className="nav-arrow" aria-hidden="true" />
+            <span className="nav-copy">
+              <span className="nav-kicker">הפרק הקודם</span>
               <strong>{previous.title}</strong>
             </span>
           </Link>
         )}
         {next && (
           <Link className="pager-next" href={`/topics/${next.id}`}>
-            <span className="pager-copy">
-              <span>הבא</span>
+            <span className="nav-copy">
+              <span className="nav-kicker">הפרק הבא</span>
               <strong>{next.title}</strong>
             </span>
-            <span className="pager-arrow" aria-hidden="true" />
+            <span className="nav-arrow" aria-hidden="true" />
           </Link>
         )}
       </nav>

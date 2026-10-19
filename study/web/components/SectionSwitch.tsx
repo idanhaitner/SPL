@@ -93,8 +93,11 @@ export function SectionSwitch({ intro, parts }: { intro: ReactNode; parts: Part[
         {current.groups.length > 0 && <Folds groups={current.groups} revealId={revealId} />}
         {parts.length > 1 && upcoming && (
           <button type="button" className="part-next" onClick={() => show(index + 1)}>
-            <span>הסעיף הבא</span>
-            <strong><Inline text={upcoming.title} /></strong>
+            <span className="nav-copy">
+              <span className="nav-kicker">הסעיף הבא</span>
+              <strong><Inline text={upcoming.title} /></strong>
+            </span>
+            <span className="nav-arrow" aria-hidden="true" />
           </button>
         )}
       </section>
