@@ -1,93 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" width="920" height="300">
   <style>
     text { font-family: Heebo, "Segoe UI", sans-serif; }
   </style>
 
   <g>
-    <rect x="16" y="16" width="304" height="300" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
-    <text x="168" y="48" text-anchor="middle" font-size="16" font-weight="700" fill="#1e2430">Students</text>
-    <rect x="32" y="64" width="272" height="28" rx="6" fill="#243044"/>
-    <text x="100" y="83" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">id</text>
-    <text x="220" y="83" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">name</text>
-    <rect x="32" y="100" width="272" height="34" rx="6" fill="#e7f4ec"/>
-    <text x="100" y="122" text-anchor="middle" font-size="14" fill="#1e2430">1</text>
-    <text x="220" y="122" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">Alice</text>
-    <rect x="32" y="140" width="272" height="34" rx="6" fill="#f8e8e4"/>
-    <text x="100" y="162" text-anchor="middle" font-size="14" fill="#a33d32">2</text>
-    <text x="220" y="162" text-anchor="middle" font-size="14" fill="#a33d32">Bob</text>
-    <line x1="196" y1="157" x2="246" y2="157" stroke="#a33d32" stroke-width="1.4"/>
-    <text x="168" y="204" text-anchor="middle" font-size="13" fill="#5e6672" direction="rtl">יש: id, name</text>
-    <text x="168" y="230" text-anchor="middle" font-size="14" font-weight="700" fill="#a33d32" direction="rtl">חסרה: course</text>
-    <text x="168" y="262" text-anchor="middle" font-size="13" fill="#a33d32" direction="rtl">Bob נשמט</text>
-    <text x="168" y="284" text-anchor="middle" font-size="13" fill="#a33d32" direction="rtl">אין לו שורת קישור</text>
+    <rect x="16" y="12" width="288" height="168" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5"/>
+    <text x="160" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">Students</text>
+    <rect x="32" y="54" width="256" height="26" rx="6" fill="#243044"/>
+    <text x="96" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">id</text>
+    <text x="208" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">name</text>
+    <rect x="32" y="86" width="256" height="32" rx="6" fill="#e7f4ec"/>
+    <text x="96" y="107" text-anchor="middle" font-size="14" fill="#1e2430">1</text>
+    <text x="208" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">Alice</text>
+    <rect x="32" y="124" width="256" height="32" rx="6" fill="#f8e8e4"/>
+    <text x="96" y="145" text-anchor="middle" font-size="14" fill="#a33d32">2</text>
+    <text x="208" y="145" text-anchor="middle" font-size="14" fill="#a33d32">Bob</text>
+    <line x1="184" y1="140" x2="234" y2="140" stroke="#a33d32" stroke-width="1.4"/>
   </g>
 
   <g>
-    <rect x="338" y="16" width="304" height="300" rx="14" fill="#fffaf3" stroke="#e2c48a" stroke-width="1.5"/>
-    <text x="490" y="48" text-anchor="middle" font-size="16" font-weight="700" fill="#1e2430">StudentsCourses</text>
-    <rect x="354" y="64" width="272" height="28" rx="6" fill="#243044"/>
-    <text x="422" y="83" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">student_id</text>
-    <text x="558" y="83" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">course_id</text>
-    <rect x="354" y="100" width="272" height="34" rx="6" fill="#e7f4ec"/>
-    <text x="422" y="122" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">1</text>
-    <text x="558" y="122" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">10</text>
-    <rect x="354" y="140" width="272" height="34" rx="6" fill="#f8e8e4"/>
-    <text x="490" y="162" text-anchor="middle" font-size="13" fill="#a33d32" direction="rtl">אין שורה ל-Bob</text>
-    <text x="490" y="204" text-anchor="middle" font-size="13" fill="#5e6672" direction="rtl">יש: student_id, course_id</text>
-    <text x="490" y="230" text-anchor="middle" font-size="14" font-weight="700" fill="#1e2430" direction="rtl">טבלת הקישור</text>
-    <text x="490" y="262" text-anchor="middle" font-size="13" fill="#1f7a4d" direction="rtl">רק Alice מקושרת</text>
-    <text x="490" y="284" text-anchor="middle" font-size="13" fill="#1f7a4d" direction="rtl">אל prog</text>
+    <rect x="316" y="12" width="288" height="168" rx="12" fill="#fffaf3" stroke="#e2c48a" stroke-width="1.5"/>
+    <text x="460" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">StudentsCourses</text>
+    <rect x="332" y="54" width="256" height="26" rx="6" fill="#243044"/>
+    <text x="396" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">student_id</text>
+    <text x="524" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">course_id</text>
+    <rect x="332" y="86" width="256" height="32" rx="6" fill="#e7f4ec"/>
+    <text x="396" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">1</text>
+    <text x="524" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">10</text>
   </g>
 
   <g>
-    <rect x="660" y="16" width="304" height="300" rx="14" fill="#f7fafc" stroke="#c5d4e4" stroke-width="1.5"/>
-    <text x="812" y="48" text-anchor="middle" font-size="16" font-weight="700" fill="#1e2430">Courses</text>
-    <rect x="676" y="64" width="272" height="28" rx="6" fill="#243044"/>
-    <text x="744" y="83" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">id</text>
-    <text x="864" y="83" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">name</text>
-    <rect x="676" y="100" width="272" height="34" rx="6" fill="#e7f4ec"/>
-    <text x="744" y="122" text-anchor="middle" font-size="14" fill="#1e2430">10</text>
-    <text x="864" y="122" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">prog</text>
-    <rect x="676" y="140" width="272" height="34" rx="6" fill="#f8e8e4"/>
-    <text x="744" y="162" text-anchor="middle" font-size="14" fill="#a33d32">20</text>
-    <text x="864" y="162" text-anchor="middle" font-size="14" fill="#a33d32">systems</text>
-    <line x1="828" y1="157" x2="902" y2="157" stroke="#a33d32" stroke-width="1.4"/>
-    <text x="812" y="204" text-anchor="middle" font-size="13" fill="#5e6672" direction="rtl">יש: id, name</text>
-    <text x="812" y="230" text-anchor="middle" font-size="14" font-weight="700" fill="#a33d32" direction="rtl">חסרה: student</text>
-    <text x="812" y="262" text-anchor="middle" font-size="13" fill="#a33d32" direction="rtl">systems נשמט</text>
-    <text x="812" y="284" text-anchor="middle" font-size="13" fill="#a33d32" direction="rtl">אין לו שורת קישור</text>
+    <rect x="616" y="12" width="288" height="168" rx="12" fill="#f7fafc" stroke="#c5d4e4" stroke-width="1.5"/>
+    <text x="760" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">Courses</text>
+    <rect x="632" y="54" width="256" height="26" rx="6" fill="#243044"/>
+    <text x="696" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">id</text>
+    <text x="808" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">name</text>
+    <rect x="632" y="86" width="256" height="32" rx="6" fill="#e7f4ec"/>
+    <text x="696" y="107" text-anchor="middle" font-size="14" fill="#1e2430">10</text>
+    <text x="808" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">prog</text>
+    <rect x="632" y="124" width="256" height="32" rx="6" fill="#f8e8e4"/>
+    <text x="696" y="145" text-anchor="middle" font-size="14" fill="#a33d32">20</text>
+    <text x="808" y="145" text-anchor="middle" font-size="14" fill="#a33d32">systems</text>
+    <line x1="768" y1="140" x2="848" y2="140" stroke="#a33d32" stroke-width="1.4"/>
   </g>
 
-  <g>
-    <rect x="16" y="336" width="468" height="348" rx="14" fill="#fffdf8" stroke="#1f7a4d" stroke-width="1.5"/>
-    <text x="250" y="372" text-anchor="middle" font-size="16" font-weight="700" fill="#1e2430">INNER JOIN</text>
-    <text x="250" y="398" text-anchor="middle" font-size="13" fill="#5e6672">SELECT S.name, C.name</text>
-    <rect x="56" y="418" width="388" height="30" rx="6" fill="#243044"/>
-    <text x="160" y="438" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">S.name</text>
-    <text x="340" y="438" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">C.name</text>
-    <rect x="56" y="456" width="388" height="38" rx="6" fill="#e7f4ec"/>
-    <text x="160" y="481" text-anchor="middle" font-size="16" font-weight="700" fill="#1f7a4d">Alice</text>
-    <text x="340" y="481" text-anchor="middle" font-size="16" font-weight="700" fill="#1f7a4d">prog</text>
-    <text x="250" y="534" text-anchor="middle" font-size="14" fill="#1e2430" direction="rtl">שורה אחת. שתי עמודות.</text>
-    <text x="250" y="564" text-anchor="middle" font-size="13" fill="#5e6672" direction="rtl">העמודות שנשארו:</text>
-    <text x="250" y="590" text-anchor="middle" font-size="14" font-weight="700" fill="#1f7a4d">S.name , C.name</text>
-    <text x="250" y="624" text-anchor="middle" font-size="13" fill="#5e6672" direction="rtl">המפתחות לא חוזרים בתוצאה</text>
-    <text x="250" y="650" text-anchor="middle" font-size="13" fill="#a33d32">id, student_id, course_id</text>
-  </g>
-
-  <g>
-    <rect x="500" y="336" width="464" height="348" rx="14" fill="#fffdf8" stroke="#e4c4bc" stroke-width="1.5"/>
-    <text x="732" y="372" text-anchor="middle" font-size="16" font-weight="700" fill="#1e2430" direction="rtl">מה חסר בתוצאה</text>
-
-    <text x="732" y="408" text-anchor="middle" font-size="13" font-weight="700" fill="#a33d32" direction="rtl">שורות בלי התאמה</text>
-    <text x="732" y="436" text-anchor="middle" font-size="14" fill="#1e2430" direction="rtl">Bob — אין שורה בקישור</text>
-    <text x="732" y="462" text-anchor="middle" font-size="14" fill="#1e2430" direction="rtl">systems — אין שורה בקישור</text>
-
-    <text x="732" y="504" text-anchor="middle" font-size="13" font-weight="700" fill="#a33d32" direction="rtl">עמודות שלא חוזרות</text>
-    <text x="732" y="532" text-anchor="middle" font-size="14" fill="#1e2430">Students.id</text>
-    <text x="732" y="558" text-anchor="middle" font-size="14" fill="#1e2430">Courses.id</text>
-    <text x="732" y="584" text-anchor="middle" font-size="14" fill="#1e2430">student_id</text>
-    <text x="732" y="610" text-anchor="middle" font-size="14" fill="#1e2430">course_id</text>
-    <text x="732" y="648" text-anchor="middle" font-size="13" fill="#5e6672" direction="rtl">החיבור משתמש בהן. ה-SELECT לא.</text>
-  </g>
+  <text x="460" y="214" text-anchor="middle" font-size="13" font-weight="700" fill="#1e2430">INNER JOIN  ·  SELECT S.name, C.name</text>
+  <rect x="270" y="228" width="380" height="28" rx="6" fill="#243044"/>
+  <text x="370" y="247" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">S.name</text>
+  <text x="550" y="247" text-anchor="middle" font-size="13" font-weight="650" fill="#f7f4ee">C.name</text>
+  <rect x="270" y="262" width="380" height="32" rx="6" fill="#e7f4ec"/>
+  <text x="370" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="#1f7a4d">Alice</text>
+  <text x="550" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="#1f7a4d">prog</text>
 </svg>
