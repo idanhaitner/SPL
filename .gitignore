@@ -13,12 +13,8 @@ study/drill.html
 study/glossary.html
 study/topics/
 
-# Legacy static-site chrome (Next serves figures from study/web/public/)
-study/assets/course.js
-study/assets/site.css
-study/assets/site.js
-study/assets/fonts/
-study/assets/vendor/
+# Old static-site tree; figures live in study/web/public/figures/
+study/assets/
 
 # Next.js / Node
 study/web/node_modules/
