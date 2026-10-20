@@ -32,115 +32,66 @@ sources:
   - "materials/exams/20-b-solution.pdf"
 ---
 
-RAM שוכח. הוא צריך חשמל, הוא נמחק באתחול, הוא מת עם התהליך (process), והוא המאגר היקר והקטן יותר. דיסק שומר בתים עד שמישהו מוחק אותם, והוא גדול. סיריאליזציה (serialization) יכולה לשים אובייקט על הדיסק הזה. פרק 13 מונה למה זה עדיין אינו בסיס נתונים: חיפוש עושה דה-סיריאליזציה (deserialization) לאובייקטים שלמים, אין אינדקס, עדכון כותב את הקובץ מחדש, מקביליות היא מנעול שאתם ממציאים, ואין טרנזקציות.
-
-DBMS הוא סביבת הריצה של הנתונים האלה. ההרצאה נוקבת ב-MS SQL Server, ב-MySQL, ב-Oracle, וב-SQLite. מתחת, השכבות הן גישה לדיסק, גישה לקבצים, פעולות על רשומות (record/row), ושאילתות.
+מערכת לניהול בסיסי נתונים (DBMS) מאפשרת אחסון מתמיד, שאילתות יעילות, וניהול טרנזקציות ומקביליות.
 
 ## המודל הרלציוני
 
-:::definition id=def-relational title="בסיס נתונים רלציוני" source="materials/lectures/Chapter 13 - Persistance.pptx"
-בסיס נתונים רלציוני (Relational Database) שומר רשומות בטבלאות (table). לשדה (field) יש שם וטיפוס. מפתח ראשי (primary key) מזהה רשומה אחת. מפתח זר (foreign key) הוא הפניה למפתח בטבלה אחרת, והוא צריך להיות ייחודי ביעד, בדרך כלל המפתח הראשי של אותה טבלה. בשקפים, מצביע או הפניה הם מפתח זר. שדה יכול להיות `NOT NULL` או `UNIQUE`.
+:::definition id=def-relational title="עקרונות המודל הרלציוני" source="materials/lectures/Chapter 13 - Persistance.pptx"
 
-כלל העיצוב בשקפים: מחלקה הופכת לטבלה, הפניה הופכת למפתח זר, ורשימה הופכת לטבלה נוספת. הזוג `(student id, course id)` בטבלה הנוספת הזו הוא המפתח הראשי של הקישור, וכל אחד משני השדות האלה הוא מפתח זר.
-
-הסיכומים מוסיפים את סדר העיצוב. מחלקה היא טבלה. שדה שהטיפוס שלו הוא אובייקט אינו עמודה של אובייקט: הוא מפתח זר אל הטבלה של המחלקה ההיא, או טבלה של היעד כשהקשר הוא הבעלות. שדה שהוא מערך או אוסף הוא טבלת קישור, לא רשימת עמודות. שדה ששולפים לפיו מקבל אינדקס. בכל טבלה יש שדה, או קבוצת שדות, שהם גם המפתח וגם ייחודיים.
+- **טבלה (Table):** מייצגת ישות או קשר.
+- **מפתח ראשי (Primary Key):** עמודה (או אוסף עמודות) המזהה ייחודית כל שורה בטבלה.
+- **מפתח זר (Foreign Key):** עמודה המפנה למפתח הראשי בטבלה אחרת ולאוכפת תקינות התייחסותית (Referential Integrity).
 :::
 
-הפעולות של המודל, בשמות של הסיכומים: בחירה (selection) שומרת שורות לפי תנאי, הטלה (projection) שומרת עמודות, ומכפלה קרטזית מזווגת כל שורה עם כל שורה. צירוף (join) הוא שלושתן יחד: מכפלה, ואז בחירה של הזוגות שתנאי החיבור מתקיים בהם, ואז הטלה אל העמודות שביקשו. `SELECT` בלי תנאי חיבור נעצר אחרי המכפלה.
+מיפוי מחלקות לטבלאות:
 
-האוניברסיטה של ההרצאה:
-
-| students | | | |
-| --- | --- | --- | --- |
-| id | name | login | dept |
-| 3984 | Alice | alice12 | 1 |
-
-| departments | | |
-| --- | --- | --- |
-| id | name | building |
-| 1 | science | 37 |
-
-| courses | | |
-| --- | --- | --- |
-| id | name | teacher |
-| 1 | prog | Gil |
-
-רשימת הקורסים של סטודנט אינה שדה של מערכים. היא `StudentsCourses(StudId, CourseId, Year, Grade)` עם מפתח ראשי `(StudId, CourseId, Year)`.
-
-NoSQL, על שקף אחד, הוא המשפחה האחרת: מאגר מפתח-ערך, קרוב לטבלת גיבוב, עם MongoDB ו-Redis כדוגמאות. שאר הפרק, וכל שאלה, הם SQL רלציוני.
-
-### DDL
-
-שפת הגדרת הנתונים של SQL יוצרת והורסת את הצורה.
+1. מחלקה הופכת לטבלה.
+2. קשר יחיד-לרבים (1:N) מיוצג על ידי מפתח זר בצד של ה-N.
+3. קשר רבים-לרבים (N:M) מיוצג על ידי **טבלת קישור (Junction Table)** המכילה מפתחות זרים לשתי הטבלאות.
 
 ```sql
 CREATE TABLE Students (
   Id INTEGER PRIMARY KEY,
-  Name VARCHAR(20) NOT NULL,
-  Login VARCHAR(10) UNIQUE,
-  DeptId INTEGER REFERENCES Departments(Id)
+  Name TEXT NOT NULL
 );
-CREATE TABLE Departments (
+
+CREATE TABLE Courses (
   Id INTEGER PRIMARY KEY,
-  Name VARCHAR(20) UNIQUE NOT NULL,
-  Building INTEGER
+  Title TEXT NOT NULL
 );
-CREATE INDEX idx_departments_name ON Departments(name);
-CREATE TABLE StudentsCourses (
-  StudId INTEGER,
-  CourseId INTEGER,
-  Year INTEGER,
-  Grade INTEGER,
-  PRIMARY KEY (StudId, CourseId, Year),
-  FOREIGN KEY (StudId) REFERENCES Students(Id),
-  FOREIGN KEY (CourseId) REFERENCES Courses(Id)
+
+CREATE TABLE Enrollment (
+  StudentId INTEGER REFERENCES Students(Id),
+  CourseId INTEGER REFERENCES Courses(Id),
+  PRIMARY KEY (StudentId, CourseId)
 );
+
 ```
 
-סכימה (schema) היא מרחב שמות של טבלאות. `CREATE SCHEMA University;` ו-`DROP SCHEMA`. `DROP TABLE Students;`, `DROP INDEX ...`, ו-`ALTER TABLE Students ADD COLUMN Email VARCHAR(50);` הן פקודות ה-DDL האחרות בשקפים.
-
-### DML
-
-שפת הטיפול בנתונים משנה וקוראת רשומות.
+### פעולות JOIN ב-SQL
 
 ```sql
-INSERT INTO Departments (Id, Name, Building) VALUES (1, 'science', 37);
-INSERT INTO Students (Id, DeptId) VALUES (2485, 2);          -- fails: Name is NOT NULL
-INSERT INTO Students (Id, Name, DeptId) VALUES (2485, 'Bob', 2);  -- Login may be omitted
-```
-
-השמטת רשימת השדות, `INSERT INTO Courses VALUES (1, 'prog', 'Gil')`, עובדת רק כל עוד סדר השדות בטבלה תואם את סדר הערכים. ההרצאה מייעצת נגד זה.
-
-```sql
-UPDATE Students SET Login = 'bob12' WHERE Id = 2485;   -- one row, Id is unique
-UPDATE Students SET Login = 'x';                        -- every row
-DELETE FROM Students WHERE Id = 2485;
-DELETE FROM Students WHERE Id < 3000;
-DELETE FROM Students;                                   -- every row, the table stays
-```
-
-`SELECT` הוא הקריאה.
-
-```sql
-SELECT * FROM Students;
-SELECT Id, Name FROM Students;
-SELECT * FROM Students WHERE Id = 3984;
-```
-
-`SELECT Students.Name, Courses.Name FROM Students, Courses` בלי תנאי חיבור הוא המכפלה הקרטזית: כל סטודנט מזווג עם כל קורס. Alice מופיעה פעם לכל קורס. התיקון הוא inner join.
-
-```sql
-SELECT S.name, C.name
+-- Inner Join: מחזיר רק שורות בעלות התאמה בשתי הטבלאות
+SELECT S.Name, C.Title
 FROM Students S
-INNER JOIN StudentsCourses SC ON S.id = SC.student_id
-INNER JOIN Courses C ON SC.course_id = C.id;
+INNER JOIN Enrollment E ON S.Id = E.StudentId
+INNER JOIN Courses C ON E.CourseId = C.Id;
+
+-- Left Join: מחזיר את כל השורות מהטבלה השמאלית, גם אם אין התאמה בימנית
+SELECT S.Name, C.Title
+FROM Students S
+LEFT JOIN Enrollment E ON S.Id = E.StudentId
+LEFT JOIN Courses C ON E.CourseId = C.Id;
+
 ```
 
 ![Students, טבלת ההרשמה, ו-Courses. Alice מקושרת ל-prog. ל-Bob ול-systems אין רשומת קישור](../assets/figures/sql-join.svg)
 
-`INNER JOIN` שומר רק רשומות שמתאימות. `LEFT JOIN` שומר כל סטודנט, עם שדות קורס שהם null כשאין לסטודנט הרשמה. `RIGHT JOIN` שומר כל קורס, עם שדות סטודנט שהם null כשאף אחד לא למד אותו. `FULL JOIN` שומר את שני הצדדים. טבלאות המתרגלים של מפגש 12 הן אותו דפוס: `PRACTICAL_SESSIONS.TA_ID` מפנה אל `TEACHING_ASSISTANTS.ID`, ו-left join מראה את Matan ואת Yair עם שדות מפגש תרגול שהם null כי אין להם קבוצה.
+## תבניות ארכיטקטורה (DTO, DAO, Repository)
 
-מפגש 13 שם תוכנית Python לפני הטבלאות האלה. DTO הוא רשומה אחת כאובייקט (`Student` עבור הטבלה `students`). DAO הוא האובייקט שעושה `insert` ו-`find` ל-DTO הזה, בדרך כלל טבלה אחת, לעתים קרובות singleton. repository מחזיק כמה DAO ואת המתודות שמחברות טבלאות, כולל `create_tables`. ORM הוא הגרסה הגנרית: `row_map` בונה DTO מרשומה לפי סדר השדות, ומחלקת DAO אחת משרתת כל טבלה. דוגמת בודק המטלות שומרת `students`, `assignments`, ו-`grades`, מריצה קובץ שהוגש, וכותבת רשומת ציון. Bob נכשל כי הפונקציה שלו מחזירה `"main"` והפלט הצפוי הוא `"Main"`.
+- **DTO (Data Transfer Object):** אובייקט מחלקה מייצג שורה בטבלה.
+- **DAO (Data Access Object):** מחלקה המנהלת פעולות CRUD (`Create`, `Read`, `Update`, `Delete`) מול טבלה בודדת.
+- **Repository:** שכבה גבוהה המנהלת לוגיקה עסקית ושאילתות המורכבות ממספר טבלאות/DAOs.
 
 :::problem id=worked-inner-join title="מה inner join מחזיר" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=worked solution_origin=source
 Alice רשומה ל-`prog`. Bob אינו רשום לכלום. `prog` ו-`systems` שניהם קיימים. מה השאילתה הזו מחזירה, ומה left join מוסיף?
@@ -167,14 +118,6 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 - [ ] `NOT NULL` על `Students.Name`
 
 מפתח זר אומר שכל `DeptId` הוא מזהה של רשומה כלשהי ב-`Departments`. הייחודיות של `Students.Id` היא אילוץ אחר.
-:::
-
-:::trap
-`SELECT * FROM A, B` נראה כמו join והוא מכפלה. על טבלה של אלף רשומות מול אלף אחרות מתקבלות מיליון רשומות. הרשימה של Alice כפול כל קורס בהרצאה היא הבאג הזה בקנה מידה קטן.
-:::
-
-:::trap
-רשימה שנשמרת כשדה אחד מופרד בפסיקים אינה יכולה להיות מפתח זר, ואי אפשר לאנדקס אותה כשייכות. הכלל של ההרצאה הוא טבלה נוספת.
 :::
 
 ## תרגול
@@ -282,7 +225,6 @@ join חוצה טבלאות, ולכן הוא חי על ה-repository.
 `col_mapping` הוא רשימת האינדקסים לפי סדר הבנאי. אם הרשומה היא `(num, expected_output)`, המיפוי הוא `[0, 1]`. אם שאילתה בחרה `expected_output` לפני `num`, המיפוי הוא `[1, 0]`, כדי שהבנאי עדיין יקבל את `num` ראשון. `dto_type(*ctor_args)` הוא `Assignment(num, expected_output)`. מיפוי שהולך אחרי `SELECT *` בעיניים עצומות נשבר ברגע שסדר השדות בטבלה משתנה, וזו אותה אזהרה שהרצאת ה-SQL נתנה על `INSERT` בלי רשימת שדות.
 :::
 :::
-
 
 :::examnote
 השאלה מתארת עסק קטן במשפטים ומבקשת טבלאות, מפתחות, ו-`SELECT` אחד. המלכודת היא רשימה שנדחסה לשדה אחד, או join שמכפיל רשומות כי טבלת הקישור הושמטה.

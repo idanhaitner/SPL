@@ -29,64 +29,41 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
-חוט (thread) לכל לקוח מוציא מחסנית (stack) על כל חיבור, ונמצא בחסימה (blocking) בתוך `read` ברוב חייו. שרת חוט אחד (single threaded server) מקבל לקוח אחד ומתעלם מהאחרים עד שהשיחה נגמרת. Reactor הוא הצורה השלישית: חוט אחד ממתין להרבה ערוצים (channel), ומאגר קטן מריץ את העבודה שבאמת איטית.
+תבנית העיצוב Reactor מיועדת למימוש שרתים סקלאביליים המטפלים במספר רב של חיבורים מקביליים, באמצעות קלט/פלט ללא חסימה (Non-blocking I/O) מבוסס אירועים.
 
-## שלושה שרתים, ואז רביעי
+## השוואת ארכיטקטורות שרתים
 
-השירות בהרצאה מחזיר `BufferedImage` עבור שם קובץ. הלקוח כותב את השם ושורה חדשה וקורא את הבתים בחזרה.
+1. **חוט-לכל-לקוח (Thread-per-Client):** מנהל חוט נפרד לכל חיבור. אינו סקלאבילי עבור אלפי חיבורים בשל צריכת זיכרון גבוהה למחסניות ועלויות context switch.
+2. **Reactor Pattern:** חוט יחיד (Selector Thread) ממתין לאירועי רשת מרובים (`OP_ACCEPT`, `OP_READ`, `OP_WRITE`). עבודת עיבוד הפרוטוקול הכבדה מועברת למאגר חוטי עבודה (Worker Thread Pool).
 
-שרת חוט אחד קורא ל-`accept`, מטפל בשקע (socket) הזה עד הסוף, ורק אז חוזר ללולאה. לקוח אחד בכל רגע.
+:::definition id=def-reactor title="רכיבי Java NIO ב-Reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
 
-שרת חוט-לכל-לקוח (thread-per-client) קורא ל-`accept` ול-`new Thread(() -> handle(s)).start()`. החיבורים חופפים. חוטים יקרים, רובם חסומים ב-`read`, ושום דבר אינו עוצר מיליון לקוחות מליצור מיליון חוטים. השורה של ההרצאה לעיצוב הזה: בלי שליטה, קורס תחת עומס, בזבזני, אינו ניתן להרחבה.
-
-מאגר קבוע, `Executors.newFixedThreadPool(poolSize)`, מגביל את המספר. חיבורים עודפים ממתינים בתור. החוטים עדיין חסומים ב-I/O, ולכן מאגר של שמונה שתקוע ב-`read` אינו משרת אף אחד אחר.
-
-:::definition id=def-reactor title="Reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
-שרת מונחה אירועים אינו נותן חוט לכל לקוח. חוט אחד נשאר פנוי לאירועים הקצרים. חוטים נוספים קיימים רק לעבודה שהייתה חוסמת את הלולאה הזו. קלט-פלט ללא חסימה אומר שלקוח איטי אינו עוצר את הלולאה מלקבל מישהו אחר, ופעולה זולה אינה ממתינה מאחורי קריאה איטית מהדיסק.
+- **`Selector`:** רכיב הממתין באופן יעיל לאירועי קלט/פלט מרובים על גבי ערוצים רשומים.
+- **`ServerSocketChannel` / `SocketChannel`:** ערוצי תקשורת הניתנים להגדרה במצב ללא חסימה (`configureBlocking(false)`).
+- **`SelectionKey`:** מייצג את הרישום של ערוץ מול ה-Selector והאירועים שמוכנים לטיפול (`readyOps()`).
+- **`ByteBuffer`:** חוצץ זיכרון לקריאה וכתיבה.
 :::
-
-השמות של Java NIO, מההרצאה וממפגש 10:
-
-- ערוץ מחליף את הזוג של שקע וזרמים. `SocketChannel` ו-`ServerSocketChannel` יכולים להיות ללא חסימה, ולכן `read`, `write`, ו-`accept` חוזרים מיד עם ספירה, שלעתים קרובות היא 0.
-- `Selector` הוא ההמתנה. ערוץ נרשם לעניין ב-`OP_ACCEPT`, ב-`OP_READ`, או ב-`OP_WRITE`. `select()` נחסם עד שלפחות ערוץ רשום אחד מוכן, במקום להסתובב על קריאות שמחזירות 0.
-- `SelectionKey` הוא רישום אחד. `interestOps` הוא מה שביקשתם לשמוע עליו. `readyOps` הוא מה שקרה. `selectedKeys()` הוא הקבוצה ש-`select` סימן זה עתה כמוכנה. חובה להסיר מפתח מהקבוצה הזו בעצמכם; ה-selector אינו עושה זאת.
-- `ByteBuffer` הוא הזיכרון שהקריאות והכתיבות האלה משתמשות בו. יש לו position, limit, ו-capacity. אחרי כתיבה לתוך החוצץ, `flip()` קובע את ה-limit ל-position ואת ה-position ל-0, כדי שהפעולה הבאה תקרא את מה שזה עתה נכתב. `clear()` מכין את החוצץ למילוי נוסף.
-
-מסכות הביטים של מפגש 11: `OP_READ` הוא 1, `OP_WRITE` הוא 4, `OP_ACCEPT` הוא 16. עניין בקריאה או בכתיבה הוא `OP_READ | OP_WRITE`. בדיקה שהערוץ מוכן לקריאה היא `(ready & OP_READ) != 0`. הביטים אינם חופפים, ולכן מסכה עובדת.
 
 ![לולאת ה-Reactor: חוט selector אחד, מפתחות מוכנים, ומאגר רק לעבודת הפרוטוקול](../assets/figures/reactor-loop.svg)
 
-:::algorithm id=alg-reactor title="לולאת Reactor" source="materials/lectures/Chapter 11 - Reactor.pptx" complexity="חוט אחד ממתין ב-select; עבודת הפרוטוקול יורדת מהחוט הזה. שרת שקט נחסם ב-select במקום להסתובב" invariant="כל ערוץ פתוח רשום לאירועים שהשרת מוכן לטפל בהם, והלולאה שמטפלת במפתח שב-selectedKeys מסירה אותו."
-```text
-selector = new Selector
-register serverSocket for OP_ACCEPT
-while true:
-    selector.select()
-    for key in selector.selectedKeys():
-        remove key from the set
-        if key is acceptable: accept, set non-blocking, register OP_READ
-        if key is readable: read into a ByteBuffer, hand bytes to the tokenizer
-        if a full message exists: submit protocol work to the pool
-        if key is writable: write queued bytes, and clear OP_WRITE when the queue is empty
-```
-:::
+## שימוש נכון ב-ByteBuffer
 
-קריאה ממלאת את החוצץ מההתחלה ומשאירה את ה-position בסוף מה שהגיע. `flip` הופך את הקידומת המלאה הזו לטווח שכתיבה מאוחרת תשלח.
+המחלקה `ByteBuffer` מנהלת שלושה מצביעים: `position`, `limit`, ו-`capacity`.
 
 ```java
-ByteBuffer buf = ByteBuffer.allocate(16);
-int n = channel.read(buf);   // n == 5, position == 5, limit == 16
-buf.flip();                   // position == 0, limit == 5
-channel.write(buf);           // sends those five bytes
+ByteBuffer buf = ByteBuffer.allocate(1024);
+channel.read(buf);   // Read bytes from channel into buffer (position advances)
+buf.flip();          // Prepare for reading from buffer: limit = position, position = 0
+channel.write(buf);  // Write bytes from buffer to channel
+buf.clear();         // Reset buffer for writing: position = 0, limit = capacity
+
 ```
 
 ![לפני flip החלון הקריא ריק כי position כבר בסוף הנתונים. flip מחזיר את limit לאותו סוף ואת position ל-0](../assets/figures/buffer-flip.svg)
 
-השארת `OP_WRITE` דלוק כשהתור ריק גורמת ל-`select` לחזור מיד, לנצח. זה הסיבוב העסוק ברשימת הטעויות של ההרצאה. טעויות אחרות על אותו שקף: קריאה בלי חסם כך שהחוצצים גדלים בלי גבול, קריאה כבדה או חוסמת על חוט ה-selector, וקריאה ל-`interestOps` מחוט שאינו חוט ה-selector. Reactor אינו עושה את הפרוטוקול נכון, ואינו עושה דיסק איטי למהיר. הוא רק מרחיק את ההמתנה מחוטי העבודה.
-
-מפגש 11 מוסיף את מאגר ה-actors (actor pool). מאגר רגיל עלול להריץ את ההודעה M2 של לקוח לפני M1, כי הן שתי משימות. למאגר actors יש תור לכל לקוח ומשימה פעילה אחת לכל לקוח, ולכן ההודעות של הלקוח הזה נשארות לפי הסדר. מנעול קריאה-כתיבה מופיע באותו מפגש עבור הטבלאות (table) המשותפות שהפרוטוקול נוגע בהן: הרבה קוראים, כותב אחד.
-
-מטפל החיבור בעיצוב הזה אינו `Runnable` לכל לקוח, בניגוד למטפל של חוט-לכל-לקוח. הוא מחזיק את החוצצים, את המקודד-מפענח, ואת תור הכתיבה של ערוץ אחד. חוט ה-selector קורא לו כשהמפתח מוכן.
+:::trap
+השארת דגל `OP_WRITE` דלוק ב-`SelectionKey` כאשר אין נתונים מוכנים למשלוח תגרום ל-`select()` לחזור מיד בלולאה אינסופית (Busy Waiting). יש להדליק את `OP_WRITE` רק כאשר קיימים נתונים בתור הכתיבה, ולכבותו בגמר המשלוח.
+:::
 
 :::problem id=worked-flip title="היפוך חוצץ" source="materials/sessions/SPL_PS10.pptx" kind=worked solution_origin=source
 רוצים לכתוב את 5 הבתים שזה עתה נקראו. מה `flip` משנה?
@@ -111,14 +88,6 @@ channel.write(buf);
 - [ ] הוא סוגר את הערוץ
 
 ערוץ שיש מקום בחוצץ השליחה שלו הוא מוכן לכתיבה. `select` חוזר מיד. ההרצאה קוראת לזה סיבוב עסוק. נקו את `OP_WRITE` עד שקריאה מאוחרת יותר תעמיד תשובה בתור.
-:::
-
-:::trap
-`selectedKeys` מצטבר עד שמסירים את המפתח. טיפול במפתח והשארתו בקבוצה מטפלים בו שוב באיטרציה הבאה, לעתים קרובות כש-`readyOps` כבר נצרך.
-:::
-
-:::trap
-מיסגור והרצת הפרוטוקול על חוט ה-selector הם הבאג מאחורי כמה "אופטימיזציות" בשאלות. `process` איטי עוצר את `accept` לכל לקוח.
 :::
 
 ## תרגול
@@ -186,7 +155,6 @@ key.interestOps(SelectionKey.OP_READ);
 הדליקו את `OP_WRITE` שוב רק כשתשובת פרוטוקול הועמדה בתור ו-`write` לא קיבל כל בית. את הקריאה הזו ל-`interestOps` עושים על חוט ה-selector. ההרצאה מונה `interestOps` מחוט אחר כבאג נפרד.
 :::
 :::
-
 
 :::examnote
 השאלה עורכת את ה-Reactor מהנספח: מזיזה את המיסגור מה-selector, מגבילה עבודה לכל לקוח, מוסיפה יומן, או משרתת שאילתת בסיס נתונים בלי לחסום את `select`. המלכודת היא לעשות את הקריאה הכבדה על חוט ה-selector, או להעיר את `select` לנצח על ידי השארת `OP_WRITE` דלוק.

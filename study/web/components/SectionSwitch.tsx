@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Inline } from "@/lib/inline";
 
 type Group = { title: string; ids: string[]; body: ReactNode };
 type Part = { title: string; ids: string[]; intro: ReactNode; groups: Group[] };
-export type ChapterHop = { href: string; title: string; num: string };
+export type ChapterHop = { href: string; title: string; num: string; blurb?: string };
 
 function hashId() {
   return decodeURIComponent(window.location.hash.replace(/^#/, ""));
@@ -57,7 +57,9 @@ function Folds({
               setOpen((current) => current.map((value, item) => (item === index ? !value : value)));
             }}
           >
-            <Inline text={group.title} />
+            <span className="fold-toggle-label">
+              <Inline text={group.title} />
+            </span>
           </button>
           {open[index] && <div className="fold-body">{group.body}</div>}
         </section>
@@ -66,48 +68,91 @@ function Folds({
   );
 }
 
-type Hop = { kicker: string; title: string; num?: string; href?: string; onClick?: () => void };
-
-function FootControl({ hop, side }: { hop: Hop; side: "prev" | "next" }) {
-  const className = `foot-link foot-${side}`;
-  const body = (
-    <>
-      <span className="foot-kicker">{hop.kicker}</span>
-      <span className="foot-line">
-        {side === "prev" && <span className="foot-arrow" aria-hidden="true" />}
-        {hop.num && <span className="foot-num">{hop.num}</span>}
-        <span className="foot-title"><Inline text={hop.title} /></span>
-        {side === "next" && <span className="foot-arrow" aria-hidden="true" />}
-      </span>
-    </>
-  );
-  if (hop.href) return <Link className={className} href={hop.href}>{body}</Link>;
+function DirectionMark({ way }: { way: "back" | "forward" }) {
+  const ltr = way === "back" ? "←" : "→";
+  const rtl = way === "back" ? "→" : "←";
   return (
-    <button type="button" className={className} onClick={hop.onClick}>
-      {body}
+    <span aria-hidden="true">
+      <span className="rtl:hidden">{ltr}</span>
+      <span className="hidden rtl:inline">{rtl}</span>
+    </span>
+  );
+}
+
+function SectionPop({
+  title,
+  side,
+  onClick,
+}: {
+  title: string;
+  side: "prev" | "next";
+  onClick: () => void;
+}) {
+  const isPrev = side === "prev";
+  return (
+    <button type="button" className={`section-pop is-${side}`} onClick={onClick}>
+      <span className="section-pop-go">
+        <DirectionMark way={isPrev ? "back" : "forward"} />
+      </span>
+      <span className="section-pop-copy">
+        <span className="section-pop-kicker">{isPrev ? "הסעיף הקודם" : "הסעיף הבא"}</span>
+        <span className="section-pop-title">
+          <Inline text={title} />
+        </span>
+      </span>
     </button>
   );
 }
 
-function Band({
-  tone,
-  previous,
-  next,
-}: {
-  tone: "sections" | "chapters";
-  previous: Hop | null;
-  next: Hop | null;
-}) {
-  if (!previous && !next) return null;
+function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "next" }) {
+  const isPrev = side === "prev";
+  const copy = (
+    <span className="chapter-hop-copy">
+      <span className="chapter-hop-kicker">
+        <span className="chapter-hop-badge">פרק {chapter.num}</span>
+        {isPrev ? "הפרק הקודם בקורס" : "הפרק הבא בקורס"}
+      </span>
+      <span className="chapter-hop-title">
+        <Inline text={chapter.title} />
+      </span>
+      {chapter.blurb && <span className="chapter-hop-detail">{chapter.blurb}</span>}
+    </span>
+  );
+  const go = (
+    <span className="chapter-hop-go">
+      {isPrev ? (
+        <>
+          <DirectionMark way="back" />
+          חזרה לפרק {chapter.num}
+        </>
+      ) : (
+        <>
+          התחל פרק {chapter.num}
+          <DirectionMark way="forward" />
+        </>
+      )}
+    </span>
+  );
   return (
-    <div className={`foot-band foot-${tone}`}>
-      {previous && <FootControl hop={previous} side="prev" />}
-      {next && <FootControl hop={next} side="next" />}
-    </div>
+    <Link className={`chapter-hop is-${side}`} href={chapter.href}>
+      {isPrev ? (
+        <>
+          {go}
+          {copy}
+        </>
+      ) : (
+        <>
+          {copy}
+          {go}
+        </>
+      )}
+    </Link>
   );
 }
 
 export function ReadingFooter({
+  sectionIndex,
+  sectionCount,
   previousSection,
   nextSection,
   onPreviousSection,
@@ -115,30 +160,67 @@ export function ReadingFooter({
   previousChapter,
   nextChapter,
 }: {
+  sectionIndex?: number | null;
+  sectionCount?: number;
   previousSection?: string | null;
   nextSection?: string | null;
   onPreviousSection?: () => void;
   onNextSection?: () => void;
-  previousChapter: ChapterHop | null;
+  previousChapter?: ChapterHop | null;
   nextChapter: ChapterHop | null;
 }) {
-  const sectionPrev = previousSection
-    ? { kicker: "הסעיף הקודם", title: previousSection, onClick: onPreviousSection }
-    : null;
-  const sectionNext = nextSection
-    ? { kicker: "הסעיף הבא", title: nextSection, onClick: onNextSection }
-    : null;
-  const chapterPrev = previousChapter
-    ? { kicker: "הפרק הקודם", title: previousChapter.title, num: previousChapter.num, href: previousChapter.href }
-    : null;
-  const chapterNext = nextChapter
-    ? { kicker: "הפרק הבא", title: nextChapter.title, num: nextChapter.num, href: nextChapter.href }
-    : null;
-  if (!sectionPrev && !sectionNext && !chapterPrev && !chapterNext) return null;
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+  const hasPrevSection = Boolean(previousSection && onPreviousSection);
+  const hasNextSection = Boolean(nextSection && onNextSection);
+  const hasSectionNav = hasPrevSection || hasNextSection;
+  const showChapters = Boolean((previousChapter || nextChapter) && !hasNextSection);
+
+  useEffect(() => {
+    const node = anchorRef.current;
+    if (!node || !hasSectionNav) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setReady(entry.isIntersecting),
+      { rootMargin: "0px 0px -72px 0px", threshold: 0 },
+    );
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      setReady(false);
+    };
+  }, [hasSectionNav, previousSection, nextSection, sectionIndex]);
+
+  if (!hasSectionNav && !showChapters) return null;
+
+  const showCount = sectionCount != null && sectionCount > 1 && sectionIndex != null;
+
   return (
     <nav className="chapter-foot" aria-label="המשך הקריאה">
-      <Band tone="sections" previous={sectionPrev} next={sectionNext} />
-      <Band tone="chapters" previous={chapterPrev} next={chapterNext} />
+      {hasSectionNav && <div ref={anchorRef} className="chapter-foot-anchor" />}
+      {hasSectionNav && ready && (
+        <>
+          {hasPrevSection && (
+            <SectionPop title={previousSection!} side="prev" onClick={onPreviousSection!} />
+          )}
+          {hasNextSection && (
+            <SectionPop title={nextSection!} side="next" onClick={onNextSection!} />
+          )}
+        </>
+      )}
+      {showChapters && (
+        <>
+          {showCount && (
+            <div className="foot-meta">
+              <span>סעיף {sectionIndex! + 1} מתוך {sectionCount}</span>
+              <span className="foot-done">סיום הפרק</span>
+            </div>
+          )}
+          <div className="chapter-hops">
+            {previousChapter && <ChapterCard chapter={previousChapter} side="prev" />}
+            {nextChapter && <ChapterCard chapter={nextChapter} side="next" />}
+          </div>
+        </>
+      )}
     </nav>
   );
 }
@@ -208,6 +290,8 @@ export function SectionSwitch({
           <Folds key={index} groups={groups} active={activeGroup} onOpen={setGroupIndex} />
         )}
         <ReadingFooter
+          sectionIndex={index}
+          sectionCount={parts.length}
           previousSection={previous?.title}
           nextSection={upcoming?.title}
           onPreviousSection={() => show(index - 1)}

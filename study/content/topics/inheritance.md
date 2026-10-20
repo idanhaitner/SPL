@@ -18,126 +18,75 @@ sources:
   - "materials/exams/24-b-solution.pdf"
 ---
 
-ירושה (inheritance) בונה מחלקה (class) חדשה על מחלקה קיימת. מחלקת הבסיס (base class) היא זו שכבר קיימת. המחלקה הנגזרת (derived class) מוסיפה איברים ויכולה להחליף התנהגות. הנקודתיים בראש המחלקה הן האיות של C++ ל-`extends` של Java.
+ירושה (Inheritance) מאפשרת להגדיר מחלקה נגזרת (Derived Class) המרחיבה מחלקת בסיס (Base Class), מוסיפה איברים ומעדכנת התנהגות.
 
 ```cpp
 class BlurFilter : public Filter {
     double _str;
 public:
     BlurFilter(double strength) : Filter("blur"), _str(strength) {}
-    double getStrength() { return _str; }
+    double getStrength() const { return _str; }
 };
+
 ```
 
-הבנאי (constructor) של המחלקה הנגזרת חייב לקרוא לבנאי של מחלקת הבסיס. אם הוא לא קורא, המהדר מנסה את בנאי ברירת המחדל של הבסיס, והתוכנית נכשלת בהידור כשלבסיס אין בנאי כזה. תרגול 3 מראה גם את הצורה המפורשת `Student(...) : Person(name) {}` וגם את הצורה המשתמעת, שמתקמפלת רק כשאפשר לבנות `Person` בלי ארגומנטים.
+הבנאי של המחלקה הנגזרת מחויב לקרוא לבנאי של מחלקת הבסיס ברשימת האתחול. בהעדר קריאה מפורשת, יופעל בנאי ברירת המחדל של מחלקת הבסיס.
 
-## מה יחס is-a באמת דורש
-
-המרה למעלה (upcasting) שומרת אובייקט (object) נגזר במצביע (pointer) של מחלקת הבסיס או ברפרנס (reference) של מחלקת הבסיס. ההצדקה בשקף היא יחס is-a: `BlurFilter` הוא `Filter`.
-
-```cpp
-void process(Image& img, const Filter& filter);
-BlurFilter blur(50.0);
-process(img, blur);
-```
-
-אותה המרה למעלה עובדת עם מצביע חכם ייחודי (unique_ptr): `unique_ptr<Filter>` שמחזיק `BlurFilter`.
+## עקרון ההחלפה של ליסקוב (LSP)
 
 :::definition id=def-lsp title="עקרון ההחלפה של ליסקוב (Liskov Substitution Principle)" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-עקרון ההחלפה של ליסקוב: אובייקט נגזר חייב להיות שמיש בכל מקום שנדרש אובייקט של מחלקת הבסיס, בלי לשבור את שמורות הבסיס. זה משפט על התנהגות, לא על שיתוף שמות של שדות.
+עקרון LSP קובע כי אובייקט ממחלקה נגזרת חייב להיות ניתק להחלפה בכל מקום שבו נדרש אובייקט ממחלקת הבסיס, מבלי לפגוע בתקינות התוכנית או להפר את השמורות (invariants) של מחלקת הבסיס.
 :::
 
-דוגמת הנגד בהרצאה היא `SquareImage : Image` שה-`crop` שלו יכול לשנות את הרוחב ואת הגובה בנפרד, כך שהתוצאה כבר אינה ריבוע. override של `crop` כדי לסרב לשינוי הזה שובר את החוזה של הבסיס, שהבטיח חיתוך. הירושה היא הכלי הלא נכון. ריבוע אינו תמונה שמותר לחתוך בחופשיות.
+דוגמה להפרת LSP: הגדרת המחלקה `Square` כנגזרת מ-`Rectangle`. הקריאה ל-`setWidth(w)` במלבן משנה רק את הרוחב, בעוד שבריבוע היא מחייבת שינוי של הגובה. דריסה זו מפרה את החוזה של מחלקת הבסיס.
 
-### public, protected, private
+### רמות הרשאה וירושה ב-C++
 
-אנקפסולציה (encapsulation) היא לתת גישה רק לקוד שצריך אותה. שלוש הרמות הן `public`, `protected` ו-`private`. ל-C++ יש גם שלושה סוגי ירושה. ל-Java יש רק את הסוג ה-public.
-
-| ירושה | חבר public הופך ל- | חבר protected הופך ל- | חבר private |
+| סוג ירושה | חבר public של הבסיס הופך ל- | חבר protected של הבסיס הופך ל- | חבר private של הבסיס |
 | --- | --- | --- | --- |
-| public | public | protected | לא נגיש |
-| protected | protected | protected | לא נגיש |
-| private | private | private | לא נגיש |
+| `public` | `public` (יחס is-a) | `protected` | לא נגיש |
+| `protected` | `protected` | `protected` | לא נגיש |
+| `private` | `private` (קומפוזיציה) | `private` | לא נגיש |
 
-ירושה public היא is-a. ירושה private היא איות של has-a שההרצאה אומרת לא להשתמש בו בשביל מסנן שמוצמד לתמונה. הרכבה / קומפוזיציה (composition) היא ה-has-a שההרצאה רוצה: `Image` מחזיק `Filter*` וקורא ל-`filter->apply(*this)`. ירושת protected היא האמצע ה«מוגבל» שהשקף נוקב בשמו ואז לא משתמש בו.
-
-### הצללה (shadowing) ופונקציות וירטואליות (virtual function)
-
-פונקציה לא-virtual במחלקה הנגזרת מסתירה את פונקציית הבסיס בעלת אותו שם. הקריאה נקשרת לפי הטיפוס הסטטי (static type) של הביטוי. דרך `Filter*` מקבלים את `Filter::apply`, גם אם האובייקט הוא `BlurFilter`. גם שדות יכולים להסתיר: `_name` שני במחלקה הנגזרת הוא איבר אחר, ו-`_name` לא מצוין במתודה הנגזרת הוא זה של הנגזרת.
+### פונקציות וירטואליות וטבלת vtable
 
 :::definition id=def-virtual title="פונקציה וירטואלית ו-vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-פונקציה וירטואלית משתמשת בקשירה דינמית (dynamic binding), שנקראת גם קשירה מאוחרת (late binding). הקריאה הולכת ל-override של הטיפוס הדינמי (dynamic type). פונקציה לא-virtual משתמשת בקשירה סטטית (static binding), או קשירה מוקדמת (early binding).
+פונקציה שאינה וירטואלית נקשרת באמצעות **קשירה סטטית** (Static Binding) לפי הטיפוס הסטטי של המצביע/הרפרנס בזמן ההידור.
 
-מחלקה היא פולימורפית כשיש בה לפחות פונקציה וירטואלית אחת. זה פולימורפיזם (polymorphism). המהדר מוסיף אז, לכל אובייקט, מצביע חבוי `vptr` אל ה-vtable של המחלקה, שמחזיקה את הכתובות של הפונקציות הווירטואליות.
+פונקציה המוכרזת כ-`virtual` נקשרת באמצעות **קשירה דינמית** (Dynamic Binding) לפי הטיפוס הדינמי של האובייקט בזמן הריצה.
 
-`override` בודק שבאמת דרסתם virtual של הבסיס. `final` על פונקציה אוסר דריסות נוספות. `final` על מחלקה אוסר גזירה נוספת.
+מחלקה הכוללת לפחות פונקציה וירטואלית אחת היא מחלקה פולימורפית. המהדר מוסיף לכל מופע שלה מצביע חבוי (`vptr`) המוליך לטבלת פונקציות וירטואליות (`vtable`) של המחלקה.
 :::
 
-הקריאה, כפי שההרצאה מציירת אותה: טוענים את ה-`vptr` של האובייקט, מאנדקסים את הפונקציה ב-vtable, וקוראים לכתובת הזאת. `Filter*` שבאמת מצביע על `BlurFilter` עדיין מוצא את `BlurFilter::apply` אם `apply` הוא virtual.
+### דיסטרקטור וירטואלי (Virtual Destructor)
 
-```cpp
-struct Filter {
-    virtual void apply(Image& img) const { std::cout << "Apply Filter\n"; }
-    virtual ~Filter() = default;
-};
-struct BlurFilter : Filter {
-    void apply(Image& img) const override { std::cout << "Apply BlurFilter\n"; }
-};
-const Filter* p = new BlurFilter();
-p->apply(img);     // prints "Apply BlurFilter"
-```
-
-![אובייקט BlurFilter מחזיק vptr. הקריאה עוקבת אחריו אל ה-vtable של המחלקה ומוצאת את BlurFilter::apply](../assets/figures/vtable-call.svg)
-
-### המרה למטה (downcast) והדיסטרקטור (destructor) הווירטואלי
-
-המרה למטה הופכת מצביע של הבסיס בחזרה למצביע נגזר. המרה בסגנון C מנסה יותר מדי המרות ותקבל גם שטות כמו `(BlurFilter*)3`. `static_cast` נבדק בזמן הידור ועדיין סומך עליכם בזמן ריצה. `dynamic_cast` מסתכל ב-vtable ומחזיר null (עבור מצביע) כשהאובייקט אינו מהטיפוס הנגזר הזה. הוא צריך טיפוס פולימורפי. `const_cast` מוסיף או מסיר `const`. `reinterpret_cast` מפרש מחדש את הביטים.
-
-:::theorem id=thm-virtual-dtor title="דיסטרקטור וירטואלי" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-אם מחלקה פולימורפית, הדיסטרקטור שלה חייב להיות virtual. זה נשאר נכון גם כשהמחלקה הנגזרת לא מוסיפה שדות משלה. אחרת `delete` דרך מצביע של הבסיס הוא התנהגות לא מוגדרת (undefined behavior): ייתכן שהדיסטרקטור של הנגזרת לא ירוץ, והזיכרון עשוי להשתחרר בגודל הלא נכון.
+:::theorem id=thm-virtual-dtor title="חובת דיסטרקטור וירטואלי" source="materials/lectures/Chapter 6 - Inheritance.pptx"
+אם מחלקה כוללת מתודות וירטואליות (כלומר מיועדת לשמש כמחלקת בסיס פולימורפית), הדיסטרקטור שלה חייב להיות מוכרז כ-`virtual`.
 
 :::proof
-**אינטואיציה.** `delete p` חייב לדעת את האובייקט האמיתי, לא את הטיפוס שכתוב על המצביע. ה-vtable הוא איך כל קריאה וירטואלית אחרת יודעת. הדיסטרקטור הוא הקריאה הזאת לסוף חיי האובייקט.
-
-**הוכחה.** `Filter* p = new BlurFilter(...); delete p;` מחפש את הדיסטרקטור באותה דרך שהוא מחפש את `apply`, אבל רק אם `~Filter` הוא virtual. אם הוא לא, הטיפוס הסטטי מנצח: `~Filter` רץ, `~BlurFilter` לא, ואיבר ש-`BlurFilter` הקצה דולף. ההרצאה גם מזהירה שהמקצה עשוי לשחרר רק `sizeof(Filter)` בתים. הכרזה `virtual ~Filter() = default;` שמה את הדיסטרקטור ב-vtable, כך ש-`delete p` מגיע ל-`~BlurFilter` ואז לבסיס.
-
-**על מה ההוכחה נשענה.** קשירה דינמית, והעובדה שלמחלקה פולימורפית כבר יש vptr. למחלקה בלי פונקציות וירטואליות אין vtable לשים בו דיסטרקטור, ולכן הכלל מנוסח למחלקות פולימורפיות.
+אם הדיסטרקטור אינו וירטואלי, מחיקת אובייקט נגזר דרך מצביע למחלקת הבסיס (`Base* p = new Derived(); delete p;`) תפעיל קשירה סטטית ותקרא לדיסטרקטור של `Base` בלבד. כתוצאה מכך, הדיסטרקטור של `Derived` לא יורץ, ומשאבים שהוקצו במחלקה הנגזרת ידלפו (התנהגות לא מוגדרת - Undefined Behavior).
 :::
 :::
 
-פונקציה וירטואלית טהורה (pure virtual) נכתבת `= 0` ואין לה גוף שחייבים לקרוא לו. מחלקה שיש בה אחת היא מופשטת (abstract): אי אפשר ליצור ממנה מופע. זו הצורה של C++ למתודה מופשטת של Java, שגם תרגול 3 מציין. בנאים לא יכולים להיות virtual. פונקציה וירטואלית לא יכולה להיות `static`. החתימה ב-override חייבת להתאים, אחרת הצללתם את פונקציית הבסיס במקום לדרוס אותה.
+פונקציה וירטואלית טהורה (`pure virtual`) מוגדרת באמצעות `= 0`. מחלקה המכילה לפחות פונקציה וירטואלית טהורה אחת היא **מחלקה מופשטת (Abstract Class)** ולא ניתן ליצור מופעים שלה.
 
-אובייקט של מחלקה נגזרת הוא בלוק אחד: קודם תת-האובייקט של הבסיס (subobject), ואז האיברים הנגזרים. הטבלה בהרצאה ל-`BlurFilter` על המחסנית (stack) מראה את `_str` ליד שדות הבסיס, הקצאה אחת, לא שני אובייקטים.
-
-## מעקב אחרי קריאה
-
-| ביטוי | טיפוס סטטי | הפונקציה שרצה אם `apply` הוא virtual | אם הוא לא |
-| --- | --- | --- | --- |
-| `filter.apply(img)` | `Filter` | `Filter::apply` | `Filter::apply` |
-| `blur.apply(img)` | `BlurFilter` | `BlurFilter::apply` | `BlurFilter::apply` |
-| `Filter* p = &blur; p->apply(img)` | `Filter` | `BlurFilter::apply` | `Filter::apply` |
-
-:::problem id=worked-virtual-call title="קריאה וירטואלית" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
-`apply` הוא virtual. איזו פונקציה רצה, ומה משתנה אם מסירים את `virtual`?
+:::problem id=worked-virtual-call title="מעקב קריאה וירטואלית" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
+הסבר איזו מתודה תיקרא כאשר `apply` מוגדר כ-`virtual` וכאשר אינו מוגדר כ-`virtual`:
 
 ```cpp
 Filter* filter = new BlurFilter();
 filter->apply(img);
+
 ```
 
 :::solution
-עם `virtual`, הקריאה טוענת את ה-vptr של אובייקט ה-`BlurFilter` וקוראת ל-`BlurFilter::apply`. הפלט בשקף הוא «Apply BlurFilter».
 
-```text
-filter->apply(img)
-    load the vptr from the BlurFilter object
-    index apply in that vtable
-    call BlurFilter::apply
-```
-
-בלי `virtual`, המהדר קושר את `Filter::apply` לפי טיפוס המצביע, והפלט הוא «Apply Filter». האובייקט לא השתנה. הקשירה כן.
+- **כאשר `apply` הוא `virtual`:** מבוצעת קשירה דינמית. ה-`vptr` מוליך ל-vtable של `BlurFilter`, ותיקרא המתודה `BlurFilter::apply`.
+- **כאשר `apply` אינו `virtual`:** מבוצעת קשירה סטטית. לפי הטיפוס הסטטי של המצביע (`Filter*`), תיקרא המתודה `Filter::apply`.
 :::
 :::
+
+![אובייקט BlurFilter מחזיק vptr. הקריאה עוקבת אחריו אל ה-vtable של המחלקה ומוצאת את BlurFilter::apply](../assets/figures/vtable-call.svg)
 
 :::check id=chk-virtual-dtor
 אתם הולכים לבצע `delete` ל-`BlurFilter` דרך `Filter*`. מה חייב להיות נכון לגבי `~Filter`?
@@ -147,14 +96,6 @@ filter->apply(img)
 - [ ] הוא חייב להיות private
 
 הדיסטרקטור של הנגזרת חייב לרוץ. רק דיסטרקטור וירטואלי משוגר דרך ה-vptr.
-:::
-
-:::trap
-הצללה אינה override. `apply` נגזר שלא סומן virtual, על בסיס שאינו virtual, לא משנה קריאות דרך מצביע של הבסיס. `override` הופך את הטעות הזאת לשגיאת הידור.
-:::
-
-:::trap
-ירושה public של טיפוס שהפעולות שלו שוברות את השמורה שלכם אינה ניצלת על ידי override הדוק יותר. ה-`crop` של תמונת הריבוע הוא הדוגמה של ההרצאה.
 :::
 
 ## תרגול
@@ -180,7 +121,6 @@ delete p;
 ההתנהגות לא מוגדרת. בפועל מדלגים על הדיסטרקטור של הנגזרת, ולכן משאבים שהמחלקה הנגזרת מחזיקה דולפים, והשחרור עשוי להשתמש בגודל הבסיס. הכלל בתרגול: אם מחלקה נועדה לרשת ממנה, תנו לה דיסטרקטור וירטואלי. ההרצאה מחמירה יותר בניסוח ושקולה בתוצאה: מחלקה פולימורפית חייבת דיסטרקטור כזה. בנאים נשארים לא-virtual. מתודה וירטואלית טהורה, שנכתבת `= 0`, הופכת את הבסיס למופשט, וזו החלטה נפרדת מן הדיסטרקטור.
 :::
 :::
-
 
 :::examnote
 השאלה שמה שני טיפוסים נגזרים מאחורי מצביע בסיס אחד ושואלת למה קריאה לא-virtual, דיסטרקטור לא-virtual, או העמסה (overload) במקום override משתמשים בבסיס. המלכודת היא ציור זיכרון שמחסיר את ה-vptr, או `delete` דרך הבסיס שאף פעם לא מריץ את הדיסטרקטור של הנגזרת.

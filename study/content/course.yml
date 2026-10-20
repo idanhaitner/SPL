@@ -30,6 +30,12 @@ changelog:
     note: "The memory chapter's explanation of why the stack and the heap are split no longer repeats the leak, recursion, and delete examples already shown above it."
   - date: 2026-10-19
     note: "Lectures, session decks, exams, and notes live under materials/. The runnable practice files live under practice/."
+  - date: 2026-10-19
+    note: "Lesson prose was replaced with the clearer wording in fixed_content.md. Practice questions, hints, and diagrams stayed in place."
+  - date: 2026-10-19
+    note: "Rule of five chapter rewritten from fixed_rule_of_5.md."
+  - date: 2026-10-20
+    note: "Memory-model chapter replaced with the corrected wording. Diagrams and topic links that the paste dropped were put back."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
