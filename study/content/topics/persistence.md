@@ -71,13 +71,13 @@ CREATE TABLE Enrollment (
 ### פעולות JOIN ב-SQL
 
 ```sql
--- Inner Join: מחזיר רק שורות בעלות התאמה בשתי הטבלאות
+-- Inner Join: returns only rows that match in both tables
 SELECT S.Name, C.Title
 FROM Students S
 INNER JOIN Enrollment E ON S.Id = E.StudentId
 INNER JOIN Courses C ON E.CourseId = C.Id;
 
--- Left Join: מחזיר את כל השורות מהטבלה השמאלית, גם אם אין התאמה בימנית
+-- Left Join: returns every row from the left table, even with no match on the right
 SELECT S.Name, C.Title
 FROM Students S
 LEFT JOIN Enrollment E ON S.Id = E.StudentId

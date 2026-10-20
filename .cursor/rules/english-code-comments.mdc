@@ -1,0 +1,13 @@
+---
+description: Code and SQL comments in study topics stay in English
+globs: study/content/**/*.md
+alwaysApply: false
+---
+
+# English comments in code
+
+Comments inside fenced code and SQL blocks are always English.
+
+- Prose, headings, and practice text stay in Hebrew.
+- `//`, `/* */`, `#`, and `--` comments inside a fence are English.
+- Do not mix a Hebrew explanation into a code comment. Put that explanation in the paragraph around the block.
