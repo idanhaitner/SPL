@@ -662,7 +662,12 @@ blockquote {
   border-inline-start: 3px solid var(--line);
   color: var(--muted);
 }
-.masthead { position: relative; padding-inline-end: 5.5rem; }
+.masthead {
+  position: relative;
+  padding-inline-end: 5.5rem;
+  margin-bottom: 1.75rem;
+}
+.masthead h1 { margin-bottom: 0; }
 .masthead-num {
   position: absolute;
   inset-inline-end: 0;
