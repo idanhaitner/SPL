@@ -1,0 +1,39 @@
+# OS junk
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Course source materials — local authoring only; the site reads study/content/
+materials/
+practice/
+
+# Legacy static HTML site (Pages deploys study/web)
+study/index.html
+study/drill.html
+study/glossary.html
+study/topics/
+
+# Legacy static-site chrome (Next serves figures from study/web/public/)
+study/assets/course.js
+study/assets/site.css
+study/assets/site.js
+study/assets/fonts/
+study/assets/vendor/
+
+# Next.js / Node
+study/web/node_modules/
+study/web/.next/
+study/web/out/
+study/web/tsconfig.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Env / secrets
+.env
+.env.*
+!.env.example

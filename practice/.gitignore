@@ -1,8 +1,0 @@
-*.class
-*.o
-__pycache__/
-PS01_IntroCpp
-PS02_Memory
-PS03_Classes
-PS04_AdvancedOop
-PS10_CppThreads
