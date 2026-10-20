@@ -85,7 +85,7 @@ LEFT JOIN Courses C ON E.CourseId = C.Id;
 
 ```
 
-![Students, טבלת ההרשמה, ו-Courses. Alice מקושרת ל-prog. ל-Bob ול-systems אין רשומת קישור](../assets/figures/sql-join.svg)
+![INNER JOIN מחזיר רק את S.name ו-C.name בשורה Alice, prog. נשמטים Bob ו-systems, וגם עמודות המפתח id, student_id ו-course_id](../assets/figures/sql-join.svg)
 
 ## תבניות ארכיטקטורה (DTO, DAO, Repository)
 
