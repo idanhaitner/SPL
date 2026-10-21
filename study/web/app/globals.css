@@ -887,17 +887,17 @@ blockquote {
   animation: rise 0.28s ease both;
 }
 .section-pop.is-prev {
-  right: calc(18.5rem + 1.25rem);
+  left: calc(18.5rem + 1.25rem);
+  right: auto;
+  padding-left: 0.9rem;
+  padding-right: 0.55rem;
+}
+.section-pop.is-next {
+  right: 1.25rem;
   left: auto;
   flex-direction: row-reverse;
   padding-left: 0.55rem;
   padding-right: 0.9rem;
-}
-.section-pop.is-next {
-  left: 1.25rem;
-  right: auto;
-  padding-left: 0.9rem;
-  padding-right: 0.55rem;
 }
 button.section-pop { min-height: 0; }
 .section-pop:hover {
@@ -919,7 +919,7 @@ button.section-pop { min-height: 0; }
   align-items: center;
   gap: 0.08rem;
   min-width: 0;
-  direction: rtl;
+  direction: ltr;
   text-align: center;
 }
 .section-pop-kicker {
@@ -994,11 +994,9 @@ button.section-pop { min-height: 0; }
   text-decoration: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.chapter-hop.is-prev {
+.chapter-hop.is-prev,
+.chapter-hop.is-next {
   direction: ltr;
-}
-.chapter-hop.is-prev .chapter-hop-copy {
-  direction: rtl;
 }
 .chapter-hop:hover {
   transform: translateY(-1px);
@@ -1104,8 +1102,8 @@ button.section-pop { min-height: 0; }
   .section-pop {
     width: min(14rem, calc(100vw - 1.7rem));
   }
-  .section-pop.is-prev { right: 0.85rem; }
-  .section-pop.is-next { left: 0.85rem; }
+  .section-pop.is-prev { left: 0.85rem; right: auto; }
+  .section-pop.is-next { right: 0.85rem; left: auto; }
 }
 @media (max-width: 640px) {
   .chapter-hop-go { width: 100%; min-width: 0; }
