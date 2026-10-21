@@ -103,24 +103,47 @@ The derived destructor has to run. A virtual destructor is dispatched through th
 ## Practice
 
 :::problem id=ps3-virtual-destructor title="Deletion through a base pointer" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
-A derived object is destroyed with `delete` through a base-class pointer, and the destructor is not virtual. What is the result, and what rule applies to a class that is meant to be a base?
+A derived object is destroyed with `delete` through a base-class pointer, and the destructor is not virtual.
 
 ```cpp
 Base* p = new Derived();
 delete p;
 ```
 
-:::hint
-The static type of the pointer is the base class. A non-virtual call uses that type.
+:::check id=ps3-virtual-destructor-q1
+What does this `delete` do?
+
+- [ ] The derived destructor runs, then the base destructor
+- [ ] The behavior is defined, and only the base subobject is destroyed
+- [x] The behavior is undefined
+
+The behavior is undefined.
 :::
-:::hint
-The exercise calls the result undefined behavior. A solution that says the derived destructor still runs contradicts that wording.
+
+:::check id=ps3-virtual-destructor-q2
+Which of these hold in a typical implementation of that `delete`?
+
+- [x] The derived destructor is skipped, so resources the derived class owns are leaked
+- [ ] The derived destructor still runs
+- [x] The deallocation may use the size of the base subobject
+
+In a typical implementation the derived destructor is skipped, so resources the derived class owns are leaked, and the deallocation may use the size of the base subobject.
 :::
-:::hint
-Tie the rule to the case in which a class is meant to be inherited from.
+
+:::check id=ps3-virtual-destructor-q3
+If a class is meant to be inherited from, give it a {{=virtual|non-virtual|private}} destructor.
+
+The exercise states the rule this way: if a class is meant to be inherited from, give it a virtual destructor. The lecture uses a stricter wording and reaches the same outcome: a polymorphic class must have a virtual destructor.
 :::
-:::solution
-The behavior is undefined. In a typical implementation the derived destructor is skipped, so resources the derived class owns are leaked, and the deallocation may use the size of the base subobject. The exercise states the rule this way: if a class is meant to be inherited from, give it a virtual destructor. The lecture uses a stricter wording and reaches the same outcome: a polymorphic class must have a virtual destructor. Constructors are non-virtual. A pure virtual function, written `= 0`, makes the base an abstract class. The virtual destructor remains a requirement of its own.
+
+:::check id=ps3-virtual-destructor-q4
+Which claim matches the rest of that rule?
+
+- [x] A pure virtual function, written `= 0`, makes the base an abstract class, and the virtual destructor remains a requirement of its own
+- [ ] Constructors are virtual, so the base constructor dispatches to the derived constructor
+- [ ] A pure virtual function removes the need for a virtual destructor
+
+Constructors are non-virtual. A pure virtual function, written `= 0`, makes the base an abstract class. The virtual destructor remains a requirement of its own.
 :::
 :::
 
@@ -131,126 +154,205 @@ The question places two derived types behind one base pointer and asks why a non
 :::problem id=exam-16a-q2 title="A visitor for shapes" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 A game engine has `SHAPE` objects (`SPHERE`, `BOX`) that are drawn by `SHADER` objects (`BASIC_SHADER`, `COMPLEX_SHADER`). Each shader has `Render(SPHERE*)` and `Render(BOX*)`. `RENDER_MGR::Render` walks the shapes and the shaders. Overload resolution on a `SHAPE*` cannot select `Render(SPHERE*)`.
 
-a. Implement the visitor so that the loop dispatches to the matching pair. `SHAPE` and `SHADER` must be abstract. Add code only in the classes whose names appear in the question.
+:::check id=exam-16a-q2-q1
+Which `Sphere::Accept` body is correct?
 
-b. Write a deep copy constructor for `RENDER_MGR`.
+- [ ] `Render(static_cast<Shape*>(this));`
+- [ ] `shader->Render(static_cast<Shape*>(this));`
+- [x] `sh->Render(this);`
 
-:::hint
-Double dispatch needs two virtual calls. The shape receives the shader, and the shader then receives the concrete shape.
+`Sphere::Accept` is `void Accept(Shader* sh) override { sh->Render(this); }`. `Box::Accept` is the same call with a `Box*`.
 :::
-:::hint
-`Accept` on `SPHERE` calls `shader->Render(this)` when the implicit `this` parameter has type `SPHERE*`, so the overload is resolved in the derived class.
-:::
-:::hint
-A manager that owns its pointers makes a deep copy by cloning every shape and every shader. Copying the pointer values shares the objects.
-:::
-:::solution
-```cpp
-struct Shader {
-    virtual ~Shader() = default;
-    virtual void Render(Sphere* s) = 0;
-    virtual void Render(Box* b) = 0;
-};
-struct Shape {
-    virtual ~Shape() = default;
-    virtual void Accept(Shader* sh) = 0;
-};
-struct Sphere : Shape {
-    void Accept(Shader* sh) override { sh->Render(this); }
-};
-struct Box : Shape {
-    void Accept(Shader* sh) override { sh->Render(this); }
-};
-```
 
-`RENDER_MGR::Render` calls `shape->Accept(shader)` for each pair. `BasicShader` and `ComplexShader` override both `Render` overloads. The copy constructor allocates new shapes and new shaders. When the hierarchy provides a virtual `clone()`, that function is the deep copy. Copying the array of pointers is the bug that part (b) is written to catch.
+:::check id=exam-16a-q2-q2
+`Shader::Render` and `Shape::Accept` are declared {{== 0|inline|static}}.
+
+`Shader` declares `virtual void Render(Sphere* s) = 0` and `virtual void Render(Box* b) = 0`. `Shape` declares `virtual void Accept(Shader* sh) = 0`. Both bases also declare a virtual destructor with `= default`.
+:::
+
+:::check id=exam-16a-q2-q3
+Which of these hold?
+
+- [x] `RENDER_MGR::Render` calls `shape->Accept(shader)` for each pair
+- [ ] Copying the manager's pointer array gives the copy its own shapes and shaders
+- [x] `BasicShader` and `ComplexShader` override both `Render` overloads
+
+`RENDER_MGR::Render` calls `shape->Accept(shader)` for each pair. `BasicShader` and `ComplexShader` override both `Render` overloads. Copying the array of pointers is the bug. The copy constructor allocates new shapes and new shaders.
+:::
+
+:::check id=exam-16a-q2-q4
+Which copy of `RENDER_MGR` is correct?
+
+- [x] The copy constructor allocates new shapes and new shaders. A virtual `clone()` is that deep copy when the hierarchy provides one
+- [ ] The copy constructor copies the pointer values, so the two managers share the objects
+- [ ] The copy constructor allocates new shaders and keeps the original shapes
+
+The copy constructor allocates new shapes and new shaders. When the hierarchy provides a virtual `clone()`, that function is the deep copy.
 :::
 :::
 
 :::problem id=exam-18a-q1 title="An image destructor" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
-`Image` is an abstract base with `int n_pixels` and `virtual void show() = 0`. `ColorImage` inherits from it and holds an array of pixels. The claims to choose among are these: the program leaks because `~ColorImage` never runs; the repair is `virtual ~Image() {}`; `ColorImage` also needs a destructor of its own that applies `delete[]` to the array; there is no leak. Choose the correct claim, and say what a pass-by-value copy of `ColorImage` does to the array under the rule of three.
+`Image` is an abstract base with `int n_pixels` and `virtual void show() = 0`. `ColorImage` inherits from it and holds an array of pixels. A `ColorImage` is destroyed through an `Image*`. A separate `ColorImage` is also passed by value.
 
-:::hint
-`Image* p = new ColorImage(...); delete p;` uses `~Image` unless that destructor is virtual.
+:::check id=exam-18a-q1-q1
+What does `delete` through an `Image*` do when the destructor is not virtual?
+
+- [ ] `~ColorImage` runs and releases the pixel array
+- [x] `~Image` runs alone, so `~ColorImage` never releases the pixel array
+- [ ] There is no leak, because `show` is already virtual
+
+`delete` through an `Image*` runs `~Image` alone when the destructor is not virtual, so `~ColorImage` never releases the pixel array. That is a leak. A claim that there is no leak is false.
 :::
-:::hint
-Making the destructor virtual runs `~ColorImage`. Releasing a raw array is the job of the derived destructor.
+
+:::check id=exam-18a-q1-q2
+The declaration that makes `delete` dispatch to `~ColorImage` is {{=virtual ~Image() = default|~Image() = default|virtual ~ColorImage() = default}}.
+
+The declaration `virtual ~Image() = default` makes `delete` dispatch to `~ColorImage`.
 :::
-:::hint
-The options treat "add `virtual ~Image`" as required. When the object owns a further array, the derived destructor still has to release that array.
+
+:::check id=exam-18a-q1-q3
+Which of these hold when `ColorImage` owns a raw array?
+
+- [x] `~ColorImage` must apply `delete[]` to the array
+- [x] The copy constructor and the assignment operator must copy the array deeply
+- [ ] A virtual `~Image` releases the pixel array by itself
+
+If `ColorImage` owns a raw array, `~ColorImage` must apply `delete[]` to it, and the copy constructor and the assignment operator must copy it deeply.
 :::
-:::solution
-`delete` through an `Image*` runs `~Image` alone when the destructor is not virtual, so `~ColorImage` never releases the pixel array. That is a leak. The declaration `virtual ~Image() = default` makes `delete` dispatch to `~ColorImage`. If `ColorImage` owns a raw array, `~ColorImage` must apply `delete[]` to it, and the copy constructor and the assignment operator must copy it deeply. A claim that there is no leak is false. A repair that only changes `main` so the variable is declared with the dynamic type fixes that one line. The next `delete` through an `Image*` is still wrong. Copying under the rule of three is a separate bug: the copy the compiler generates shares the array, and each of the two destructors releases that same array.
+
+:::check id=exam-18a-q1-q4
+Which of these hold for the other repairs?
+
+- [x] Declaring the variable in `main` with the dynamic type fixes that one line. The next `delete` through an `Image*` is still wrong
+- [ ] That change of `main` makes every later `delete` through an `Image*` run `~ColorImage`
+- [x] The copy the compiler generates shares the array, and each of the two destructors releases that same array
+
+A repair that only changes `main` so the variable is declared with the dynamic type fixes that one line. The next `delete` through an `Image*` is still wrong. Copying under the rule of three is a separate bug: the copy the compiler generates shares the array, and each of the two destructors releases that same array.
 :::
 :::
 
 :::problem id=exam-18b-q1 title="Memory of an image hierarchy" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-`Image` is an abstract base with `int n_pixels` and `virtual void show() = 0`. `GrayImage` and `ColorImage` inherit from it, differ in the pixel type, and each holds its own pixel array. Draw the stack and the heap at the comment inside `show`, including the vptrs. A later part asks which cast recovers the dynamic type. The discussion of the question includes `dynamic_cast`.
+`Image` is an abstract base with `int n_pixels` and `virtual void show() = 0`. `GrayImage` and `ColorImage` inherit from it, differ in the pixel type, and each holds its own pixel array. The call under discussion is inside `show`. The cast under discussion is `dynamic_cast`.
 
-:::hint
-One derived object is a single block in the object layout: the base subobject, then the derived members, and a vptr because the class is polymorphic.
+:::check id=exam-18b-q1-q1
+Which description of the layout is right during that call?
+
+- [ ] The stack frame holds the pixel buffer. The heap object starts with `n_pixels` and has no vptr
+- [x] The heap object begins with the vptr, then `n_pixels`, then the derived class's pointer to the pixel buffer. The buffer is a further block on the heap
+- [ ] The vptr and the pixel array both sit in the stack frame, next to the return address
+
+The object layout on the heap begins with the vptr, then `n_pixels`, then the derived class's pointer to the pixel buffer. The buffer itself is a further block on the heap.
 :::
-:::hint
-A pointer variable on the stack stores the address of that block. The pixel array, when it was allocated with `new`, is a second block on the heap.
+
+:::check id=exam-18b-q1-q2
+What does the stack hold during the call?
+
+- [x] The pointer parameter and the return address
+- [ ] The pixel buffer and the vtable
+- [ ] The vptr and `n_pixels`
+
+During the call, the stack holds the pointer parameter and the return address.
 :::
-:::hint
-`dynamic_cast` needs the vtable. Failure is a run-time result: the cast fails when the object is not of the target type.
+
+:::check id=exam-18b-q1-q3
+`dynamic_cast<ColorImage*>(p)` returns {{=null|the same pointer p|a new ColorImage}} when `p` does not point at a color image.
+
+`dynamic_cast<ColorImage*>(p)` returns null when `p` does not point at a color image, and it returns the pointer when it does. A C-style cast converts the pointer without consulting the vtable.
 :::
-:::solution
-During the call, the stack holds the pointer parameter and the return address. The object layout on the heap begins with the vptr, then `n_pixels`, then the derived class's pointer to the pixel buffer. The buffer itself is a further block on the heap. A grayscale image and a color image have different vtables, so `show` through an `Image*` reaches the override. `dynamic_cast<ColorImage*>(p)` returns null when `p` does not point at a color image, and it returns the pointer when it does. A C-style cast converts the pointer without consulting the vtable. The diagram the question prints is correct when every polymorphic subobject shows a vptr and the pixel array is drawn outside the stack frame.
+
+:::check id=exam-18b-q1-q4
+Which of these hold?
+
+- [x] A grayscale image and a color image have different vtables, so `show` through an `Image*` reaches the override
+- [ ] A C-style cast consults the vtable and returns null when the type does not match
+- [x] The layout is right when every polymorphic subobject shows a vptr and the pixel array is outside the stack frame
+
+A grayscale image and a color image have different vtables, so `show` through an `Image*` reaches the override. A C-style cast converts the pointer without consulting the vtable. The layout is right when every polymorphic subobject shows a vptr and the pixel array is outside the stack frame.
 :::
 :::
 
 :::problem id=exam-19a-q1 title="An application repository" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
-`APP` is abstract, with `virtual void run() = 0`. `PAY_APP` and `PLAY_APP` override it. `MY_APPS_REPO` must store both kinds in one array.
+`APP` is abstract, with `virtual void run() = 0`. `PAY_APP` and `PLAY_APP` override it. `MY_APPS_REPO` stores both kinds in one array. Clients are kept from writing `new` on the repository. `Clone` and `test_apps_repo` are already correct, and the call is `repo->test_apps_repo(test->Clone())`.
 
-a. Give `apps_repo_arr_` a single type that can hold both.
+:::check id=exam-19a-q1-q1
+Which types can hold both kinds in one collection?
 
-b. Implement `MY_APPS_REPO(int n_pay_app, int n_play_app)` so that it allocates and stores that many of each.
+- [x] `APP** apps_repo_arr_`
+- [ ] An array of `APP` objects
+- [x] `std::vector<std::unique_ptr<APP>>`
 
-c. The class stops clients from calling `new` on the repository by hiding construction. Implement that, and show how a client still obtains an instance.
-
-d. `Clone` and `test_apps_repo` are already correct. Make `repo->test_apps_repo(test->Clone())` perform the copy efficiently. Implement only the functions that line needs.
-
-:::hint
-One array of `APP*` holds both derived types. An array of `APP` slices each object down to the base subobject. An array of one derived type has no place for the other.
+`APP** apps_repo_arr_` or `std::vector<std::unique_ptr<APP>>`. The static type is a pointer to the base class.
 :::
-:::hint
-Hiding `new` means a private constructor together with a static factory, or a private `operator new`. The factory returns a pointer or a smart pointer.
+
+:::check id=exam-19a-q1-q2
+Which constructor body is correct for `MY_APPS_REPO(int n_pay_app, int n_play_app)`?
+
+- [x] Allocate `n_pay_app + n_play_app` slots. The first `n_pay_app` slots hold `new PAY_APP`. The remaining slots hold `new PLAY_APP`
+- [ ] Allocate one array of `PAY_APP` and a second array of `PLAY_APP`
+- [ ] Store both kinds by value in an array of `APP`
+
+Allocate `n_pay_app + n_play_app` slots. The first `n_pay_app` slots hold `new PAY_APP`. The remaining slots hold `new PLAY_APP`.
 :::
-:::hint
-`Clone` returns a new repository. If it returns by value, the copy constructor runs. A move, or returning a pointer, is the efficient version the line asks for.
+
+:::check id=exam-19a-q1-q3
+Every constructor is private. A client obtains an instance by calling {{=create|new|Clone}}.
+
+Make every constructor private, and publish `static MY_APPS_REPO* create(...)`. The private constructor stops client code outside the class from writing `new MY_APPS_REPO`. The client obtains an instance by calling `create`.
 :::
-:::solution
-a. `APP** apps_repo_arr_;` or `std::vector<std::unique_ptr<APP>>`. The static type is a pointer to the base class.
 
-b. Allocate `n_pay_app + n_play_app` slots. The first `n_pay_app` slots hold `new PAY_APP`. The remaining slots hold `new PLAY_APP`.
+:::check id=exam-19a-q1-q4
+Which of these hold for `repo->test_apps_repo(test->Clone())`?
 
-c. Make every constructor private, and publish `static MY_APPS_REPO* create(...)`. The private constructor stops client code outside the class from writing `new MY_APPS_REPO`. The client obtains an instance by calling `create`.
+- [ ] `Clone` returns the original repository, so the argument is that same object
+- [x] If `Clone` returns by value, the argument is a temporary and the move constructor takes ownership of the pointer array
+- [x] `APP` needs a virtual destructor so that destroying the repository applies `delete` to the real application objects
 
-d. `Clone` must move the pointer array into a new repository, or deep-copy it there. If `Clone` returns by value, the argument of `test_apps_repo` is a temporary, and the repository's move constructor takes ownership of the pointer array. `APP` needs a virtual destructor so that destroying the repository applies `delete` to the real application objects. Implement `Clone` and the constructor or move operation this call uses.
+`Clone` must move the pointer array into a new repository, or deep-copy it there. If `Clone` returns by value, the argument of `test_apps_repo` is a temporary, and the repository's move constructor takes ownership of the pointer array. `APP` needs a virtual destructor so that destroying the repository applies `delete` to the real application objects.
 :::
 :::
 
 :::problem id=exam-19b-q1 title="Overload resolution and the dynamic type" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
-`TESTER` declares three overloads, `test(APP*)`, `test(PAY_APP*)`, and `test(PLAY_APP*)`. Each of them is virtual on the base class. The call `tester->test(app)`, where `app` has static type `APP*`, binds the `APP*` overload at compile time. Overload resolution reads the static type of the argument. Draw the memory of the run up to the comment, and explain why a `PAY_APP` object still reaches `test(APP*)`.
+`TESTER` declares three overloads, `test(APP*)`, `test(PAY_APP*)`, and `test(PLAY_APP*)`. Each of them is virtual on the base class. The call is `tester->test(app)`. The variable `app` has static type `APP*`, and the object it points at is a `PAY_APP`.
 
-:::hint
-Overload resolution reads the static type of the argument. Virtual dispatch then reads the dynamic type of the receiver, the object on which the method is called. The receiver's dynamic type selects the override of the signature that overload resolution already chose.
+:::check id=exam-19b-q1-q1
+Which signature does `tester->test(app)` select?
+
+- [ ] `test(PAY_APP*)`, because the object is a `PAY_APP`
+- [x] `TESTER::test(APP*)`, at compile time, from the static type of `app`
+- [ ] `test(PLAY_APP*)`, because that overload is also virtual
+
+`test(app)`, with `app` declared as `APP*`, selects `TESTER::test(APP*)` at compile time, including when `app` points at a `PAY_APP`.
 :::
-:::hint
-The visitor pattern is what lets the dynamic type of the argument take part. A single set of overloads resolves the argument from its static type.
+
+:::check id=exam-19b-q1-q2
+Dispatch that follows the application's dynamic type needs a virtual {{=accept|test|run}} on `APP`, or a chain of `dynamic_cast`.
+
+Dispatch that follows the application's dynamic type needs a virtual `accept` on `APP`, which is the visitor, or a chain of `dynamic_cast`. The lecture presents the `dynamic_cast` chain as the weaker of those two tools.
 :::
-:::hint
-The memory diagram still needs a vptr when any function of the object is virtual.
+
+:::check id=exam-19b-q1-q3
+Which description of the layout is right?
+
+- [ ] The pointer variable sits on the heap, and neither object has a vptr
+- [ ] Callable addresses sit in the application object, and the vtables hold the fields
+- [x] Each polymorphic object has a vptr, the pointer variable sits on the stack, and the argument stores the address of the application object
+
+The memory picture contains the tester object and the application object. Each has a vptr when it is polymorphic. The pointer variable sits on the stack. Callable addresses sit in the vtables. The argument stores the address of the application object.
 :::
-:::solution
-`test(app)`, with `app` declared as `APP*`, selects `TESTER::test(APP*)` at compile time, including when `app` points at a `PAY_APP`. Declaring the three overloads `virtual` selects the tester's override of that exact signature. The signature itself was fixed from the static type of `app`. Dispatch that follows the application's dynamic type needs a virtual `accept` on `APP`, which is the visitor, or a chain of `dynamic_cast`. The lecture presents the `dynamic_cast` chain as the weaker of those two tools. The memory picture contains the tester object and the application object. Each has a vptr when it is polymorphic. The application's further fields sit in the derived part of its block, and the pointer variable sits on the stack. Callable addresses sit in the vtables. The argument stores the address of the application object.
+
+:::check id=exam-19b-q1-q4
+Which of these hold?
+
+- [x] The application's further fields sit in the derived part of its block
+- [ ] The dynamic type of `app` changes which overload was selected at compile time
+- [x] Marking the three overloads `virtual` selects the tester's override of the signature that was already chosen
+
+The application's further fields sit in the derived part of its block. Declaring the three overloads `virtual` selects the tester's override of that exact signature. The signature itself was fixed from the static type of `app`.
 :::
 :::
 
 :::problem id=exam-24b-q1 title="A tree under an inorder walk" source="materials/exams/24-b.pdf" kind=exam solution_origin=derived
-`BinaryTree<T>` has `left` and `right`. `InorderBinaryTree` inherits from it and also implements a traversal interface. Draw the memory at the end of this fragment:
+`BinaryTree<T>` has `left` and `right`. `InorderBinaryTree` inherits from it and also implements a traversal interface.
 
 ```cpp
 Traversable<BinaryTree<int>>* t1 = new InorderBinaryTree<BinaryTree<int>>(
@@ -262,19 +364,40 @@ InorderBinaryTree<int> t2(2,
     new InorderBinaryTree<int>(3));
 ```
 
-:::hint
-`t1` is one pointer on the stack. The object is on the heap, and its object layout contains a `BinaryTree` subobject plus the derived part.
-:::
-:::hint
-`t2` is an automatic object. Its children were allocated with `new`, so those children are on the heap while `t2` itself sits in the frame.
-:::
-:::hint
-A `BinaryTree<int>(2)` argument passed by value is embedded in the parent. A child created with `new InorderBinaryTree` is a separate block with its own vptr.
-:::
-:::solution
-`t1` lives in the frame and holds a heap address. That heap object is an `InorderBinaryTree` whose base subobject stores the datum 2 and two child pointers. Each child is an `InorderBinaryTree` of its own on the heap, one with datum 1 and one with datum 3. The class is polymorphic through `Traversable`, so each of these three objects has a vptr.
+:::check id=exam-24b-q1-q1
+Which description of the layout of `t1` is right?
 
-`t2` is the whole derived object in the frame: the datum 2, a vptr, and two pointers. The children with data 1 and 3 are heap objects, and each has a vptr. The fields of `t2` belong in the frame. The fields of the children belong in their own heap blocks. The value `BinaryTree<int>(2)` that was passed as an argument was copied into the parent. Once the constructor returns, the live trees are the parent and the two children.
+- [x] `t1` is a pointer in the frame and holds a heap address. That heap object has a vptr, stores datum 2 in the base subobject, and holds two child pointers. Each child is its own heap object, one with datum 1 and one with datum 3
+- [ ] `t1` is the whole tree in the frame, and the children with data 1 and 3 are embedded beside datum 2
+- [ ] `t1` points at one heap block that contains datum 2 together with both children
+
+`t1` lives in the frame and holds a heap address. That heap object is an `InorderBinaryTree` whose base subobject stores the datum 2 and two child pointers. Each child is an `InorderBinaryTree` of its own on the heap, one with datum 1 and one with datum 3. The class is polymorphic through `Traversable`, so each of these three objects has a vptr.
+:::
+
+:::check id=exam-24b-q1-q2
+Which description of the layout of `t2` is right?
+
+- [ ] `t2` is a pointer in the frame, and datum 2 lives on the heap
+- [ ] `t2` and both children sit in the frame, and none of them has a vptr
+- [x] `t2` is the whole derived object in the frame: datum 2, a vptr, and two pointers. The children with data 1 and 3 are heap objects, and each has a vptr
+
+`t2` is the whole derived object in the frame: the datum 2, a vptr, and two pointers. The children with data 1 and 3 are heap objects, and each has a vptr. The fields of `t2` belong in the frame. The fields of the children belong in their own heap blocks.
+:::
+
+:::check id=exam-24b-q1-q3
+The `BinaryTree<int>(2)` argument was {{=copied into the parent|shared with the caller|left on the heap as a third child}}.
+
+The value `BinaryTree<int>(2)` that was passed as an argument was copied into the parent. Once the constructor returns, the live trees are the parent and the two children.
+:::
+
+:::check id=exam-24b-q1-q4
+Which of these hold?
+
+- [x] Each of the three objects reachable from `t1` has a vptr, because the class is polymorphic through `Traversable`
+- [ ] The children of `t2` are embedded in the frame and have no vptr
+- [x] The fields of those children belong in their own heap blocks
+
+Each of the three objects behind `t1` has a vptr because the class is polymorphic through `Traversable`. The fields of the children belong in their own heap blocks.
 :::
 :::
 

@@ -1099,8 +1099,9 @@ def _render_text_with_blanks(text: str, href_for, prose: bool) -> str:
             parts.append(render_inline(chunk, href_for) if prose else html.escape(chunk))
         options = [part.strip() for part in match.group(1).split("|") if part.strip()]
         opts = ['<option value="">Choose</option>']
-        for option in options:
-            opts.append(f"<option>{html.escape(option)}</option>")
+        for index, option in enumerate(options):
+            flag = ' data-correct="true"' if index == 0 else ""
+            opts.append(f"<option{flag}>{html.escape(option)}</option>")
         parts.append(f'<select class="blank-select" aria-label="Blank">{"".join(opts)}</select>')
         last = match.end()
     if last < len(text):

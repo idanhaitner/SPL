@@ -175,7 +175,7 @@ A cycle of `shared_ptr` keeps every reference count above zero. If two objects e
 ## Practice
 
 :::problem id=ps4-copy-count title="How many copies" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=derived
-How many times does the copy constructor run if there is no copy elision, and what changes when the parameter is passed as `const MyClass&`? Which of those copies may NRVO remove?
+These two functions return a `MyClass` by value.
 
 ```cpp
 MyClass pass(MyClass value) {
@@ -189,24 +189,35 @@ MyClass passRef(const MyClass& value) {
 
 ```
 
-:::hint
-A parameter passed by value is copied on the way in. A return by value is copied on the way out when the compiler does not elide that copy.
-:::
-:::hint
-A parameter passed as `const MyClass&` binds to the caller's object. Entering the function copies nothing.
-:::
-:::hint
-NRVO may construct the named local directly in the caller's return slot, which drops the copy on the way out. The explicit `MyClass local(value)` remains.
-:::
-:::solution
-In `pass`, with no NRVO and no elision, one copy initializes the parameter `value` and a second copy returns it. That is two calls to the copy constructor.
+:::check id=ps4-copy-count-q1
+With no NRVO and no elision, how many times does the copy constructor run in `pass`?
 
-In `passRef`, the parameter is a const reference, so entry copies nothing. `local(value)` is one explicit copy, and returning `local` is a second copy. When NRVO is applied, `local` is constructed directly in the caller's return slot, and that return uses the same object.
+- [ ] Once, on the return only
+- [x] Twice: one copy initializes `value`, and a second copy returns it
+- [ ] Three times: the argument, a local, and the return
+
+One copy initializes the parameter `value`. A second copy returns it.
+:::
+
+:::check id=ps4-copy-count-q2
+Which of these hold for `passRef`?
+
+- [x] Entering the function copies nothing, because the parameter is a const reference
+- [ ] `MyClass local(value)` is skipped when NRVO is off
+- [x] With no NRVO, `local(value)` is one copy and returning `local` is a second copy
+
+The parameter is a const reference, so entry copies nothing. `local(value)` is one explicit copy, and returning `local` is a second copy.
+:::
+
+:::check id=ps4-copy-count-q3
+Under NRVO, `local` is constructed directly in the caller's {{=return slot|parameter|heap}}.
+
+That return uses the same object.
 :::
 :::
 
 :::problem id=ps4-unique-vs-shared title="shared versus unique" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=source
-What happens in each of the following fragments?
+Two fragments.
 
 ```cpp
 auto sp1 = std::make_shared<int>(1);
@@ -222,19 +233,30 @@ auto up2 = up1;
 
 ```
 
-:::hint
-Copying a `shared_ptr` increments the reference count.
-:::
-:::hint
-`unique_ptr` has its copy constructor deleted (`= delete`).
-:::
-:::hint
-The inner block ends by destroying `sp2`, which decrements the count. Transferring `up1` into `up2` is a move: `auto up2 = std::move(up1);`.
-:::
-:::solution
-In the first fragment, `sp2 = sp1` copies the shared pointer and raises the reference count to 2. At the end of the inner block, `sp2` is destroyed and the count drops to 1. The `int` on the heap stays alive, and `sp1` can still reach it.
+:::check id=ps4-unique-vs-shared-q1
+After `sp2 = sp1`, and before the inner block ends, what is the reference count?
 
-In the second fragment, `auto up2 = up1;` tries to copy a `unique_ptr`. That copy constructor is deleted, so the program fails to compile. The ownership moves with an explicit `auto up2 = std::move(up1);`.
+- [ ] 0
+- [ ] 1
+- [x] 2
+
+Copying the shared pointer raises the reference count to 2.
+:::
+
+:::check id=ps4-unique-vs-shared-q2
+Which of these hold when the inner block ends?
+
+- [x] `sp2` is destroyed and the count drops to 1
+- [ ] The `int` on the heap is deleted
+- [x] `sp1` can still reach the `int`
+
+Destroying `sp2` drops the count to 1. The `int` stays alive, and `sp1` can still reach it.
+:::
+
+:::check id=ps4-unique-vs-shared-q3
+`auto up2 = up1` tries to copy a {{=unique_ptr|shared_ptr|weak_ptr}}. That copy constructor is deleted, so the program fails to compile.
+
+Ownership moves with an explicit `auto up2 = std::move(up1)`.
 :::
 :::
 
@@ -243,263 +265,180 @@ Exam questions on the rule of five, or on smart pointers, often ask for a transf
 :::
 
 :::problem id=exam-16b-q2 title="A collection by value" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-`ITEM_COLLECTION<T>` manages a collection of items. The function `byVal` takes the collection by value.
+`ITEM_COLLECTION<T>` manages a collection of items. `byVal` takes the collection by value. `SPHERE` and `BOX` both inherit from `SHAPE`.
 
-a. Write a deep copy constructor, and keep the template syntax.
+:::check id=exam-16b-q2-q1
+Which copy-constructor body is required for a deep copy?
 
-b. Complete `main` so the collection can hold both a `SPHERE` and a `BOX`. Both inherit from `SHAPE`.
+- [x] Initialize `_capacity`, `_size`, and `new T[other._capacity]`, then assign each live element `_items[i] = other._items[i]`
+- [ ] Copy the pointer `_items` and share the other collection's array
+- [ ] Allocate `new T[other._capacity]` and leave the new elements unassigned
 
-c. What happens in the call `byVal(myShapeCollection)` if the class uses the default copy constructor?
-
-d. Repair the ownership with `shared_ptr`.
-
-:::hint
-`byVal` takes the collection by value, so a copy constructor runs. A raw pointer to the array is the same ownership problem as `Image::_bytes`.
+The deep copy constructor copies the capacity and the size, allocates `new T[other._capacity]`, and assigns each live element.
 :::
-:::hint
-`SPHERE` and `BOX` derive from `SHAPE`. Storing a `SHAPE` by value slices the derived object. A `shared_ptr<SHAPE>` keeps the derived object and shares ownership of it.
+
+:::check id=exam-16b-q2-q2
+Which element types keep a `SPHERE` and a `BOX` without slicing the derived object?
+
+- [ ] `ITEM_COLLECTION<SHAPE>`
+- [x] `ITEM_COLLECTION<SHAPE*>`
+- [x] `ITEM_COLLECTION<std::shared_ptr<SHAPE>>`
+
+Storing a `SHAPE` by value slices the derived object. A `SHAPE*` or a `std::shared_ptr<SHAPE>` keeps the dynamic type.
 :::
-:::hint
-The deep copy constructor initializes the capacity, the size, and a `new T[other._capacity]`, then assigns each live element. The default copy copies the pointer, and the parameter's destructor `delete[]`s that array.
+
+:::check id=exam-16b-q2-q3
+What does `byVal(myShapeCollection)` do when the class uses the default copy constructor?
+
+- [ ] It gives the parameter its own array, so both destructors are safe
+- [ ] The call fails to compile
+- [x] It shallow-copies the array pointer. The parameter's destructor `delete[]`s that array, the original is left dangling, and destroying the original is a double free
+
+The default copy constructor makes a shallow copy (העתקה רדודה) of the pointer to the array. When `byVal` returns, the parameter's destructor releases the array with `delete[]`.
 :::
-:::solution
-a. A deep copy constructor:
 
-```cpp
-template <typename T>
-ITEM_COLLECTION<T>::ITEM_COLLECTION(const ITEM_COLLECTION<T>& other)
-    : _capacity(other._capacity), _size(other._size), _items(new T[other._capacity]) {
-    for (int i = 0; i < _size; ++i) {
-        _items[i] = other._items[i];
-    }
-}
+:::check id=exam-16b-q2-q4
+A copied collection of {{=shared_ptr|unique_ptr|raw pointer}} elements copies smart pointers, and each copy increments a reference count.
 
-```
-
-b. To keep the dynamic type, and to avoid slicing the derived object, store pointers: `ITEM_COLLECTION<SHAPE*>`, or, with shared ownership, `ITEM_COLLECTION<std::shared_ptr<SHAPE>>`.
-
-c. The default copy constructor makes a shallow copy (העתקה רדודה) of the pointer to the array. Passing the collection to `byVal` by value builds that shallow copy. When `byVal` returns, the parameter's destructor releases the array with `delete[]`. The original collection is left with a dangling pointer, and destroying it is a double free.
-
-d. `ITEM_COLLECTION<std::shared_ptr<SHAPE>>` copies smart pointers when the collection is copied, and each copy increments a reference count. Destroying the temporary drops those counts. The shapes stay alive until the last owner is gone.
+Destroying the temporary drops those counts. The shapes stay alive until the last owner is gone.
 :::
 :::
 
 :::problem id=exam-20b-q1 title="A smart pointer" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-Implement `SmartPointer<T>` on the shared-ownership model of `shared_ptr`: a dynamically allocated reference count, a copy that shares the object, and a release of the memory only when the reference count reaches zero.
-
-:::hint
-Shared ownership uses two allocations: the `T`, and an `int` on the heap that counts the owners.
-:::
-:::hint
-The copy constructor copies both pointers and increments the count. The destructor decrements the count, and it deletes both blocks only when the count reaches zero.
-:::
-:::hint
-Assignment releases `*this` before it adopts the other pointer and the other count. When `this` and `other` are the same object, the count stays as it is.
-:::
-:::solution
+`SmartPointer<T>` uses shared ownership: a pointer to a `T`, a reference count on the heap, a copy that shares the object, and a release of the memory only when the count reaches zero.
 
 ```cpp
 template <typename T>
 class SmartPointer {
     T* ptr_;
     int* count_;
-public:
-    explicit SmartPointer(T* p = nullptr)
-        : ptr_(p), count_(p ? new int(1) : new int(0)) {}
-
-    SmartPointer(const SmartPointer& other)
-        : ptr_(other.ptr_), count_(other.count_) {
-        if (ptr_) {
-            ++(*count_);
-        }
-    }
-
-    ~SmartPointer() {
-        release();
-    }
-
-    SmartPointer& operator=(const SmartPointer& other) {
-        if (this != &other) {
-            release();
-            ptr_ = other.ptr_;
-            count_ = other.count_;
-            if (ptr_) {
-                ++(*count_);
-            }
-        }
-        return *this;
-    }
-
-    T& operator*() const { return *ptr_; }
-    T* operator->() const { return ptr_; }
-
-private:
-    void release() {
-        if (ptr_ && --(*count_) == 0) {
-            delete ptr_;
-            delete count_;
-            ptr_ = nullptr;
-            count_ = nullptr;
-        }
-    }
 };
-
 ```
 
+:::check id=exam-20b-q1-q1
+Which constructor is required?
+
+- [ ] `SmartPointer(T value) : ptr_(new T(value)), count_(nullptr) {}`
+- [ ] `explicit SmartPointer(T* p = nullptr) : ptr_(p), count_(new int(0)) {}`
+- [x] `explicit SmartPointer(T* p = nullptr) : ptr_(p), count_(p ? new int(1) : new int(0)) {}`
+
+A non-null pointer starts the count at 1. A null pointer starts it at 0.
+:::
+
+:::check id=exam-20b-q1-q2
+Which of these match the copy constructor and `release`?
+
+- [x] The copy constructor copies both pointers and increments the count when `ptr_` is non-null
+- [ ] `release` deletes both blocks on every call
+- [x] `release` deletes both blocks only when `ptr_` is non-null and the decremented count is 0
+- [ ] The destructor deletes `ptr_` and leaves `count_` allocated
+
+The copy shares both pointers and increments when there is an object. `release` deletes `ptr_` and `count_` only when the count reaches zero, then nulls both pointers.
+:::
+
+:::check id=exam-20b-q1-q3
+Which copy-assignment body is required?
+
+- [ ] Call `release()` and then copy the pointers, including when `this == &other`
+- [x] When `this != &other`, call `release()`, copy both pointers, and increment the count when `ptr_` is non-null. Return `*this`
+- [ ] Swap the pointers and leave the count unchanged
+
+Self-assignment leaves the count as it is. A different object is released first, then adopted.
+:::
+
+:::check id=exam-20b-q1-q4
+`operator*` returns {{=*ptr_|ptr_|count_}}.
+
+`operator->` returns `ptr_`.
 :::
 :::
 
 :::problem id=exam-24a-q1 title="A tree under the rule of five" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-`BinaryTree<T>` is a binary tree whose nodes are allocated on the heap.
+`BinaryTree<T>` stores `T data` and owning children `BinaryTree* left` and `BinaryTree* right`. Nodes are allocated on the heap. The call is `f(BinaryTree<int>(...))`, and the class implements move.
 
-a. Define the class in C++, including the data members, the constructors, `insert`, and the getters.
+:::check id=exam-24a-q1-q1
+Which destructor body is required?
 
-b. Continue the class and implement the rule of five: the destructor, the copy constructor, the copy assignment operator, the move constructor, and the move-assignment operator.
+- [ ] `left = nullptr; right = nullptr;`
+- [x] `delete left; delete right;`
+- [ ] `delete this;`
 
-c. Draw the stack and the heap for the call `f(BinaryTree<int>(1, ...))`, assuming the class implements move.
-
-:::hint
-`left` and `right` are owning pointers. A memberwise copy would share one tree between two objects, and both destructors would delete it.
+The destructor is `delete left; delete right;`.
 :::
-:::hint
-The copy constructor allocates a new node for each child. The move constructor copies the pointers and then sets the source pointers to `nullptr`. Copy assignment can build a temporary and swap.
+
+:::check id=exam-24a-q1-q2
+Which of these bodies are required?
+
+- [x] Copy constructor: `new BinaryTree(*other.left)` when `left` is non-null, and the same for `right`
+- [x] Move constructor: move `data`, take `left` and `right`, then set the source pointers to null
+- [ ] Copy assignment: `delete left` and `delete right` before the copy, with no temporary
+- [x] Move assignment: delete the old children, take the source pointers, and null the source
+- [x] `insert` sends a smaller value to the left and a larger value to the right, and it does not insert an equal key
+
+The copy constructor allocates a new node for each child. Copy assignment builds a temporary and swaps. The move operations take the pointers and then null the source. Move assignment deletes the old children first. `insert` places a smaller value on the left and a larger value on the right.
 :::
-:::hint
-The argument `BinaryTree<int>(...)` is an rvalue, so the parameter of `f` is initialized by the move constructor. The nodes stay on the heap. The stack frame of `f` holds their new owner.
+
+:::check id=exam-24a-q1-q3
+Copy assignment, when `this` is not the other object, builds a {{=temporary|shared node|raw alias}} and swaps `data`, `left`, and `right`.
+
+The body builds `BinaryTree temp(other)`, swaps `data`, `left`, and `right`, and returns `*this`.
 :::
-:::solution
-a and b. The class, with the rule of five:
 
-```cpp
-template <typename T>
-class BinaryTree {
-    T data;
-    BinaryTree* left;
-    BinaryTree* right;
+:::check id=exam-24a-q1-q4
+Which description of `f(BinaryTree<int>(...))` is right?
 
-public:
-    BinaryTree(const T& val) : data(val), left(nullptr), right(nullptr) {}
-    BinaryTree(const T& val, BinaryTree* l, BinaryTree* r)
-        : data(val), left(l), right(r) {}
+- [x] The argument is an unnamed rvalue. The move constructor takes `left` and `right`, nulls the temporary, and the parameter on the stack frame of `f` owns the nodes that stay on the heap
+- [ ] The nodes leave the heap and are stored inside the stack frame of `f`
+- [ ] The argument is an lvalue, so every node is deep-copied before `f` starts
 
-    // Destructor
-    ~BinaryTree() {
-        delete left;
-        delete right;
-    }
-
-    // Copy Constructor
-    BinaryTree(const BinaryTree& other)
-        : data(other.data),
-          left(other.left ? new BinaryTree(*other.left) : nullptr),
-          right(other.right ? new BinaryTree(*other.right) : nullptr) {}
-
-    // Copy Assignment Operator
-    BinaryTree& operator=(const BinaryTree& other) {
-        if (this != &other) {
-            BinaryTree temp(other);
-            std::swap(data, temp.data);
-            std::swap(left, temp.left);
-            std::swap(right, temp.right);
-        }
-        return *this;
-    }
-
-    // Move Constructor
-    BinaryTree(BinaryTree&& other) noexcept
-        : data(std::move(other.data)), left(other.left), right(other.right) {
-        other.left = nullptr;
-        other.right = nullptr;
-    }
-
-    // Move Assignment Operator
-    BinaryTree& operator=(BinaryTree&& other) noexcept {
-        if (this != &other) {
-            delete left;
-            delete right;
-            data = std::move(other.data);
-            left = other.left;
-            right = other.right;
-            other.left = nullptr;
-            other.right = nullptr;
-        }
-        return *this;
-    }
-
-    void insert(const T& val) {
-        if (val < data) {
-            if (left) left->insert(val);
-            else left = new BinaryTree(val);
-        } else if (val > data) {
-            if (right) right->insert(val);
-            else right = new BinaryTree(val);
-        }
-    }
-};
-
-```
-
-c. In the call `f(BinaryTree<int>(...))`, the argument is an unnamed rvalue. The move constructor takes `left` and `right` from the temporary and sets the temporary's pointers to null. On the stack frame of `f`, the parameter `t` receives ownership of the nodes that remain on the heap.
+The argument is an unnamed rvalue, so the parameter is initialized by the move constructor. The nodes remain on the heap.
 :::
 :::
 
 :::problem id=exam-24c-q1 title="Copy on write" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
-Implement the wrapper `copy_on_write<T>`. It implements copy-on-write: copied objects share the same data on the heap until the first write, `on_write()`, which makes a private clone.
-
-:::hint
-The copy constructor copies `ptr` and `users` and increments the count. The clone waits until something writes.
-:::
-:::hint
-`on_write` clones only when `*users` is greater than 1. It decrements the shared count, clones the `T`, and allocates a fresh count of 1.
-:::
-:::hint
-The destructor decrements the count and deletes both blocks only when the count reaches zero. The const `operator->` returns the shared pointer. A non-const use is what calls `on_write`.
-:::
-:::solution
+`copy_on_write<T>` shares one heap `T` across copies until the first write. `on_write()` makes a private clone.
 
 ```cpp
 template <typename T>
 class copy_on_write {
     T* ptr;
     int* users;
-
-public:
-    explicit copy_on_write(T* p)
-        : ptr(p), users(new int(1)) {}
-
-    // Copy Constructor: share data, increment reference count
-    copy_on_write(const copy_on_write& other)
-        : ptr(other.ptr), users(other.users) {
-        ++(*users);
-    }
-
-    // Called before any mutating operation
-    void on_write() {
-        if (*users > 1) {
-            --(*users);
-            ptr = ptr->clone(); // Allocate private copy
-            users = new int(1);
-        }
-    }
-
-    ~copy_on_write() {
-        if (--(*users) == 0) {
-            delete ptr;
-            delete users;
-        }
-    }
-
-    T* operator->() {
-        on_write();
-        return ptr;
-    }
-
-    const T* operator->() const {
-        return ptr; // Const access does not trigger copy
-    }
 };
-
 ```
 
+:::check id=exam-24c-q1-q1
+Which copy-constructor body is required?
+
+- [x] Copy `ptr` and `users`, then `++(*users)`
+- [ ] Clone the `T` in the copy constructor and set `users` to `new int(1)`
+- [ ] Copy `ptr` and set `users` to null
+
+The copy constructor copies `ptr` and `users`, then increments the count.
+:::
+
+:::check id=exam-24c-q1-q2
+Which of these hold?
+
+- [ ] `on_write` clones even when `*users` is 1
+- [x] `on_write` clones only when `*users` is greater than 1: it decrements the shared count, clones the `T`, and allocates a fresh count of 1
+- [x] The destructor deletes `ptr` and `users` only when the decremented count is 0
+
+A single owner does not clone. The destructor deletes both blocks only when the count reaches zero.
+:::
+
+:::check id=exam-24c-q1-q3
+The non-const `operator->` calls {{=on_write|clone|release}} and then returns `ptr`.
+
+The const `operator->` returns `ptr` and does not copy.
+:::
+
+:::check id=exam-24c-q1-q4
+Which constructor body is required?
+
+- [ ] `: ptr(p), users(nullptr)`
+- [ ] `: ptr(nullptr), users(new int(0))`
+- [x] `explicit copy_on_write(T* p) : ptr(p), users(new int(1))`
+
+The first owner starts the count at 1.
 :::
 :::

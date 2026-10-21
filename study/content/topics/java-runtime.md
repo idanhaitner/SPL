@@ -63,21 +63,43 @@ Checked exceptions are part of the method's type. Unchecked exceptions and `Erro
 ## Practice
 
 :::problem id=ps5-checked-exception title="A checked exception" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
-`FileNotFoundException` is checked. `ArithmeticException` is unchecked. For each one, say whether the program compiles when the caller ignores it, and where a thrown exception goes when no frame handles it.
+`FileNotFoundException` is checked. `ArithmeticException` is unchecked.
 
-:::hint
-The exercise table says that ignoring an unchecked exception still leaves the program able to compile. Ignoring a checked exception makes compilation fail.
-:::
-:::hint
-The ways to handle a checked exception are a `try/catch`, or a `throws` clause on the method.
-:::
-:::hint
-The picture of the call stack ends at the JVM when `main` has no handler.
-:::
-:::solution
-Ignoring `ArithmeticException` still compiles. Handling it is optional, and catching it is usually the wrong response when the exception marks a bug the program should fix. A method that ignores `FileNotFoundException` fails to compile. The method must catch it or declare `throws FileNotFoundException`, and the caller then has the same obligation.
+:::check id=ps5-checked-exception-q1
+A method that can throw `FileNotFoundException` must catch it or declare {{=throws|finally|assert}} `FileNotFoundException`.
 
-If the exception is thrown and no frame from the throw site through `main` has a matching `catch`, the JVM terminates the program and reports the exception. `finally` blocks along that walk still run. `try-with-resources` closes the resource on this path. A second failure thrown by `close` is suppressed, and the original exception remains the one that propagates.
+A method that ignores `FileNotFoundException` fails to compile. The caller then has the same obligation.
+:::
+
+:::check id=ps5-checked-exception-q2
+Which of these hold?
+
+- [x] Ignoring `ArithmeticException` still compiles
+- [ ] Ignoring `FileNotFoundException` still compiles
+- [x] The caller of a method that declares `throws FileNotFoundException` has the same obligation
+- [x] Catching `ArithmeticException` is usually the wrong response when the exception marks a bug the program should fix
+
+Handling `ArithmeticException` is optional. A method that ignores `FileNotFoundException` must catch it or declare `throws FileNotFoundException`, and the caller has the same obligation.
+:::
+
+:::check id=ps5-checked-exception-q3
+If no frame from the throw site through `main` has a matching `catch`, what happens?
+
+- [ ] `main` returns normally and the exception is discarded
+- [ ] `finally` blocks along that walk are skipped
+- [x] The JVM terminates the program and reports the exception
+
+The JVM terminates the program and reports the exception.
+:::
+
+:::check id=ps5-checked-exception-q4
+Which of these hold on that path?
+
+- [x] `finally` blocks along the walk still run
+- [ ] A second failure thrown by `close` replaces the original exception
+- [x] `try-with-resources` closes the resource. A second failure from `close` is suppressed, and the original exception remains the one that propagates
+
+`finally` still runs. The original exception stays the one that propagates.
 :::
 :::
 

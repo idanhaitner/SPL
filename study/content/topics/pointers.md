@@ -148,7 +148,7 @@ const short* ps1 = &s1;
 ## Practice
 
 :::problem id=ps2-pointer-dangers title="Four pointer faults" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-For each fragment, name the fault. Leave in place any line that still compiles.
+Four fragments use a pointer.
 
 ```cpp
 int* p = nullptr;
@@ -167,28 +167,42 @@ delete b;
 *a = 3;
 ```
 
-:::hint
-For each pointer, at the moment of the dereference, ask whether it holds the address of a live object.
-:::
-:::hint
-`delete` releases the block. Any other pointer variable that copied the address keeps the bits it already holds.
-:::
-:::hint
-The first fragment stores the sentinel address 0.
-:::
-:::solution
-The first fault is a dereference of null. Address 0 is the null sentinel, and the load or the store is a segmentation fault.
+:::check id=ps2-pointer-dangers-q1
+Which of these are faults?
 
-The second fault is an uninitialized pointer. The exercise notes that a declaration such as `int* q;` leaves the pointer with an indeterminate value, so `*q = 3` is undefined behavior. Those bits were never set to an object this program allocated.
+- [ ] `int* r = new int` stores an indeterminate address.
+- [x] `*p = 3` dereferences null.
+- [x] `*q = 3` uses an uninitialized pointer.
+- [x] `*r = 5` after `delete r` is a use after `delete`.
+- [x] `*a = 3` after `delete b` uses an address that `delete` already released.
 
-The third fault is a use after `delete`. The variable `r` still holds the old address, and that address no longer designates an object. A later slide in the exercise observes that the assignment still compiles.
+The first fault is a dereference of null. Address 0 is the null sentinel, and the load or the store is a segmentation fault. The second fault is an uninitialized pointer. A declaration such as `int* q;` leaves the pointer with an indeterminate value, so `*q = 3` is undefined behavior. Those bits were never set to an object this program allocated. The third fault is a use after `delete`. The fourth fault is a dangling second pointer. `a` and `b` held one address. `delete b` releases the `int`. `*a` uses that same address after the release.
+:::
 
-The fourth fault is a dangling second pointer. `a` and `b` held one address. `delete b` releases the `int`. `*a` uses that same address after the release. The safe pattern on the slide is `delete p; p = nullptr;`, applied to every copy. That assignment is possible only while the program still knows about those copies.
+:::check id=ps2-pointer-dangers-q2
+What is true of `*r = 5` after `delete r`?
+
+- [ ] The line is rejected at compile time.
+- [x] The line still compiles. `r` holds the old address, and that address no longer designates an object.
+- [ ] `delete r` clears `r`, so the assignment stores into a new `int`.
+
+The variable `r` still holds the old address, and that address no longer designates an object. The assignment still compiles.
+:::
+
+:::check id=ps2-pointer-dangers-q3
+Which repair matches the safe pattern after `delete b`?
+
+- [ ] Call `delete a` as well. `a` and `b` owned two blocks.
+- [ ] Set only `b` to null. `a` still addresses a live `int`.
+- [ ] Leave both pointers unchanged. `delete` already stored null in every copy.
+- [x] Apply `delete p; p = nullptr;` to every copy, while the program still knows about those copies.
+
+`a` and `b` held one address. `delete b` releases the `int`. The safe pattern is `delete p; p = nullptr;`, applied to every copy. That assignment is possible only while the program still knows about those copies.
 :::
 :::
 
 :::problem id=ps2-delete-2d title="Releasing a two-dimensional array" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-Release every block this allocation obtained. Release each row once.
+A two-dimensional array is allocated as an array of pointers and one array of `int` per row.
 
 ```cpp
 int** arry = new int*[rowCount];
@@ -196,24 +210,52 @@ for (int i = 0; i < rowCount; ++i)
     arry[i] = new int[colCount];
 ```
 
-:::hint
-There are `rowCount + 1` blocks on the heap: one array of pointers, and one array of `int` for each row.
-:::
-:::hint
-Release the rows before you release the array that holds their addresses. After the outer `delete[]`, the row pointers are gone.
-:::
-:::hint
-The loop that allocated is the loop that must delete, in the reverse order of the dependency.
-:::
-:::solution
+:::check id=ps2-delete-2d-q1
+Which body releases every block?
+
 ```cpp
+// A
+delete[] arry;
+for (int i = 0; i < rowCount; ++i)
+    delete arry[i];
+```
+
+```cpp
+// B
 for (int i = 0; i < rowCount; ++i)
     delete[] arry[i];
 delete[] arry;
 arry = nullptr;
 ```
 
-Each `arry[i]` came from `new int[colCount]`, which is an array on the heap, so `delete[]` is the release that matches it. The array of pointers came from `new int*[rowCount]`, so it too is released with `delete[]`. `delete` releases one object. Releasing the pointer array first would drop the only copies of the row addresses, and every row would be a memory leak (זליגת זיכרון). Setting `arry` to null afterward matches the exercise's habit after a delete.
+```cpp
+// C
+for (int i = 0; i < rowCount; ++i)
+    delete arry[i];
+delete arry;
+```
+
+- [ ] A. Release the pointer array first, then each row with `delete`.
+- [x] B. `delete[]` each row, then `delete[]` the pointer array, then set `arry` to null.
+- [ ] C. `delete` matches both `new int[colCount]` and `new int*[rowCount]`.
+
+Each `arry[i]` came from `new int[colCount]`, which is an array on the heap, so `delete[]` is the release that matches it. The array of pointers came from `new int*[rowCount]`, so it too is released with `delete[]`. `delete` releases one object. Setting `arry` to null afterward matches the exercise's habit after a delete.
+:::
+
+:::check id=ps2-delete-2d-q2
+Each `arry[i]` is an array on the {{=heap|stack|vtable}} and is released with {{=delete[]|delete|no delete}}. The array of pointers is released with {{=delete[]|delete|no delete}}. `delete` releases {{=one object|an array|the stack frame}}.
+
+Each `arry[i]` came from `new int[colCount]`, which is an array on the heap, so `delete[]` is the release that matches it. The array of pointers came from `new int*[rowCount]`, so it too is released with `delete[]`. `delete` releases one object.
+:::
+
+:::check id=ps2-delete-2d-q3
+What follows from releasing the pointer array first?
+
+- [ ] The row addresses have already been copied onto the stack, so the rows stay reachable.
+- [ ] `delete[] arry` releases every row as well as the pointer array.
+- [x] The only copies of the row addresses are dropped, and every row is a memory leak.
+
+Releasing the pointer array first would drop the only copies of the row addresses, and every row would be a memory leak.
 :::
 :::
 
@@ -222,11 +264,7 @@ The question builds an image repository behind an array of pointers, then return
 :::
 
 :::problem id=exam-20a-q1 title="An image repository" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
-Write a C++ program that stores two kinds of image, `Portrait` and `Scenery`. Each pixel is a gray level in `0..255`. The pixels of one image are stored in a one-dimensional `BYTES` array, row after row. `ImageRepository` holds many images in an array named `_images`.
-
-a. Implement the constructor and `Insert`. The constructor allocates an array of `capacity` pointers. `Insert` receives an array of images, allocates a new array, and copies the pointers into it. The `BYTES` arrays of the images stay as they are. Add a field or a method only when you need it.
-
-b. A student writes:
+`Portrait` and `Scenery` are images. Each pixel is a gray level in `0..255`. The pixels of one image are stored in a one-dimensional `BYTES` array, row after row. `ImageRepository` holds many images in an array named `_images`. The constructor allocates an array of `capacity` pointers. `Insert` receives an array of images, allocates a new array, and copies the pointers into it. The `BYTES` arrays of the images stay as they are.
 
 ```cpp
 ImageRepository CreateEmptyRep() {
@@ -235,44 +273,78 @@ ImageRepository CreateEmptyRep() {
 }
 ```
 
-Explain what this returns, and what goes wrong if it is used as an empty repository.
-
-The rest of the question continues the same class. Answer (a) and (b) as the question about pointers.
-:::hint
-`_images` is an array of pointers. Copying that array copies addresses. Copying an `Image` would copy pixels. The question asks for the copy of the addresses, and it rules out the copy of the pixels.
-:::
-:::hint
-`rep` is an automatic object. Returning it by value constructs a copy from the local. With no copy constructor of your own, that copy shares `_images` with an object that is about to be destroyed.
-:::
-:::hint
-The constructor has to execute `_images = new Image*[capacity];` and record `capacity`. `Insert` allocates a new array of pointers of that length and copies those pointers. The `BYTES` blocks stay where they are.
-:::
-:::solution
-a. One reading that stays consistent with the rules on the slides and with the question:
+:::check id=exam-20a-q1-q1
+Which constructor and `Insert` match that design?
 
 ```cpp
-class Image { /* pixels in a BYTES block, virtual destructor */ };
-class ImageRepository {
-    Image** _images;
-    int _capacity;
-    int _size;
-public:
-    ImageRepository(int capacity)
-        : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
-    void Insert(Image** src, int n) {
-        Image** copy = new Image*[n];
-        for (int i = 0; i < n; ++i) copy[i] = src[i];  // pointers only
-        delete[] _images;
-        _images = copy;
-        _capacity = n;
-        _size = n;
-    }
-};
+// A
+ImageRepository(int capacity)
+    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
+void Insert(Image** src, int n) {
+    Image** copy = new Image*[n];
+    for (int i = 0; i < n; ++i) copy[i] = new Image(*src[i]);
+    delete[] _images;
+    _images = copy;
+    _capacity = n;
+    _size = n;
+}
 ```
 
-The byte arrays stay where the images already allocated them. Two repositories can hold the same `Image*`. That sharing of the image objects is the shallow copy the question asked for. A `delete` of an `Image` is safe only for a sole owner. `Insert` copies the pointer, so several repositories can hold it.
+```cpp
+// B
+ImageRepository(int capacity)
+    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
+void Insert(Image** src, int n) {
+    Image** copy = new Image*[n];
+    for (int i = 0; i < n; ++i) copy[i] = src[i]; // pointers only
+    delete[] _images;
+    _images = copy;
+    _capacity = n;
+    _size = n;
+}
+```
 
-b. `rep` is constructed in the frame of `CreateEmptyRep`. `return rep` is a return by value, so it uses the copy constructor. The default copy constructor copies the pointer `_images`. The destructor of `rep` then runs. If that destructor executes `delete[] _images`, the returned object holds a dangling pointer. If the destructor leaves the array allocated, every other path is a memory leak, and the caller shares the buffer with a local that has already been destroyed. In either case, returning by value an object that owns a pointer array is the problem the rule of three addresses. An empty repository is built by returning an object constructed in the caller's storage, or by returning by move. Move is the tool of the next chapter. A correct empty repository is `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
+```cpp
+// C
+ImageRepository(int capacity)
+    : _images(nullptr), _capacity(capacity), _size(0) {}
+void Insert(Image** src, int n) {
+    _images = src;
+    _size = n;
+}
+```
+
+- [ ] A. `Insert` allocates a new `Image` for each element, so the pixels are copied.
+- [x] B. The constructor allocates `new Image*[capacity]`. `Insert` copies pointers into a new array. The `BYTES` blocks stay where they are.
+- [ ] C. The constructor leaves `_images` null. `Insert` stores the caller's array and does not allocate.
+
+The constructor allocates `_images` with `new Image*[capacity]` and records `capacity` and `_size == 0`. `Insert` allocates a new array of pointers and copies those pointers. The byte arrays stay where the images already allocated them.
+:::
+
+:::check id=exam-20a-q1-q2
+`Insert` releases the previous `_images` array with {{=delete[]|delete|no delete}}. It copies {{=pointers|pixels|BYTES blocks}}. Two repositories can hold the same {{=Image*|stack frame|vtable}}. A `delete` of an `Image` is safe only for a {{=sole owner|second repository|null pointer}}.
+
+`Insert` copies the pointer and releases the previous array with `delete[]`. The byte arrays stay where the images already allocated them. Two repositories can hold the same `Image*`. That sharing of the image objects is the shallow copy the question asked for. A `delete` of an `Image` is safe only for a sole owner. Several repositories can hold the same pointer.
+:::
+
+:::check id=exam-20a-q1-q3
+What does `CreateEmptyRep` return?
+
+- [ ] `return rep` returns the local object itself, so the destructor of `rep` does not run.
+- [ ] The default copy constructor duplicates every `BYTES` array, so the caller owns new pixels.
+- [x] `return rep` copies `_images`. If the destructor then executes `delete[] _images`, the returned object holds a dangling pointer. If it leaves the array allocated, the caller shares that buffer with a destroyed local, and other paths leak.
+
+`rep` is constructed in the frame of `CreateEmptyRep`. `return rep` is a return by value, so it uses the copy constructor. The default copy constructor copies the pointer `_images`. The destructor of `rep` then runs. If that destructor executes `delete[] _images`, the returned object holds a dangling pointer. If the destructor leaves the array allocated, every other path is a memory leak, and the caller shares the buffer with a local that has already been destroyed.
+:::
+
+:::check id=exam-20a-q1-q4
+Which object is an empty repository?
+
+- [x] `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
+- [ ] The object returned by `CreateEmptyRep` after its destructor has executed `delete[] _images`.
+- [ ] A repository whose `_images` still addresses the array of a local that has been destroyed.
+
+Returning by value an object that owns a pointer array is the problem the rule of three addresses. An empty repository is built by returning an object constructed in the caller's storage, or by returning by move. Move is the tool of the next chapter. A correct empty repository is `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
 :::
 :::
 

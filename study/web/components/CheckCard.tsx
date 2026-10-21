@@ -9,10 +9,21 @@ type Blank = { correct: string; options: string[] };
 
 const BLANK = /\{\{=([^{}]+)\}\}/g;
 
-function shuffle<T>(items: T[]) {
+function hash(text: string) {
+  let value = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    value ^= text.charCodeAt(index);
+    value = Math.imul(value, 16777619);
+  }
+  return value >>> 0;
+}
+
+function shuffle<T>(items: T[], seed: number) {
   const copy = [...items];
+  let state = seed || 1;
   for (let index = copy.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    const swap = state % (index + 1);
     const held = copy[index];
     copy[index] = copy[swap];
     copy[swap] = held;
@@ -204,7 +215,9 @@ export function CheckCard({
   const [picked, setPicked] = useState<number | null>(null);
   const [pickedMany, setPickedMany] = useState<number[]>([]);
   const [values, setValues] = useState<string[]>([]);
-  const [menus] = useState(() => blanks.map((blank) => shuffle(blank.options)));
+  const [menus] = useState(() =>
+    blanks.map((blank, index) => shuffle(blank.options, hash(`${id}:${index}:${blank.correct}`))),
+  );
   const [graded, setGraded] = useState(false);
 
   const manyCorrect =

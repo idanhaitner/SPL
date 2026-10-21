@@ -464,7 +464,7 @@ Global variables, and local variables declared `static`, occupy the static regio
 ## Practice
 
 :::problem id=ps2-stack-vs-heap title="Stack versus heap" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-For each name, say whether the storage it refers to is on the stack or on the heap, and which `delete` is required, if any.
+Four names are declared in `demo`.
 
 ```cpp
 void demo() {
@@ -476,21 +476,30 @@ void demo() {
 
 ```
 
-:::hint
-A variable declared inside a function, with no `new`, is allocated on the stack. An explicit `new` or `new[]` always obtains its block from the heap.
-:::
-:::hint
-Match the release to the allocation. `delete` releases one object. `delete[]` releases an array. A local on the stack needs no `delete`.
-:::
-:::hint
-The pointer and the block are two objects. Name the region of the pointer, then the region of the block it addresses, then the form of `delete` that matches the `new` that created the block.
-:::
-:::solution
+:::check id=ps2-stack-vs-heap-q1
+Where does each object live, and which release matches it?
 
-- `local` is an `int` in `demo`'s stack frame. The return releases it. It takes no `delete`.
-- `one` is a local pointer on the stack. The `int` it addresses is a block on the heap. Release that `int` with `delete one`.
-- `many` is a local pointer on the stack. The array of ten integers is a block on the heap. Release it with `delete[] many`.
-- `s` is a local pointer on the stack. The `string` object itself is a block on the heap. Release it with `delete s`.
+`local` is an `int` on the {{=stack|heap|vtable}} and takes {{=no delete|delete|delete[]}}.
+
+`one` is a pointer on the {{=stack|heap|vtable}}. The `int` from `new int(2)` lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
+
+`local` is an `int` in `demo`'s stack frame. The return releases it. It takes no `delete`. `one` is a local pointer on the stack. The `int` it addresses is a block on the heap. Release that `int` with `delete one`.
+:::
+
+:::check id=ps2-stack-vs-heap-q2
+`many` is a pointer on the {{=stack|heap|vtable}}. The array of ten integers lives on the {{=heap|stack|frame of demo}} and is released with {{=delete[]|delete|no delete}}.
+
+`s` is a pointer on the {{=stack|heap|vtable}}. The `string` object lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
+
+`many` is a local pointer on the stack. The array of ten integers is a block on the heap. Release it with `delete[] many`. `s` is a local pointer on the stack. The `string` object itself is a block on the heap. Release it with `delete s`.
+:::
+
+:::check id=ps2-stack-vs-heap-q3
+What is true if `demo` returns while those three blocks are still allocated?
+
+- [ ] The return pops the frame and releases the three heap blocks with it.
+- [ ] The three pointers move onto the heap, so the blocks stay reachable.
+- [x] The return pops the frame and the pointers disappear with it. A block left behind is a memory leak on the heap.
 
 The three heap blocks have to be released before the function returns. The return pops the frame and the pointers disappear with it. A block left behind is a memory leak on the heap.
 :::
@@ -501,43 +510,63 @@ A common exam question passes an object by value into a function and asks for a 
 :::
 
 :::problem id=exam-15a-q2 title="A vector as a list" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
-We want a class `mvector<T>` that stores its elements as a dynamic linked list, using that list where another design would use a contiguous array.
+A class `mvector<T>` stores its elements as a dynamic linked list, using that list where another design would use a contiguous array. `insertAt` allocates a node when one is needed and inserts it at position `pos`. `removeAt` shrinks the structure. One proposal drops `_len` and uses `sizeof(_head)` as the length. The call `foo(mvector<T> vec)` passes the argument by value.
 
-a. Implement the required operations. `insertAt` allocates a node when one is needed and inserts it at position `pos`. `removeAt` shrinks the structure.
+:::check id=exam-15a-q2-q1
+Which destructor matches this list, and which copy goes with it?
 
-b. Suppose we remove the field `_len` and return `sizeof(_head)` as the length of the structure. Which statement is correct?
+```cpp
+// A
+delete[] _head;
+```
 
-1. This works, and it returns the exact length.
-2. The result has to be divided by `sizeof(T)`.
-3. On a 32-bit system the expression always returns 4.
-4. A compilation error (`sizeof` cannot be applied to a template).
-5. None of the answers is correct.
+```cpp
+// B
+node<T>* current = _head;
+while (current != nullptr) {
+    node<T>* upcoming = current->_next;
+    delete current;
+    current = upcoming;
+}
+```
 
-c. Draw the memory (stack, heap, and vtable) for the call `foo(mvector<T> vec)`, which passes the argument by value.
-:::hint
-`sizeof` is the size of a type, computed at compile time. A count of nodes would be a walk along `_next` at run time.
+```cpp
+// C
+delete _head;
+```
+
+- [ ] A, together with a copy constructor that copies `_head` only.
+- [x] B, together with a copy constructor that makes a deep copy of every node.
+- [ ] C, together with a copy constructor that leaves every vector sharing one chain.
+
+The class keeps a linked list of `node<T>` nodes and the length of that list in `_len`. The destructor walks the nodes and releases each one with `delete`. The copy constructor makes a deep copy of every node. Each vector then owns its own nodes, so the destructor of one vector releases only that vector's nodes.
 :::
-:::hint
-A parameter received by value is a separate object. Its pointer and the caller's pointer are two different cells on the stack. Whether they share one list on the heap depends on the copy constructor.
-:::
-:::hint
-`_head` has a pointer type. On the 32-bit systems this question refers to, every pointer occupies exactly 4 bytes.
-:::
-:::solution
-a. The solution keeps a linked list of `node<T>` nodes and the length of that list in `_len`. The destructor walks the nodes and releases each one with `delete`. The copy constructor makes a deep copy of every node. Each vector then owns its own nodes, so the destructor of one vector releases only that vector's nodes.
 
-b. Statement 3 is correct. `_head` is a pointer. On a 32-bit system the size of a pointer is 4 bytes, for any number of elements in the list it addresses.
+:::check id=exam-15a-q2-q2
+`_len` is removed and the length is `sizeof(_head)`. Which statement is correct?
 
-c. Inside `foo`, the parameter arrives by value, so a new `mvector` object is created in `foo`'s stack frame. It has its own `_head` and its own `_len`. A deep copy duplicates the nodes on the heap into a new chain. A shallow copy leaves the two pointers on the stack addressing one chain of nodes on the heap. This class has no virtual methods, so it has no vtable.
+- [ ] 1. This works, and it returns the exact length.
+- [ ] 2. The result has to be divided by `sizeof(T)`.
+- [x] 3. On a 32-bit system the expression always returns 4.
+- [ ] 4. A compilation error (`sizeof` cannot be applied to a template).
+- [ ] 5. None of the answers is correct.
+
+Statement 3 is correct. `_head` is a pointer. On a 32-bit system the size of a pointer is 4 bytes, for any number of elements in the list it addresses.
+:::
+
+:::check id=exam-15a-q2-q3
+Which description of the stack and the heap is right for `foo(mvector<T> vec)`?
+
+- [ ] The parameter is another name for the caller's vector, so both share one `_head` cell on the stack.
+- [ ] The nodes live in `foo`'s frame, and the class has a vtable because it is a template.
+- [x] A new `mvector` is created in `foo`'s stack frame, with its own `_head` and `_len`. A deep copy puts a new chain on the heap. A shallow copy leaves both stack pointers on one heap chain. There is no vtable.
+
+Inside `foo`, the parameter arrives by value, so a new `mvector` object is created in `foo`'s stack frame. It has its own `_head` and its own `_len`. A deep copy duplicates the nodes on the heap into a new chain. A shallow copy leaves the two pointers on the stack addressing one chain of nodes on the heap. This class has no virtual methods, so it has no vtable.
 :::
 :::
 
 :::problem id=exam-15b-q2 title="A vector that grows" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
 The class `mvector` is based on a dynamic array. When `insertAt` goes past the current size, it grows the array to the smallest power of 2 that is greater than `pos`. `removeAt` shrinks the array by half when the entire upper half is unused. `node` has a pure virtual method `duplicate()`.
-
-a. Implement a deep copy constructor.
-
-b. Draw the memory for the following code:
 
 ```cpp
 void foo(mvector vec) {
@@ -553,28 +582,57 @@ void main() {
 
 ```
 
-c. At the end of `main` the code contains the conversion `my_node* m = (my_node*)(vec.getAt(0));`. Which statement is correct?
+At the end of `main` the code contains the conversion `my_node* m = (my_node*)(vec.getAt(0));`.
 
-1. Downcasting is forbidden in C++.
-2. A C-style cast is checked only at compile time.
-3. A downcast is safe only when there are no virtual methods.
-4. Virtual methods are bound at run time (dynamic binding).
-5. None of the answers is correct.
-:::hint
-Growth takes the smallest power of two that can hold the index `pos`. The old cells are copied by value into the new array, and only then is the old array released with `delete[]`.
-:::
-:::hint
-`foo` receives `vec` by value, then constructs `my_vec` by copying that parameter. Count three distinct vector objects.
-:::
-:::hint
-`getAt` returns `node*`. The added line is a C-style cast. The official choices are claims about virtual functions. Judge each claim on its own.
-:::
-:::solution
-a. The copy constructor allocates a new array on the heap, of the appropriate size, and copies every node into it. Because `node` is polymorphic, a correct copy calls `duplicate()`, so the new object has the real dynamic type. Copying a `node` by value would slice the object. That loss of the derived part is object slicing.
+:::check id=exam-15b-q2-q1
+Which copy constructor is correct?
 
-b. Three distinct vector objects sit on the stack: `vec` in `main`'s frame, the parameter `vec` in `foo`'s frame (the object produced by pass by value), and the local `my_vec` in `foo`'s frame. Each has its own dynamic array on the heap, provided the copy was a correct deep copy. The vtable of `my_node` is present, because the elements are polymorphic and include virtual functions.
+```cpp
+// A
+node* buf = new node[n];
+for (int i = 0; i < n; ++i)
+    buf[i] = *src[i];
+```
 
-c. Statement 4 is correct. A call of a virtual function is resolved at run time from the real object on the heap. A C-style cast converts the pointer with no run-time type check. `dynamic_cast` performs that check.
+```cpp
+// B
+node** buf = src;
+```
+
+```cpp
+// C
+node** buf = new node*[n];
+for (int i = 0; i < n; ++i)
+    buf[i] = src[i]->duplicate();
+```
+
+- [ ] A. Copying a `node` by value keeps the derived part.
+- [ ] B. The copy stores the source array pointer and allocates no new array.
+- [x] C. Allocate a new array on the heap and copy every node by calling `duplicate()`.
+
+The copy constructor allocates a new array on the heap, of the appropriate size, and copies every node into it. Because `node` is polymorphic, a correct copy calls `duplicate()`, so the new object has the real dynamic type. Copying a `node` by value would slice the object. That loss of the derived part is object slicing.
+:::
+
+:::check id=exam-15b-q2-q2
+Which description of the stack and the heap is right at the marked line?
+
+- [ ] `my_vec` is another name for `vec` in `main`, so one vector object sits on the heap.
+- [x] Three vectors sit on the stack: `vec` in `main`, the parameter `vec` in `foo`, and `my_vec`. After a deep copy, each has its own array on the heap, and `my_node` has a vtable.
+- [ ] The three vectors share one array in `foo`'s frame, and `my_node` has no vtable.
+
+Three distinct vector objects sit on the stack: `vec` in `main`'s frame, the parameter `vec` in `foo`'s frame (the object produced by pass by value), and the local `my_vec` in `foo`'s frame. Each has its own dynamic array on the heap, provided the copy was a correct deep copy. The vtable of `my_node` is present, because the elements are polymorphic and include virtual functions.
+:::
+
+:::check id=exam-15b-q2-q3
+`getAt` returns `node*`, and the added line is a C-style cast. Which statement is correct?
+
+- [ ] 1. Downcasting is forbidden in C++.
+- [ ] 2. A C-style cast is checked only at compile time.
+- [ ] 3. A downcast is safe only when there are no virtual methods.
+- [x] 4. Virtual methods are bound at run time (dynamic binding).
+- [ ] 5. None of the answers is correct.
+
+Statement 4 is correct. A call of a virtual function is resolved at run time from the real object on the heap. A C-style cast converts the pointer with no run-time type check. `dynamic_cast` performs that check.
 :::
 :::
 

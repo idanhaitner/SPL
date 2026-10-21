@@ -183,25 +183,37 @@ Forgetting the semicolon after a `class` or `struct` definition is a common comp
 ## Practice
 
 :::problem id=ps1-link-vs-java title="Where linking happens" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-Explain when linking happens in Java and when it happens in C++, and say which file `g++ -c` produces.
-:::hint
-The Java compiler emits bytecode. The JVM turns that bytecode into machine code later, on the machine that runs the program.
-:::
-:::hint
-A C++ object file still names symbols that other `.cpp` files define. The step after `-c` is what resolves those names.
-:::
-:::hint
-In this session the assembler writes `*.o` on Unix.
-:::
-:::solution
-In Java, source is compiled to bytecode, and the JVM links dynamically while the program runs, when it loads a class.
+Java and C++ both turn source into a program that can run. In this session the C++ compile step is `g++ -c`.
 
-In C++, `g++ -c` runs the preprocessor, the compiler, and the assembler, and it writes an object file (`.o`). That file contains machine code, and its external symbols are still unresolved. Linking is a separate step, and it runs before the executable exists.
+:::check id=ps1-link-vs-java-q1
+`g++ -c` writes an {{=object file|executable|bytecode}}.
+
+That file is a `.o`. It contains machine code, and its external symbols are still unresolved. The step runs the preprocessor, the compiler, and the assembler.
+:::
+
+:::check id=ps1-link-vs-java-q2
+Which of these hold for Java?
+
+- [ ] Java source is compiled straight to an `.o` file
+- [x] Java source is compiled to bytecode
+- [x] The JVM links dynamically while the program runs, when it loads a class
+
+Linking happens when the JVM loads a class, during the run.
+:::
+
+:::check id=ps1-link-vs-java-q3
+When does C++ linking run, relative to `g++ -c`?
+
+- [x] As a separate step, before the executable exists
+- [ ] Inside `g++ -c`, which already resolves every external symbol
+- [ ] While the program runs, when a class is loaded
+
+After `g++ -c`, external symbols are still unresolved. Linking runs before the executable exists.
 :::
 :::
 
 :::problem id=ps1-makefile-first-target title="The first target of make" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-What happens when you run `make` on the following file?
+This makefile has two targets.
 
 ```makefile
 clean:
@@ -211,22 +223,36 @@ hello: helloWorld.o run.o
 	g++ -o bin/hello bin/helloWorld.o bin/run.o
 
 ```
-:::hint
-`make` with no arguments runs the first target in the file. A target named `all` runs when it is that first target.
+
+:::check id=ps1-makefile-first-target-q1
+`make` with no arguments runs {{=clean|hello|bin}}.
+
+That is the first target in the file.
 :::
-:::hint
-The session states the default directly: it is the first target in the file.
+
+:::check id=ps1-makefile-first-target-q2
+What does that run do?
+
+- [ ] It links `bin/hello` from `helloWorld.o` and `run.o`
+- [x] It deletes the build products, and `hello` stays unbuilt
+- [ ] It builds `hello`, then deletes `bin`
+
+The recipe under `clean` deletes the build products.
 :::
-:::hint
-The recipe under a target is indented with a Tab. The dependency line has the form `target: dep1 dep2`.
-:::
-:::solution
-`make` with no arguments runs the first target in the file, which is `clean`. That recipe deletes the build products, and `hello` stays unbuilt. To build the program, run `make hello`, or move the `hello` target so that it is the first target in the file.
+
+:::check id=ps1-makefile-first-target-q3
+Which of these build the program?
+
+- [x] Run `make hello`
+- [ ] Run `make` with no arguments
+- [x] Move `hello` so it is the first target, then run `make`
+
+`make hello` selects that target. `make` with no arguments stays on `clean` while `clean` is first.
 :::
 :::
 
 :::problem id=ps3-pass-by-value title="Three signatures of emphasize" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
-Here are three signatures. Which of them can modify the caller's string, and which of them can accept `nullptr`?
+Three signatures.
 
 ```cpp
 void emphasize1(std::string word);
@@ -234,20 +260,31 @@ void emphasize2(std::string& word);
 void emphasize3(std::string* word);
 
 ```
-:::hint
-A parameter passed by value is a different object from the caller's object.
-:::
-:::hint
-A reference has to bind to an object. A pointer may hold `nullptr`, and the function body has to test for that.
-:::
-:::hint
-On the slide, the body is `word.append(3, '!')` or `word->append(3, '!')`.
-:::
-:::solution
 
-- `emphasize1` receives a copy, passed by value. Changes inside the function leave the caller's string as it was.
-- `emphasize2` receives a reference. Changes inside the function modify the caller's string. A reference cannot be `nullptr`.
-- `emphasize3` receives a pointer. Changes made through that pointer modify the caller's string. The pointer may be `nullptr`, and the function body has to check before it uses it.
+:::check id=ps3-pass-by-value-q1
+What does `emphasize1` do with the caller's string?
+
+- [x] It receives a copy. Changes inside the function leave the caller's string as it was
+- [ ] It modifies the caller's string
+- [ ] It accepts `nullptr` in place of the string
+
+It receives a copy, passed by value. Changes inside the function leave the caller's string as it was.
+:::
+
+:::check id=ps3-pass-by-value-q2
+Which of these hold?
+
+- [x] `emphasize2` receives a reference, so changes inside the function modify the caller's string
+- [ ] `emphasize2` can be passed `nullptr`
+- [x] `emphasize3` receives a pointer. Changes through that pointer modify the caller's string, and the pointer may be `nullptr`
+
+A reference cannot be `nullptr`.
+:::
+
+:::check id=ps3-pass-by-value-q3
+The body of `emphasize3` has to check for {{=nullptr|a reference|a copy}} before it uses the pointer.
+
+The pointer may be `nullptr`, and the function body has to check before it uses it.
 :::
 :::
 

@@ -135,7 +135,7 @@ b = a;
 ## Practice
 
 :::problem id=ps3-rule-of-three title="The three functions of List" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
-If a class needs a user-defined destructor, copy constructor, or copy assignment operator, it almost always needs all three. `List` holds a `Node* head` allocated with `new`, and the special members the compiler generates are still in place. What breaks, and which three functions do you write?
+`List` holds a `Node* head` allocated with `new`. The special members the compiler generates are still in place.
 
 ```cpp
 class List {
@@ -143,21 +143,31 @@ class List {
 };
 ```
 
-:::hint
-The operations the compiler generates copy the pointer, so both lists end up owning one chain.
-:::
-:::hint
-Two objects, one `head`, two destructors.
-:::
-:::hint
-Name the three: the destructor, the copy constructor, and the copy assignment operator. Say what each one does with `head`.
-:::
-:::solution
-`List b = a` copies `head`. `b` and `a` share one chain. When one destructor walks the chain and `delete`s each node, the other list is left with a dangling pointer, and its destructor `delete`s those same nodes again.
+:::check id=ps3-rule-of-three-q1
+`List b = a` uses the generated copy. What breaks?
 
-Write all three. The destructor walks the chain and `delete`s every node. The copy constructor allocates a new node for each element and points `head` at that new chain. The copy assignment operator releases the chain `this` already holds, then makes a deep copy, and returns `*this`. Copy-and-swap is the assignment that reuses the copy constructor and the destructor: build a temporary copy, swap the two `head` pointers, and let the temporary's destructor release the old chain.
+- [ ] The program fails to compile, because a `Node*` cannot be copied
+- [ ] `b` allocates its own chain
+- [x] `b` and `a` share one chain. One destructor deletes the nodes, and the other deletes those same nodes again
 
-The session's note on compiler-generated members: they are the right functions when each member already manages itself. A raw `Node*` leaves the chain for `List` to free.
+The generated copy copies `head`. After one destructor walks the chain, the other list holds a dangling pointer.
+:::
+
+:::check id=ps3-rule-of-three-q2
+Which bodies are required?
+
+- [x] The destructor walks the chain and `delete`s every node
+- [ ] The copy constructor copies `head` and shares the chain
+- [x] The copy constructor allocates a new node for each element and points `head` at that new chain
+- [x] Copy assignment releases the chain `this` already holds, then makes a deep copy, and returns `*this`
+
+The compiler-generated members are the right functions when each member already manages itself. A raw `Node*` leaves the chain for `List` to free.
+:::
+
+:::check id=ps3-rule-of-three-q3
+Copy-and-swap builds a {{=temporary|shared_ptr|reference}}, swaps the two `head` pointers, and lets that object's destructor release the old chain.
+
+That assignment reuses the copy constructor and the destructor.
 :::
 :::
 
@@ -166,43 +176,48 @@ The question gives a small class with a raw pointer or a raw array and asks for 
 :::
 
 :::problem id=exam-17a-q2 title="Ownership of a description" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
-Students in "C-Kalkel" store exam results in C++. `TestRes` holds a `char* description_`. `Test` manages a collection of those results. Make the classes correct under copying and destruction: the result owns its description buffer, and a copied test owns a separate copy of that buffer. Implement the special functions that this ownership requires. On assignment, release the previous description exactly once.
+`TestRes` holds a `char* description_`. `Test` manages a collection of those results. A result owns its description buffer, and a copied test owns a separate copy of that buffer. Assignment releases the previous description exactly once.
 
-:::hint
-A `char*` member is `Image::_bytes` under another name.
-:::
-:::hint
-The copy builds a new buffer with `new char[...]` and with `memcpy` or `strcpy`. The destructor is `delete[]`.
-:::
-:::hint
-For assignment, use copy-and-swap, or allocate the new buffer and only then `delete` the old one, so that a throw or a self-assignment cannot release the only copy.
-:::
-:::solution
-```cpp
-class TestRes {
-    char* description_;
-public:
-    explicit TestRes(const char* s)
-        : description_(new char[std::strlen(s) + 1]) {
-        std::strcpy(description_, s);
-    }
-    ~TestRes() { delete[] description_; }
-    TestRes(const TestRes& other) : TestRes(other.description_) {}
-    TestRes& operator=(const TestRes& other) {
-        if (this == &other) return *this;
-        TestRes temp(other);
-        std::swap(description_, temp.description_);
-        return *this;
-    }
-};
-```
+:::check id=exam-17a-q2-q1
+Which constructor body is required for that buffer?
 
-A `Test` that holds an array of `TestRes*` uses the same three operations on that array: `delete[]` in the destructor, a new array and a per-element copy in the copy constructor, and copy-and-swap for assignment. If `Test` instead stores `TestRes` by value in a container that already has the right special members, `Test` itself can keep the members the compiler generates. The bug the question is aimed at is the raw `char*`.
+- [ ] `: description_(s)`, so both objects share one buffer
+- [x] `: description_(new char[std::strlen(s) + 1])`, then `std::strcpy(description_, s)`
+- [ ] `: description_(new char[1])`, with no copy of the characters
+
+The constructor allocates a new buffer large enough for the characters and the terminator, then copies them.
+:::
+
+:::check id=exam-17a-q2-q2
+Which of these hold for the other special members?
+
+- [x] The destructor is `delete[] description_`
+- [ ] Assignment `delete[]`s `description_` and then reads that same buffer to build the new one
+- [x] Assignment returns immediately when `this == &other`. Otherwise it builds a temporary, swaps the pointers, and returns `*this`
+
+The swap hands the previous buffer to the temporary, and the temporary's destructor releases it once. Self-assignment does not release it.
+:::
+
+:::check id=exam-17a-q2-q3
+The copy constructor delegates with {{=TestRes(other.description_)|std::move(other)|other.description_}}.
+
+That call reuses the constructor that allocates and copies the characters.
+:::
+
+:::check id=exam-17a-q2-q4
+Which of these hold for `Test`?
+
+- [x] An array of `TestRes*` is released with `delete[]` in the destructor
+- [ ] Copying that array's pointer is enough
+- [x] The copy constructor allocates a new array and copies each element
+- [x] If `Test` stores `TestRes` by value in a container that already has the right special members, `Test` can keep the members the compiler generates
+
+The same three operations apply to an array of `TestRes*`: `delete[]`, a new array with a per-element copy, and copy-and-swap for assignment. The raw `char*` is the bug the question is aimed at.
 :::
 :::
 
 :::problem id=exam-17b-q2 title="A deep copy of a board" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-`Terrain<T>` stores a board as one `T*` block of `height_ * width_` cells. Implement the two constructors and the destructor. The copy constructor has to be a deep copy.
+`Terrain<T>` stores a board as one `T*` block of `height_ * width_` cells.
 
 ```cpp
 template <typename T>
@@ -214,33 +229,40 @@ public:
 };
 ```
 
-:::hint
-One `new T[w * h]` owns the board. The width and the height are plain integers, and they copy themselves.
-:::
-:::hint
-The copy allocates an array of its own. Assigning each cell copies a `T`. If `T` is itself only a pointer, the result is as deep as the copy that `T` performs.
-:::
-:::hint
-Start the copy constructor with `_w(other._w), _h(other._h), _cells(new T[_w * _h])`.
-:::
-:::solution
-```cpp
-template <typename T>
-Terrain<T>::Terrain(int w, int h)
-    : _w(w), _h(h), _cells(new T[w * h]) {}
+:::check id=exam-17b-q2-q1
+Which body is required for `Terrain(int w, int h)`?
 
-template <typename T>
-Terrain<T>::Terrain(const Terrain& other)
-    : _w(other._w), _h(other._h), _cells(new T[_w * _h]) {
-    for (int i = 0; i < _w * _h; ++i)
-        _cells[i] = other._cells[i];
-}
+- [x] `: _w(w), _h(h), _cells(new T[w * h])`
+- [ ] `: _w(w), _h(h), _cells(nullptr)`
+- [ ] `: _cells(new T[w + h])`
 
-template <typename T>
-Terrain<T>::~Terrain() { delete[] _cells; }
-```
+The constructor stores `w`, `h`, and `new T[w * h]`.
+:::
 
-The default copy would copy `_cells` and share one board. The copy's destructor would then release the original's board. The rule of three says that the destructor just written requires the copy constructor, and that it also requires a copy assignment operator if the class allows `a = b`. The question asks for the constructors and the destructor. A complete class also writes the assignment, with copy-and-swap, or removes it with `= delete`.
+:::check id=exam-17b-q2-q2
+Which copy-constructor body is the deep copy?
+
+- [ ] `: _w(other._w), _h(other._h), _cells(other._cells)`
+- [ ] `: _w(other._w), _h(other._h), _cells(new T[_w * _h])`, with no assignment of the cells
+- [x] `: _w(other._w), _h(other._h), _cells(new T[_w * _h])`, then `_cells[i] = other._cells[i]` for each cell
+
+The copy allocates an array of its own and assigns each cell.
+:::
+
+:::check id=exam-17b-q2-q3
+Which of these hold?
+
+- [x] The destructor is `delete[] _cells`
+- [x] The default copy would copy `_cells` and share one board, and the copy's destructor would release the original's board
+- [ ] `_w` and `_h` are allocated with `new`
+
+The destructor is `delete[] _cells`. The default copy shares `_cells`, and the copy's destructor releases the original board. That destructor requires the copy constructor.
+:::
+
+:::check id=exam-17b-q2-q4
+If the class allows `a = b`, a complete class also writes copy assignment with copy-and-swap, or removes it with {{== delete|= default|friend}}.
+
+The question asks for the constructors and the destructor. A complete class also writes the assignment with copy-and-swap, or removes it with `= delete`.
 :::
 :::
 
