@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Heebo, Source_Code_Pro } from "next/font/google";
 import { Rail } from "@/components/Rail";
 import { ReadingProgress } from "@/components/ReadingProgress";
@@ -8,6 +8,12 @@ import "./globals.css";
 
 const sans = Heebo({ subsets: ["latin", "hebrew"], variable: "--font-sans", display: "swap" });
 const mono = Source_Code_Pro({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const course = loadCourse();
