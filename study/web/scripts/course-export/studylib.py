@@ -803,11 +803,11 @@ def blocks_plain(blocks) -> str:
         if kind == "heading":
             parts.append(inline_plain(block["text"]))
         elif kind in {"paragraph", "quote"}:
-            parts.append(inline_plain(block["text"]))
+            parts.append(inline_plain(_blank_plain(block["text"])))
         elif kind == "math":
             parts.append(block["text"])
         elif kind == "code":
-            parts.append(block["text"])
+            parts.append(_blank_plain(block["text"]))
         elif kind == "list":
             for item in block["items"]:
                 parts.append(inline_plain(item["text"]))
@@ -1020,6 +1020,115 @@ def _render_problem(block, ctx: RenderCtx) -> str:
     )
 
 
+def _blank_plain(text: str) -> str:
+    def repl(match: re.Match) -> str:
+        return match.group(1).split("|", 1)[0].strip()
+
+    return re.sub(r"\{\{=([^{}]+)\}\}", repl, text)
+
+
+def _block_texts(block) -> list[str]:
+    kind = block["type"]
+    if kind in {"paragraph", "quote", "code", "math", "heading"}:
+        return [block.get("text") or ""]
+    if kind == "list":
+        texts = []
+        for item in block["items"]:
+            texts.append(item.get("text") or "")
+            for child in item.get("children") or []:
+                texts.extend(_block_texts(child))
+        return texts
+    if kind == "table":
+        texts = list(block.get("header") or [])
+        for row in block.get("rows") or []:
+            texts.extend(row)
+        return texts
+    if kind == "directive":
+        texts = []
+        for child in block.get("children") or []:
+            texts.extend(_block_texts(child))
+        return texts
+    return []
+
+
+def _block_has_blank(block) -> bool:
+    return any("{{=" in text for text in _block_texts(block))
+
+
+def _blank_options(text: str) -> list[list[str]]:
+    specs = []
+    for match in re.finditer(r"\{\{=([^{}]+)\}\}", text):
+        options = [part.strip() for part in match.group(1).split("|")]
+        specs.append([part for part in options if part])
+    return specs
+
+
+def _blank_check_bounds(block):
+    list_index = None
+    last_blank = None
+    for index, child in enumerate(block["children"]):
+        if child["type"] == "list" and list_index is None:
+            list_index = index
+        if _block_has_blank(child):
+            last_blank = index
+    return list_index, last_blank
+
+
+def _is_blank_check(block) -> bool:
+    list_index, last_blank = _blank_check_bounds(block)
+    return last_blank is not None and (list_index is None or last_blank < list_index)
+
+
+def _split_blank_check(block):
+    _list_index, last_blank = _blank_check_bounds(block)
+    question = block["children"][: last_blank + 1]
+    why = block["children"][last_blank + 1 :]
+    specs = []
+    for child in question:
+        for text in _block_texts(child):
+            specs.extend(_blank_options(text))
+    return question, specs, why
+
+
+def _render_text_with_blanks(text: str, href_for, prose: bool) -> str:
+    parts = []
+    last = 0
+    for match in re.finditer(r"\{\{=([^{}]+)\}\}", text):
+        if match.start() > last:
+            chunk = text[last : match.start()]
+            parts.append(render_inline(chunk, href_for) if prose else html.escape(chunk))
+        options = [part.strip() for part in match.group(1).split("|") if part.strip()]
+        opts = ['<option value="">Choose</option>']
+        for option in options:
+            opts.append(f"<option>{html.escape(option)}</option>")
+        parts.append(f'<select class="blank-select" aria-label="Blank">{"".join(opts)}</select>')
+        last = match.end()
+    if last < len(text):
+        chunk = text[last:]
+        parts.append(render_inline(chunk, href_for) if prose else html.escape(chunk))
+    return "".join(parts)
+
+
+def _render_blank_question(blocks, ctx: RenderCtx) -> str:
+    parts = []
+    for block in blocks:
+        kind = block["type"]
+        if kind == "paragraph":
+            parts.append(f"<p>{_render_text_with_blanks(block['text'], ctx.href_for, True)}</p>")
+        elif kind == "quote":
+            parts.append(f"<blockquote>{_render_text_with_blanks(block['text'], ctx.href_for, True)}</blockquote>")
+        elif kind == "code":
+            lang = html.escape(block.get("lang") or "text")
+            body = _render_text_with_blanks(block.get("text") or "", ctx.href_for, False)
+            parts.append(
+                f'<div class="code-panel"><span class="lang">{lang}</span>'
+                f'<pre class="blank-pre"><code>{body}</code></pre></div>'
+            )
+        else:
+            parts.append(render_block(block, ctx))
+    return "".join(parts)
+
+
 def _check_choices(block):
     list_index = None
     for index, child in enumerate(block["children"]):
@@ -1048,13 +1157,24 @@ def _check_choices(block):
 
 
 def _render_check(block, ctx: RenderCtx) -> str:
-    question, choices, why = _check_choices(block)
     check_id = block["attrs"].get("id", "")
+    if _is_blank_check(block):
+        question, _specs, why = _split_blank_check(block)
+        return (
+            f'<div class="check" id="{html.escape(check_id)}">'
+            f'<div class="check-q">{_render_blank_question(question, ctx)}</div>'
+            f'<button type="button" data-action="grade">{html.escape(ctx.t("check"))}</button>'
+            f'<p class="check-result" hidden></p>'
+            f'<div class="check-why" hidden>{render_blocks(why, ctx)}</div></div>'
+        )
+    question, choices, why = _check_choices(block)
+    several = sum(1 for correct, _text in choices if correct) > 1
+    control = "checkbox" if several else "radio"
     options = []
     for index, (correct, text) in enumerate(choices):
         flag = ' data-correct="true"' if correct else ""
         options.append(
-            f'<label><input type="radio" name="check-{html.escape(check_id)}" value="{index}"{flag}> '
+            f'<label><input type="{control}" name="check-{html.escape(check_id)}" value="{index}"{flag}> '
             f'<span>{render_inline(text, ctx.href_for)}</span></label>'
         )
     return (
@@ -1184,6 +1304,7 @@ def validate_content(model) -> list[str]:
     topic_ids = []
     topic_by_id = {}
     problems = {}
+    seen_checks: set[str] = set()
     for topic in model["topics"]:
         entry = topic["entry"]
         if not isinstance(entry, dict):
@@ -1224,7 +1345,7 @@ def validate_content(model) -> list[str]:
                 errors.append(f"{rel}: source {source_path} is not in the ledger")
             elif ledger[source_path].get("status") != "incorporated":
                 errors.append(f"{rel}: source {source_path} is not incorporated")
-        _validate_directives(topic["blocks"], rel, topic_id, problems, errors)
+        _validate_directives(topic["blocks"], rel, topic_id, problems, errors, seen_checks)
 
     known_topics = set(topic_ids)
     for topic in model["topics"]:
@@ -1323,7 +1444,7 @@ def validate_content(model) -> list[str]:
     return errors
 
 
-def _validate_directives(blocks, rel, topic_id, problems, errors):
+def _validate_directives(blocks, rel, topic_id, problems, errors, seen_checks):
     for parent, block in walk_directives(blocks):
         name = block["name"]
         attrs = block["attrs"]
@@ -1343,20 +1464,41 @@ def _validate_directives(blocks, rel, topic_id, problems, errors):
                 if not str(attrs.get(key) or "").strip():
                     errors.append(f"{line}: algorithm needs {key}")
         if name == "check":
-            if not str(attrs.get("id") or "").strip() or not ID_RE.match(str(attrs.get("id") or "")):
+            check_id = str(attrs.get("id") or "")
+            if not check_id.strip() or not ID_RE.match(check_id):
                 errors.append(f"{line}: check needs an id")
+            elif check_id in seen_checks:
+                errors.append(f"{line}: duplicate check id {check_id}")
+            else:
+                seen_checks.add(check_id)
             try:
-                _question, choices, why = _check_choices(block)
+                if _is_blank_check(block):
+                    if parent != "problem":
+                        errors.append(f"{line}: a fill-in check belongs inside a practice problem")
+                    if any(child["type"] == "list" for child in block["children"]):
+                        errors.append(f"{line}: a fill-in check has blanks or a choice list, not both")
+                    _question, specs, why = _split_blank_check(block)
+                    if not specs:
+                        errors.append(f"{line}: a fill-in check needs a blank")
+                    for options in specs:
+                        if len(options) < 2:
+                            errors.append(f"{line}: each blank needs a correct option and at least one other")
+                    if specs and not why:
+                        errors.append(f"{line}: a check needs the reason after the choices")
+                else:
+                    _question, choices, why = _check_choices(block)
+                    correct = [flag for flag, _text in choices].count(True)
+                    if parent == "problem":
+                        if choices and correct < 1:
+                            errors.append(f"{line}: a check needs at least one [x] choice")
+                    elif choices and correct != 1:
+                        errors.append(f"{line}: a check needs exactly one [x] choice")
+                    if choices and len(choices) < 2:
+                        errors.append(f"{line}: a check needs at least two choices")
+                    if choices and not why:
+                        errors.append(f"{line}: a check needs the reason after the choices")
             except StudyError as exc:
                 errors.append(f"{rel}: {exc}")
-                choices, why = [], []
-            correct = [flag for flag, _text in choices].count(True)
-            if choices and correct != 1:
-                errors.append(f"{line}: a check needs exactly one [x] choice")
-            if choices and len(choices) < 2:
-                errors.append(f"{line}: a check needs at least two choices")
-            if choices and not why:
-                errors.append(f"{line}: a check needs the reason after the choices")
         if name != "problem":
             continue
         problem_id = str(attrs.get("id") or "")
@@ -1372,11 +1514,18 @@ def _validate_directives(blocks, rel, topic_id, problems, errors):
         if not source:
             errors.append(f"{line}: problem needs source")
         statement, hints, solutions = problem_parts(block)
-        if kind in {"exercise", "exam"} and len(hints) != 3:
+        quiz = kind in {"exercise", "exam"} and any(
+            child["type"] == "directive" and child["name"] == "check" for child in block["children"]
+        )
+        if quiz and hints:
+            errors.append(f"{line}: quiz {problem_id or ''} has no hints, found {len(hints)}")
+        if quiz and solutions:
+            errors.append(f"{line}: quiz {problem_id or ''} has no solution essay, found {len(solutions)}")
+        if kind in {"exercise", "exam"} and not quiz and len(hints) != 3:
             errors.append(f"{line}: {kind} {problem_id or ''} needs 3 hints, found {len(hints)}")
         if kind == "worked" and hints:
             errors.append(f"{line}: a worked example has a visible solution and no hints")
-        if len(solutions) != 1:
+        if not quiz and len(solutions) != 1:
             errors.append(f"{line}: {problem_id or name} needs one solution, found {len(solutions)}")
         spilled = False
         seen_ladder = False

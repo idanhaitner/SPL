@@ -64,8 +64,47 @@ function splitProblem(children: Block[]) {
   return { statement, hints, solution };
 }
 
+function blockHasBlank(block: Block): boolean {
+  if (block.type === "paragraph" || block.type === "quote" || block.type === "code" || block.type === "heading" || block.type === "math") {
+    return block.text.includes("{{=");
+  }
+  if (block.type === "list") {
+    return block.items.some((item) => item.text.includes("{{=") || item.children.some(blockHasBlank));
+  }
+  if (block.type === "table") {
+    return [...block.header, ...block.rows.flat()].some((cell) => cell.includes("{{="));
+  }
+  if (block.type === "directive") return block.children.some(blockHasBlank);
+  return false;
+}
+
+function checkIdsIn(blocks: Block[]): string[] {
+  const ids: string[] = [];
+  for (const block of blocks) {
+    if (block.type === "directive" && block.name === "check" && block.attrs.id) ids.push(block.attrs.id);
+    if (block.type === "directive") ids.push(...checkIdsIn(block.children));
+    if (block.type === "list") {
+      for (const item of block.items) ids.push(...checkIdsIn(item.children));
+    }
+  }
+  return ids;
+}
+
 function splitCheck(children: Block[]) {
   const listIndex = children.findIndex((child) => child.type === "list");
+  let lastBlank = -1;
+  children.forEach((child, index) => {
+    if (blockHasBlank(child)) lastBlank = index;
+  });
+  if (lastBlank >= 0 && (listIndex < 0 || lastBlank < listIndex)) {
+    return {
+      mode: "blank" as const,
+      prompt: children.slice(0, lastBlank + 1),
+      question: [] as Block[],
+      choices: [] as { correct: boolean; text: React.ReactNode }[],
+      why: children.slice(lastBlank + 1),
+    };
+  }
   const list = listIndex >= 0 ? (children[listIndex] as Extract<Block, { type: "list" }>) : null;
   const question = listIndex >= 0 ? children.slice(0, listIndex) : children;
   const why = listIndex >= 0 ? children.slice(listIndex + 1) : [];
@@ -75,7 +114,8 @@ function splitCheck(children: Block[]) {
     const body = text.replace(/^\[[xX ]\]\s*/, "");
     return { correct, text: <Inline text={body} /> };
   });
-  return { question, choices, why };
+  const mode = choices.filter((choice) => choice.correct).length > 1 ? ("multi" as const) : ("single" as const);
+  return { mode, prompt: [] as Block[], question, choices, why };
 }
 
 function Directive({ block, courseId }: { block: Extract<Block, { type: "directive" }>; courseId: string }) {
@@ -94,6 +134,7 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
           <Blocks key={index} blocks={hint} courseId={courseId} />
         ))}
         solution={parts.solution ? <Blocks blocks={parts.solution} courseId={courseId} /> : null}
+        checkIds={checkIdsIn(children)}
       />
     );
   }
@@ -102,7 +143,8 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
     return (
       <CheckCard
         id={attrs.id || "check"}
-        question={<Blocks blocks={parts.question} courseId={courseId} />}
+        question={parts.mode === "blank" ? null : <Blocks blocks={parts.question} courseId={courseId} />}
+        prompt={parts.mode === "blank" ? parts.prompt : undefined}
         choices={parts.choices}
         why={<Blocks blocks={parts.why} courseId={courseId} />}
       />

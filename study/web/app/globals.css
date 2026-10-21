@@ -568,6 +568,46 @@ button:disabled { opacity: 0.45; cursor: default; }
 .check-result { font-weight: 650; }
 .check-result.is-yes { color: var(--ok); }
 .check-result.is-no { color: var(--danger); }
+.check-note { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.92rem; }
+.practice .card.check {
+  margin: 0.85rem 0 0;
+  box-shadow: none;
+}
+.solved-flag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ok);
+}
+.blank-select {
+  font: inherit;
+  font-size: 0.95rem;
+  min-height: 42px;
+  margin: 0.15rem 0.25rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  vertical-align: middle;
+  max-width: min(100%, 22rem);
+}
+.blank-pre {
+  margin: 0;
+  padding: 0.9rem 1rem 1rem;
+  color: #d4d4d4;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.blank-pre .blank-select {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  color: var(--ink);
+}
 .meta { color: var(--muted); }
 
 .code-panel {

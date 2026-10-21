@@ -12,14 +12,18 @@ type Props = {
   statement: React.ReactNode;
   hints: React.ReactNode[];
   solution: React.ReactNode | null;
+  checkIds?: string[];
 };
 
-export function PracticeCard({ id, courseId, kind, summary, statement, hints, solution }: Props) {
+export function PracticeCard({ id, courseId, kind, summary, statement, hints, solution, checkIds = [] }: Props) {
   const worked = kind === "worked";
+  const quiz = checkIds.length > 0;
+  const quizKey = checkIds.join("|");
   const [open, setOpen] = useState(worked);
   const [openHints, setOpenHints] = useState(0);
   const [showSolution, setShowSolution] = useState(worked);
   const [solved, setSolved] = useState(false);
+  const [results, setResults] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const wanted = decodeURIComponent(window.location.hash.replace(/^#/, ""));
@@ -32,6 +36,30 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
     window.addEventListener("study-progress", sync);
     return () => window.removeEventListener("study-progress", sync);
   }, [courseId, id]);
+
+  useEffect(() => {
+    if (!quiz) return;
+    const onCheck = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: string; correct: boolean }>).detail;
+      if (!detail || !quizKey.split("|").includes(detail.id)) return;
+      setResults((current) => ({ ...current, [detail.id]: detail.correct }));
+    };
+    window.addEventListener("study-check", onCheck);
+    return () => window.removeEventListener("study-check", onCheck);
+  }, [quiz, quizKey]);
+
+  useEffect(() => {
+    if (!quiz) return;
+    const ids = quizKey.split("|").filter(Boolean);
+    const anyWrong = ids.some((item) => results[item] === false);
+    const allCorrect = ids.every((item) => results[item] === true);
+    if (!anyWrong && !allCorrect) return;
+    const progress = readProgress(courseId);
+    const has = progress.solved.includes(id);
+    if (allCorrect === has) return;
+    const solvedIds = allCorrect ? [...progress.solved, id] : progress.solved.filter((item) => item !== id);
+    writeProgress(courseId, { ...progress, solved: solvedIds });
+  }, [results, quiz, quizKey, courseId, id]);
 
   function toggleSolved() {
     const progress = readProgress(courseId);
@@ -67,9 +95,13 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
         {!worked && (
           <div className="card-tools">
             <button type="button" onClick={() => setOpen(false)}>Close</button>
-            <button type="button" className={solved ? "is-on" : ""} onClick={toggleSolved} aria-pressed={solved}>
-              {solved ? "Solved" : "Mark solved"}
-            </button>
+            {quiz ? (
+              solved ? <span className="solved-flag">Solved</span> : null
+            ) : (
+              <button type="button" className={solved ? "is-on" : ""} onClick={toggleSolved} aria-pressed={solved}>
+                {solved ? "Solved" : "Mark solved"}
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -83,7 +115,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
           </div>
         </div>
       ))}
-      {(hints.length > 0 || solution) && !worked && (
+      {!quiz && (hints.length > 0 || solution) && !worked && (
         <div className="actions">
           {hints.length > 0 && (
             <button type="button" onClick={() => setOpenHints((count) => Math.min(hints.length, count + 1))} disabled={openHints >= hints.length}>
@@ -97,7 +129,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
           )}
         </div>
       )}
-      {solution && showSolution && (
+      {!quiz && solution && showSolution && (
         <div className="reveal">
           <div className="solution">
             <p className="kicker">Solution</p>
