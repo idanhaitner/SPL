@@ -193,15 +193,15 @@ export function ReadingFooter({
   return (
     <nav className="chapter-foot" aria-label="Continue reading">
       {hasSectionNav && <div ref={anchorRef} className="chapter-foot-anchor" />}
-      {hasSectionNav && ready && (
-        <>
+      {hasSectionNav && (
+        <div className={`section-pops${ready ? " is-ready" : ""}`}>
           {hasPrevSection && (
             <SectionPop title={previousSection!} side="prev" onClick={onPreviousSection!} />
           )}
           {hasNextSection && (
             <SectionPop title={nextSection!} side="next" onClick={onNextSection!} />
           )}
-        </>
+        </div>
       )}
       {showChapters && (
         <>
@@ -272,7 +272,10 @@ export function SectionSwitch({
               type="button"
               key={`${part.title}-${item}`}
               aria-current={item === index ? "true" : undefined}
-              onClick={() => show(item)}
+              onClick={(event) => {
+                show(item);
+                event.currentTarget.scrollIntoView({ inline: "nearest", block: "nearest" });
+              }}
             >
               <Inline text={part.title} />
             </button>
