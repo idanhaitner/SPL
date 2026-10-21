@@ -2,7 +2,7 @@
 
 Every value in C++ has a type. The type decides how many bytes the value occupies, which operations are legal, and what bit pattern counts as a number. The types to know first are `int`, `double`, `bool`, `char`, and later `const`.
 
-## The types you will actually write
+## Built-in types
 
 | Type | Size on this Mac | What you store |
 | --- | --- | --- |

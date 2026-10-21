@@ -16,7 +16,7 @@ sources:
 
 A copy gives two objects the same data, and it is also the expensive way to return a large object from a function. C++11 adds a second mechanism, move (העברה): a temporary hands its resource to the new owner, and the bytes themselves stay where they are. The rule of five (חוק החמישה) is the set of special members that make copying and moving correct. The rule of zero (חוק האפס) leaves every one of those members to the compiler, because each data member already manages its own resource.
 
-## Values that have an address, and values that do not
+## lvalues and rvalues
 
 :::definition id=def-value-category title="lvalue and rvalue" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 An lvalue names an object that has an address. You can form that address, assign to the object, and bind a reference to it. The name records an older rule: an lvalue may stand on the left of an assignment.

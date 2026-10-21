@@ -34,7 +34,7 @@ A destructor has an empty parameter list and no return type. For `Image` it is `
 
 ![An Image object on the stack: width, height, and a pointer to a separate byte buffer on the heap](../assets/figures/image-object-layout.svg)
 
-### Shallow copy (העתקה רדודה), then the crash
+### Shallow copy (העתקה רדודה)
 
 `void processImage(Image img)` takes the image by value, so the copy constructor runs at the call and the destructor runs when the function returns. The copy constructor the compiler generates copies `_width`, `_height`, and `_bytes`. Both objects point at one array. The parameter's destructor runs `delete[]` on that array. The caller's `_bytes` is then a dangling pointer. The pointer is still inside the object, and the heap block is gone.
 

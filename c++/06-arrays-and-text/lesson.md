@@ -89,7 +89,7 @@ char buffer[] = "Avi";
 
 `Image` does not store a C string. It stores `char* _bytes` of length `_width * _height`, and those bytes are pixel data, not text. There may be no `'\0'`. Do not run `strlen` on a pixel buffer. Keep the length beside the pointer.
 
-## Which one to pick
+## Choosing a representation
 
 | You have | Use |
 | --- | --- |

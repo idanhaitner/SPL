@@ -470,7 +470,7 @@ Which of these hold?
 :::
 :::
 
-:::problem id=exam-18a-q4 title="A question used again" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
+:::problem id=exam-18a-q4 title="A question bank" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
 A question bank stores the text of each question, and a row for each year in which it was given, in one of the two sittings of that year. A question may return in a later year, and it must not be used twice in the same year.
 
 :::check id=exam-18a-q4-q1

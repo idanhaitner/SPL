@@ -239,7 +239,7 @@ void leaky() {
 
 ![Inside leaky, the pointer on the stack points at the int on the heap. After the return the int is still there, and nothing points to it](../assets/figures/heap-leak.svg)
 
-### One program, five memory regions
+### All five regions in one run
 
 One run of a program can use all five regions at the same time:
 
@@ -274,7 +274,7 @@ int main() {
 
 ![The second call of note: x and box on the stack, the new int on the heap, calls and ready in static storage, the instructions in the code](../assets/figures/five-homes.svg)
 
-### Recursion deepens the stack
+### Recursion and the stack
 
 Each recursive call pushes a new frame. The previous frame stays in place, because the call that created it is still in progress.
 
@@ -309,7 +309,7 @@ Two kinds of storage need the heap:
 
 The compiler fixes the size of every local slot in the frame before the program runs. Data of a dynamic size is allocated on the heap. The frame stores only the pointer, and the pointer's size is fixed and known.
 
-## The hardware underneath the memory
+## The von Neumann machine
 
 In the von Neumann architecture, the RAM that holds a program's data also holds its code, the instructions.
 
@@ -409,7 +409,7 @@ int* pi = new int[10];
 `pi` is a local variable that holds an address, so it is allocated in the stack frame. The block of ten integers is allocated on the heap by `new[]`.
 :::
 
-## A sample layout
+## An example layout
 
 Consider this code:
 

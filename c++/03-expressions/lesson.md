@@ -47,7 +47,7 @@ a || b                 // true when at least one side is true
 
 `=` writes. `==` compares. `if (x = 0)` assigns 0 to `x` and then tests that value, which is false. The compiler warns about this when the warning flags from the Makefile are on. Write `==` in a condition.
 
-## A chained comparison does something else
+## Chained comparison
 
 ```cpp
 1 < 100 < 0

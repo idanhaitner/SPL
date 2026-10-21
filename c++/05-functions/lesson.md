@@ -49,7 +49,7 @@ double area(double w, double h) { return w * h; }
 
 The compiler picks the overload from the argument types at the call. `area(2, 3)` calls the `int` version. `area(2.5, 4.0)` calls the `double` version. The return type alone is not enough to overload: you cannot have `int f()` and `double f()` with the same parameters.
 
-## A function can call itself
+## Recursion
 
 ```cpp
 int factorial(int n) {

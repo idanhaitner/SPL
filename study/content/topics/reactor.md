@@ -46,7 +46,7 @@ A server cannot stop the world inside `accept`. The call returns one new connect
 
 ![The reactor loop: one selector thread, ready keys, and a pool only for protocol work](../assets/figures/reactor-loop.svg)
 
-## Using a ByteBuffer correctly
+## ByteBuffer indexes
 
 The class `ByteBuffer` keeps three indexes: `position`, `limit`, and `capacity`. `channel.read` and `put` write into the buffer and advance `position`. `flip` switches the buffer from writing into it to reading out of it: it sets `limit` to the current `position` and `position` to 0, so the next `get` or `channel.write` walks the bytes just stored. `clear` sets `position` to 0 and `limit` to `capacity`, which prepares the same buffer for another fill.
 

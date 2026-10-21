@@ -1,4 +1,4 @@
-# 15 — A stack, twice
+# 15 — A stack, two ways
 
 A stack (מחסנית) of integers is the smallest class that uses the whole path. You push a value, the top is the last value you pushed, and pop removes it. The same idea appears later as a Java contract. Here the point is ownership.
 
@@ -24,7 +24,7 @@ heap:  [10, 20, ?, ?]
 
 `s` dies at the end of `main`. The destructor frees the heap block. A copy of `s` has a different heap block with the same two live values. If both `data` pointers are equal, the copy is shallow, and the program is wrong even if a short test happens to print the right numbers.
 
-## What this folder stopped short of
+## Scope of these lessons
 
 The C++ on the exams is the material in lessons 8 through 14: pointers, `new`/`delete`, constructors, the rule of three, move and smart pointers, and virtual calls. The study site teaches those chapters again, with the diagrams and the past-paper questions:
 

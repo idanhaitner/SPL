@@ -85,7 +85,7 @@ delete pb;
 
 The object `a` lives in `main`'s stack frame. The object `*pb` lives on the heap. The pointer `pb` itself lives in the frame. `delete pb` runs the destructor and frees the heap object. Lesson 12 is what you write in that destructor when the object owns a second heap block.
 
-## What a constructor is not
+## Initialization is not assignment
 
 ```cpp
 Image b = a;     // constructs b. Copy constructor. Lesson 12.

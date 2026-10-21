@@ -77,7 +77,7 @@ year = 2026
 after adding 1, year = 2027
 ```
 
-## Java, in one paragraph
+## Java and C++
 
 A Java program is compiled to bytecode and started by the JVM, which looks for `public static void main`. A C++ program is compiled to machine code and started by the operating system, which looks for `main`. Objects in Java are reclaimed by a garbage collector. In C++, lesson 9 is where you start freeing memory yourself. You do not need that yet.
 

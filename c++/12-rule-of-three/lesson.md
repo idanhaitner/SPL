@@ -18,7 +18,7 @@ b = a;           // assignment. b already exists.
 
 In Java, dropping the last reference to an image also drops the byte array, because the garbage collector traces references. In C++, destroying the `Image` destroys the pointer variable. The bytes stay allocated unless the destructor says `delete[]`.
 
-## Shallow copy, then the crash
+## Shallow copy
 
 The compiler-generated copy copies `_width`, `_height`, and `_bytes`. This is a shallow copy (העתקה רדודה).
 
@@ -89,7 +89,7 @@ Self-assignment is harmless. `temp` is a copy, and swapping with your own copy p
 
 `operator=` returns `Image&` because `avi = benni = carmi` is `avi = (benni = carmi)`. The inner call has to return an object the outer call can bind to. Returning `*this` is that object. Returning `void` will not chain.
 
-## What is not one of the three
+## Outside the three operations
 
 Overloading `operator()` so that `avi(x, y)` reads a pixel is ordinary overloading. It does not, by itself, mean you must write the rule of three. Owning a raw pointer does.
 

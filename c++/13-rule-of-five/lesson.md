@@ -10,7 +10,7 @@ An rvalue (ערך זמני) is a temporary. It has no name you can come back to.
 
 `Image&&` is an rvalue reference. It binds only to an rvalue. The move constructor and the move-assignment operator use that parameter so the overload is chosen for temporaries, and for objects you have explicitly allowed to be stolen.
 
-## std::move does not move
+## What std::move does
 
 `std::move(avi)` is a cast. It produces an rvalue referring to `avi`, so overload resolution can pick `Image(Image&&)`. The cast itself copies nothing and frees nothing. The move constructor does the steal.
 
@@ -83,7 +83,7 @@ auto filter = std::make_shared<Filter>(args...);
 
 `shared_ptr` does not collect cycles. If two objects each hold a `shared_ptr` to the other, the count never reaches zero. `std::weak_ptr` is the tool for the back-edge. It observes without owning.
 
-## Do not move a local on the way out
+## Returning a local
 
 Returning a local by value is already the fast path. The compiler may build the object directly in the caller's slot (copy elision: RVO for an unnamed temporary, NRVO for a named local).
 

@@ -32,7 +32,7 @@ if (p != nullptr) {
 
 Check before you dereference, unless you already know the pointer came from a live object. `&&` stops early, so `p != nullptr && *p > 0` does not dereference a null pointer.
 
-## A pointer can be reseated
+## Reseating a pointer
 
 This is the useful difference from a reference.
 
@@ -105,7 +105,7 @@ int** ppi = &pi;
 
 You will see `T**` when a function needs to change the caller's pointer, and inside the language's own implementation of a virtual call. You do not need it for ordinary code.
 
-## Which `&` am I looking at?
+## The two uses of `&`
 
 | Code | Meaning |
 | --- | --- |

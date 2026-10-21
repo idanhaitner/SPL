@@ -7,7 +7,7 @@ sources:
 
 Serialization (סיריאליזציה) records an object as a byte sequence so a later run, or another process, can rebuild it. The image server in the Reactor chapter spoke a private protocol: a file name went in, and the file's bytes came out. The next server sends objects. An object becomes a byte array only when something walks its fields and writes them down. That byte sequence records the type, the shape of the fields, and the field values.
 
-## What is written
+## Writing and reading an object
 
 :::definition id=def-serialization title="Serialization" source="materials/lectures/Chapter 12 - Serialization.pptx"
 Serialization is a representation of an object as a sequence of bytes. The sequence records the type of the object, the shape of its fields, and the values of the fields. Deserialization builds an object back from that sequence.
@@ -42,7 +42,7 @@ An enum constant is written by its name, a `String` by its characters, and an `i
 
 ![writeObject saves name and age and skips the hash, which is transient. readObject builds another Pet whose hash starts as null](../assets/figures/serialize-object.svg)
 
-### What is left out
+### Omitted fields
 
 Static fields belong to the class, and every instance shares them, so the stream omits them. A field marked `transient` is omitted as well. A cached hash is the usual case:
 
@@ -56,7 +56,7 @@ private transient Integer hash;
 
 After deserialization, `hash` is null, and the next `hashCode` computes it again. That is the point of `transient`: the field is a cache, or a thread, or a socket, something that has no meaning in another JVM. Forgetting `transient` on a `Thread` or an `OutputStream` makes `writeObject` throw, because those objects are not `Serializable`.
 
-### Versions
+### serialVersionUID
 
 Changing a class that is already `Serializable` is a compatibility problem. You wrote a file, then changed the class, then tried to read the file. `serialVersionUID` is the version number you assign so the JVM can tell these classes apart. An old stream stays readable by the new class only when the change is on the compatible list.
 

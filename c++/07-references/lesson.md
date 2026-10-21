@@ -10,7 +10,7 @@ ref = 20;         // x is now 20
 
 The `&` in the type `int&` means "reference to int." This is a different use of `&` from the address-of operator in the next lesson. In a declaration, `&` makes a reference. In an expression, `&x` asks for the address of `x`.
 
-## Rules that never bend
+## Rules of a reference
 
 - A reference is initialized when it is created. `int& ref;` is a compile error.
 - After that, it cannot be reseated. `ref = y` writes into the object `ref` already names. It does not make `ref` name `y`.
@@ -23,7 +23,7 @@ int& ref = x;
 ref = y;          // x becomes 2. ref still names x.
 ```
 
-## Why functions take references
+## Passing by reference
 
 Pass by value copies. A reference parameter is a name for the caller's object.
 

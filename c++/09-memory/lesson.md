@@ -70,7 +70,7 @@ The heap block is not inside the caller's frame. `make_filled` can return the po
 
 What is still true after a leak: the rest of the program is allowed to keep running. The leak is a missing `delete`, not an immediate crash. Tools such as `make test-asan` exist because a leak is silent.
 
-## The crashes that look like "bad luck"
+## Memory errors
 
 | Mistake | What you did |
 | --- | --- |
@@ -81,7 +81,7 @@ What is still true after a leak: the rest of the program is allowed to keep runn
 
 Set a pointer to `nullptr` after you delete it if any later code might look at that variable. Deleting a second time is then a no-op. This does not fix a second pointer that still holds the old address. Two pointers to one block are the shallow-copy bug in lesson 12.
 
-## What the demo is showing
+## Addresses in the demo
 
 `demo.cpp` prints addresses of a global, a function-local `static`, a local, and a `new` int. The numbers change from run to run because the operating system slides the address space (ASLR). Do not submit a lab that depends on a particular address. Do check the lifetimes: the local's storage is meaningful only until the function returns, and the `new` int is meaningful until `delete`.
 
