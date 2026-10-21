@@ -1029,17 +1029,6 @@ button.section-pop { min-height: 0; }
   font-weight: 650;
   line-height: 1.2;
 }
-.chapter-hop-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: oklch(0.27 0.05 55);
-  font-size: 0.7rem;
-  font-weight: 700;
-  line-height: 1.25;
-}
 .chapter-hop-title {
   font-size: 1.05rem;
   font-weight: 700;
