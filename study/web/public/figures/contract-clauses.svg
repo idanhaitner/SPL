@@ -9,17 +9,17 @@
   <rect width="680" height="300" fill="#f6f1e7" />
   <g class="draw">
     <rect x="36" y="28" width="608" height="72" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
-    <text x="624" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">precondition</text>
-    <text x="624" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">crop rectangle is inside the image</text>
+    <text x="52" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">precondition</text>
+    <text x="52" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="ltr">crop rectangle is inside the image</text>
   </g>
   <g class="draw d2">
     <rect x="36" y="112" width="608" height="72" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="624" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">invariant</text>
-    <text x="624" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">width</tspan> and <tspan direction="ltr">height</tspan> are positive, bytes match</text>
+    <text x="52" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">invariant</text>
+    <text x="52" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="ltr"><tspan direction="ltr">width</tspan> and <tspan direction="ltr">height</tspan> are positive, bytes match</text>
   </g>
   <g class="draw d3">
-    <rect x="36" y="196" width="608" height="72" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
-    <text x="624" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">postcondition</text>
-    <text x="624" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">size is the crop, buffer holds the pixels</text>
+    <rect x="36" y="196" width="608" height="72" rx="12" fill="#e7f0e4" stroke="#c9d7e4" stroke-width="1.5" />
+    <text x="52" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">postcondition</text>
+    <text x="52" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="ltr">size is the crop, buffer holds the pixels</text>
   </g>
 </svg>

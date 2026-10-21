@@ -1,20 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" width="760" height="420">
   <rect width="760" height="420" fill="#f6f1e7" />
   <rect x="24" y="24" width="328" height="372" rx="16" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="328" y="56" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" text-anchor="end" direction="ltr">selector thread</text>
-  <text x="328" y="84" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#2a3142" text-anchor="end">Selector</text>
+  <text x="40" y="56" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" text-anchor="start" direction="ltr">selector thread</text>
+  <text x="40" y="84" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#2a3142" text-anchor="start">Selector</text>
   <circle cx="312" cy="128" r="14" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
   <text x="312" y="133" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2a3142">1</text>
-  <text x="284" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">select()</text>
-  <text x="284" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">waits until a key is ready</text>
+  <text x="40" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">select()</text>
+  <text x="40" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">waits until a key is ready</text>
   <circle cx="312" cy="196" r="14" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
   <text x="312" y="201" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2a3142">2</text>
-  <text x="284" y="192" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">ready keys</text>
-  <text x="284" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">takes each key from the set</text>
+  <text x="40" y="192" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">ready keys</text>
+  <text x="40" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">takes each key from the set</text>
   <circle cx="312" cy="264" r="14" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
   <text x="312" y="269" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2a3142">3</text>
-  <text x="284" y="260" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">handles the key</text>
-  <text x="284" y="282" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">accept, read</tspan>, or <tspan direction="ltr">write</tspan></text>
+  <text x="40" y="260" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">handles the key</text>
+  <text x="40" y="282" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr"><tspan direction="ltr">accept, read</tspan>, or <tspan direction="ltr">write</tspan></text>
   <rect x="242" y="324" width="90" height="40" rx="10" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5" />
   <text x="287" y="349" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2a3142">accept</text>
   <rect x="142" y="324" width="90" height="40" rx="10" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5" />
@@ -28,9 +28,9 @@
   <polygon points="368,300 382,294 382,306" fill="#3d7eb8" />
   <text x="412" y="284" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#2f5f8a" direction="ltr">queued bytes</text>
   <rect x="472" y="72" width="264" height="200" rx="16" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="712" y="112" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" text-anchor="end" direction="ltr">outside this thread</text>
-  <text x="712" y="144" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">worker pool</text>
-  <text x="712" y="180" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3d4454" text-anchor="end" direction="ltr">a task per client</text>
-  <text x="712" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3d4454" text-anchor="end" direction="ltr"><tspan direction="ltr">protocol</tspan> work only</text>
-  <text x="712" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">selector</tspan> stays free</text>
+  <text x="488" y="112" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" text-anchor="start" direction="ltr">outside this thread</text>
+  <text x="488" y="144" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">worker pool</text>
+  <text x="488" y="180" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3d4454" text-anchor="start" direction="ltr">a task per client</text>
+  <text x="488" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#3d4454" text-anchor="start" direction="ltr"><tspan direction="ltr">protocol</tspan> work only</text>
+  <text x="488" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr"><tspan direction="ltr">selector</tspan> stays free</text>
 </svg>

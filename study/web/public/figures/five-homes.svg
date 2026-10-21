@@ -9,40 +9,40 @@
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
   <rect width="720" height="640" fill="#f6f1e7" />
-  <text x="684" y="32" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">high addresses</text>
+  <text x="32" y="32" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">high addresses</text>
   <g class="draw">
     <rect x="32" y="48" width="656" height="128" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
-    <text x="668" y="76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">stack, second call to <tspan direction="ltr">note</tspan></text>
-    <text x="668" y="104" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
-    <text x="668" y="130" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">x = 1</text>
-    <text x="540" y="130" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">local, gone on return</text>
-    <text x="668" y="156" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">box</text>
-    <text x="540" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">pointer, gone too</text>
+    <text x="48" y="76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">stack, second call to <tspan direction="ltr">note</tspan></text>
+    <text x="48" y="104" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
+    <text x="48" y="130" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">x = 1</text>
+    <text x="160" y="130" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">local, gone on return</text>
+    <text x="48" y="156" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">box</text>
+    <text x="160" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">pointer, gone too</text>
   </g>
   <g class="draw d2">
     <rect x="32" y="188" width="656" height="88" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
-    <text x="668" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">heap</text>
-    <text x="668" y="248" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">int 1</text>
-    <text x="540" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">the block <tspan direction="ltr">new</tspan> returned; only <tspan direction="ltr">box</tspan> points to it</text>
+    <text x="48" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">heap</text>
+    <text x="48" y="248" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">int 1</text>
+    <text x="160" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">the block <tspan direction="ltr">new</tspan> returned; only <tspan direction="ltr">box</tspan> points to it</text>
   </g>
   <g class="draw d3">
     <rect x="32" y="288" width="656" height="72" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="668" y="318" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">uninitialized variables</text>
-    <text x="668" y="342" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">scratch</text>
+    <text x="48" y="318" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">uninitialized variables</text>
+    <text x="48" y="342" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">scratch</text>
   </g>
   <g class="draw d4">
     <rect x="32" y="372" width="656" height="112" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="668" y="402" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">initialized variables</text>
-    <text x="668" y="430" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">ready = 1</text>
-    <text x="500" y="430" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">global, for the whole run</text>
-    <text x="668" y="458" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">calls = 1</text>
-    <text x="500" y="458" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">function <tspan direction="ltr">static</tspan>, survives return</text>
+    <text x="48" y="402" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">initialized variables</text>
+    <text x="48" y="430" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">ready = 1</text>
+    <text x="180" y="430" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">global, for the whole run</text>
+    <text x="48" y="458" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">calls = 1</text>
+    <text x="180" y="458" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">function <tspan direction="ltr">static</tspan>, survives return</text>
   </g>
   <g class="draw d5">
     <rect x="32" y="496" width="656" height="88" rx="12" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5" />
-    <text x="668" y="528" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">code</text>
-    <text x="668" y="556" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">main, note</text>
-    <text x="500" y="556" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">instructions, read only</text>
+    <text x="48" y="528" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">code</text>
+    <text x="48" y="556" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">main, note</text>
+    <text x="180" y="556" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">instructions, read only</text>
   </g>
-  <text x="684" y="620" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">low addresses</text>
+  <text x="32" y="620" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">low addresses</text>
 </svg>

@@ -27,7 +27,7 @@
     <text x="308" y="236" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#2f5f8a">px + 1</text>
     <line x1="308" y1="220" x2="308" y2="176" stroke="#3d7eb8" stroke-width="2" />
     <polygon points="308,176 302,188 314,188" fill="#3d7eb8" />
-    <text x="724" y="132" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">the step is</text>
-    <text x="724" y="154" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">4 bytes</text>
+    <text x="590" y="132" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="ltr">the step is</text>
+    <text x="590" y="154" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="ltr">4 bytes</text>
   </g>
 </svg>
