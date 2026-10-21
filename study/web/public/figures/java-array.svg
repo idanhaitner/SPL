@@ -8,27 +8,27 @@
   </style>
   <rect width="760" height="320" fill="#f6f1e7" />
   <g class="draw">
-    <text x="130" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">מחסנית, המסגרת של <tspan direction="ltr" unicode-bidi="embed">main</tspan></text>
+    <text x="130" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" direction="ltr">stack, <tspan direction="ltr">main</tspan>'s frame</text>
     <rect x="36" y="56" width="190" height="70" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
     <text x="131" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">int[] a</text>
-    <text x="131" y="108" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">רפרנס</text>
+    <text x="131" y="108" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">reference</text>
     <rect x="36" y="142" width="190" height="70" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
     <text x="131" y="172" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">String[] b</text>
-    <text x="131" y="194" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">רפרנס</text>
+    <text x="131" y="194" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">reference</text>
   </g>
   <g class="draw d2">
-    <text x="470" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">ערימה</text>
+    <text x="470" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" direction="ltr">heap</text>
     <rect x="300" y="52" width="200" height="88" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
-    <text x="400" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">מערך <tspan direction="ltr" unicode-bidi="embed">int</tspan></text>
-    <text x="400" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">‏<tspan direction="ltr" unicode-bidi="embed">length</tspan> 10, בלוק אחד</text>
+    <text x="400" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" direction="ltr"><tspan direction="ltr">int</tspan> array</text>
+    <text x="400" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr"><tspan direction="ltr">length</tspan> 10, one block</text>
   </g>
   <g class="draw d3">
     <rect x="300" y="176" width="200" height="88" rx="12" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5" />
-    <text x="400" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">מערך רפרנסים</text>
-    <text x="400" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">עשרה מצביעים, מתחילים ב-<tspan direction="ltr" unicode-bidi="embed">null</tspan></text>
+    <text x="400" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142" direction="ltr">array of references</text>
+    <text x="400" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">ten pointers, start as <tspan direction="ltr">null</tspan></text>
     <rect x="540" y="176" width="184" height="88" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
     <text x="632" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2a3142">a String</text>
-    <text x="632" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">בלוק משלו</text>
+    <text x="632" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">its own block</text>
     <line x1="226" y1="96" x2="300" y2="96" stroke="#c47b2b" stroke-width="2" />
     <polygon points="300,96 288,90 288,102" fill="#c47b2b" />
     <line x1="226" y1="176" x2="300" y2="220" stroke="#c47b2b" stroke-width="2" />

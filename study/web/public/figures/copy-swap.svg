@@ -8,7 +8,7 @@
   </style>
   <rect width="760" height="460" fill="#f6f1e7" />
   <g class="draw">
-    <text x="724" y="36" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="start" direction="rtl" unicode-bidi="embed">1. לפני ההשמה</text>
+    <text x="724" y="36" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">1. before assignment</text>
     <rect x="36" y="48" width="140" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
     <text x="106" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">avi → A</text>
     <rect x="200" y="48" width="140" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
@@ -19,7 +19,7 @@
     <text x="600" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">B</text>
   </g>
   <g class="draw d2">
-    <text x="724" y="164" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="start" direction="rtl" unicode-bidi="embed">2. <tspan direction="ltr" unicode-bidi="embed">temp</tspan> מעתיק את <tspan direction="ltr" unicode-bidi="embed">B</tspan> לעומק לחוצץ <tspan direction="ltr" unicode-bidi="embed">B2</tspan></text>
+    <text x="724" y="164" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">2. <tspan direction="ltr">temp</tspan> deep-copies <tspan direction="ltr">B</tspan> into buffer <tspan direction="ltr">B2</tspan></text>
     <rect x="36" y="176" width="140" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
     <text x="106" y="214" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">avi → A</text>
     <rect x="200" y="176" width="150" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
@@ -28,10 +28,10 @@
     <text x="449" y="214" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">temp → B2</text>
     <rect x="548" y="176" width="160" height="64" rx="10" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
     <text x="628" y="204" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">A   B   B2</text>
-    <text x="628" y="224" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5c5348" direction="rtl" unicode-bidi="embed">שלושה חוצצים</text>
+    <text x="628" y="224" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5c5348" direction="ltr">three buffers</text>
   </g>
   <g class="draw d3">
-    <text x="724" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="start" direction="rtl" unicode-bidi="embed">3. <tspan direction="ltr" unicode-bidi="embed">swap</tspan>, ואז הדיסטרקטור של <tspan direction="ltr" unicode-bidi="embed">temp</tspan> משחרר את <tspan direction="ltr" unicode-bidi="embed">A</tspan></text>
+    <text x="724" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">3. <tspan direction="ltr">swap</tspan>, then <tspan direction="ltr">temp</tspan>'s destructor frees <tspan direction="ltr">A</tspan></text>
     <rect x="36" y="304" width="150" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
     <text x="111" y="342" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">avi → B2</text>
     <rect x="206" y="304" width="150" height="64" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
@@ -39,6 +39,6 @@
     <rect x="376" y="304" width="160" height="64" rx="10" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5" />
     <text x="456" y="332" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">temp → A</text>
     <text x="456" y="352" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#5c5348">delete[] A</text>
-    <text x="724" y="412" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">‏<tspan direction="ltr" unicode-bidi="embed">benni</tspan> עדיין מחזיק את <tspan direction="ltr" unicode-bidi="embed">B</tspan>. <tspan direction="ltr" unicode-bidi="embed">avi</tspan> מחזיק את העותק. אין שיתוף.</text>
+    <text x="724" y="412" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">benni</tspan> still holds <tspan direction="ltr">B</tspan>. <tspan direction="ltr">avi</tspan> holds the copy. No sharing.</text>
   </g>
 </svg>

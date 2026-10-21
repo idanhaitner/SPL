@@ -1,6 +1,6 @@
 ---
 id: memory-model
-title: מודל הזיכרון
+title: The memory model
 sources:
   - "materials/lectures/Chapter 1 - The Memory Model.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
@@ -11,72 +11,78 @@ sources:
   - "materials/exams/15-b-solution.pdf"
 ---
 
-תוכנית C++ אינה מקבלת מקטע זיכרון אחיד ורציף אחד לכל צרכיה. לכל תהליך (Process) יש מרחב כתובות משלו, והשפה מנהלת ומקצה את אזור הקוד, המשתנים הגלובליים, מסגרות הקריאה (Stack Frames) והבלוקים המוקצים דינמית (באמצעות `new`) באזורים ייעודיים שונים בתוכו. כל תרשים שתראו בהמשך הקורס — בין אם הוא מציג מצביע (pointer) על המחסנית (stack), חוצץ (buffer) על הערימה (heap), או ארגומנט המועבר לפי ערך (by value) — נשען על החלוקה לאזורים אלו.
+Systems programming is the work of writing libraries and services that other programs use. The programmer stays close to the machine: memory, protocols, and the run-time environment (סביבת זמן ריצה) that executes the program. A run-time environment (RTE) is the layer between a program and the infrastructure. It preserves the properties of that infrastructure, adds an abstraction and a usable interface, and supplies services the hardware does not offer on its own. For a C++ program the operating system is the RTE. The JVM is an RTE above the operating system: the Java program uses the JVM, and the JVM uses the OS.
 
-שפות כמו Java, C# ו-Python מסתירות מהמתכנת את מנגנוני הזיכרון ברמה הנמוכה (Low-level). הזיכרון אצלן מנוהל, ושחרור הזיכרון מבוצע באופן אוטומטי על ידי מנגנון איסוף אשפה (Garbage Collector). ב-C++, לעומת זאת, ניהול הזיכרון נמצא באחריות המתכנת: הקצאה באמצעות `new` שקולה לקבלת מפתח לדירה, ושחרור באמצעות `delete` שקול להחזרתו. מתכנת ששוכח להחזיר את המפתח מותיר את הדירה תפוסה לנצח — וזוהי זליגת זיכרון (Memory Leak).
+A program (תוכנית) is a passive collection of instructions. A process (תהליך) is one execution of a program. The process has its own address space and its own state, so two runs of the same program at the same time are two processes. The operating system creates the process. It shares CPU time among processes by a context switch: the scheduler suspends one process and resumes another. That sharing is multitasking. The operating system also gives each process a virtual address space of its own. A process reaches the disk or the network by a system call (קריאת מערכת). A system call is the process asking the kernel for a service. An ordinary function call transfers control to another function inside the same process.
 
-## סביבת זמן ריצה
+The memory of a C++ process is divided into regions. Code, static variables, call frames, and blocks obtained with `new` each live in a different region of the virtual address space. Later pictures in this course are drawings of those regions: a pointer (מצביע) on the stack (מחסנית), a buffer on the heap (ערימה), and an argument passed by value into the frame of the called function.
 
-חומרה כשלעצמה אינה מספקת שירותים מורכבים בצורה נגישה למתכנת. נבחן כדוגמה מערכת המחפשת סרט ברשת, מורידה אותו ומקרינה אותו. חיפוש ברשת, קריאה וכתיבה ממערכת הקבצים ופענוח וידאו הם שלושה שירותים נפרדים. המעבד לבדו אינו מספק אף אחד מהם באופן ישיר, ולכן נדרשת שכבת תיווך בין התוכנית לבין החומרה.
+Java, C#, and Python hide these regions behind garbage collection (איסוף אשפה). The collector releases storage the program can no longer reach. In C++ the programmer owns the lifetime of each dynamic block. `new` obtains a block, and a matching `delete` releases it. A block that is never released is a memory leak (זליגת זיכרון). `new` hands you the key to an apartment, and `delete` returns that key: a forgotten key leaves the apartment occupied for the rest of the process.
 
-:::definition id=def-runtime title="מחשב, תוכנית, תהליך, וסביבת זמן ריצה" source="materials/notes/lecture-notes.docx.pdf"
-מחשב (Computer) הוא יחידה לוגית המבצעת משימות בעצמה באמצעות ערכת ההוראות (Instruction Set) שלה. תוכנית (Program) היא הגדרה פורמלית של משימה. תהליך (Process) הוא תוכנית בזמן הרצתה בפועל על גבי המחשב.
+## The run-time environment
 
-סביבת זמן ריצה (Runtime Environment) מתווכת בין התוכנית לבין תשתית החומרה ומערכת ההפעלה. יש לה ארבעה תפקידים עיקריים: שימור תכונות התשתית, אספקת שכבת הפשטה (Abstraction), מתן ממשק נוח יותר לעבודה מול התשתית, ואספקת שירותים שאינם קיימים בתשתית הבסיסית עצמה.
+Consider a system that searches for a film on the network, downloads it, and plays it. Searching the network, reading and writing the file system, and decoding video are three separate services. They are provided by the layer between the program and the hardware, above the processor's instruction set.
+
+:::definition id=def-runtime title="Computer, program, process, and run-time environment" source="materials/notes/lecture-notes.docx.pdf"
+A computer is a logical unit that carries out tasks on its own, through its instruction set. A program is a passive collection of instructions: a formal description of a task. A process is one execution of a program, with its own address space and its own state.
+
+A run-time environment is the layer between a program and the infrastructure. For a C++ program that layer is the operating system, and the infrastructure under it is the hardware. The layer has four main roles. It preserves properties of the infrastructure. It supplies an abstraction over that infrastructure. It offers a more convenient interface to the infrastructure. It provides services that the infrastructure does not provide on its own.
 :::
 
-מערכת ההפעלה היא סביבת זמן הריצה הראשונית; היא חוצצת בין התהליך לחומרה. בעת הרצת תוכנית, מערכת ההפעלה בונה את התהליך ומנהלת את מעברי המצבים שלו. מונה התוכנית / מצביע ההוראות (Program Counter, PC) מחזיק את הכתובת של ההוראה הבאה שהמעבד עתיד לבצע.
+The operating system is the run-time environment of a C++ process. It stands between the process and the hardware. When a program is started, the operating system builds the process and moves it from state to state. The program counter (PC) holds the address of the next instruction the processor will execute.
 
-:::definition id=def-process-states title="מצבי תהליך" source="materials/notes/lecture-notes.docx.pdf"
-לתהליך יש חמישה מצבים עיקריים:
+:::definition id=def-process-states title="Process states" source="materials/notes/lecture-notes.docx.pdf"
+A process has five main states:
 
-| מצב | תיאור | מצב יעד |
+| State | Description | Next state |
 | --- | --- | --- |
-| Created | אובייקט התהליך נבנה, הוקצה זיכרון, הקובץ נטען, וה-PC מצביע על השורה הראשונה של `main` | Runnable |
-| Runnable | התהליך מוכן להרצה וממתין לתורו ממתזמן התהליכים (Scheduler) | Running |
-| Running | התהליך רץ בפועל על המעבד. כל צעד מקדם את ה-PC להוראה הבאה | Runnable (בתום הקצאת הזמן); Blocked (בציפייה לאירוע/קלט-פלט); Terminated (עם סיום התוכנית) |
-| Blocked | התהליך אינו יכול לרוץ כרגע ואינו נמצא בתור ההמתנה של המתזמן | Runnable (לאחר הסרת הגורם החוסם) |
-| Terminated | המשאבים שוחררו והתהליך סיים את חייו | אין |
+| Created | The process object is built, memory is allocated, the file is loaded, and the PC points at the first line of `main` | Runnable |
+| Runnable | The process is ready to run and is waiting for its turn from the scheduler | Running |
+| Running | The process is executing on the CPU. Each step advances the PC to the next instruction | Runnable (when the time slice ends); Blocked (waiting for an event or for I/O); Terminated (when the program finishes) |
+| Blocked | The process cannot run at the moment, and it is not in the scheduler's ready queue | Runnable (once the cause of the block is gone) |
+| Terminated | The resources have been released and the process has ended | none |
 
-![חמישה מצבי תהליך: Created נכנס ל-Runnable, Runnable ו-Running מחליפים תור, Running יורד ל-Blocked וחוזר, ו-Running מסיים ב-Terminated](../assets/figures/process-states.svg)
+![Five process states: Created enters Runnable, Runnable and Running alternate, Running drops to Blocked and returns, and Running finishes in Terminated](../assets/figures/process-states.svg)
 
 :::
 
-קריאת מערכת (System Call) היא המנגנון שבאמצעותו תהליך מבקש שירות ממערכת ההפעלה והחומרה. התהליך אינו ניגש ישירות לרכיבי החומרה (כגון כרטיס רשת או דיסק). אירוע חומרה חיצוני מועבר בחזרה אל התהליך כהודעה מצידה של מערכת ההפעלה.
+Runnable is the state of waiting for the scheduler. Blocked is the state of waiting for I/O or for an event.
 
-בנוסף, מערכת ההפעלה מבצעת שלוש פעולות מרכזיות: היא מנהלת ריבוי תהליכים (Multitasking) הגדול ממספר הליבות הפיזיות (על ידי החלפת הקשר / Context Switch), מעניקה לכל תהליך מרחב כתובות וירטואלי עצמאי (שלרוב גדול מה-RAM הפיזי הזמין), ואוכפת הרשאות גישה (קריאה, כתיבה, הרצה) לקבצים ולזיכרון.
+A system call is how a process asks the kernel for a service. An ordinary function call transfers control to code inside the same process. The kernel performs the operation on the disk or the network card. An external hardware event is delivered back to the process as a message from the operating system.
 
-המכונה הווירטואלית של Java (ה-JVM) מהווה סביבת זמן ריצה נוספת, הפועלת מעל מערכת ההפעלה. הפרק [חזרה ל-Java](topic:java-runtime) מפרט כיצד אותו קוד בייטקוד (Bytecode) מורץ על גבי מערכות הפעלה שונות בשינויים מזעריים.
+The operating system also does three things for the processes it runs. It multitasks more processes than the machine has physical cores, by a context switch from one process to another. It gives each process an independent virtual address space, usually larger than the physical RAM. It enforces read, write, and execute permissions on files and on memory.
 
-## חמשת האזורים
+The JVM is a further run-time environment, running above the operating system. The chapter [Back to Java](topic:java-runtime) describes how the same bytecode runs, with only small changes, on different operating systems.
 
-מרחב הכתובות הווירטואלי פרוס מכתובות נמוכות ועד לכתובות גבוהות, כאשר אזורים שונים צומחים לכיוונים נגדיים כדי לייעל את ניצול הזיכרון.
+## The five regions
 
-:::definition id=def-address-space title="מרחב הכתובות של תהליך" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
-לתהליך פעיל יש טווח כתובות משלו. בתוך טווח זה מוגדרים חמישה אזורים מרכזיים:
+The virtual address space runs from low addresses up to high addresses. Separate regions grow toward each other, so the free range between them can be used by whichever side needs it.
 
-| אזור | שם באנגלית/שקפים | גודל | מנגנון שחרור | הרשאות גישה |
+:::definition id=def-address-space title="The address space of a process" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
+A running process has an address range of its own. Five main regions sit inside that range:
+
+| Region | Name on the slides | Size | Release | Access |
 | --- | --- | --- | --- | --- |
-| מחסנית | Stack | דינמי (גדל וקטן) | אוטומטי, לפי סדר LIFO | קריאה וכתיבה |
-| ערימה | Heap | דינמי (גדל וקטן) | ידני, על ידי המתכנת (למשל `delete`) | קריאה וכתיבה |
-| סטטיים לא מאותחלים | BSS / Uninitialized Data | קבוע בזמן ההידור | משך חיי התהליך | קריאה וכתיבה |
-| סטטיים מאותחלים | Data / Initialized Data | קבוע בזמן ההידור | משך חיי התהליך | קריאה וכתיבה |
-| קוד | Text / Code | קבוע בזמן ההידור | משך חיי התהליך | קריאה בלבד |
+| Stack | Stack | Dynamic (grows and shrinks) | Automatic, in LIFO order | Read and write |
+| Heap | Heap | Dynamic (grows and shrinks) | Manual, by the programmer (for example `delete`) | Read and write |
+| Uninitialized static data | BSS / Uninitialized Data | Fixed at compile time | For the life of the process | Read and write |
+| Initialized static data | Data / Initialized Data | Fixed at compile time | For the life of the process | Read and write |
+| Code | Text / Code | Fixed at compile time | For the life of the process | Read only |
 
-![מרחב הכתובות של התהליך, כתובות גבוהות למעלה: מחסנית, ערימה, משתנים לא מאותחלים, משתנים מאותחלים, וקוד](../assets/figures/address-space.svg)
+![The process address space, high addresses at the top: stack, heap, uninitialized variables, initialized variables, and code](../assets/figures/address-space.svg)
 
-כתובות גבוהות ממוקמות בקצה אזור המחסנית (הצומחת כלפי מטה). כתובות נמוכות ממוקמות באזור הקוד.
+High addresses sit at the end of the stack region, which grows downward. Low addresses sit in the code region.
 :::
 
-המחסנית מנהלת את המשתנים המקומיים ואת הנתונים הנדרשים לחזרה מקריאות לפונקציות (כתובת חזרה לביצוע, אוגרים שמורים). כשהפונקציה מסתיימת, מסגרת הקריאה (Stack Frame) נשלפת והמשתנים המקומיים שלה מוסרים מהזיכרון.
+The stack holds local variables and the data a return needs: the return address, and saved registers. When the function ends, its stack frame is popped and its local variables leave that memory.
 
-הערימה (Heap) משמשת להקצאת בלוקים של זיכרון באופן דינמי (למשל באמצעות `new`). הבלוק אינו כבול למסגרת המחסנית של הפונקציה שביצעה את ההקצאה, ולכן הוא יכול להמשיך להתקיים גם לאחר שהפונקציה סיימה את ריצתה.
+The heap is where a program allocates blocks dynamically, for example with `new`. The block's lifetime is separate from the stack frame of the function that allocated it, so the block can remain after that function has returned.
 
-שני האזורים הסטטיים (Data ו-BSS) מחזיקים משתנים שזמן חייהם הוא כמשך חיי התהליך כולו. אזור הקוד (Text) מחזיק את הוראות המכונה לפענוח והרצה; התוכנית קוראת ממנו הוראות אך אינה יכולה לכתוב אליו בטעות (הוא מוגן בגישת קריאה בלבד).
+The two static regions, Data and BSS, hold variables whose lifetime is the lifetime of the process. Data holds initialized static data. BSS holds uninitialized static data. The code region, Text, holds the machine instructions the processor fetches and executes. The process reads those instructions through a read-only mapping.
 
-### משתנים סטטיים
+### Static variables
 
-משתנה סטטי מאותחל רק בערך שהמהדר (Compiler) יכול לחשב בזמן הידור, ולא באמצעות קריאה לפונקציה בזמן ריצה. בשקפים מופיעות שלוש תצורות של המילה השמורה `static`:
+A static variable is initialized with a value the compiler (מהדר) can compute at compile time. The initializer is a constant expression, fixed before the program runs. The slides show three forms of the keyword `static`:
 
 ```cpp
 int a = 1;                 // global: whole run, visible from every file
@@ -87,9 +93,9 @@ void function() {
 
 ```
 
-ניתן לגשת ל-`a` מכל קובץ המצהיר עליו (למשל בעזרת `extern`). ל-`b` ניתן לגשת רק מתוך הקובץ שבו הוא הוגדר (File Scope). המשתנה `c` שומר על ערכו בין קריאות שונות לפונקציה, אך רק הקוד בתוך הפונקציה `function` רשאי לגשת אליו. המהדר והמקשר (Linker) מקצים למשתנים אלו מיקום קבוע בזיכרון לפני תחילת ריצת `main`. הם אינם נוצרים מחדש בכל קריאה.
+Any file that declares `a`, for example with `extern`, can use `a`. Only the file that defines `b` can use `b`. That limit is file scope. `c` keeps its value from one call of `function` to the next, and only the code inside `function` may name `c`. The compiler and the linker (מקשר) give these variables a fixed address before `main` begins. Every later call finds those same variables.
 
-בדוגמה הבאה, ל-`c` ול-`x` יש זמן חיים שונה לחלוטין, אף ששניהם מופיעים בתוך הפונקציה `tick`. המשתנה `c` שמור באזור הסטטי ואתחולו מבוצע פעם אחת בלבד. לעומת זאת, `x` יושב במסגרת המחסנית, ונוצר עותק חדש של `x` בכל קריאה:
+In the next example, `c` and `x` have different lifetimes, although both names appear inside `tick`. `c` lives in the static region, and its initialization runs once. `x` lives in the stack frame, and each call gets a new `x`:
 
 ```cpp
 void tick() {
@@ -105,25 +111,25 @@ int main() {
 
 ```
 
-![c נשאר באזור הסטטי אחרי החזרה. הקריאה השנייה מקבלת x חדש שקורא את ה-c שנשאר](../assets/figures/static-calls.svg)
+![c stays in the static region after the return. The second call receives a new x that reads the c that remained](../assets/figures/static-calls.svg)
 
-| רגע | `c` | `x` |
+| Moment | `c` | `x` |
 | --- | --- | --- |
-| קריאה ראשונה, בשורה `int x = c` | 0 | 0 |
-| קריאה ראשונה, בסיום הפונקציה | 1 | נעלם (נשלף מהמחסנית) |
-| קריאה שנייה, בשורה `int x = c` | 1 | 1 |
+| First call, at the line `int x = c` | 0 | 0 |
+| First call, when the function ends | 1 | Gone (popped off the stack) |
+| Second call, at the line `int x = c` | 1 | 1 |
 
-### מסגרת המחסנית
+### The stack frame
 
-:::definition id=def-stack-frame title="מסגרת מחסנית" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
-מסגרת מחסנית (Stack Frame / Activation Record) נדחפת למחסנית בכל קריאה לפונקציה. היא מכילה את כתובת החזרה, הפרמטרים שהועברו, והמשתנים המקומיים של הפונקציה. המסגרות נשלפות בסדר LIFO (נכנס אחרון יוצא ראשון) בעת החזרה מהפונקציה.
+:::definition id=def-stack-frame title="Stack frame" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
+A stack frame, also called an activation record, is pushed on every function call. It holds the return address, the parameters that were passed, and the function's local variables. Frames are popped in LIFO order, last in first out, when the function returns.
 :::
 
-משתנה מקומי מוקצה בתוך המסגרת של הקריאה הנוכחית. המערכת משחררת אותו אוטומטית עם סיום הקריאה ללא צורך בחיפוש זיכרון פנוי (פשוט על ידי הזזת מצביע המחסנית), ולכן הקצאה זו מהירה ביותר. המשתנה נעלם ברגע שהפונקציה חוזרת, שכן הזיכרון של המסגרת כולה מיועד לשימוש חוזר בקריאות הבאות.
+A local variable is allocated inside the frame of the current call. When the call ends, the run-time releases it by moving the stack pointer. There is no search for a free block, which is why the allocation is fast. The name disappears when the function returns, because the whole frame is then available for a later call to reuse.
 
-גלישת מחסנית (Stack Overflow) היא מצב שבו נגמר המקום במחסנית עבור מסגרות נוספות. סיבות נפוצות לכך הן רקורסיה אינסופית או הקצאת מערכים מקומיים עצומים.
+A stack overflow means the stack has no room left for another frame. Two common causes are infinite recursion and a very large local array.
 
-בדוגמה הבאה, הקריאה `foo(a)` מעתיקה את ערכו של `a` לפרמטר חדש `n` (העברה לפי ערך), ואינה מעבירה את המשתנה `a` עצמו (לא מועבר רפרנס):
+In the call `foo(a)`, the value of `a` is copied into a new parameter `n`. This is pass by value. A reference (רפרנס) parameter would be another name for the caller's `a`.
 
 ```cpp
 void foo(int n) {
@@ -138,19 +144,19 @@ int main() {
 
 ```
 
-בזמן ש-`foo` מורצת, קיימות במחסנית שתי מסגרות: המסגרת של `main` שמחזיקה את `a`, והמסגרת של `foo` שמחזיקה את כתובת החזרה, הפרמטר `n`, והמשתנה המקומי `x`. בסיום `foo`, המסגרת שלה נשלפת החוצה.
+While `foo` is running, the stack holds two frames. The frame of `main` holds `a`. The frame of `foo` holds the return address, the parameter `n`, and the local variable `x`. When `foo` finishes, its frame is popped.
 
-![בזמן ש-foo רצה, n ו-x יושבים במסגרת של foo מתחת ל-main. אחרי החזרה נשארות רק המסגרת של main, ו-a](../assets/figures/stack-frames.svg)
+![While foo is running, n and x sit in foo's frame below main. After the return only main's frame remains, and a](../assets/figures/stack-frames.svg)
 
-| שם משתנה | בזמן הרצת `foo` | לאחר החזרה מ-`foo` |
+| Name | While `foo` is running | After `foo` returns |
 | --- | --- | --- |
-| `a` | במסגרת של `main`, ערכו 4 | עדיין במסגרת של `main`, ערכו 4 |
-| `n` | במסגרת של `foo`, ערכו 4 | נעלם עם שליפת המסגרת |
-| `x` | במסגרת של `foo`, ערכו 8 | נעלם עם שליפת המסגרת |
-| כתובת חזרה | במסגרת של `foo`, מצביעה ל-`main` | נשלפה מהמחסנית לטובת ביצוע החזרה ונעלמה |
+| `a` | In `main`'s frame, value 4 | Still in `main`'s frame, value 4 |
+| `n` | In `foo`'s frame, value 4 | Gone when the frame is popped |
+| `x` | In `foo`'s frame, value 8 | Gone when the frame is popped |
+| Return address | In `foo`'s frame, points back into `main` | Popped in order to perform the return, then gone |
 
-:::problem id=worked-frame-call title="מסגרת של קריאה" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
-היכן שמורים `n` ו-`x` בזמן הרצת `foo`, ומה נשאר בזיכרון לאחר ש-`foo` חוזרת?
+:::problem id=worked-frame-call title="The frame of a call" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+Where are `n` and `x` stored while `foo` is running, and what remains after `foo` returns?
 
 ```cpp
 void foo(int n) {
@@ -166,16 +172,16 @@ int main() {
 ```
 
 :::solution
-`n` ו-`x` שמורים שניהם במסגרת המחסנית של `foo`. `n` הוא הפרמטר (עותק של הערך 4 שהועבר מ-`main`), ו-`x` הוא משתנה מקומי שערכו 8. מסגרת זו ממוקמת בראש המחסנית, מעל המסגרת של `main` שממשיכה להחזיק את המשתנה `a`.
+Both `n` and `x` are stored in `foo`'s stack frame. `n` is the parameter, a copy of the value 4 passed from `main`, and `x` is a local whose value is 8. That frame sits at the top of the stack, above `main`'s frame, which still holds `a`.
 
-החזרה מ-`foo` שולפת את המסגרת שלה, ולפיכך הגישה לשמות `n` ו-`x` אינה אפשרית עוד. ערכו של `a` לא השתנה, משום שהערך הועתק ולא הועבר ברפרנס.
+The return from `foo` pops `foo`'s frame, so the names `n` and `x` can no longer be used. The value of `a` is still 4. The call passed `a` by value, so `n` received a copy. A reference parameter would have named `a` itself.
 
-אילו היה מבוצע `new` בתוך `foo`, הבלוק שעל הערימה היה נשאר תפוס, ורק המצביע אליו (שהיה שמור במחסנית) היה נעלם.
+If `foo` had executed `new`, the block on the heap would stay allocated. The pointer that addressed it lived in the frame, and that pointer would disappear with the frame.
 :::
 :::
 
 :::check id=chk-frame-gone
-לאחר ש-`foo` חוזרת, איזה מהמשתנים הבאים עדיין קיים בזיכרון?
+After `foo` returns, which of the following is still in memory?
 
 ```cpp
 void foo(int n) {
@@ -188,14 +194,14 @@ int main() {
 
 ```
 
-- [ ] `n`, כי הפרמטר הועבר פנימה
-- [ ] `x`, כי הוא אותחל
-- [x] רק `a`
+- [ ] `n`, because the parameter was passed in
+- [ ] `x`, because it was initialized
+- [x] only `a`
 
-`n` ו-`x` היו רכיבים במסגרת של `foo` שנשלפה. המשתנה `a` שמור במסגרת של `main`, שטרם הסתיימה.
+`n` and `x` belonged to `foo`'s frame, and that frame has been popped. `a` lives in `main`'s frame, which is still on the stack.
 :::
 
-### הערימה
+### The heap
 
 ```cpp
 int* pi = new int;       // one int on the heap; pi itself is local
@@ -206,11 +212,11 @@ delete[] arr;            // the array form, not delete
 
 ```
 
-יתרונה המרכזי של הערימה הוא היעדר שחרור אוטומטי: הבלוק שהוקצה יכול להמשיך להתקיים גם לאחר שהפונקציה שהקצתה אותו סיימה את הרצתה. משתנה מקומי במחסנית אינו יכול לעשות זאת, שכן הוא משוחרר עם שליפת המסגרת.
+A block on the heap can outlive the function that allocated it. A local variable on the stack cannot: the local is released when its frame is popped.
 
-המחיר של גמישות זו מתבטא בזמן ובניהול: הפקודה `new` פונה למנהל הזיכרון (Memory Manager) של מערכת ההפעלה כדי לחפש מקום פנוי, ולכן ההקצאה איטית משמעותית מהזזת מצביע המחסנית. בנוסף, נדרש ניהול מעקב (Bookkeeping) קפדני אחר הבלוקים התפוסים והפנויים בערימה.
+The cost of that longer lifetime is time, and a record of what is free. `new` asks the operating system's memory manager to find a free range, so the allocation is much slower than moving the stack pointer. The heap records which blocks are occupied and which are free.
 
-המצביע והבלוק המוצבע אינם יושבים בהכרח באותו אזור בזיכרון:
+The pointer and the block it addresses may occupy different regions:
 
 ```cpp
 int* pi = new int[10];             // pi on the stack, the ten ints on the heap
@@ -218,11 +224,11 @@ Student* ps = new Student("Avi");  // ps on the stack, the Student on the heap
 
 ```
 
-בדוגמה הראשונה, `pi` הוא משתנה מקומי במחסנית שמחזיק כתובת. עשרת השלמים מוקצים כבלוק רציף בערימה. בדוגמה השנייה, המצביע `ps` שמור במחסנית, ואילו אובייקט ה-`Student` עצמו מוקצה בערימה.
+In the first line, `pi` is a local on the stack and it holds an address. The ten integers are one contiguous block on the heap. In the second line, `ps` lives on the stack and the `Student` object lives on the heap.
 
-האם תיתכן זליגת זיכרון מהמחסנית? לא. מסגרת המחסנית נשלפת תמיד אוטומטית עם החזרה מהפונקציה. זליגת זיכרון מתרחשת אך ורק בערימה, כאשר בלוק נשאר מסומן כתפוס אך אף מצביע פעיל בתוכנית אינו מחזיק עוד את כתובתו.
+A stack frame is popped on every return, so a stack allocation ends with the call that created it. A memory leak is a heap block that stays marked occupied after no live pointer in the program still holds its address.
 
-ב-Java, מנגנון איסוף האשפה (GC) משחרר בעצמו אובייקטים שאין אליהם רפרנס נגיש. זליגת זיכרון ב-Java מתארת מצב שבו רפרנס לאובייקט נשאר נגיש בטעות (למשל נשכח בתוך רשימה סטטית Global Collection), אף שהתוכנית אינה זקוקה לו עוד.
+In Java, garbage collection releases an object that has no reachable reference. A memory leak in Java is a reference that stays reachable by accident, for example because it was left in a static collection, after the program no longer needs the object.
 
 ```cpp
 void leaky() {
@@ -231,11 +237,11 @@ void leaky() {
 
 ```
 
-![בתוך leaky מצביע המחסנית מצביע אל ה-int שעל הערימה. אחרי החזרה ה-int עדיין שם, ושום דבר לא מצביע אליו](../assets/figures/heap-leak.svg)
+![Inside leaky, the pointer on the stack points at the int on the heap. After the return the int is still there, and nothing points to it](../assets/figures/heap-leak.svg)
 
-### תוכנית אחת, חמישה אזורי זיכרון
+### One program, five memory regions
 
-ריצת תוכנית בודדת עשויה לעשות שימוש בכל חמשת האזורים בו-זמנית:
+One run of a program can use all five regions at the same time:
 
 ```cpp
 int ready = 1;              // initialized static, whole run
@@ -256,23 +262,23 @@ int main() {
 
 ```
 
-| משתנה / רכיב | אזור זיכרון | נשאר קיים לאחר החזרה מ-`note`? |
+| Name | Region | Still present after `note` returns? |
 | --- | --- | --- |
-| `ready` | משתנים סטטיים מאותחלים | כן, עד לסיום התהליך |
-| `scratch` | משתנים סטטיים לא מאותחלים | כן, עד לסיום התהליך |
-| `calls` | משתנים סטטיים מאותחלים | כן, שומר על ערכו בין הקריאות |
-| `x` | מחסנית (מסגרת `note`) | לא, נשלף עם החזרה |
-| `box` | מחסנית (מסגרת `note`) | לא, נשלף עם החזרה |
-| ה-`int` המוקצה ב-`new` | ערימה | נמחק מפורשות לפני החזרה (`delete box`) |
-| קוד התוכנית | אזור הקוד (text) | כן, לקריאה בלבד |
+| `ready` | Initialized static data | Yes, until the process ends |
+| `scratch` | Uninitialized static data (BSS) | Yes, until the process ends |
+| `calls` | Initialized static data | Yes, it keeps its value across calls |
+| `x` | Stack (`note`'s frame) | No, it is popped on return |
+| `box` | Stack (`note`'s frame) | No, it is popped on return |
+| the `int` from `new` | Heap | Released explicitly before the return (`delete box`) |
+| the program's code | Code region (Text) | Yes, read only |
 
-![הקריאה השנייה של note: x ו-box על המחסנית, ה-int החדש על הערימה, calls ו-ready באחסון הסטטי, ההוראות בקוד](../assets/figures/five-homes.svg)
+![The second call of note: x and box on the stack, the new int on the heap, calls and ready in static storage, the instructions in the code](../assets/figures/five-homes.svg)
 
-### רקורסיה מעמיקה את המחסנית
+### Recursion deepens the stack
 
-כל קריאה רקורסיבית דוחפת מסגרת חדשה למחסנית. המסגרת הקודמת נשארת במקומה כיוון שהקריאה שביצעה אותה טרם הסתיימה.
+Each recursive call pushes a new frame. The previous frame stays in place, because the call that created it is still in progress.
 
-בפונקציה `forever`, הפונקציה קוראת לעצמה שוב ושוב עם `n + 1`. אף קריאה אינה מגיעה לסיומה, ולכן אף מסגרת אינה נשלפת. המערך המקומי `pad` (בגודל 256 שלמים) תופס מקום בכל מסגרת, והמחסנית גדלה עד למילוי המרחב המוקצה לה.
+In `forever`, the function calls itself again with `n + 1`. No call reaches its end, so no frame is popped. The local array `pad`, 256 integers, takes space in every frame. The stack grows until its region is full.
 
 ```cpp
 void forever(int n) {
@@ -286,64 +292,64 @@ int main() {
 
 ```
 
-![forever ממשיכה לדחוף מסגרת עבור n ו-pad. המחסנית גדלה כלפי מטה עד שהאזור מלא](../assets/figures/recursion-frames.svg)
+![forever keeps pushing a frame for n and pad. The stack grows downward until the region is full](../assets/figures/recursion-frames.svg)
 
-בדוגמה זו לא מבוצעות הקצאות ב-`new`, ולכן הערימה נשארת ריקה. הגלישה מתרחשת במחסנית בלבד (Stack Overflow).
+This example never executes `new`, so the heap stays empty. The failure is a stack overflow.
 
-מנגד, ניתן למלא את הערימה מבלי לגלוש במחסנית: פונקציה יחידה המריצה בלולאה הקצאות `new` מבלי לשחררן, תשתמש במסגרת מחסנית אחת בלבד בעוד זיכרון הערימה ילך ויאזל עד לשגיאת הקצאה (`std::bad_alloc`).
+A program can exhaust the heap with a single stack frame. One function that loops on `new` and never releases the blocks uses one frame, while the free heap shrinks until the allocation fails with `std::bad_alloc`.
 
-## שיקולי תכנון המודל
+## Design considerations
 
-זמן החיים של מסגרת פונקציה מוכל לחלוטין בתוך זמן החיים של הפונקציה שקראה לה. מבנה זה מתאים באופן טבעי למחסנית (LIFO - Last In First Out). יצירת מסגרת דורשת רק את הזזת מצביע המחסנית (Stack Pointer) בגודל הידוע מראש בזמן ההידור, וסגירתה מחזירה את המצביע לאחור. היות שהמסגרות משתחררות בסדר הפוך ליצירתן, אין סכנה לפרגמנטציה ("חורים" או קיטוע) במחסנית.
+The frame of a called function lives entirely inside the lifetime of the function that called it. A stack matches that nesting. Frames leave in LIFO order: the frame pushed last is the frame popped first. Creating a frame moves the stack pointer by a size the compiler already knows. Leaving the frame moves the pointer back by that same amount. Because frames are released in the reverse of the order in which they were created, live frames occupy one contiguous range. The stack stays free of fragmentation.
 
-מנגד, שני מקרים אינם יכולים להיות מנוהלים דרך המחסנית:
+Two kinds of storage need the heap:
 
-1. אובייקטים שזמן חייהם אמור להימשך מעבר לסיום הפונקציה שייצרה אותם.
-2. נתונים שגודלם אינו ידוע בזמן ההידור (כדוגמת `new int[n]` כאשר `n` מתקבל מקלט בזמן ריצה).
+1. An object whose lifetime must continue after the function that created it has returned.
+2. Data whose size is unknown at compile time, such as `new int[n]` when `n` is obtained at run time.
 
-המהדר קובע מראש את גודל התאים המקומיים במסגרת. נתונים דינמיים חייבים להיות מוקצים בערימה, והמחסנית תחזיק רק את המצביע (שגודלו קבוע וידוע) אליהם.
+The compiler fixes the size of every local slot in the frame before the program runs. Data of a dynamic size is allocated on the heap. The frame stores only the pointer, and the pointer's size is fixed and known.
 
-## ארכיטקטורת החומרה שמתחת לזיכרון
+## The hardware underneath the memory
 
-בארכיטקטורת פון נוימן (Von Neumann), זיכרון ה-RAM המחזיק את נתוני התוכנית מחזיק במקביל גם את הקוד (ההוראות) שלה.
+In the von Neumann architecture, the RAM that holds a program's data also holds its code, the instructions.
 
-:::definition id=def-von-neumann title="מכונת פון נוימן" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
-ארכיטקטורת פון נוימן מבוססת על מעבד (CPU), ערוץ העברת נתונים (Bus), וזיכרון ראשי (RAM) משותף לקוד ולנתונים. המעבד פועל במחזוריות קבועה של הבאה-פענוח-ביצוע (Fetch-Decode-Execute): מביא הוראה מהזיכרון, מפענח אותה, ומבצע אותה.
+:::definition id=def-von-neumann title="The von Neumann machine" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
+The von Neumann architecture is a processor (CPU), a bus, and a main memory (RAM) shared by code and data. The processor repeats a fixed cycle of fetch, decode, and execute. It fetches an instruction from memory, decodes it, and executes it.
 :::
 
-![מכונת פון נוימן (Von Neumann): מעבד (CPU), bus, ו-RAM אחד שמחזיק גם את התוכנית וגם את הנתונים](../assets/figures/von-neumann-architecture.svg)
+![A von Neumann machine: a CPU, a bus, and one RAM that holds both the program and the data](../assets/figures/von-neumann-architecture.svg)
 
-רכיבי המעבד המרכזיים:
+The main parts of the processor:
 
-- **יחידת הבקרה (Control Unit, CU):** מנהלת את מחזור הבאה-פענוח-ביצוע, מסונכרנת באמצעות אות השעון (Clock), ומטפלת באירועי קלט/פלט באמצעות פסיקות (Interrupts).
-- **יחידה אריתמטית-לוגית (ALU):** מבצעת חישובים אריתמטיים, פעולות לוגיות, השוואות, פעולות ברמת הביטים (Bitwise), ובדיקות גלישה (Overflow).
-- **אוגרים (Registers):** רכיבי האחסון המהירים ביותר במעבד. אוגרים כלליים מחזיקים ערכים לפעולות מיידיות (`load`, `store`), ואוגרים ייעודיים מנהלים את מצב ההרצה (כדוגמת `ip` - מצביע ההוראות, ו-`rsp` - מצביע המחסנית).
-- **זיכרון מטמון (Cache):** זיכרון מהיר החוצץ בין האוגרים ל-RAM הפיזי, ומחולק לרמות (L1 הקטן והמהיר ביותר, L2, ו-L3).
+- **Control unit (CU).** It runs the fetch-decode-execute cycle, stays in step with the clock, and handles input and output through interrupts.
+- **Arithmetic-logic unit (ALU).** It performs arithmetic, logical operations, comparisons, bitwise operations, and checks for arithmetic overflow.
+- **Registers.** These are the fastest storage in the processor. General-purpose registers hold values for the operation in progress (`load`, `store`). Dedicated registers hold execution state, including `ip`, the instruction pointer, and `rsp`, the stack pointer.
+- **Cache.** This is fast memory between the registers and physical RAM, divided into levels. L1 is the smallest and the fastest, then L2, then L3.
 
-![רכיבי המעבד בטבלה, ואחר כך זיכרון המטמון, ערוץ העברת הנתונים, ו-RAM, עם היררכיית הזיכרון המהירה למעלה](../assets/figures/memory-hierarchy.svg)
+![The processor components in a table, then the cache, the bus, and RAM, with the fast end of the memory hierarchy at the top](../assets/figures/memory-hierarchy.svg)
 
-כאשר המעבד טוען משתנה מקומי, הכתובת ממוקמת באזור המחסנית; כשהוא קורא דרך מצביע `pi`, הכתובת המבוקשת ממוקמת באזור הערימה. כל הגישות לזיכרון עוברות על גבי ערוץ הנתונים (Bus). האזורים (מחסנית, ערימה, קוד) הם בסופו של דבר הפשטה תוכנתית בלבד מעל ה-RAM הפיזי.
+When the processor loads a local variable, the address is in the stack region. When it reads through the pointer `pi`, the address is in the heap region. Every access travels on the bus. The stack, the heap, and the code region are a software division of that same physical RAM.
 
-היררכיית הזיכרון (מהמהיר והקטן אל האיטי והגדול):
+The memory hierarchy, from the fast and small end to the slow and large end:
 
-| רכיב | ייעוד | שומר מידע ללא חשמל (Non-volatile)? |
+| Component | Role | Retains data with the power off? |
 | --- | --- | --- |
-| אוגר (Register) | ערכים מיידיים לפעולה הנוכחית של המעבד | לא |
-| זיכרון מטמון (Cache) | העתק של תאי RAM שניגשו אליהם לאחרונה למניעת גישה איטית | לא |
-| זיכרון ראשי (RAM) | נתוני התהליך והקוד בזמן הריצה | לא |
-| דיסק (SSD/HDD) | אחסון קבוע של קבצים | כן |
-| סרט מגנטי (Tape) | גיבוי ואחזור לטווח ארוך | כן |
+| Register | Values for the processor's current operation | No |
+| Cache | A copy of recently used RAM cells, so the processor can avoid a slow access | No |
+| Main memory (RAM) | The process's data and code during the run | No |
+| Disk (SSD/HDD) | Permanent storage for files | Yes |
+| Magnetic tape | Long-term backup and retrieval | Yes |
 
-רוחב אפיק הנתונים (Data Bus) קובע כמה ביטים מועברים בפעולת זיכרון בודדת (גודל המילה - Word Size). רוחב אפיק הכתובות (Address Bus) קובע את טווח הזיכרון המרבי שהמעבד יכול לְמַעֵן (Addressable Memory).
+The width of the data bus is how many bits move in one memory transfer. That width is the word size. The width of the address bus is the largest range of memory the processor can address.
 
-ערכת ההוראות (Instruction Set) הגולמית כוללת פקודות בסיסיות, כדוגמת:
+The raw instruction set includes operations such as these:
 
-- `READ 100 R1`: העתקת תוכן תא 100 לתוך אוגר R1.
-- `ADD R1 R2 R3`: חיבור התוכן של R1 ו-R2 ואחסון התוצאה ב-R3.
-- `WRITE R3 200`: העתקת תוכן R3 לתוך תא 200.
+- `READ 100 R1`: copy the contents of cell 100 into register R1.
+- `ADD R1 R2 R3`: add the contents of R1 and R2, and store the result in R3.
+- `WRITE R3 200`: copy the contents of R3 into cell 200.
 
-:::problem id=worked-add-trace title="עקבות של חיבור" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
-המשתנה `i` שמור בתא 3000 והמשתנה `j` בתא 4000. תרגם את קטע הקוד להוראות `READ`, `WRITE` ו-`ADD`.
+:::problem id=worked-add-trace title="A trace of an addition" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+The variable `i` is stored in cell 3000 and the variable `j` in cell 4000. Translate the fragment into `READ`, `WRITE`, and `ADD` instructions.
 
 ```java
 int i = 10;
@@ -353,7 +359,7 @@ i = i + j;
 ```
 
 :::solution
-תחילה נכתבים הערכים לזיכרון. לאחר מכן הם נטענים לאוגרים, מבוצע החישוב ב-ALU, והתוצאה נכתבת בחזרה לתא של `i`:
+The values are written into memory first. They are then loaded into registers, the ALU adds them, and the result is written back into the cell of `i`:
 
 ```text
 WRITE 3000 10
@@ -365,47 +371,47 @@ WRITE 3000 R3
 
 ```
 
-בסיום הביצוע, תא 3000 מכיל 30. החיבור האריתמטי מבוצע באוגרי המעבד ולא בתוך רכיב ה-RAM עצמו.
+At the end, cell 3000 holds 30. The addition is performed in the processor's registers. RAM holds the cells that were read and the cell that was written.
 :::
 :::
 
-מודל המחסנית והערימה מתורגם לפעולות בסיסיות מול המעבד:
+The stack and the heap correspond to a small set of operations:
 
-**פעולות מחסנית:**
+**Stack operations:**
 
-- `createAF`: יצירת מסגרת הפעלה חדשה.
-- `removeAF`: הסרת המסגרת הנוכחית וחזרה למסגרת הקוראת.
-- `push`: הוספת תא בראש המסגרת הנוכחית.
-- `pop`: הסרת התא מראש המסגרת.
-- `read` / `write`: גישה לתאים בתוך המסגרת הנוכחית בלבד.
+- `createAF`: create a new stack frame.
+- `removeAF`: remove the current frame and return to the caller's frame.
+- `push`: add a cell at the top of the current frame.
+- `pop`: remove the cell at the top of the frame.
+- `read` / `write`: access a cell in the current frame only.
 
-**פעולות ערימה:**
+**Heap operations:**
 
-- `new`: הקצאת רצף תאים פנוי בערימה וסימונם כתפוסים עבור התהליך.
-- `delete`: שחרור מקטע מוקצה וסימונו כפנוי.
-- `read` / `write`: גישה לתאים שהוקצו בערימה בלבד (גישה לתא ששוחרר גורמת לשגיאת זמן ריצה / Segmentation Fault).
+- `new`: allocate a free run of cells on the heap and mark them occupied for this process.
+- `delete`: release an allocated range and mark it free.
+- `read` / `write`: access a cell that is currently allocated on the heap. A read or a write of a cell that has already been released is a run-time fault, a segmentation fault.
 
-קריאה לפרוצדורה כוללת: יצירת מסגרת (`createAF`), דחיפת כתובת החזרה, דחיפת המצביע `this` (אם מדובר במתודה של אובייקט), דחיפת הארגומנטים, ביצוע הקוד, כתיבת ערך החזרה למיקום זמני, שליפת הארגומנטים (`pop`), והסרת המסגרת (`removeAF`).
+A procedure call does the following. It creates the frame (`createAF`), pushes the return address, pushes the `this` pointer when the call is a method of an object, pushes the arguments, runs the body, writes the return value to a temporary location, pops the arguments, and removes the frame (`removeAF`).
 
 :::check id=chk-where-array
-השורה הבאה מורצת בתוך פונקציה. היכן שמורים `pi` ועשרת השלמים?
+The following line runs inside a function. Where do `pi` and the ten integers live?
 
 ```cpp
 int* pi = new int[10];
 
 ```
 
-- [ ] שניהם על המחסנית
-- [x] `pi` על המחסנית ועשרת השלמים על הערימה
-- [ ] שניהם על הערימה
-- [ ] `pi` שמור באזור הקוד
+- [ ] Both are on the stack
+- [x] `pi` is on the stack and the ten integers are on the heap
+- [ ] Both are on the heap
+- [ ] `pi` is stored in the code region
 
-`pi` הוא משתנה מקומי שמחזיק כתובת, ולפיכך מוקצה במסגרת המחסנית. הבלוק של 10 השלמים מוקצה בערימה באמצעות `new[]`.
+`pi` is a local variable that holds an address, so it is allocated in the stack frame. The block of ten integers is allocated on the heap by `new[]`.
 :::
 
-## פריסה לדוגמה
+## A sample layout
 
-נבחן את הקוד הבא:
+Consider this code:
 
 ```cpp
 int* pi = new int[10];
@@ -413,16 +419,16 @@ pi[0] = 1;
 
 ```
 
-| שם | אזור זיכרון | תוכן |
+| Name | Region | Contents |
 | --- | --- | --- |
-| `pi` | מסגרת המחסנית | כתובת ה-`int` הראשון בערימה |
-| עשרת ה-`int` | ערימה | ערכי המערך (התא הוגדר ל-1 באינדקס 0) |
-| הוראות הקוד | אזור הקוד (text) | פקודות המכונה לקריאה בלבד |
+| `pi` | The stack frame | The address of the first `int` on the heap |
+| The ten `int`s | Heap | The array values (index 0 has been set to 1) |
+| The instructions | Code region (Text) | Machine instructions, read only |
 
-בעת היציאה מהפונקציה, המשתנה המקומי `pi` נמחק יחד עם המסגרת. עשרת השלמים נשארים מוקצים בערימה עד לביצוע מפורש של `delete[] pi`. אם הכתובת לא נשמרה במיקום יציב אחר, לא ניתן לגשת אליהם עוד — וזוהי זליגת זיכרון.
+When the function returns, the local `pi` disappears with the frame. The ten integers stay allocated on the heap until the program executes `delete[] pi`. Once the only copy of that address has disappeared with the frame, the integers are unreachable, and the block is a memory leak.
 
-:::problem id=worked-stack-array title="מצביע על המחסנית" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
-הסבר היכן שמור `ps`, היכן שמור אובייקט ה-`Student`, ומה קורה בזיכרון במידה ואיש אינו קורא ל-`delete`.
+:::problem id=worked-stack-array title="A pointer on the stack" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+Explain where `ps` is stored, where the `Student` object is stored, and what happens in memory if nobody calls `delete`.
 
 ```cpp
 int main() {
@@ -433,7 +439,7 @@ int main() {
 ```
 
 :::solution
-`ps` הוא משתנה מצביע מקומי, ולכן הוא תופס תא במסגרת המחסנית של `main`. אובייקט ה-`Student` עצמו מוקצה בערימה:
+`ps` is a local pointer, so it occupies a cell in `main`'s stack frame. The `Student` object itself is allocated on the heap:
 
 ```text
 stack (main):  ps  ----------+
@@ -443,22 +449,22 @@ heap:                        v
 
 ```
 
-כש-`main` מסתיימת, מסגרת המחסנית נשלפת והמשתנה `ps` נעלם. הבלוק בערימה אינו משוחרר אוטומטית. בהעדר מצביע הנגיש אליו, נוצרת זליגת זיכרון.
+When `main` ends, the stack frame is popped and `ps` disappears. The heap block stays allocated. No pointer remains that can reach it, so the block is a memory leak.
 :::
 :::
 
 :::trap
-שימוש ב-`delete pi` במקום ב-`delete[] pi` עבור מערך שהוקצה באמצעות `new[]` גורם להתנהגות לא מוגדרת (Undefined Behavior) ולפגיעה במנגנון ניהול הזיכרון של הערימה. זליגת זיכרון היא תופעה שונה: אי-שחרור של הבלוק כלל.
+`delete` releases one object. `delete[]` releases an array. Applying `delete` to an array that was allocated with `new[]` is undefined behavior, and it corrupts the heap's bookkeeping. A memory leak is a separate failure: the block is never released.
 :::
 
 :::trap
-משתנים גלובליים ומשתנים מקומיים שהוגדרו כ-`static` יושבים באזור הסטטי לכל אורך ריצת התוכנית. הם אינם חלק ממסגרת המחסנית ואינם מוקצים בערימה.
+Global variables, and local variables declared `static`, occupy the static region for the whole run of the program. Their storage is that static region for the entire lifetime. They sit outside every stack frame, and they sit outside the heap.
 :::
 
-## תרגול
+## Practice
 
-:::problem id=ps2-stack-vs-heap title="מחסנית מול ערימה" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-עבור כל משתנה, ציין האם האחסון אליו הוא מתייחס נמצא במחסנית או בערימה, ואיזו פקודת `delete` נדרשת (אם בכלל).
+:::problem id=ps2-stack-vs-heap title="Stack versus heap" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
+For each name, say whether the storage it refers to is on the stack or on the heap, and which `delete` is required, if any.
 
 ```cpp
 void demo() {
@@ -471,62 +477,67 @@ void demo() {
 ```
 
 :::hint
-משתנה המוצהר בתוך פונקציה ללא `new` מוקצה במחסנית. הקצאות מפורשות עם `new` / `new[]` מגיעות תמיד מהערימה.
+A variable declared inside a function, with no `new`, is allocated on the stack. An explicit `new` or `new[]` always obtains its block from the heap.
 :::
 :::hint
-התאם את השחרור לאופן ההקצאה: אובייקט יחיד משוחרר ב-`delete`, מערך משוחרר ב-`delete[]`. משתנים מקומיים במחסנית אינם דורשים `delete`.
+Match the release to the allocation. `delete` releases one object. `delete[]` releases an array. A local on the stack needs no `delete`.
+:::
+:::hint
+The pointer and the block are two objects. Name the region of the pointer, then the region of the block it addresses, then the form of `delete` that matches the `new` that created the block.
 :::
 :::solution
 
-- `local`: משתנה מסוג `int` במסגרת המחסנית של `demo`. משוחרר אוטומטית עם סיום הפונקציה. אין להשתמש ב-`delete`.
-- `one`: מצביע מקומי במחסנית. ה-`int` אליו הוא מצביע מוקצה בערימה. ישוחרר באמצעות `delete one`.
-- `many`: מצביע מקומי במחסנית. מערך 10 השלמים מוקצה בערימה. ישוחרר באמצעות `delete[] many`.
-- `s`: מצביע מקומי במחסנית. אובייקט ה-`string` עצמו מוקצה בערימה. ישוחרר באמצעות `delete s`.
+- `local` is an `int` in `demo`'s stack frame. The return releases it. It takes no `delete`.
+- `one` is a local pointer on the stack. The `int` it addresses is a block on the heap. Release that `int` with `delete one`.
+- `many` is a local pointer on the stack. The array of ten integers is a block on the heap. Release it with `delete[] many`.
+- `s` is a local pointer on the stack. The `string` object itself is a block on the heap. Release it with `delete s`.
 
-השחרור הידני של שלושת הבלוקים הללו חייב להתבצע לפני היציאה מהפונקציה, כדי למנוע זליגת זיכרון בערימה בעת שליפת מסגרת המחסנית ואובדן המצביעים.
+The three heap blocks have to be released before the function returns. The return pops the frame and the pointers disappear with it. A block left behind is a memory leak on the heap.
 :::
 :::
 
 :::examnote
-שאלות בחינה שכיחות מציגות אובייקט המועבר לפי ערך לפונקציה ומבקשות לשרטט את מצב המחסנית והערימה בשורה מסוימת. יש להקפיד שלא לצייר חוצצים דינמיים בתוך מסגרת המחסנית, ולא לבלבל בין אובייקטים המועברים לפי ערך (היוצרים עותק נפרד לחלוטין במחסנית) לבין העברה ברפרנס או מצביע.
+A common exam question passes an object by value into a function and asks for a drawing of the stack and the heap at a given line. Draw each dynamic buffer on the heap. An argument passed by value is a separate object in the called function's frame. An argument passed by reference is another name for an object that already exists. An argument passed by pointer is an address of an object that already exists.
 :::
 
-:::problem id=exam-15a-q2 title="וקטור כרשימה" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
-רצינו לממש מחלקה `mvector<T>` המנהלת זיכרון של רשימה מקושרת דינמית (במקום מערך רציף).
+:::problem id=exam-15a-q2 title="A vector as a list" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
+We want a class `mvector<T>` that stores its elements as a dynamic linked list, using that list where another design would use a contiguous array.
 
-א. ממשו את הפעולות הנדרשות. `insertAt` מקצה חוליה במידת הצורך ומכניסה במיקום `pos`. `removeAt` מקטינה את המבנה.
-ב. מוצע למחוק את השדה `_len` ולהחזיר את `sizeof(_head)` כאורך המבנה. מהי הקביעה הנכונה?
+a. Implement the required operations. `insertAt` allocates a node when one is needed and inserts it at position `pos`. `removeAt` shrinks the structure.
 
-1. זה עובד ומחזיר את האורך המדויק.
-2. נדרש לחלק ב-`sizeof(T)`.
-3. במערכת של 32-ביט הביטוי יחזיר תמיד 4.
-4. שגיאת הידור (אי אפשר להפעיל `sizeof` על תבנית).
-5. אף תשובה אינה נכונה.
+b. Suppose we remove the field `_len` and return `sizeof(_head)` as the length of the structure. Which statement is correct?
 
-ג. שרטטו את הזיכרון (מחסנית, ערימה, vtable) בקריאה לפי ערך `foo(mvector<T> vec)`.
+1. This works, and it returns the exact length.
+2. The result has to be divided by `sizeof(T)`.
+3. On a 32-bit system the expression always returns 4.
+4. A compilation error (`sizeof` cannot be applied to a template).
+5. None of the answers is correct.
+
+c. Draw the memory (stack, heap, and vtable) for the call `foo(mvector<T> vec)`, which passes the argument by value.
 :::hint
-`sizeof` הוא גודל של טיפוס המחושב בזמן קומפילציה, לא ספירה דינמית של צמתים שמגיעים אליהם בהליכה על `_next`.
+`sizeof` is the size of a type, computed at compile time. A count of nodes would be a walk along `_next` at run time.
 :::
 :::hint
-פרמטר שמתקבל לפי ערך הוא אובייקט נפרד. המצביע שלו והמצביע של האובייקט הקורא הם שני תאים שונים במחסנית. האם הם חולקים רשימה אחת בערימה? זה תלוי באופן המימוש של בנאי ההעתקה (Copy Constructor).
+A parameter received by value is a separate object. Its pointer and the caller's pointer are two different cells on the stack. Whether they share one list on the heap depends on the copy constructor.
 :::
 :::hint
-ל-`_head` יש טיפוס של מצביע. במערכות של 32 סיביות שאליהן השאלה מתייחסת, כל מצביע תופס בדיוק 4 בתים.
+`_head` has a pointer type. On the 32-bit systems this question refers to, every pointer occupies exactly 4 bytes.
 :::
 :::solution
-א. הפתרון שומר רשימה מקושרת של צמתים מסוג `node<T>` ואת אורך הרשימה ב-`_len`. ההורס (Destructor) עובר על הצמתים ומשחרר כל אחד מהם בעזרת `delete`. בנאי ההעתקה חייב לבצע העתקה עמוקה (Deep Copy) של כל הצמתים למניעת דריסות כפולות.
+a. The solution keeps a linked list of `node<T>` nodes and the length of that list in `_len`. The destructor walks the nodes and releases each one with `delete`. The copy constructor makes a deep copy of every node. Each vector then owns its own nodes, so the destructor of one vector releases only that vector's nodes.
 
-ב. תשובה 3 נכונה. `_head` הוא משתנה מטיפוס מצביע. הגודל של מצביע במערכת 32-ביט הוא תמיד 4 בתים, ללא קשר למספר האיברים ברשימה המקושרת שעליה הוא מצביע.
+b. Statement 3 is correct. `_head` is a pointer. On a 32-bit system the size of a pointer is 4 bytes, for any number of elements in the list it addresses.
 
-ג. בתוך `foo`, כיוון שהפרמטר מועבר לפי ערך, נוצר אובייקט `mvector` חדש במסגרת המחסנית של `foo` (הכולל מצביע `_head` משלו ו-`_len`). אם בוצעה העתקה עמוקה, הצמתים בערימה משוכפלים לשרשרת חדשה לגמרי. אם בוצעה העתקה רדודה (Shallow Copy), שני המצביעים שעל המחסנית יצביעו לאותה שרשרת צמתים בדיוק בערימה. למחלקה זו אין מתודות וירטואליות ולכן לא נוצרת vtable כלל.
+c. Inside `foo`, the parameter arrives by value, so a new `mvector` object is created in `foo`'s stack frame. It has its own `_head` and its own `_len`. A deep copy duplicates the nodes on the heap into a new chain. A shallow copy leaves the two pointers on the stack addressing one chain of nodes on the heap. This class has no virtual methods, so it has no vtable.
 :::
 :::
 
-:::problem id=exam-15b-q2 title="וקטור שגדל" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-מחלקה `mvector` מבוססת על מערך דינמי. הפעולה `insertAt` מעבר לגודל הנוכחי מגדילה את המערך לחזקה הקטנה ביותר של 2 הגדולה מ-`pos`. `removeAt` מקטינה את המערך בחצי כאשר החצי העליון כולו פנוי. ל-`node` יש מתודה וירטואלית טהורה `duplicate()`.
+:::problem id=exam-15b-q2 title="A vector that grows" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
+The class `mvector` is based on a dynamic array. When `insertAt` goes past the current size, it grows the array to the smallest power of 2 that is greater than `pos`. `removeAt` shrinks the array by half when the entire upper half is unused. `node` has a pure virtual method `duplicate()`.
 
-א. ממשו בנאי העתקה עמוקה.
-ב. ציירו את מצב הזיכרון עבור הקוד הבא:
+a. Implement a deep copy constructor.
+
+b. Draw the memory for the following code:
 
 ```cpp
 void foo(mvector vec) {
@@ -542,29 +553,29 @@ void main() {
 
 ```
 
-ג. בסוף `main` מופיעה ההמרה: `my_node* m = (my_node*)(vec.getAt(0));`. מהו המשפט הנכון?
+c. At the end of `main` the code contains the conversion `my_node* m = (my_node*)(vec.getAt(0));`. Which statement is correct?
 
-1. המרה כלפי מטה (Downcasting) אסורה ב-C++.
-2. המרה בסגנון C נבדקת בזמן הידור בלבד.
-3. המרה כלפי מטה בטוחה רק ללא מתודות וירטואליות.
-4. מתודות וירטואליות נקשרות בזמן ריצה (Dynamic Binding).
-5. אף תשובה אינה נכונה.
+1. Downcasting is forbidden in C++.
+2. A C-style cast is checked only at compile time.
+3. A downcast is safe only when there are no virtual methods.
+4. Virtual methods are bound at run time (dynamic binding).
+5. None of the answers is correct.
 :::hint
-הגידול הוא "חזקת השתיים הקטנה ביותר שיכולה להכיל את האינדקס `pos`", והתאים הישנים מועתקים לפי ערך אל המערך החדש, לפני שהמערך הישן נמחק ב-`delete[]`.
+Growth takes the smallest power of two that can hold the index `pos`. The old cells are copied by value into the new array, and only then is the old array released with `delete[]`.
 :::
 :::hint
-הפונקציה `foo` מקבלת את `vec` לפי ערך, ואז בונה את `my_vec` בהעתקה מהפרמטר הזה. ספרו שלושה אובייקטי vector שונים, לא אחד.
+`foo` receives `vec` by value, then constructs `my_vec` by copying that parameter. Count three distinct vector objects.
 :::
 :::hint
-`getAt` מחזיר `node*`. השורה שנוספה היא המרה בסגנון C (C-style cast). האפשרויות הרשמיות עוסקות במה שנכון לגבי פונקציות וירטואליות, לא בשאלה אם ההמרה הזו מומלצת.
+`getAt` returns `node*`. The added line is a C-style cast. The official choices are claims about virtual functions. Judge each claim on its own.
 :::
 :::solution
-א. בנאי ההעתקה מקצה מערך חדש בערימה בגודל המתאים ומעתיק אליו את כל ה-nodes. כיוון ש-`node` הוא פולימורפי, שכפול נכון חייב להשתמש במתודה `duplicate()` כדי למנוע חיתוך אובייקט (Object Slicing).
+a. The copy constructor allocates a new array on the heap, of the appropriate size, and copies every node into it. Because `node` is polymorphic, a correct copy calls `duplicate()`, so the new object has the real dynamic type. Copying a `node` by value would slice the object. That loss of the derived part is object slicing.
 
-ב. ישנם 3 אובייקטי vector שונים המפוזרים במחסנית: `vec` במסגרת של `main`, הפרמטר `vec` במסגרת של `foo` (העתק לפי ערך), ו-`my_vec` המקומי במסגרת של `foo`. לכל אחד מהם מערך דינמי משלו בערימה (בהנחה שבוצעה העתקה עמוקה נכונה). ה-vtable של `my_node` נוכח בזיכרון כיוון שרכיבי המערך פולימורפיים וכוללים פונקציות וירטואליות.
+b. Three distinct vector objects sit on the stack: `vec` in `main`'s frame, the parameter `vec` in `foo`'s frame (the object produced by pass by value), and the local `my_vec` in `foo`'s frame. Each has its own dynamic array on the heap, provided the copy was a correct deep copy. The vtable of `my_node` is present, because the elements are polymorphic and include virtual functions.
 
-ג. תשובה 4 נכונה. קריאה לפונקציות וירטואליות נפתרת בזמן ריצה על סמך האובייקט האמיתי בערימה. המרה בסגנון C מבוצעת "על עיוור" וללא בדיקת בטיחות בזמן ריצה (בשונה מ-`dynamic_cast`).
+c. Statement 4 is correct. A call of a virtual function is resolved at run time from the real object on the heap. A C-style cast converts the pointer with no run-time type check. `dynamic_cast` performs that check.
 :::
 :::
 
-על הציור הזה נשען הפרק [מצביעים ורפרנסים](topic:pointers): התא במחסנית מחזיק כתובת בלבד, והכתובת מועילה רק כל עוד הבלוק המוקצה בערימה חי. אותו ציור בדיוק הוא מה שפעולות ההעתקה ב[חוק השלושה](topic:rule-of-three) צריכות לשקף נכון.
+The chapter [Pointers and references](topic:pointers) builds on this drawing. A cell on the stack holds an address, and the address is useful while the block on the heap is still alive. The copy operations in [The rule of three](topic:rule-of-three) have to reproduce that drawing correctly.

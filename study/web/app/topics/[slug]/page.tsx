@@ -20,7 +20,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
     <article className="page chapter">
       <Visit courseId={course.id} slug={topic.id} />
       <header className="masthead">
-        <p className="kicker">פרק {String(index + 1).padStart(2, "0")}</p>
+        <p className="kicker">Chapter {String(index + 1).padStart(2, "0")}</p>
         <h1><Mixed text={topic.title} /></h1>
         <span className="masthead-num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
       </header>

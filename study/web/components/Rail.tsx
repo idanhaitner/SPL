@@ -73,10 +73,10 @@ export function Rail({
       <p className="course-name"><Link href="/"><Mixed text={title} /></Link></p>
       <SearchBox hits={hits} />
       <nav className="rail-nav">
-        <Link className={samePath(pathname, "/") ? "is-current" : ""} href="/">סקירה</Link>
-        <Link className={samePath(pathname, "/glossary") ? "is-current" : ""} href="/glossary">מונחים</Link>
+        <Link className={samePath(pathname, "/") ? "is-current" : ""} href="/">Overview</Link>
+        <Link className={samePath(pathname, "/glossary") ? "is-current" : ""} href="/glossary">Glossary</Link>
       </nav>
-      <p className="rail-label">פרקים</p>
+      <p className="rail-label">Chapters</p>
       <nav className="chapters-nav" ref={chaptersRef}>
         {mark && <span className="rail-mark" style={{ top: mark.top, height: mark.height }} />}
         {chapters.map((chapter, index) => {
@@ -91,7 +91,7 @@ export function Rail({
           );
         })}
       </nav>
-      <p className="progress-count">{total ? <><bdi dir="ltr">{done} / {total}</bdi> תרגילים שנפתרו</> : ""}</p>
+      <p className="progress-count">{total ? <>{done} / {total} exercises solved</> : ""}</p>
     </aside>
   );
 }

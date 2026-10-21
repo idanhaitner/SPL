@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${mono.variable}`}>
       <body>
         <ReadingProgress />
-        <a className="skip" href="#content">דלג לתוכן</a>
+        <a className="skip" href="#content">Skip to content</a>
         <div className="shell">
           <Rail
             courseId={course.id}

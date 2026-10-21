@@ -95,7 +95,7 @@ function SectionPop({
         <DirectionMark way={isPrev ? "back" : "forward"} />
       </span>
       <span className="section-pop-copy">
-        <span className="section-pop-kicker">{isPrev ? "הסעיף הקודם" : "הסעיף הבא"}</span>
+        <span className="section-pop-kicker">{isPrev ? "Previous section" : "Next section"}</span>
         <span className="section-pop-title">
           <Inline text={title} />
         </span>
@@ -109,8 +109,8 @@ function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "n
   const copy = (
     <span className="chapter-hop-copy">
       <span className="chapter-hop-kicker">
-        <span className="chapter-hop-badge">פרק {chapter.num}</span>
-        {isPrev ? "הפרק הקודם בקורס" : "הפרק הבא בקורס"}
+        <span className="chapter-hop-badge">Chapter {chapter.num}</span>
+        {isPrev ? "Previous chapter" : "Next chapter"}
       </span>
       <span className="chapter-hop-title">
         <Inline text={chapter.title} />
@@ -123,11 +123,11 @@ function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "n
       {isPrev ? (
         <>
           <DirectionMark way="back" />
-          חזרה לפרק {chapter.num}
+          Back to chapter {chapter.num}
         </>
       ) : (
         <>
-          התחל פרק {chapter.num}
+          Start chapter {chapter.num}
           <DirectionMark way="forward" />
         </>
       )}
@@ -195,7 +195,7 @@ export function ReadingFooter({
   const showCount = sectionCount != null && sectionCount > 1 && sectionIndex != null;
 
   return (
-    <nav className="chapter-foot" aria-label="המשך הקריאה">
+    <nav className="chapter-foot" aria-label="Continue reading">
       {hasSectionNav && <div ref={anchorRef} className="chapter-foot-anchor" />}
       {hasSectionNav && ready && (
         <>
@@ -211,8 +211,8 @@ export function ReadingFooter({
         <>
           {showCount && (
             <div className="foot-meta">
-              <span>סעיף {sectionIndex! + 1} מתוך {sectionCount}</span>
-              <span className="foot-done">סיום הפרק</span>
+              <span>Section {sectionIndex! + 1} of {sectionCount}</span>
+              <span className="foot-done">End of chapter</span>
             </div>
           )}
           <div className="chapter-hops">
@@ -270,7 +270,7 @@ export function SectionSwitch({
     <>
       {intro}
       {parts.length > 1 && (
-        <nav className="parts" aria-label="סעיפים">
+        <nav className="parts" aria-label="Sections">
           {parts.map((part, item) => (
             <button
               type="button"

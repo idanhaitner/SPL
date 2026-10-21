@@ -1,6 +1,6 @@
 ---
 id: design-by-contract
-title: תכנון לפי חוזה
+title: Design by contract
 sources:
   - "materials/lectures/Chapter 9 - Design by Contract.pptx"
   - "materials/sessions/SPL_PS5.pptx"
@@ -14,27 +14,27 @@ sources:
   - "materials/exams/24-a-solution.pdf"
 ---
 
-תכנון לפי חוזה (Design by Contract - DbC) מגדיר את הממשק בין פונקציה/מתודה לבין הקורא שלה כחוזה מחייב בעל שלושה סעיפים מרכזיים.
+Design by contract states the agreement between a method and its caller before any implementation is written. The caller must establish the precondition (תנאי קדם), and the method may assume that the precondition holds. When the method returns, it establishes the postcondition (תנאי סיום), provided the precondition held. The invariant (תנאי פנימי) holds whenever no public method of the object is running. A failure of one of these three statements names whose bug it is.
 
-## שלושת סעיפי החוזה
+## The three clauses of the contract
 
-:::definition id=def-dbc title="תנאי קדם, תנאי פנימי ותנאי סיום" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
+:::definition id=def-dbc title="Precondition, invariant, and postcondition" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
 
-- **תנאי קדם (Precondition):** התנאי שהקורא מתחייב לקיים לפני הקריאה למתודה. אם תנאי הקדם אינו מתקיים, התנהגות המתודה אינה מוגדרת (Undefined Behavior). הפרת תנאי קדם היא **באג של הקורא**.
-- **תנאי פנימי (Invariant):** התנאי המתקיים בכל מצב יציב של האובייקט (לפני הקריאה ולאחריה). הפרת התנאי הפנימי היא **באג במימוש המחלקה**.
-- **תנאי סיום (Postcondition):** ההתחייבות של המתודה לגבי מצב האובייקט וערך החזרה בסיום ריצתה, בהסתמך על כך שתנאי הקדם התקיים. הפרת תנאי הסיום היא **באג במימוש המתודה**.
+- **Precondition:** the condition the caller must establish before the call. The method may assume it. If the precondition does not hold, the method's behavior is undefined. A broken precondition is **the caller's bug**.
+- **Invariant:** a condition that holds whenever no public method of the object is running. A broken invariant is **a bug in the class implementation**.
+- **Postcondition:** what the method establishes about the object's state and the return value when it returns, provided the precondition held. A broken postcondition is **a bug in the method implementation**.
 :::
 
-![החוזה של crop, בסדר שבו קריאה פוגשת אותו: תנאי קדם, תנאי פנימי, תנאי סיום](../assets/figures/contract-clauses.svg)
+![The contract of crop, in the order a call meets it: precondition, invariant, postcondition](../assets/figures/contract-clauses.svg)
 
-תכנות הגנתי (Defensive Programming) כולל בדיקות בזמן ריצה וזריקת חריגות בעת קבלת קלט לא תקין. החוזה, לעומת זאת, מגדיר ברמת העיצוב על מי מוטלת האחריות לתקינות הנתונים.
+Defensive programming checks inputs at run time and throws when an input is invalid. A contract, at the level of the design, assigns who is responsible for the validity of the data.
 
-### עקרון הפרדת פקודות ושאילתות (CQS)
+### Command-query separation (CQS)
 
-כדי לאפשר ניסוח חוזים ברור ובדיקתם:
+Contracts are easier to state and to test when commands and queries are separate.
 
-- **שאילתה (Query):** מחזירה מידע מבלי לשנות את מצב האובייקט.
-- **פקודה (Command):** משנה את מצב האובייקט ואינה מחזירה ערך.
+- **Query:** returns information and leaves the object's state unchanged.
+- **Command:** changes the object's state and returns no value.
 
 ```java
 /**
@@ -63,10 +63,10 @@ public interface Stack<T> {
 
 ```
 
-הסימון `size()@pre` מייצג את ערך ה-`size()` כפי שהיה בכניסה למתודה.
+The notation `size()@pre` is the value of `size()` on entry to the method.
 
-:::problem id=worked-crop-contract title="חוזה של crop" source="materials/lectures/Chapter 9 - Design by Contract.pptx" kind=worked solution_origin=source
-נסח את תנאי הקדם, התנאי הפנימי ותנאי הסיום של המתודה `crop`:
+:::problem id=worked-crop-contract title="The contract for crop" source="materials/lectures/Chapter 9 - Design by Contract.pptx" kind=worked solution_origin=source
+State the precondition, the invariant, and the postcondition of `crop`:
 
 ```java
 /**
@@ -79,159 +79,159 @@ void crop(int x, int y, int w, int h);
 
 :::solution
 
-- **תנאי קדם:** הקואורדינטות `x, y` אינן שליליות, ומלבן החיתוך בגודל `w` על `h` מוכל כולו בתוך גבולות התמונה הנוכחיים.
-- **תנאי פנימי:** ממדי התמונה חיוביים, ואורך חוצץ הפיקסלים שווה ל-`width * height`.
-- **תנאי סיום:** ממדי התמונה מעודכנים ל-`w` ו-`h`, וחוצץ הפיקסלים מכיל את הפיקסלים של האזור שנחתך.
+- **Precondition:** the coordinates `x` and `y` are non-negative, and the crop rectangle of width `w` and height `h` lies entirely inside the current image bounds.
+- **Invariant:** the image dimensions are positive, and the length of the pixel buffer equals `width * height`.
+- **Postcondition:** the image dimensions are updated to `w` and `h`, and the pixel buffer holds the pixels of the cropped region.
 :::
 :::
 
 :::check id=chk-whose-bug
-`crop` נקרא עם רוחב שלילי. של מי הבאג, במונחי ההרצאה?
+`crop` is called with a negative width. Whose bug is that, in the terms of the lecture?
 
-- [ ] המימוש, כי התנאי הפנימי נכשל
-- [x] הקורא, כי תנאי קדם נכשל
-- [ ] אוסף-האשפה (Garbage Collector), כי החוצץ דלף
+- [ ] The implementation, because the invariant failed
+- [x] The caller, because a precondition failed
+- [ ] The garbage collector, because the buffer leaked
 
-תנאי קדם הוא החובה של הקורא. המתודה אינה חייבת לקיים דבר אחרי הקריאה הזאת.
+The caller must establish the precondition. When it does not hold, the method is not required to establish a postcondition for this call.
 :::
 
-## תרגול
+## Practice
 
-:::problem id=ps5-stack-contract title="חוזה של Stack" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
-כתוב את התנאי הפנימי של `Stack`, את תנאי הקדם ואת תנאי הסיום של `push`, ואת תנאי הקדם של `top`. `push` דוחה null. `top` מחזיר את הרכיב האחרון שנדחף ואינו מסיר אותו. `size` לעולם אינו שלילי, ול-`Stack` ריק יש גודל 0.
+:::problem id=ps5-stack-contract title="The contract for Stack" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
+Write the invariant of `Stack`, the precondition and the postcondition of `push`, and the precondition of `top`. `push` rejects null. `top` returns the last element that was pushed and does not remove it. `size` is never negative, and an empty `Stack` has size 0.
 
 :::hint
-`top` היא שאילתה. תנאי הסיום שלה אינו אומר ש-`size` משתנה.
+`top` is a query. Its postcondition does not say that `size` changes.
 :::
 :::hint
-השתמש ב-`size()@pre` אם צריך את הגודל הישן בתנאי הסיום של `push`.
+Use `size()@pre` when the postcondition of `push` needs the old size.
 :::
 :::hint
-עובדת ה-`Stack` הריק היא תנאי פנימי שמקשר את `isEmpty` ואת `size`, לא תנאי קדם של `push`.
+The fact about an empty `Stack` is an invariant that relates `isEmpty` and `size`. `push` is legal on an empty stack.
 :::
 :::solution
-תנאי פנימי: `size() >= 0`, ו-`isEmpty()` נכון בדיוק כש-`size()` הוא 0.
+Invariant: `size() >= 0`, and `isEmpty()` is true exactly when `size()` is 0.
 
-`push(obj)`: תנאי קדם `obj != null`. תנאי סיום: `size()` הוא `size()@pre + 1`, ו-`top()` שווה ל-`obj`.
+`push(obj)`: precondition `obj != null`. Postcondition: `size()` is `size()@pre + 1`, and `top()` equals `obj`.
 
-`top()`: תנאי קדם `!isEmpty()`. תנאי סיום: התוצאה שווה לרכיב האחרון שנדחף ועדיין לא הוסר, ו-`size()` אינו משתנה.
+`top()`: precondition `!isEmpty()`. Postcondition: the result equals the last element that was pushed and has not yet been removed, and `size()` is unchanged.
 
-בדיקה לתנאי הקדם קוראת ל-`push(null)` ומצפה לדחייה. בדיקה לתנאי הסיום רושמת את `size()`, דוחפת `"a"`, ובודקת ש-`size` גדל באחד וש-`top` הוא `"a"`. בדיקה לתנאי הפנימי בודקת את `size` לפני ואחרי. `pop` שגם מחזיר וגם מסיר קשה יותר לבדיקה; התרגול מפצל אותו ל-`top` ול-`removeTop` מהסיבה הזאת.
+A test of the precondition calls `push(null)` and expects rejection. A test of the postcondition records `size()`, pushes `"a"`, and checks that `size` grew by one and that `top` is `"a"`. A test of the invariant checks `size` before and after. A `pop` that both returns a value and removes it is harder to test. The exercise splits that operation into `top` and `removeTop` for this reason.
 :::
 :::
 
 :::examnote
-השאלה מדביקה אינטרפייס (interface) ואומרת "הגדר את התנאי הפנימי, ואת תנאי הקדם ואת תנאי הסיום של המתודה הזאת." המלכודת היא תנאי פנימי ששוכח את מקרה הריק, או תנאי סיום שנכון רק כשאף אחד אחר אינו משנה את האובייקט.
+The question pastes an interface and says to define the invariant, and the precondition and the postcondition of the given method. The trap is an invariant that forgets the empty case, or a postcondition that is written so it holds only when no other code changes the object.
 :::
 
-:::problem id=exam-16a-q1 title="חוזה של תור" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-ל-`Queue<T>` יש `add(T item)` ו-`remove()`.
+:::problem id=exam-16a-q1 title="The contract for a queue" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
+`Queue<T>` has `add(T item)` and `remove()`.
 
-a. הגדר תנאי פנימי לאינטרפייס, ותנאי קדם ותנאי סיום למתודות. הוסף מתודות לאינטרפייס אם צריך אותן כדי לנסח את החוזה.
+a. Define an invariant for the interface, and a precondition and a postcondition for the methods. Add methods to the interface if you need them in order to state the contract.
 
-b. השלם את `testAdd` ואת `testRemove` ב-`TestQueue`. `createQueue()` מחזיר את האובייקט בבדיקה. `setUp` בונה תור חדש.
+b. Complete `testAdd` and `testRemove` in `TestQueue`. `createQueue()` returns the object under test. `setUp` builds a new queue.
 
-c. השאלה מראה אחר כך את הפילוסופים הסועדים עם `Semaphore` שנכתב ביד, ושואלת על נעילה הדדית (deadlock), livelock, והרעבה (starvation). החלק הזה הוא מקביליות. כאן, ענה על החוזה.
+c. The question later shows the dining philosophers with a hand-written `Semaphore`, and asks about deadlock, livelock, and starvation. That part belongs to concurrency. Here, answer the contract.
 
 :::hint
-ל-`remove` על תור ריק אין תנאי סיום ישר, אלא אם אוסרים את הקריאה.
+`remove` on an empty queue has no immediate postcondition, unless the contract forbids the call.
 :::
 :::hint
-צריך שאילתה, `size` או `isEmpty`, אחרת אי אפשר לנסח את התנאי הפנימי.
+The contract needs a query, `size` or `isEmpty`. Without one, the invariant cannot be stated.
 :::
 :::hint
-בדיקה שרק קוראת ל-`add` ולעולם אינה מסתכלת על התור אינה בודקת תנאי סיום.
+A test that only calls `add` and never inspects the queue does not test a postcondition.
 :::
 :::solution
-הוסף `int size()` ו-`boolean isEmpty()`.
+Add `int size()` and `boolean isEmpty()`.
 
-תנאי פנימי: `size() >= 0`, ו-`isEmpty()` אם ורק אם `size() == 0`. הרכיבים בסדר ההכנסה: ה-`remove` הבא מניב את ה-`add` המוקדם ביותר שעדיין לא הוסר.
+Invariant: `size() >= 0`, and `isEmpty()` if and only if `size() == 0`. Elements stay in insertion order: the next `remove` yields the earliest `add` that has not yet been removed.
 
-`add(item)`: תנאי קדם ש-`item` עומד במה שהתור מבטיח על null (אם null אסור, אמור את זה). תנאי סיום: `size()` גדול באחד, ורצף מאוחר של `remove` עדיין מניב את הרכיבים הישנים, ואחריהם את `item`.
+`add(item)`: a precondition that `item` meets whatever the queue promises about null (if null is forbidden, say so). Postcondition: `size()` is larger by one, and a later sequence of `remove` calls still yields the old elements and then `item`.
 
-`remove()`: תנאי קדם `!isEmpty()`. תנאי סיום: `size()` קטן באחד, והרכיב שהוסר היה הישן ביותר.
+`remove()`: precondition `!isEmpty()`. Postcondition: `size()` is smaller by one, and the removed element was the oldest.
 
-`testAdd` אינו רושם כלום, דוחף רכיב אחד, ובודק `size() == 1` ושהרכיב הוא זה ש-`remove` מחזיר. `testRemove` על תור ריק מצפה לכישלון תנאי הקדם. `testRemove` אחרי `add` אחד בודק ש-`size` חוזר ל-0 ושהערך תואם. `setUp` חייב לתת לכל בדיקה תור חדש, כדי ששאריות לא ייראו כמו כישלונות של התנאי הפנימי.
+`testAdd` records nothing beforehand. It adds one element, then checks `size() == 1` and that the element is the one `remove` returns. `testRemove` on an empty queue expects the precondition to fail. `testRemove` after one `add` checks that `size` returns to 0 and that the value matches. `setUp` must give every test a fresh queue, so leftovers do not look like failures of the invariant.
 :::
 :::
 
-:::problem id=exam-18a-q2 title="מחסנית חסומה" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
-`Stack<T>` חסום. `push` רשאי לשמור null. `pop` מסיר. `size` הוא המספר הנוכחי. `capacity` הוא המקסימום.
+:::problem id=exam-18a-q2 title="A bounded stack" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
+`Stack<T>` is bounded. `push` may store null. `pop` removes. `size` is the current number of elements. `capacity` is the maximum.
 
-a. הגדר תנאי פנימי.
+a. Define an invariant.
 
-נסח גם תנאי קדם ותנאי סיום ל-`push` ול-`pop`. שאר השאלה, על הפיכת המימוש לבטוח, הוא פרק המקביליות.
+Also state a precondition and a postcondition for `push` and for `pop`. The rest of the question, about making the implementation safe, belongs to the concurrency chapter.
 
 :::hint
-החסם הוא הסעיף המעניין. `size` אינו רק אי-שלילי.
+The bound is the clause that matters. `size` is more than a non-negative count.
 :::
 :::hint
-`push` של null מותר במפורש, ולכן null אינו כישלון של תנאי קדם.
+`push` of null is explicitly allowed, so null is not a precondition failure.
 :::
 :::hint
-`pop` על `Stack` ריק הוא באג של הקורא אם נותנים לו תנאי קדם, או באג של המתודה אם הבטחת ערך בכל מקרה.
+`pop` on an empty `Stack` is the caller's bug if the contract gives it a precondition, and the method's bug if the contract promises a value in every case.
 :::
 :::solution
-תנאי פנימי: `0 <= size() <= capacity()`, ו-`capacity()` אינו משתנה.
+Invariant: `0 <= size() <= capacity()`, and `capacity()` does not change.
 
-`push(data)`: תנאי קדם `size() < capacity()`. null מותר. תנאי סיום: `size()` הוא `size()@pre + 1`, ו-`pop()` מניב את `data`.
+`push(data)`: precondition `size() < capacity()`. Null is allowed. Postcondition: `size()` is `size()@pre + 1`, and `pop()` yields `data`.
 
-`pop()`: תנאי קדם `size() > 0`. תנאי סיום: `size()` הוא `size()@pre - 1`, והתוצאה היא הרכיב האחרון שנדחף ועדיין ב-`Stack`.
+`pop()`: precondition `size() > 0`. Postcondition: `size()` is `size()@pre - 1`, and the result is the last element that was pushed and is still on the `Stack`.
 
-מימוש שמגדיל את `size` מעבר ל-`capacity`, או שחוזר מ-`push` בלי לשמור את `data`, שובר את תנאי הסיום גם אם מנעול היה מוחזק. המנעול אינו התנאי הפנימי.
+An implementation that lets `size` grow past `capacity`, or that returns from `push` without storing `data`, breaks the postcondition even if a lock was held. The invariant is still the bound on `size` and `capacity`. A held lock is a separate fact about the implementation.
 :::
 :::
 
-:::problem id=exam-19a-q2 title="תנאי פנימי של עץ" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
-ל-`SortedBinaryTree<T extends Comparable<T>>` יש `getData`, `getLeft`, `getRight`, ו-`insert`.
+:::problem id=exam-19a-q2 title="The invariant of a tree" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
+`SortedBinaryTree<T extends Comparable<T>>` has `getData`, `getLeft`, `getRight`, and `insert`.
 
-a. הגדר את התנאי הפנימי.
+a. Define the invariant.
 
-המימוש שומר את `data`, `left` ו-`right` בשדות `volatile`, דוחה null בחריגה, ומכניס על ידי השוואה עם `data`. חלקים מאוחרים שואלים אם המימוש הזה בטוח לחוטים. ענה כאן על התנאי הפנימי כעובדה על עץ שקט.
+The implementation stores `data`, `left`, and `right` in `volatile` fields, rejects null by throwing, and inserts by comparing with `data`. Later parts ask whether this implementation is safe for threads. Here, answer the invariant as a fact about a quiet tree.
 
 :::hint
-כל צומת הוא עץ. התנאי הפנימי חייב להתקיים לילדים, לא רק לשורש.
+Every node is a tree. The invariant must hold for the children, as well as for the root.
 :::
 :::hint
-`compareTo` מחליט את הצד. שווים אינם נכנסים לשני הילדים.
+`compareTo` decides the side. An equal key is not inserted under both children.
 :::
 :::hint
-נתוני null כבר נדחים על ידי `insert`. התנאי הפנימי יכול לומר `getData() != null`.
+Null data is already rejected by `insert`. The invariant can say `getData() != null`.
 :::
 :::solution
-לכל צומת, `getData() != null`. אם `getLeft()` אינו null, אז `getData().compareTo(getLeft().getData()) > 0` והילד השמאלי מקיים את אותו תנאי פנימי. אם `getRight()` אינו null, אז `getData().compareTo(getRight().getData()) < 0` והילד הימני מקיים אותו. כפילויות אינן מוכנסות, ולכן לאף ילד אין נתון ששווה להורה שלו.
+For every node, `getData() != null`. If `getLeft()` is not null, then `getData().compareTo(getLeft().getData()) > 0` and the left child satisfies the same invariant. If `getRight()` is not null, then `getData().compareTo(getRight().getData()) < 0` and the right child satisfies it. Duplicates are not inserted, so no child holds a datum equal to its parent.
 
-תנאי הקדם של `insert` הוא ארגומנט שאינו null. תנאי הסיום הוא שהערך בעץ, העץ עדיין ממוין, וערך שכבר היה נוכח עדיין נוכח פעם אחת.
+The precondition of `insert` is a non-null argument. The postcondition is that the value is in the tree, the tree is still sorted, and a value that was already present is still present once.
 
-`volatile` הופך כתיבה של רפרנס (reference) יחיד לנראית. הוא אינו הופך את עדכון שלושת השדות של `insert` לאטומי, ולכן שני חוטים יכולים לשבור את התנאי הפנימי הזה. זה כישלון מקביליות של המימוש, לא חולשה בתנאי הפנימי שהתבקשת לכתוב.
+`volatile` makes a write of a single reference visible to other threads. It does not make the three field updates inside `insert` atomic, so two threads can break this invariant. That is a concurrency failure of the implementation. The invariant you were asked to write remains the right fact about a quiet tree.
 :::
 :::
 
-:::problem id=exam-24a-q2 title="חוזה של קבוצה" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-ל-`Set<T>` יש `contains` ו-`add`.
+:::problem id=exam-24a-q2 title="The contract for a set" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
+`Set<T>` has `contains` and `add`.
 
-a. הגדר תנאי פנימי. הגדר תנאי קדם ותנאי סיום ל-`add`. הרחב את האינטרפייס אם צריך שאילתה כדי לנסח אותם.
+a. Define an invariant. Define a precondition and a postcondition for `add`. Extend the interface if you need a query in order to state them.
 
-ה-`SetImpl` הנתון הוא רשימה מקושרת עם ראש `volatile`. `add` הולך על הרשימה וחוזר אם `equals` פוגע, אחרת הוא מקשר צומת חדש בסוף. `contains` אינו מוצג ואינו נדרש. שאר השאלה מבקשת להפוך את `add` לבטוח. נסח קודם את החוזה.
+The given `SetImpl` is a linked list with a `volatile` head. `add` walks the list and returns if `equals` matches an element. Otherwise it links a new node at the end. The body of `contains` is not shown, and you are not asked to write it. The rest of the question asks you to make `add` safe. State the contract first.
 
 :::hint
-קבוצה אינה מכילה כפילויות. התנאי הפנימי עוסק בשייכות, לא בכך שהרשימה ממוינת.
+A set contains no duplicates. The invariant states membership. Sorting the list is outside this contract.
 :::
 :::hint
-`add` של רכיב שכבר נוכח אינו מגדיל את הרשימה.
+`add` of an element that is already present does not grow the list.
 :::
 :::hint
-מותר להוסיף `size`, או לנסח שייכות עם `contains`, שכבר על האינטרפייס.
+You may add `size`, or state membership with `contains`, which is already on the interface.
 :::
 :::solution
-תנאי פנימי: אין שני צמתים שהם `equals`, ו-`contains(x)` נכון בדיוק כשצומת כלשהו מ-`head` מחזיק רכיב ששווה ל-`x`. לרשימה אין מעגל.
+Invariant: no two nodes are `equals`, and `contains(x)` is true exactly when some node reachable from `head` holds an element equal to `x`. The list has no cycle.
 
-`add(obj)`: תנאי קדם `obj != null` (המימוש קורא ל-`equals` על רכיבים, ורכיב null הופך את זה ללא בטוח אלא אם מציינים אותו). תנאי סיום: `contains(obj)`, ולכל `y` שהיה כלול לפני הקריאה, `contains(y)` עדיין מתקיים. אם `contains(obj)` כבר היה נכון, מספר הצמתים אינו משתנה. אחרת מספר הצמתים גדול באחד.
+`add(obj)`: precondition `obj != null` (the implementation calls `equals` on elements, and a null element makes that call unsafe unless the contract names null). Postcondition: `contains(obj)`, and for every `y` that was a member before the call, `contains(y)` still holds. If `contains(obj)` was already true, the number of nodes is unchanged. Otherwise the number of nodes is larger by one.
 
-ה-`add` שפורסם תואם את תנאי הסיום הזה רק כשחוט אחד מריץ אותו. שני חוטים יכולים שניהם לעבור את בדיקת ה-`equals` ושניהם לקשר, או שניהם לראות `head == null` ושניהם להציב את `head`, ולאבד רכיב. החוזה אינו מזכיר חוטים. המימוש הוא זה שצריך להגן עליו.
+The published `add` meets this postcondition only when one thread runs it. Two threads can both pass the `equals` check and both link a node, or both see `head == null` and both assign `head`, and an element is lost. The contract says nothing about threads. The implementation is what has to protect the contract.
 :::
 :::
 
-חוזים הם המשפטים שמתודה מקבילית חייבת לקיים. בהמשך, [תקשורת](topic:networking) היא הערוץ בין תהליכים.
+A contract is the set of statements a concurrent method must still establish. [Networking](topic:networking) is the channel between processes, taken up later.
 
-תנאי פנימי שנכון רק בחוט (thread) יחיד אינו תנאי פנימי של אובייקט במקביליות (concurrency). כבר ראית את השזירה ב[מקביליות](topic:concurrency). כתוב את התנאי הפנימי כעובדה על הנתונים, לא כמשפט "המתודה היא `synchronized`".
+Under concurrency, the invariant is a fact about the data that holds whenever no public method of the object is running. You have already seen interleaving in [Concurrency](topic:concurrency). Write the invariant as that fact about the data. A sentence that only says the method is `synchronized` leaves the fact unstated.

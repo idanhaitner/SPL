@@ -67,12 +67,12 @@ async function openHidden(page) {
     await folded.first().click();
   }
   for (let guard = 0; guard < 200; guard++) {
-    const hint = page.getByRole("button", { name: /הצג רמז|הרמז הבא/ });
+    const hint = page.getByRole("button", { name: /Show hint|Next hint/ });
     if ((await hint.count()) === 0) break;
     await hint.first().click();
   }
   for (let guard = 0; guard < 80; guard++) {
-    const solutions = page.getByRole("button", { name: "הצג פתרון" });
+    const solutions = page.getByRole("button", { name: "Show solution" });
     if ((await solutions.count()) === 0) break;
     await solutions.first().click();
   }
@@ -223,10 +223,10 @@ try {
   }
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(base + "/", { waitUntil: "networkidle" });
-  await page.locator("#q").fill("מחסנית");
+  await page.locator("#q").fill("stack");
   const hits = page.locator(".search-results a");
   await hits.first().waitFor({ timeout: 3000 }).catch(() => {});
-  if ((await hits.count()) === 0) failures.push("search for מחסנית returned nothing");
+  if ((await hits.count()) === 0) failures.push("search for stack returned nothing");
   const reducedContext = await browser.newContext({
     reducedMotion: "reduce",
     viewport: { width: 1280, height: 900 },

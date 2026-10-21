@@ -8,25 +8,25 @@
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
   <rect width="720" height="280" fill="#f6f1e7" />
-  <text x="190" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">חוט 1</text>
-  <text x="520" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">חוט 2</text>
+  <text x="190" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">thread 1</text>
+  <text x="520" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">thread 2</text>
   <g class="draw">
     <rect x="48" y="60" width="280" height="44" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
-    <text x="188" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="rtl" unicode-bidi="embed">קורא את <tspan direction="ltr" unicode-bidi="embed">count</tspan>, רואה 0</text>
+    <text x="188" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="ltr">reads <tspan direction="ltr">count</tspan>, sees 0</text>
     <rect x="380" y="60" width="280" height="44" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
-    <text x="520" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="rtl" unicode-bidi="embed">קורא את <tspan direction="ltr" unicode-bidi="embed">count</tspan>, רואה 0</text>
+    <text x="520" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="ltr">reads <tspan direction="ltr">count</tspan>, sees 0</text>
   </g>
   <g class="draw d2">
     <rect x="48" y="118" width="280" height="44" rx="10" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="188" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="rtl" unicode-bidi="embed">מוסיף 1, מחזיק 1</text>
+    <text x="188" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="ltr">adds 1, holds 1</text>
     <rect x="380" y="118" width="280" height="44" rx="10" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="520" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="rtl" unicode-bidi="embed">מוסיף 1, מחזיק 1</text>
+    <text x="520" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="ltr">adds 1, holds 1</text>
   </g>
   <g class="draw d3">
     <rect x="48" y="176" width="280" height="44" rx="10" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
-    <text x="188" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="rtl" unicode-bidi="embed">כותב 1</text>
+    <text x="188" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="ltr">writes 1</text>
     <rect x="380" y="176" width="280" height="44" rx="10" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
-    <text x="520" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="rtl" unicode-bidi="embed">כותב 1</text>
+    <text x="520" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#2a3142" direction="ltr">writes 1</text>
   </g>
-  <text class="draw d4" x="360" y="256" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">‏<tspan direction="ltr" unicode-bidi="embed">count</tspan> הוא 1, לא 2</text>
+  <text class="draw d4" x="360" y="256" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22" direction="ltr"><tspan direction="ltr">count</tspan> is 1, not 2</text>
 </svg>

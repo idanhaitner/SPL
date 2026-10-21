@@ -1,30 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300">
   <rect width="760" height="300" fill="#f6f1e7" />
   <rect x="28" y="36" width="132" height="72" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="94" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">נוצר</text>
-  <text x="94" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c6574">Created</text>
+  <text x="94" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="ltr">Created</text>
   <line x1="164" y1="72" x2="214" y2="72" stroke="#c47b2b" stroke-width="2" />
   <polygon points="214,72 202,66 202,78" fill="#c47b2b" />
   <rect x="218" y="36" width="132" height="72" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="284" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">מוכן</text>
-  <text x="284" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c6574">Runnable</text>
+  <text x="284" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="ltr">Runnable</text>
   <line x1="354" y1="64" x2="404" y2="64" stroke="#c47b2b" stroke-width="2" />
   <polygon points="404,64 392,58 392,70" fill="#c47b2b" />
   <line x1="404" y1="84" x2="354" y2="84" stroke="#c47b2b" stroke-width="2" />
   <polygon points="354,84 366,78 366,90" fill="#c47b2b" />
   <rect x="408" y="36" width="132" height="72" rx="14" fill="#fffdf8" stroke="#c47b2b" stroke-width="2" />
-  <text x="474" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">רץ</text>
-  <text x="474" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c6574">Running</text>
+  <text x="474" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="ltr">Running</text>
   <line x1="544" y1="72" x2="594" y2="72" stroke="#c47b2b" stroke-width="2" />
   <polygon points="594,72 582,66 582,78" fill="#c47b2b" />
   <rect x="598" y="36" width="136" height="72" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="666" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">הסתיים</text>
-  <text x="666" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c6574">Terminated</text>
+  <text x="666" y="68" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="ltr">Terminated</text>
   <line x1="474" y1="108" x2="474" y2="168" stroke="#c47b2b" stroke-width="2" />
   <polygon points="474,168 468,156 480,156" fill="#c47b2b" />
   <rect x="392" y="172" width="164" height="72" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="474" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">חסום</text>
-  <text x="474" y="226" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c6574">Blocked</text>
+  <text x="474" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="ltr">Blocked</text>
   <path d="M392 208 H300 V108" fill="none" stroke="#c47b2b" stroke-width="2" />
   <polygon points="300,108 294,120 306,120" fill="#c47b2b" />
 </svg>

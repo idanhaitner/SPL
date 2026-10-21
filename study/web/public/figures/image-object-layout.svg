@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340">
   <rect width="760" height="340" fill="#f6f1e7" />
-  <text x="168" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">במחסנית</text>
+  <text x="168" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">on the stack</text>
   <rect x="28" y="56" width="280" height="252" rx="16" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
   <text x="168" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#2a3142">Image</text>
   <rect x="48" y="116" width="240" height="48" rx="10" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
@@ -14,10 +14,10 @@
   <text x="272" y="266" text-anchor="end" font-family="ui-monospace, monospace" font-size="14" fill="#5c5348">char*</text>
   <line x1="308" y1="260" x2="424" y2="196" stroke="#c47b2b" stroke-width="2" />
   <polygon points="430,190 414,188 420,204" fill="#c47b2b" />
-  <text x="352" y="176" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#8a5a22" direction="rtl" unicode-bidi="embed">מצביע</text>
-  <text x="590" y="72" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">בערימה</text>
+  <text x="352" y="176" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#8a5a22" direction="ltr">pointer</text>
+  <text x="590" y="72" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">on the heap</text>
   <rect x="440" y="88" width="292" height="188" rx="16" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-  <text x="586" y="128" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="rtl" unicode-bidi="embed">חוצץ בתים</text>
+  <text x="586" y="128" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" direction="ltr">byte buffer</text>
   <rect x="464" y="152" width="244" height="52" rx="10" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
   <line x1="512" y1="152" x2="512" y2="204" stroke="#c9dcc4" stroke-width="1.5" />
   <line x1="560" y1="152" x2="560" y2="204" stroke="#c9dcc4" stroke-width="1.5" />
@@ -28,5 +28,5 @@
   <text x="584" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">2</text>
   <text x="632" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#5c5348">...</text>
   <text x="684" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">n</text>
-  <text x="586" y="244" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="rtl" unicode-bidi="embed">‏<tspan direction="ltr" unicode-bidi="embed">width</tspan> כפול <tspan direction="ltr" unicode-bidi="embed">height</tspan> בתים</text>
+  <text x="586" y="244" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr"><tspan direction="ltr">width</tspan> times <tspan direction="ltr">height</tspan> bytes</text>
 </svg>

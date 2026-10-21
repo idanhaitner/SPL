@@ -1,21 +1,21 @@
 ---
 id: serialization
-title: סיריאליזציה
+title: Serialization
 sources:
   - "materials/lectures/Chapter 12 - Serialization.pptx"
 ---
 
-שרת התמונות ב-Reactor דיבר פרוטוקול פרטי: שם קובץ נכנס, בתי הקובץ יוצאים. השרת הבא שולח אובייקטים. אובייקט אינו מערך בתים עד שמשהו עובר על השדות (field) שלו וכותב אותם. ההליכה הזו היא סיריאליזציה (serialization).
+Serialization (סיריאליזציה) records an object as a byte sequence so a later run, or another process, can rebuild it. The image server in the Reactor chapter spoke a private protocol: a file name went in, and the file's bytes came out. The next server sends objects. An object becomes a byte array only when something walks its fields and writes them down. That byte sequence records the type, the shape of the fields, and the field values.
 
-## מה נכתב
+## What is written
 
-:::definition id=def-serialization title="סיריאליזציה" source="materials/lectures/Chapter 12 - Serialization.pptx"
-סיריאליזציה היא ייצוג של אובייקט כרצף של בתים. היא כוללת את טיפוס האובייקט, את צורת השדות שלו, ואת ערכי השדות. דה-סיריאליזציה (deserialization) בונה אובייקט מחדש מהרצף הזה.
+:::definition id=def-serialization title="Serialization" source="materials/lectures/Chapter 12 - Serialization.pptx"
+Serialization is a representation of an object as a sequence of bytes. The sequence records the type of the object, the shape of its fields, and the values of the fields. Deserialization builds an object back from that sequence.
 
-הזוג שומר שדות פרימיטיביים ושדות אובייקט. הוא יכול להעביר ערך בין מכונות ובין JVM-ים, והבתים יכולים לנוע בקובץ או על שקע (socket). מה שהוא אינו שומר הוא הזהות של אובייקט הערימה (heap) המקורי. תוצאת קריאת הבתים היא אובייקט חדש עם אותם ערכי שדות.
+The two operations preserve primitive fields and object fields. They can carry a value between machines and between JVMs, and the bytes can travel in a file or on a socket. Reading the bytes produces a new object with the same field values. The identity of the original heap object is not part of the sequence.
 :::
 
-`Serializable` הוא ממשק סימון (marker interface). אין לו מתודות. הוא דגל שה-JVM בודק. `ObjectOutputStream` ו-`ObjectInputStream` מסרבים לאובייקט שהמחלקה שלו אינה מממשת אותו.
+`Serializable` is a marker interface. It has no methods. It is a flag the JVM checks. `ObjectOutputStream` and `ObjectInputStream` refuse an object whose class does not implement it.
 
 ```java
 public final class Pet implements Serializable {
@@ -38,13 +38,13 @@ try (var in = new ObjectInputStream(Files.newInputStream(path))) {
 }
 ```
 
-קבוע ה-enum נכתב בשמו, ה-`String` בתווים שלו, ה-`int` בביטים שלו. בדרך חזרה, `readObject` מקצה `Pet` חדש. `copy == pet` הוא false. `copy.name.equals(pet.name)` הוא true.
+An enum constant is written by its name, a `String` by its characters, and an `int` by its bits. On the way back, `readObject` allocates a new `Pet`. `copy == pet` is false. `copy.name.equals(pet.name)` is true.
 
-![writeObject שומר את name ואת age ומדלג על ה-hash שהוא transient. readObject בונה Pet אחר שה-hash שלו מתחיל ב-null](../assets/figures/serialize-object.svg)
+![writeObject saves name and age and skips the hash, which is transient. readObject builds another Pet whose hash starts as null](../assets/figures/serialize-object.svg)
 
-### מה מדלגים עליו
+### What is left out
 
-שדות סטטיים שייכים למחלקה, לא לאובייקט, ולכן אינם נכתבים. גם שדה שמסומן `transient` אינו נכתב. הדוגמה בהרצאה היא hash שמור במטמון:
+Static fields belong to the class, and every instance shares them, so the stream omits them. A field marked `transient` is omitted as well. The lecture's example is a cached hash:
 
 ```java
 private transient Integer hash;
@@ -54,18 +54,18 @@ private transient Integer hash;
 }
 ```
 
-אחרי דה-סיריאליזציה `hash` הוא null, וה-`hashCode` הבא מחשב אותו מחדש. זו הנקודה של `transient`: השדה הוא מטמון, או חוט (thread), או שקע, משהו שאין לו משמעות ב-JVM אחר. שכחה של `transient` על `Thread` או על `OutputStream` גורמת ל-`writeObject` לזרוק, כי האובייקטים האלה אינם `Serializable`.
+After deserialization, `hash` is null, and the next `hashCode` computes it again. That is the point of `transient`: the field is a cache, or a thread, or a socket, something that has no meaning in another JVM. Forgetting `transient` on a `Thread` or an `OutputStream` makes `writeObject` throw, because those objects are not `Serializable`.
 
-### גרסאות
+### Versions
 
-שינוי מחלקה שכבר `Serializable` הוא בעיית תאימות. כתבתם קובץ, אחר כך שיניתם את המחלקה, ואז ניסיתם לקרוא את הקובץ. `serialVersionUID` הוא מספר הגרסה שאתם מקצים כדי שה-JVM יוכל להבדיל בין המחלקות האלה. כלל האצבע של ההרצאה: זרם ישן קריא למחלקה החדשה רק כשהשינוי נמצא ברשימת התואמים.
+Changing a class that is already `Serializable` is a compatibility problem. You wrote a file, then changed the class, then tried to read the file. `serialVersionUID` is the version number you assign so the JVM can tell these classes apart. The lecture's rule of thumb is that an old stream stays readable by the new class only when the change is on the compatible list.
 
-תואם: הוספת שדה (הוא חוזר כברירת המחדל, `null` או `0` או `false`), שינוי `public` / `protected` / `private`, הוספת שדה `static` או `transient`, שינוי סדר השדות.
+Compatible changes: adding a field (it comes back as the default, `null` or `0` or `false`), changing `public` / `protected` / `private`, adding a `static` or `transient` field, and changing the order of the fields.
 
-לא תואם: הסרה או שינוי הטיפוס של שדה שאינו `transient`, שינוי המחלקה בהיררכיה בדרכים שההרצאה מונה כשוברות. אי-התאמה של `serialVersionUID` מכשילה את הקריאה גם אם השדות היו מתאימים.
+Incompatible changes: removing a field that is not `transient`, or changing its type, and changing a class in the hierarchy in the ways the lecture counts as breaking. A mismatch of `serialVersionUID` fails the read even when the fields would otherwise have matched.
 
-:::problem id=worked-transient-hash title="שדה transient" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
-`pet` עבר סיריאליזציה אחרי ש-`hashCode` כבר מילא את המטמון. מה `hash` מכיל באובייקט ש-`readObject` מחזיר, ומה `name` מכיל?
+:::problem id=worked-transient-hash title="A transient field" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
+`pet` was serialized after `hashCode` had already filled the cache. What does `hash` contain in the object that `readObject` returns, and what does `name` contain?
 
 ```java
 public final class Pet implements Serializable {
@@ -75,26 +75,26 @@ public final class Pet implements Serializable {
 ```
 
 :::solution
-`name` הוא `"A"`, כי שדה אובייקט רגיל הוא חלק מהזרם. `hash` הוא null, כי שדות `transient` אינם נכתבים והאובייקט החדש מתחיל מברירת המחדל. ה-`hashCode` הראשון על העותק מחשב את המטמון מחדש. שני ה-`Pet` הם אובייקטים שונים.
+`name` is `"A"`, because an ordinary object field is part of the stream. `hash` is null, because `transient` fields are not written and the new object starts from the default. The first `hashCode` on the copy computes the cache again. The two `Pet` objects are different objects.
 :::
 :::
 
 :::check id=chk-marker
-למה `class Pet` בלי `implements Serializable` נכשל ב-`writeObject`?
+Why does `class Pet` without `implements Serializable` fail in `writeObject`?
 
-- [ ] כי ל-`Pet` אין מתודת `writeObject` משלו
-- [x] כי `Serializable` הוא ממשק הסימון שהזרם בודק, והוא אינו מצהיר על מתודות
-- [ ] כי מחלקות `final` אינן ניתנות לסיריאליזציה
+- [ ] Because `Pet` has no `writeObject` method of its own
+- [x] Because `Serializable` is the marker interface the stream checks, and it declares no methods
+- [ ] Because `final` classes cannot be serialized
 
-ההרצאה קוראת ל-`Serializable` ממשק סימון: אין מתודות, והזרמים מסרבים לאובייקט בלעדיו.
+The lecture calls `Serializable` a marker interface: it has no methods, and the streams refuse an object that does not implement it.
 :::
 
 :::trap
-שדה שמצביע על אובייקט שאינו ניתן לסיריאליזציה מכשיל את כל ה-`writeObject`, גם אם לא התכוונתם לשלוח את השדה הזה. סמנו אותו `transient` ושחזרו אותו אחרי הקריאה, או אל תצביעו עליו מאובייקט שניתן לסיריאליזציה.
+A field that points at an object that cannot be serialized makes the whole `writeObject` fail, even when you did not mean to send that field. Mark the field `transient` and restore it after the read, or keep the non-serializable object out of the graph of a serializable one.
 :::
 
 :::trap
-הסתמכות על `serialVersionUID` המחושב אומרת שעריכה שנראית תמימה משנה את המזהה וקבצים ישנים מפסיקים להיטען. ההרצאה רוצה מזהה מפורש כשהמחלקה היא חלק מפרוטוקול.
+Relying on the computed `serialVersionUID` means an edit that looks harmless changes the identifier, and old files stop loading. The lecture wants an explicit identifier when the class is part of a protocol.
 :::
 
-פרוטוקול Reactor יכול להעביר `MessageEncoderDecoder<Serializable>` סביב הבתים האלה. המקודד הוא `ObjectOutputStream` בדרך החוצה ו-`ObjectInputStream` בדרך פנימה, ממוסגר כך שהמפענח יודע מתי נתח זרם נגמר. [אחסון](topic:persistence) הוא הדרך האחרת לשמור אובייקט, וההרצאה נפתחת באמירה למה אוסף של קבצים שעברו סיריאליזציה הוא בסיס נתונים גרוע: אי אפשר לחפש שדה אחד בלי לקרוא כל אובייקט, עדכון כותב מחדש את כל הגרף, וטרנזקציות הן הבעיה שלכם.
+A Reactor protocol can carry these bytes inside a `MessageEncoderDecoder<Serializable>`. The encoder is an `ObjectOutputStream` on the way out and an `ObjectInputStream` on the way in, framed so the decoder knows when a chunk of the stream has ended. [Persistence](topic:persistence) is the other way to keep an object. The lecture opens by saying why a pile of serialized files is a poor database: a search for one field has to read every object, an update rewrites the whole graph, and transactions are left to the application.

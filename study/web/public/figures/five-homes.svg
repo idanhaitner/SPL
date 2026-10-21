@@ -9,40 +9,40 @@
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
   <rect width="720" height="640" fill="#f6f1e7" />
-  <text x="684" y="32" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">כתובות גבוהות</text>
+  <text x="684" y="32" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">high addresses</text>
   <g class="draw">
     <rect x="32" y="48" width="656" height="128" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
-    <text x="668" y="76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">מחסנית, הקריאה השנייה ל-<tspan direction="ltr" unicode-bidi="embed">note</tspan></text>
-    <text x="668" y="104" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">המסגרת של <tspan direction="ltr" unicode-bidi="embed">main</tspan></text>
+    <text x="668" y="76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">stack, second call to <tspan direction="ltr">note</tspan></text>
+    <text x="668" y="104" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
     <text x="668" y="130" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">x = 1</text>
-    <text x="540" y="130" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">מקומי, נעלם בחזרה</text>
+    <text x="540" y="130" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">local, gone on return</text>
     <text x="668" y="156" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">box</text>
-    <text x="540" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">מצביע, נעלם גם הוא</text>
+    <text x="540" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">pointer, gone too</text>
   </g>
   <g class="draw d2">
     <rect x="32" y="188" width="656" height="88" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
-    <text x="668" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">ערימה</text>
+    <text x="668" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">heap</text>
     <text x="668" y="248" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">int 1</text>
-    <text x="540" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">הבלוק ש-<tspan direction="ltr" unicode-bidi="embed">new</tspan> החזיר, רק <tspan direction="ltr" unicode-bidi="embed">box</tspan> מצביע אליו</text>
+    <text x="540" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">the block <tspan direction="ltr">new</tspan> returned; only <tspan direction="ltr">box</tspan> points to it</text>
   </g>
   <g class="draw d3">
     <rect x="32" y="288" width="656" height="72" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="668" y="318" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">משתנים לא מאותחלים</text>
+    <text x="668" y="318" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">uninitialized variables</text>
     <text x="668" y="342" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">scratch</text>
   </g>
   <g class="draw d4">
     <rect x="32" y="372" width="656" height="112" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="668" y="402" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">משתנים מאותחלים</text>
+    <text x="668" y="402" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">initialized variables</text>
     <text x="668" y="430" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">ready = 1</text>
-    <text x="500" y="430" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">גלובלי, כל הריצה</text>
+    <text x="500" y="430" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">global, for the whole run</text>
     <text x="668" y="458" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">calls = 1</text>
-    <text x="500" y="458" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">‏<tspan direction="ltr" unicode-bidi="embed">static</tspan> של פונקציה, שורד את החזרה</text>
+    <text x="500" y="458" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">function <tspan direction="ltr">static</tspan>, survives return</text>
   </g>
   <g class="draw d5">
     <rect x="32" y="496" width="656" height="88" rx="12" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5" />
-    <text x="668" y="528" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">קוד</text>
+    <text x="668" y="528" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">code</text>
     <text x="668" y="556" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">main, note</text>
-    <text x="500" y="556" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">הוראות, לקריאה בלבד</text>
+    <text x="500" y="556" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">instructions, read only</text>
   </g>
-  <text x="684" y="620" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="rtl" unicode-bidi="embed">כתובות נמוכות</text>
+  <text x="684" y="620" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">low addresses</text>
 </svg>

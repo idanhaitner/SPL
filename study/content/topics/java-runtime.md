@@ -1,43 +1,43 @@
 ---
 id: java-runtime
-title: חזרה ל-Java
+title: Back to Java
 sources:
   - "materials/lectures/Chapter 7 - Back to Java.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
   - "materials/sessions/SPL_PS5.pptx"
 ---
 
-שפת Java רצה מעל מכונה וירטואלית (JVM), המאפשרת להריץ את אותו קוד בייטקוד (`.class`) על גבי מערכות הפעלה שונות.
+Java compiles a program to bytecode and runs that bytecode on the Java Virtual Machine, a run-time environment. The same `.class` file can run on any operating system that supplies a JVM. This chapter places that execution next to the C++ object model: which values live on the stack, how an array is laid out on the heap, and why a call to an instance method is selected from the class of the object at run time. Checked exceptions are part of the same story, because the compiler treats them as part of a method's type.
 
-## תהליך התרגול ב-Java
+## Compilation and execution
 
-1. **קומפילציה לא מקוונת:** הקומפיילר (`javac`) מתרגם את קוד המקור (`.java`) לקובץ בייטקוד (`.class`). בשלב זה מבוצעות בדיקות טיפוסים, בקרת גישה ווידוא חריגות.
-2. **הרצה בזמן ריצה:** ה-JVM טוען את קובצי ה-`.class` ומתרגם את הבייטקוד לקוד מכונה פיזי באמצעות מהדר JIT (Just-In-Time Compiler).
+1. **Compilation, before the program runs:** the compiler (`javac`) translates the source file (`.java`) into a bytecode file (`.class`). This step checks types, enforces access control, and requires every checked exception to be caught or declared.
+2. **Execution:** the JVM, as the run-time environment, loads the `.class` files. It interprets the bytecode. Its just-in-time (JIT) compiler compiles hot spots, the stretches of code that run often, into native machine code.
 
-בניגוד ל-C++, ב-Java כל המתודות של אובייקטים הן וירטואליות כברירת מחדל (Dynamic Binding).
+Every instance method in Java is virtual. A call uses **dynamic binding** (קשירה דינמית), also called late binding, and the method comes from the class of the object at run time. A C++ function is dispatched that way when it is declared `virtual`.
 
-## מודל האחסון ב-Java
+## The Java storage model
 
-- **מחסנית (Stack):** מחזיקה משתנים מקומיים מטיפוסים פרימיטיביים (`int`, `boolean` וכו') ורפרנסים לאובייקטים.
-- **ערימה (Heap):** מחזיקה את כל האובייקטים והמערכים, כולל השדות שלהם.
+- **Stack:** local variables of primitive type (`int`, `boolean`, and the other primitives) live here, together with references to objects.
+- **Heap:** every object and every array lives here, including the fields inside each object.
 
-מערך ב-Java הוא אובייקט השמור בערימה ומחזיק את אורכו (`length`). מערך של אובייקטים מחזיק בערימה רפרנסים לאובייקטים אחרים.
+An array in Java is an object on the heap, and its object layout stores the length in `length`. An array whose element type is a primitive stores those values inside the array object. An array whose element type is a reference type stores references. Each referent is a separate object on the heap.
 
-![מערך int הוא בלוק אחד של int-ים בערימה. מערך String הוא בלוק של רפרנסים בערימה, וכל מחרוזת היא אובייקט נוסף](../assets/figures/java-array.svg)
+![An int array is one block of ints on the heap. A String array is a block of references on the heap, and each string is a further object](../assets/figures/java-array.svg)
 
-## מנגנון החריגות (Exceptions)
+## Exceptions
 
-:::definition id=def-exception title="סיווג חריגות ב-Java" source="materials/lectures/Chapter 7 - Back to Java.pptx"
+:::definition id=def-exception title="How Java classifies exceptions" source="materials/lectures/Chapter 7 - Back to Java.pptx"
 
-- **חריגות בדוקות (Checked Exceptions):** יורשות מ-`java.lang.Exception` (למעט `RuntimeException`). מייצגות שגיאות צפויות (כגון קובץ לא נמצא). הקומפיילר מחייב לתפוס אותן (`try-catch`) או להצהיר עליהן בחתימת המתודה (`throws`).
-- **חריגות שאינן בדוקות (Unchecked Exceptions):** יורשות מ-`RuntimeException`. מייצגות באגים בתוכנה (כגון `NullPointerException`, `IndexOutOfBoundsException`). אין חובה להצהיר עליהן.
-- **שגיאות מערכת (Errors):** יורשות מ-`java.lang.Error`. מייצגות כשלים חמורים ב-JVM (כגון `OutOfMemoryError`). אין לתפוס אותן בקוד רגיל.
+- **Checked exceptions:** these inherit from `java.lang.Exception`, excluding `RuntimeException`. They stand for failures the program is expected to anticipate, such as a missing file. The compiler requires the method to catch the exception with `try-catch`, or to declare it on the method with `throws`.
+- **Unchecked exceptions:** these inherit from `RuntimeException`. They stand for bugs in the program, such as `NullPointerException` and `IndexOutOfBoundsException`. A method may leave them undeclared.
+- **Errors:** these inherit from `java.lang.Error`. They stand for severe failures of the JVM, such as `OutOfMemoryError`. Ordinary application code leaves them uncaught.
 :::
 
-בלוק `finally` מורץ תמיד בעת היציאה מבלוק `try`, בין אם נזרקה חריגה ובין אם לא. מנגנון `try-with-resources` מבטיח סגירה אוטומטית של משאבים המממשים את הממשק `AutoCloseable`.
+A `finally` block runs whenever control leaves the `try` block, whether an exception was thrown or the block finished normally. `try-with-resources` closes resources that implement `AutoCloseable` on every exit from the block.
 
-:::problem id=worked-array-layout title="מערך על הערימה" source="materials/lectures/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
-מה על המחסנית, ומה על הערימה?
+:::problem id=worked-array-layout title="An array on the heap" source="materials/lectures/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
+What is on the stack, and what is on the heap?
 
 ```java
 int[] a = new int[10];
@@ -46,39 +46,39 @@ b[0] = new String("Avi");
 ```
 
 :::solution
-`a` ו-`b` הם רפרנסים במסגרת של `main`. `a` מצביע על אובייקט מערך אחד בערימה ששומר כותרת, את האורך 10, ועשרה `int`. `b` מצביע על מערך אחד בערימה של עשרה רפרנסים. הרפרנסים האלה מתחילים ב-null. `b[0] = new String("Avi")` שומר אובייקט ערימה נוסף אחד בתא הראשון. עשר המחרוזות אינן בתוך הבלוק של `b`, ותשעת התאים האחרים נשארים null.
+`a` and `b` are references in the frame of `main`. `a` points at one array object on the heap. That object's layout holds a header, the length 10, and ten `int` values. `b` points at one array object on the heap whose ten slots are references. Those references begin as null. `b[0] = new String("Avi")` stores one further heap object in the first slot. The `String` objects are separate from the block of `b`. The other nine slots remain null.
 :::
 :::
 
 :::check id=chk-checked
-מתודה קוראת ל-API שזורק `java.io.FileNotFoundException`, חריגה בדוקה. מה הקומפיילר דורש?
+A method calls an API that throws `java.io.FileNotFoundException`, a checked exception. What does the compiler require?
 
-- [ ] כלום, כי רק `Error` הוא חובה
-- [x] `try/catch` לחריגה הזאת, או פסקת `throws`
-- [ ] בלוק `finally` ובלי `catch`
+- [ ] Nothing, because only `Error` is mandatory
+- [x] A `try/catch` for this exception, or a `throws` clause
+- [ ] A `finally` block and no `catch`
 
-חריגות בדוקות הן חלק מטיפוס המתודה. חריגות לא-בדוקות ו-`Error` נשארות מחוץ לטיפוס.
+Checked exceptions are part of the method's type. Unchecked exceptions and `Error` stay outside that type.
 :::
 
-## תרגול
+## Practice
 
-:::problem id=ps5-checked-exception title="חריגה בדוקה" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
-`FileNotFoundException` בדוקה. `ArithmeticException` אינה בדוקה. לכל אחת, אמור אם התוכנית מתקמפלת כשהקורא מתעלם ממנה, ולאן חריגה שנזרקה הולכת אם אף מסגרת אינה מטפלת בה.
+:::problem id=ps5-checked-exception title="A checked exception" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
+`FileNotFoundException` is checked. `ArithmeticException` is unchecked. For each one, say whether the program compiles when the caller ignores it, and where a thrown exception goes when no frame handles it.
 
 :::hint
-הטבלה של התרגול: חריגה לא-בדוקה מתקמפלת גם כשמתעלמים ממנה. חריגה בדוקה אינה מתקמפלת כשמתעלמים ממנה.
+The exercise table says that ignoring an unchecked exception still leaves the program able to compile. Ignoring a checked exception makes compilation fail.
 :::
 :::hint
-טיפול בחריגה בדוקה הוא `try/catch` או `throws` על המתודה.
+The ways to handle a checked exception are a `try/catch`, or a `throws` clause on the method.
 :::
 :::hint
-תמונת מחסנית הקריאות נגמרת ב-JVM כשל-`main` אין מטפל.
+The picture of the call stack ends at the JVM when `main` has no handler.
 :::
 :::solution
-התעלמות מ-`ArithmeticException` עדיין מתקמפלת. הטיפול בה אופציונלי, ובדרך כלל שגוי אם הכוונה לבאג שצריך לתקן. התעלמות מ-`FileNotFoundException` אינה מתקמפלת. המתודה חייבת לתפוס אותה או להצהיר `throws FileNotFoundException`, והקורא ניצב אז בפני אותה בחירה.
+Ignoring `ArithmeticException` still compiles. Handling it is optional, and catching it is usually the wrong response when the exception marks a bug the program should fix. A method that ignores `FileNotFoundException` fails to compile. The method must catch it or declare `throws FileNotFoundException`, and the caller then has the same obligation.
 
-אם החריגה נזרקת ולאף מסגרת מאתר הזריקה ועד `main` אין `catch` מתאים, ה-JVM מסיים את התוכנית ומדווח את החריגה. בלוקי `finally` לאורך ההליכה הזאת עדיין רצים. try-with-resources סוגר את המשאב במסלול הזה; כישלון שני מ-`close` מדוכא ואינו מחליף את החריגה הראשונה.
+If the exception is thrown and no frame from the throw site through `main` has a matching `catch`, the JVM terminates the program and reports the exception. `finally` blocks along that walk still run. `try-with-resources` closes the resource on this path. A second failure thrown by `close` is suppressed, and the original exception remains the one that propagates.
 :::
 :::
 
-הכלל שכל מתודת מופע ב-Java היא וירטואלית הוא הכלל ש[ירושה](topic:inheritance) נאלץ לבקש עם מילת המפתח `virtual`. בהמשך, [מקביליות](topic:concurrency) היא מה שקורה כשיותר מאחת מהמתודות האלה רצה בבת אחת.
+The rule that every instance method in Java is virtual is the rule that [Inheritance and polymorphism](topic:inheritance) expresses with the keyword `virtual`. [Concurrency](topic:concurrency) is what follows when more than one of these methods runs at the same time.

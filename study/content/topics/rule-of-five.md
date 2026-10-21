@@ -1,6 +1,6 @@
 ---
 id: rule-of-five
-title: חוק החמישה וחוק האפס
+title: The rule of five and zero
 sources:
   - "materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
   - "materials/sessions/SPL_PS4.pptx"
@@ -14,21 +14,23 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
-העתקה היא הדרך הישירה להעניק לשני אובייקטים (objects) גישה לנתונים זהים, אך היא גם הדרך היקרה והבזבזנית להחזיר אובייקט כבד מפונקציה. תקן C++11 הוסיף מנגנון נוסף: סמנטיקת העברה (move semantics). סמנטיקה זו מאפשרת לרוקן אובייקט זמני — המשאב מועבר לבעלות האובייקט החדש, מבלי להעתיק את הבתים בזיכרון.
+A copy gives two objects the same data, and it is also the expensive way to return a large object from a function. C++11 adds a second mechanism, move (העברה): a temporary hands its resource to the new owner, and the bytes themselves stay where they are. The rule of five (חוק החמישה) is the set of special members that make copying and moving correct. The rule of zero (חוק האפס) leaves every one of those members to the compiler, because each data member already manages its own resource.
 
-## ערכים שיש להם כתובת, וערכים שאין להם
+## Values that have an address, and values that do not
 
-:::definition id=def-value-category title="ערך מיקום (lvalue) וערך זמני (rvalue)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
-ערך מיקום (lvalue) הוא אובייקט בעל כתובת זיכרון מוגדרת שניתן לזקק, לבצע אליה השמה ולקשור אליה רפרנס (reference). היסטורית, זהו ערך היכול להופיע בצד שמאל של אופרטור השמה.
+:::definition id=def-value-category title="lvalue and rvalue" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
+An lvalue names an object that has an address. You can form that address, assign to the object, and bind a reference to it. The name records an older rule: an lvalue may stand on the left of an assignment.
 
-ערך זמני (rvalue) הוא ערך חולף ללא כתובת זיכרון נגישה בעלת שם. הוא מופיע בצד ימין של השמה ועומד להיעלם מהזיכרון (למשל: תוצאת חישוב ביניים או אובייקט המוחזר לפי ערך מפונקציה).
+An rvalue is a value that may be consumed. It stands on the right of an assignment. A temporary is an rvalue: the result of a computation, or an object returned by value from a function. That temporary's lifetime ends with the full expression that created it, unless a reference extends it.
 
-רפרנס מסוג `const` לערך מיקום (`const T&`) יכול להיקשר הן ל-lvalue והן ל-rvalue. כאשר הוא נקשר ל-rvalue, הוא מאריך את זמן החיים של הערך הזמני עד לסיום תחום ההגדרה (scope) של הרפרנס, ומונע שינויים בתוכנו.
+A const lvalue reference, written `const T&`, binds to an lvalue and also to an rvalue. When the rvalue is a temporary, the binding extends that temporary's lifetime to the end of the reference's scope. The reference is const, so code cannot modify the object through it.
 :::
 
-הפונקציה `std::move(x)` אינה מעבירה זיכרון בפועל. היא מבצעת המרה (cast) המנחה את המהדר להתייחס ל-lvalue `x` כאל rvalue (`x&&`), ובכך מאפשרת בחירה בהעמסה (overload) שגונבת משאבים. לאחר העברה, האובייקט `x` נותר במצב תקף אך מרוקן (valid but unspecified state). אובייקט `Image` שהועבר, למשל, יחזיק מצביע `nullptr` ויהיה בטוח להשמדה.
+`std::move(x)` is a cast. It tells the compiler to treat the lvalue `x` as an rvalue, so overload resolution can select the function that takes an rvalue reference and steals the resource. The cast itself transfers nothing. After the selected function runs, `x` is in a valid but unspecified state. The lecture's moved-from `Image` holds a null pointer, and destroying it is safe.
 
-רפרנס לערך זמני מסומן ב-`&&` (למשל `Image&&`). הוא נקשר אך ורק ל-rvalue, ומשמש כחתימה עבור בנאי העברה (move constructor) ואופרטור השמת העברה (move-assignment operator).
+An rvalue reference is written `&&`, as in `Image&&`. It binds only to an rvalue. That is the parameter type of a move constructor and of a move-assignment operator.
+
+The two overloads below are how a function chooses between reading an image and taking its buffer:
 
 ```cpp
 void convert(const Image& img);   // binds a named image or a temporary, does not steal
@@ -36,15 +38,15 @@ void convert(Image&& img);        // binds only a temporary, may steal
 
 ```
 
-### פעולות העברה
+### Move operations
 
-:::definition id=def-rule-of-five title="חוק החמישה (rule of five)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
-חוק החמישה הוא הרחבה של חוק השלושה (rule of three). אם מחלקה מגדירה מפורשות אחד מבין חמשת האיברים הבאים: דיסטרקטור (destructor), בנאי העתקה (copy constructor), אופרטור השמת העתקה (copy assignment operator), בנאי העברה (move constructor), או אופרטור השמת העברה (move assignment operator) — עליה להגדיר מפורשות את כל החמישה.
+:::definition id=def-rule-of-five title="The rule of five" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
+The rule of five extends the rule of three (חוק השלושה). If you write any of the five — the destructor (הורס), the copy constructor (בנאי העתקה), the copy assignment operator (אופרטור השמה), the move constructor, or the move-assignment operator — write all five.
 
-שלושת הראשונים נדרשים לנהל משאבים בצורה תקינה ולהסיר סכנות כמו שחרור כפול או דליפות זיכרון; השניים הנוספים מספקים את חוזה ההעברה השומר על ביצועים מהירים.
+The destructor, the copy constructor, and the copy assignment operator keep ownership correct. They are how the class avoids a double free and a leak. The move constructor and the move-assignment operator carry out the move: a temporary transfers its resource, and the only thing copied is the pointer.
 :::
 
-בנאי העברה מעתיק את המצביע בלבד (ולא את הנתונים עצמם), ואז מאפס את המקור (`nullptr`) כדי שהדיסטרקטור שלו יבצע `delete[]` על מצביע null — פעולה בטוחה וחסרת השפעה.
+The move constructor copies the pointer and leaves the bytes where they are. It then sets the source pointer to `nullptr` and the dimensions to 0, so the source's destructor later runs `delete[]` on a null pointer. That call is safe, and it releases nothing.
 
 ```cpp
 Image::Image(Image&& other)
@@ -56,7 +58,7 @@ Image::Image(Image&& other)
 
 ```
 
-אופרטור השמת העברה חייב לשחרר את החוצץ הקיים ב-`*this` לפני קבלת הבעלות החדשה. דרך אלגנטית לממש זאת היא בעזרת פונקציית החלפה (swap):
+The move-assignment operator already holds a buffer, and it has to give that buffer up before it takes the new one. `swap` does the exchange:
 
 ```cpp
 Image& Image::operator=(Image&& other) {
@@ -66,28 +68,28 @@ Image& Image::operator=(Image&& other) {
 
 ```
 
-בעת היציאה מהאופרטור, האובייקט `other` מחזיק במשאב הישן של `*this`, והדיסטרקטור שלו משחרר אותו באופן אוטומטי.
+When the operator returns, `other` holds the resource that used to belong to `*this`, and the destructor of `other` releases it.
 
-מלכודת נפוצה: הקצאה בסגנון `Image avi = new Image(...)` אינה דרך תקינה ליצירת אובייקט אוטומטי במחסנית, ושימוש ב-`avi` לאחר הפעלת `std::move(avi)` קורא מתוך אובייקט שהועבר ומרוקן.
+Two further mistakes belong with this material. `Image avi = new Image(...)` initializes an `Image` from an `Image*`, which is the type `new` returns. An automatic `Image` is created by calling a constructor, as in `Image avi(...)`. After `std::move(avi)`, `avi` is in a valid but unspecified state, and any later use reads that moved-from object.
 
-### חוק האפס (rule of zero)
+### The rule of zero
 
-:::definition id=def-raii title="RAII וחוק האפס" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
-RAII פירושו Resource Acquisition Is Initialization (מנגנון שבו הקצאת המשאב נקשרת לאתחול האובייקט, ושחרורו נקשר להשמדתו - RRID, Resource Release Is Destruction).
+:::definition id=def-raii title="RAII and the rule of zero" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
+RAII means Resource Acquisition Is Initialization. A resource's lifetime is the object's lifetime, so the destructor is the release.
 
-**חוק האפס (Rule of Zero):** תכננו מחלקות כך שלא ינהלו מפורשות משאבי זיכרון גולמיים. במקום זאת, השתמשו באיברים שכבר מנהלים את המשאב בעצמם (כגון `std::vector` או מצביעים חכמים). במצב זה, חמש הפעולות שמייצר המהדר אוטומטית יהיו נכונות לחלוטין, ולא תידרשו לכתוב אף אחת מהן.
+**Rule of zero:** give the resource to a member that already manages it, such as `std::vector` or a smart pointer (מצביע חכם). The five operations the compiler generates are then the right ones, and the class leaves all five to the compiler.
 :::
 
-המחלקה `std::vector<char>` כבר מנהלת בעצמה את החוצץ, מבצעת העתקה עמוקה, ומממשת העברה. מחלקה `Image` השומרת `std::vector<char> _bytes` במקום `char*` מקבלת את חוק החמישה בחינם מהמהדר.
+`std::vector<char>` already owns its buffer. It makes a deep copy (העתקה עמוקה) when it is copied, and it moves when it is moved. An `Image` that stores `std::vector<char> _bytes` receives those five operations from the compiler.
 
-כאשר כן נדרש ניהול זיכרון דינמי, השתמשו במצביעים חכמים:
+When the class does allocate with `new`, put that pointer in a smart pointer:
 
-:::definition id=def-smart-pointers title="מצביע חכם ייחודי (unique_ptr) ומצביע חכם משותף (shared_ptr)" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
+:::definition id=def-smart-pointers title="unique_ptr and shared_ptr" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 
-* `std::unique_ptr<T>`: מייצג בעלות בלעדית. אינו ניתן להעתקה, אך ניתן להעברה. לאחר אופטימיזציה של המהדר, הביצועים שלו זהים למצביע גולמי (raw pointer).
-* `std::shared_ptr<T>`: מייצג בעלות משותפת. העתקתו מגדילה מונה ייחוסים (reference count). הדיסטרקטור האחרון שמוריד את המונה לאפס משחרר את האובייקט.
+* `std::unique_ptr<T>` is exclusive ownership. Its copy constructor and copy assignment operator are deleted, and it can be moved. After inlining, it costs the same as a raw pointer.
+* `std::shared_ptr<T>` is shared ownership. Copying it increments a reference count. The destructor that brings the count to zero releases the object.
 
-מומלץ להשתמש ב-`std::make_unique<T>(...)` ו-`std::make_shared<T>(...)` במקום הקצאה ישירה כגון `unique_ptr<T>(new T(...))`. השימוש בפונקציות אלו מבטיח בטיחות מול חריגות (exception safety) ומונע דליפות זיכרון, ובמקרה של `make_shared` אף מאחד את הקצאת האובייקט והמונה לבלוק זיכרון יחיד.
+Prefer `std::make_unique<T>(...)` and `std::make_shared<T>(...)` to a hand-written `unique_ptr<T>(new T(...))`. Each `make` function allocates the object and builds the smart pointer as one step, so an exception in a later argument still releases the object. `make_shared` places the object and the reference count in a single allocation.
 :::
 
 ```cpp
@@ -96,7 +98,7 @@ std::shared_ptr<Filter> filter = std::make_shared<Filter>(args...);
 
 ```
 
-כאשר כותבים בנאי מפורש מכל סוג שהוא, המהדר מנטרל את היצירה האוטומטית של בנאי ברירת המחדל. הגדרת בנאי העתקה מנטרלת את יצירת פונקציות ההעברה האוטומטיות. ניתן להחזירן מפורשות בעזרת `= default`, או לבטלן לחלוטין בעזרת `= delete`:
+Declaring any constructor suppresses the implicit default constructor. Declaring a copy constructor suppresses the implicit move operations. `= default` asks the compiler for its version of an operation. `= delete` removes the operation:
 
 ```cpp
 class NoCopy {
@@ -107,14 +109,14 @@ public:
 
 ```
 
-### העלמת העתקה (Copy Elision)
+### Copy elision
 
-העלמת העתקה (copy elision) היא אופטימיזציה של המהדר המבוצעת בזמן החזרת אובייקטים לפי ערך. האובייקט המוחזר נבנה ישירות בתוך משבצת הזיכרון של הקורא, ללא יצירת עותקים זמניים.
+Copy elision is an optimization the compiler may apply when a function returns an object by value. The returned object is constructed directly in the caller's return slot.
 
-* **RVO (Return Value Optimization):** מיושם בעת החזרת ערך זמני אנונימי: `return Image(...);`.
-* **NRVO (Named Return Value Optimization):** מיושם בעת החזרת אובייקט מקומי בעל שם: `return pic;`.
+* **RVO (Return Value Optimization):** the function returns an unnamed temporary, as in `return Image(...);`.
+* **NRVO (Named Return Value Optimization):** the function returns a named local, as in `return pic;`.
 
-אזהרה מפורשת:
+The lecture warns about this return in particular:
 
 ```cpp
 Image myPicture() {
@@ -124,10 +126,10 @@ Image myPicture() {
 
 ```
 
-שימוש ב-`std::move` על אובייקט מקומי בעת החזרה פוגע באופטימיזציית NRVO ומאלץ הפעלת בנאי העברה, במקום לבנות את האובייקט ישירות אצל הקורא ללא כל העברה או העתקה.
+`std::move(pic)` casts the local to an rvalue. NRVO needs the plain name `pic`. The cast hides that name, so the return calls the move constructor. A plain `return pic;` keeps the name, and NRVO can construct `pic` directly in the caller's slot.
 
-:::problem id=worked-move-image title="העברת תמונה" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
-האובייקט `avi` מחזיק בבעלות על חוצץ פיקסלים. מה יחזיקו `benny._bytes` ו-`avi._bytes`, ומה ישחרר הדיסטרקטור `~Image` של `avi`?
+:::problem id=worked-move-image title="Moving an image" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
+The object `avi` owns a pixel buffer. What do `benny._bytes` and `avi._bytes` hold after the move, and what does `avi`'s destructor `~Image` release?
 
 ```cpp
 Image avi(1080, 1920, pixels);
@@ -136,7 +138,7 @@ Image benny(std::move(avi));
 ```
 
 :::solution
-בנאי ההעברה מעתיק את המצביע ל-`benny` ומאפס את `avi._bytes` ל-`nullptr`:
+The move constructor copies the pointer into `benny` and sets `avi._bytes` to `nullptr`:
 
 ```cpp
 Image::Image(Image&& other)
@@ -148,32 +150,32 @@ Image::Image(Image&& other)
 
 ```
 
-`benny` מנהל כעת את הבעלות על הפיקסלים. הדיסטרקטור של `avi` מבצע `delete[]` על מצביע null ולכן אינו משחרר דבר. בסיום הפונקציה מושמדים שני האובייקטים, אך החוצץ בזיכרון משוחרר פעם אחת בלבד.
+`benny` now owns the pixels. `avi`'s destructor runs `delete[]` on a null pointer, so it releases nothing. At the end of the function both objects are destroyed, and the buffer is released once.
 :::
 :::
 
 :::check id=chk-move-cast
-מה מבצעת הפונקציה `std::move`?
+What does `std::move` do?
 
-* [ ] מקצה חוצץ חדש ומעתיקה את הבתים
-* [x] ממירה ערך מיקום (lvalue) לערך זמני (rvalue) כדי לאפשר בחירה בהעמסת העברה
-* [ ] משמידה את האובייקט המקורי
+- [ ] Allocates a new buffer and copies the bytes
+- [x] Casts an lvalue to an rvalue so overload resolution can select the move overload
+- [ ] Destroys the original object
 
-`std::move` אינה מעבירה זיכרון בפועל; היא מבצעת המרת טיפוס בלבד. בנאי ההעברה הוא זה שמבצע את גניבת המשאבים.
+`std::move` is a cast. The move constructor is the function that steals the resource.
 :::
 
 :::trap
-אובייקט שעברו ממנו נותר במצב תקף אך מרוקן — הוא אינו נעלם מהזיכרון. קריאה ל-`processImage(avi)` לאחר `std::move(avi)` תפעל על תמונה ריקה.
+An object that was moved from is still in memory, in a valid but unspecified state. For the lecture's `Image`, that state is empty. `processImage(avi)` after `std::move(avi)` runs on that empty image.
 :::
 
 :::trap
-`shared_ptr` אינו פותר בעיה של מצביעים מעגליים (cyclic dependencies). אם שני אובייקטים מחזיקים `shared_ptr` זה לזה, מונה הייחוסים לעולם לא יגיע לאפס והזיכרון ידלף. לפתרון בעיה זו יש להשתמש ב-`std::weak_ptr`.
+A cycle of `shared_ptr` keeps every reference count above zero. If two objects each hold a `shared_ptr` to the other, neither destructor releases the memory, and the allocation leaks. `std::weak_ptr` observes an object without owning it, and that is how the cycle is broken.
 :::
 
-## תרגול
+## Practice
 
-:::problem id=ps4-copy-count title="כמה העתקות" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=derived
-כמה פעמים ירוץ בנאי ההעתקה בהנחה שאין העלמת העתקה (copy elision), ומה משתנה כשהפרמטר מועבר כ-`const MyClass&`? אילו העתקות NRVO רשאי להסיר?
+:::problem id=ps4-copy-count title="How many copies" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=derived
+How many times does the copy constructor run if there is no copy elision, and what changes when the parameter is passed as `const MyClass&`? Which of those copies may NRVO remove?
 
 ```cpp
 MyClass pass(MyClass value) {
@@ -188,20 +190,23 @@ MyClass passRef(const MyClass& value) {
 ```
 
 :::hint
-העברת פרמטר לפי ערך דורשת העתקה בכניסה. החזרה לפי ערך דורשת העתקה ביציאה (בהעדר העלמת העתקה).
+A parameter passed by value is copied on the way in. A return by value is copied on the way out when the compiler does not elide that copy.
 :::
 :::hint
-העברת פרמטר ברפרנס קבוע (`const MyClass&`) אינה מבצעת העתקה בכניסה.
+A parameter passed as `const MyClass&` binds to the caller's object. Entering the function copies nothing.
+:::
+:::hint
+NRVO may construct the named local directly in the caller's return slot, which drops the copy on the way out. The explicit `MyClass local(value)` remains.
 :::
 :::solution
-ב-`pass` (ללא NRVO וללא העלמה): העתקה אחת מבוצעת בכניסה לפרמטר `value`, והעתקה שנייה מבוצעת ביציאה בהחזרת הערך — בסך הכול שתי קריאות לבנאי ההעתקה.
+In `pass`, with no NRVO and no elision, one copy initializes the parameter `value` and a second copy returns it. That is two calls to the copy constructor.
 
-ב-`passRef`: העברת הפרמטר ברפרנס מונעת את ההעתקה בכניסה. הקריאה ל-`local(value)` מבצעת העתקה מפורשת אחת, והחזרת `local` מבצעת העתקה שנייה. אם אופטימיזציית NRVO מופעלת, היא בונה את `local` ישירות במשבצת הזיכרון של הקורא, ומבטלת את העתקת ההחזרה.
+In `passRef`, the parameter is a const reference, so entry copies nothing. `local(value)` is one explicit copy, and returning `local` is a second copy. When NRVO is applied, `local` is constructed directly in the caller's return slot, and that return uses the same object.
 :::
 :::
 
-:::problem id=ps4-unique-vs-shared title="shared מול unique" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=source
-מה יתרחש בכל אחד מקטעי הקוד הבאים?
+:::problem id=ps4-unique-vs-shared title="shared versus unique" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=source
+What happens in each of the following fragments?
 
 ```cpp
 auto sp1 = std::make_shared<int>(1);
@@ -218,35 +223,47 @@ auto up2 = up1;
 ```
 
 :::hint
-העתקה של `shared_ptr` מגדילה את מונה הייחוסים.
+Copying a `shared_ptr` increments the reference count.
 :::
 :::hint
-ל-`unique_ptr` יש בנאי העתקה מבוטל (`= delete`).
+`unique_ptr` has its copy constructor deleted (`= delete`).
+:::
+:::hint
+The inner block ends by destroying `sp2`, which decrements the count. Transferring `up1` into `up2` is a move: `auto up2 = std::move(up1);`.
 :::
 :::solution
-בקטע הראשון: ההשמה `sp2 = sp1` מעתיקה את המצביע המשותף ומעלת את מונה הייחוסים ל-2. ביציאה מהבלוק הפנימי, `sp2` מושמד ומונה הייחוסים יורד ל-1. ה-`int` בערימה נשאר חי ונגיש דרך `sp1`.
+In the first fragment, `sp2 = sp1` copies the shared pointer and raises the reference count to 2. At the end of the inner block, `sp2` is destroyed and the count drops to 1. The `int` on the heap stays alive, and `sp1` can still reach it.
 
-בקטע השני: השורה `auto up2 = up1;` מנסה לבצע העתקה של `unique_ptr`. כיוון שבנאי ההעתקה שלו מבוטל (`= delete`), התוכנית תיכשל בהידור. כדי להעביר את הבעלות יש לכתוב מפורשות: `auto up2 = std::move(up1);`.
+In the second fragment, `auto up2 = up1;` tries to copy a `unique_ptr`. That copy constructor is deleted, so the program fails to compile. The ownership moves with an explicit `auto up2 = std::move(up1);`.
 :::
 :::
 
 :::examnote
-שאלות בחינה העוסקות בחוק החמישה או במצביעים חכמים דורשות לעיתים קרובות לממש העברת משאבים (ללא העתקה) או ליישם מנגנון השהיית העתקה (Copy-On-Write). יש להקפיד על איפוס המקור לאחר העברה ועל מניעת העתקה לא מורשית של `unique_ptr`.
+Exam questions on the rule of five, or on smart pointers, often ask for a transfer of a resource that copies only a pointer, or for copy-on-write. After a move, the source has to be reset. Copying a `unique_ptr` fails to compile.
 :::
 
-:::problem id=exam-16b-q2 title="אוסף לפי ערך" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-המחלקה `ITEM_COLLECTION<T>` מנהלת אוסף פריטים. הפונקציה `byVal` מקבלת את האוסף לפי ערך.
+:::problem id=exam-16b-q2 title="A collection by value" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
+`ITEM_COLLECTION<T>` manages a collection of items. The function `byVal` takes the collection by value.
 
-א. כתבו בנאי העתקה עמוק, תוך הקפדה על תחביר תבנית (template).
+a. Write a deep copy constructor, and keep the template syntax.
 
-ב. השלימו את `main` כך שהאוסף יוכל להחזיק הן `SPHERE` והן `BOX` (שניהם יורשים מ-`SHAPE`).
+b. Complete `main` so the collection can hold both a `SPHERE` and a `BOX`. Both inherit from `SHAPE`.
 
-ג. מה יתרחש בשרשור `byVal(myShapeCollection)` אם נעבור לבנאי העתקה של ברירת מחדל?
+c. What happens in the call `byVal(myShapeCollection)` if the class uses the default copy constructor?
 
-ד. תקנו את ניהול הבעלות באמצעות `shared_ptr`.
+d. Repair the ownership with `shared_ptr`.
 
+:::hint
+`byVal` takes the collection by value, so a copy constructor runs. A raw pointer to the array is the same ownership problem as `Image::_bytes`.
+:::
+:::hint
+`SPHERE` and `BOX` derive from `SHAPE`. Storing a `SHAPE` by value slices the derived object. A `shared_ptr<SHAPE>` keeps the derived object and shares ownership of it.
+:::
+:::hint
+The deep copy constructor initializes the capacity, the size, and a `new T[other._capacity]`, then assigns each live element. The default copy copies the pointer, and the parameter's destructor `delete[]`s that array.
+:::
 :::solution
-א. בנאי העתקה עמוק:
+a. A deep copy constructor:
 
 ```cpp
 template <typename T>
@@ -259,17 +276,26 @@ ITEM_COLLECTION<T>::ITEM_COLLECTION(const ITEM_COLLECTION<T>& other)
 
 ```
 
-ב. כדי למנוע חיתוך אובייקטים (slicing) ולאפשר פולימורפיזם, יש לאחסן מצביעים: `ITEM_COLLECTION<SHAPE*>` או בגרסה בטוחה `ITEM_COLLECTION<std::shared_ptr<SHAPE>>`.
+b. To keep the dynamic type, and to avoid slicing the derived object, store pointers: `ITEM_COLLECTION<SHAPE*>`, or, with shared ownership, `ITEM_COLLECTION<std::shared_ptr<SHAPE>>`.
 
-ג. בנאי העתקה של ברירת מחדל מבצע העתקה רדודה (shallow copy) של המצביע למערך. בעת העברת האוסף לפי ערך ל-`byVal`, נוצר העתק רדוד. בסיום `byVal`, הדיסטרקטור של הפרמטר משחרר את המערך ב-`delete[]`. האוסף המקורי נותר עם מצביע תלוי (dangling pointer), ובעת השמדתו תתרחש שגיאת שחרור כפול (double free).
+c. The default copy constructor makes a shallow copy (העתקה רדודה) of the pointer to the array. Passing the collection to `byVal` by value builds that shallow copy. When `byVal` returns, the parameter's destructor releases the array with `delete[]`. The original collection is left with a dangling pointer, and destroying it is a double free.
 
-ד. שימוש ב-`ITEM_COLLECTION<std::shared_ptr<SHAPE>>` מבטיח שכאשר האוסף מועתק, מועתקים המצביעים החכמים ומוני הייחוסים שלהם גדלים. השמדת עותק זמני תוריד את המונים מבלי לשחרר את הצורות עצמן בטרם עת.
+d. `ITEM_COLLECTION<std::shared_ptr<SHAPE>>` copies smart pointers when the collection is copied, and each copy increments a reference count. Destroying the temporary drops those counts. The shapes stay alive until the last owner is gone.
 :::
 :::
 
-:::problem id=exam-20b-q1 title="מצביע חכם" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-ממשו את המחלקה `SmartPointer<T>` בהתאם למודל הבעלות המשותפת (`shared_ptr`): כולל מונה ייחוסים דינמי, העתקה המשתפת את האובייקט, ושחרור הזיכרון רק כאשר מונה הייחוסים מגיע לאפס.
+:::problem id=exam-20b-q1 title="A smart pointer" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
+Implement `SmartPointer<T>` on the shared-ownership model of `shared_ptr`: a dynamically allocated reference count, a copy that shares the object, and a release of the memory only when the reference count reaches zero.
 
+:::hint
+Shared ownership uses two allocations: the `T`, and an `int` on the heap that counts the owners.
+:::
+:::hint
+The copy constructor copies both pointers and increments the count. The destructor decrements the count, and it deletes both blocks only when the count reaches zero.
+:::
+:::hint
+Assignment releases `*this` before it adopts the other pointer and the other count. When `this` and `other` are the same object, the count stays as it is.
+:::
 :::solution
 
 ```cpp
@@ -323,17 +349,26 @@ private:
 :::
 :::
 
-:::problem id=exam-24a-q1 title="עץ תחת חוק החמישה" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-נתונה מחלקת עץ בינארי `BinaryTree<T>` המנהלת צמתים המוקצים דינמית בערימה.
+:::problem id=exam-24a-q1 title="A tree under the rule of five" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
+`BinaryTree<T>` is a binary tree whose nodes are allocated on the heap.
 
-א. הגדירו את המחלקה ב-C++ כולל שדות, בנאים, מתודת `insert` וגטרים.
+a. Define the class in C++, including the data members, the constructors, `insert`, and the getters.
 
-ב. המשיכו את המחלקה וממשו את חוק החמישה (דיסטרקטור, בנאי העתקה, אופרטור השמת העתקה, בנאי העברה, אופרטור השמת העברה).
+b. Continue the class and implement the rule of five: the destructor, the copy constructor, the copy assignment operator, the move constructor, and the move-assignment operator.
 
-ג. שרטטו את מצב הזיכרון (מחסנית וערימה) עבור הקריאה `f(BinaryTree<int>(1, ...))` בהנחה שמימשתם העברה.
+c. Draw the stack and the heap for the call `f(BinaryTree<int>(1, ...))`, assuming the class implements move.
 
+:::hint
+`left` and `right` are owning pointers. A memberwise copy would share one tree between two objects, and both destructors would delete it.
+:::
+:::hint
+The copy constructor allocates a new node for each child. The move constructor copies the pointers and then sets the source pointers to `nullptr`. Copy assignment can build a temporary and swap.
+:::
+:::hint
+The argument `BinaryTree<int>(...)` is an rvalue, so the parameter of `f` is initialized by the move constructor. The nodes stay on the heap. The stack frame of `f` holds their new owner.
+:::
 :::solution
-א.+ב. מימוש המחלקה עם חוק החמישה:
+a and b. The class, with the rule of five:
 
 ```cpp
 template <typename T>
@@ -404,13 +439,22 @@ public:
 
 ```
 
-ג. בעת הקריאה `f(BinaryTree<int>(...))`, הארגומנט הוא rvalue אנונימי. בנאי ההעברה נגנב את המצביעים `left` ו-`right` מהאובייקט הזמני ומאפס את המצביעים במקור. במסגרת המחסנית של `f` נוצר האובייקט `t` המקבל את הבעלות על הצמתים שבערימה.
+c. In the call `f(BinaryTree<int>(...))`, the argument is an unnamed rvalue. The move constructor takes `left` and `right` from the temporary and sets the temporary's pointers to null. On the stack frame of `f`, the parameter `t` receives ownership of the nodes that remain on the heap.
 :::
 :::
 
-:::problem id=exam-24c-q1 title="העתקה בעת כתיבה" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
-ממשו מחלקת מעטפת `copy_on_write<T>` המיישמת מנגנון העתקה בעת כתיבה (Copy-On-Write): אובייקטים משוכפלים חולקים את אותם הנתונים בערימה עד לביצוע פעולת כתיבה ראשונה (`on_write()`), שבה מבוצע שיבוט פרטי.
+:::problem id=exam-24c-q1 title="Copy on write" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
+Implement the wrapper `copy_on_write<T>`. It implements copy-on-write: copied objects share the same data on the heap until the first write, `on_write()`, which makes a private clone.
 
+:::hint
+The copy constructor copies `ptr` and `users` and increments the count. The clone waits until something writes.
+:::
+:::hint
+`on_write` clones only when `*users` is greater than 1. It decrements the shared count, clones the `T`, and allocates a fresh count of 1.
+:::
+:::hint
+The destructor decrements the count and deletes both blocks only when the count reaches zero. The const `operator->` returns the shared pointer. A non-const use is what calls `on_write`.
+:::
 :::solution
 
 ```cpp

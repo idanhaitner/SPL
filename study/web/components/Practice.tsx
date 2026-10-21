@@ -43,18 +43,18 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
 
   const hintLabel =
     openHints === 0
-      ? `הצג רמז (1 מתוך ${hints.length})`
+      ? `Show hint (1 of ${hints.length})`
       : openHints < hints.length
-        ? `הרמז הבא (${openHints + 1} מתוך ${hints.length})`
-        : "הרמזים פתוחים";
+        ? `Next hint (${openHints + 1} of ${hints.length})`
+        : "Hints are open";
 
   if (!worked && !open) {
     return (
       <article className={`card practice is-folded${solved ? " is-solved" : ""}`} id={id}>
         <button type="button" className="fold-row" aria-expanded={false} onClick={() => setOpen(true)}>
-          <span className="kicker">תרגול</span>
+          <span className="kicker">Practice</span>
           <span className="fold-line"><Mixed text={summary} /></span>
-          <span className="fold-open">פתיחה</span>
+          <span className="fold-open">Open</span>
         </button>
       </article>
     );
@@ -63,12 +63,12 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
   return (
     <article className={`card practice${solved ? " is-solved" : ""}`} id={id}>
       <header className="card-head">
-        <p className="kicker">{worked ? "דוגמה" : "תרגול"}</p>
+        <p className="kicker">{worked ? "Example" : "Practice"}</p>
         {!worked && (
           <div className="card-tools">
-            <button type="button" onClick={() => setOpen(false)}>סגירה</button>
+            <button type="button" onClick={() => setOpen(false)}>Close</button>
             <button type="button" className={solved ? "is-on" : ""} onClick={toggleSolved} aria-pressed={solved}>
-              {solved ? "נפתר" : "סמן כנפתר"}
+              {solved ? "Solved" : "Mark solved"}
             </button>
           </div>
         )}
@@ -78,7 +78,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
       {hints.slice(0, openHints).map((hint, index) => (
         <div className="reveal" key={index}>
           <div className="hint">
-            <p className="kicker">רמז {index + 1} מתוך {hints.length}</p>
+            <p className="kicker">Hint {index + 1} of {hints.length}</p>
             {hint}
           </div>
         </div>
@@ -92,7 +92,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
           )}
           {solution && (
             <button type="button" onClick={() => setShowSolution((open) => !open)} aria-expanded={showSolution}>
-              {showSolution ? "הסתר פתרון" : "הצג פתרון"}
+              {showSolution ? "Hide solution" : "Show solution"}
             </button>
           )}
         </div>
@@ -100,7 +100,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
       {solution && showSolution && (
         <div className="reveal">
           <div className="solution">
-            <p className="kicker">פתרון</p>
+            <p className="kicker">Solution</p>
             {solution}
           </div>
         </div>

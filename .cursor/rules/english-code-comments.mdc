@@ -8,6 +8,7 @@ alwaysApply: false
 
 Comments inside fenced code and SQL blocks are always English.
 
-- Prose, headings, and practice text stay in Hebrew.
+- Prose, headings, and practice text are English.
+- The first time a course term appears, its Hebrew name may follow once in parentheses.
 - `//`, `/* */`, `#`, and `--` comments inside a fence are English.
 - Do not mix a Hebrew explanation into a code comment. Put that explanation in the paragraph around the block.

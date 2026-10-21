@@ -11,15 +11,15 @@
     <rect x="36" y="64" width="250" height="150" rx="14" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
     <text x="161" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142">short s</text>
     <text x="161" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">17978</text>
-    <text x="161" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="rtl" unicode-bidi="embed">כתובת 0<tspan direction="ltr" unicode-bidi="embed">x04</tspan></text>
-    <text x="161" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="rtl" unicode-bidi="embed">שני בתים</text>
+    <text x="161" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">address 0<tspan direction="ltr">x04</tspan></text>
+    <text x="161" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">two bytes</text>
   </g>
   <g class="draw d2">
     <rect x="430" y="64" width="254" height="150" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
     <text x="557" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142">short* ps</text>
     <text x="557" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">0x04</text>
-    <text x="557" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="rtl" unicode-bidi="embed">תא המצביע</text>
-    <text x="557" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="rtl" unicode-bidi="embed">שמונה בתים</text>
+    <text x="557" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">pointer cell</text>
+    <text x="557" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">eight bytes</text>
   </g>
   <g class="draw d3">
     <line x1="414" y1="128" x2="302" y2="128" stroke="#c47b2b" stroke-width="2" />

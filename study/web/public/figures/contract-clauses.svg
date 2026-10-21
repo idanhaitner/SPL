@@ -9,17 +9,17 @@
   <rect width="680" height="300" fill="#f6f1e7" />
   <g class="draw">
     <rect x="36" y="28" width="608" height="72" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
-    <text x="624" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">תנאי קדם</text>
-    <text x="624" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">מלבן החיתוך בתוך התמונה</text>
+    <text x="624" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">precondition</text>
+    <text x="624" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">crop rectangle is inside the image</text>
   </g>
   <g class="draw d2">
     <rect x="36" y="112" width="608" height="72" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="624" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">תנאי פנימי</text>
-    <text x="624" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">‏<tspan direction="ltr" unicode-bidi="embed">width</tspan> ו-<tspan direction="ltr" unicode-bidi="embed">height</tspan> חיוביים, הבתים תואמים</text>
+    <text x="624" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">invariant</text>
+    <text x="624" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">width</tspan> and <tspan direction="ltr">height</tspan> are positive, bytes match</text>
   </g>
   <g class="draw d3">
     <rect x="36" y="196" width="608" height="72" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
-    <text x="624" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="rtl" unicode-bidi="embed">תנאי סיום</text>
-    <text x="624" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="start" direction="rtl" unicode-bidi="embed">הגודל הוא החיתוך, החוצץ מחזיק את הפיקסלים</text>
+    <text x="624" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">postcondition</text>
+    <text x="624" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">size is the crop, buffer holds the pixels</text>
   </g>
 </svg>

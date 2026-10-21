@@ -1,6 +1,6 @@
 ---
 id: rule-of-three
-title: חוק השלושה
+title: The rule of three
 sources:
   - "materials/lectures/Chapter 4 - Rule of Thee.pptx"
   - "materials/sessions/SPL_PS3.pptx"
@@ -10,16 +10,18 @@ sources:
   - "materials/exams/17-b-solution.pdf"
 ---
 
-אם מחלקה (class) מחזיקה משאב, העתקה איבר-איבר (memberwise copy) היא שקר. ה-`Image` של ההרצאה מחזיק `char* _bytes` שהוקצה בבנאי (constructor). העתקת האובייקט (object) מעתיקה את המצביע (pointer). שני האובייקטים מאמינים אז שהם הבעלים של חוצץ אחד, והדיסטרקטור (destructor) הראשון משחרר אותו מתחת לשני.
+When a class owns a resource, a memberwise copy copies the pointer and leaves both objects believing they own one buffer. The `Image` in the lecture holds a `char* _bytes` that its constructor (בנאי) allocated. Copying the `Image` copies that pointer. The first destructor (הורס) then releases the buffer while the other object is still using it.
 
-## שלוש הפעולות
+## The three operations
 
-:::definition id=def-rule-of-three title="חוק השלושה (rule of three)" source="materials/lectures/Chapter 4 - Rule of Thee.pptx"
-אם מחלקה צריכה דיסטרקטור שכתב המתכנת, בנאי העתקה (copy constructor) שכתב המתכנת, או אופרטור השמה (assignment operator) שכתב המתכנת, היא כמעט תמיד צריכה את שלושתם.
+:::definition id=def-rule-of-three title="The rule of three (חוק השלושה)" source="materials/lectures/Chapter 4 - Rule of Thee.pptx"
+The rule of three: if you write the destructor, the copy constructor (בנאי העתקה), or the copy assignment operator (אופרטור השמה), write all three.
 
-- הדיסטרקטור משחרר את המשאב.
-- בנאי העתקה מקצה משאב חדש ומעתיק את התוכן לתוכו.
-- אופרטור השמה עושה את שניהם: הוא משחרר את מה שהאובייקט הזה כבר מחזיק, והוא לוקח העתקה עמוקה (deep copy) של האובייקט האחר.
+- The destructor releases the resource.
+- The copy constructor allocates a new resource and copies the contents into it.
+- The copy assignment operator does both. It releases the resource this object already holds, and it takes a deep copy (העתקה עמוקה) of the other object.
+
+`Image b = a` initializes a new object, so the copy constructor runs. `b = a` assigns one existing object to another, so the copy assignment operator runs.
 
 ```cpp
 Image a(...);
@@ -28,15 +30,15 @@ b = a;         // assignment, both objects already exist
 ```
 :::
 
-לדיסטרקטור יש רשימת פרמטרים ריקה ואין לו טיפוס החזרה. ההרצאה כותבת אותו `~Image()` והוא קורא ל-`delete[] _bytes`. ב-Java, נפילת הרפרנס (reference) האחרון ל-`Image` גם הופכת את מערך הבתים ללא נגיש. ב-C++, השמדת אובייקט ה-`Image` משמידה את המצביע, לא את הבתים, אלא אם הדיסטרקטור אומר אחרת.
+A destructor has an empty parameter list and no return type. The lecture writes it as `~Image()`, and that function calls `delete[] _bytes`. In Java, once the last reference to an `Image` becomes unreachable, the byte array becomes unreachable with it. In C++, ending the `Image` object's lifetime destroys the pointer. The bytes remain allocated, and the destructor is the function that releases them.
 
-![אובייקט Image על המחסנית (stack): רוחב, גובה, ומצביע אל חוצץ בתים נפרד על הערימה (heap)](../assets/figures/image-object-layout.svg)
+![An Image object on the stack: width, height, and a pointer to a separate byte buffer on the heap](../assets/figures/image-object-layout.svg)
 
-### העתקה רדודה (shallow copy), ואז הקריסה
+### Shallow copy (העתקה רדודה), then the crash
 
-`void processImage(Image img)` מקבל את התמונה לפי ערך (by value), ולכן בנאי ההעתקה רץ בקריאה והדיסטרקטור רץ בחזרה. בנאי ההעתקה שהמהדר מייצר מעתיק את `_width`, את `_height` ואת `_bytes`. שני האובייקטים מצביעים על מערך אחד. הדיסטרקטור של הפרמטר מבצע `delete[]` על המערך הזה. ה-`_bytes` של הקורא הוא עכשיו מצביע לא תקף. ההרצאה מציירת את הפריים האחרון הזה כשהמצביע של הקורא עדיין בתוך האובייקט ובלוק הערימה נעלם.
+`void processImage(Image img)` takes the image by value, so the copy constructor runs at the call and the destructor runs when the function returns. The copy constructor the compiler generates copies `_width`, `_height`, and `_bytes`. Both objects point at one array. The parameter's destructor runs `delete[]` on that array. The caller's `_bytes` is then a dangling pointer. The lecture's last drawing still shows the caller's pointer inside the object, and the heap block is gone.
 
-התיקון מקצה.
+The repair allocates a new buffer and copies the other image's bytes into it.
 
 ```cpp
 Image::Image(const Image& other)
@@ -46,11 +48,11 @@ Image::Image(const Image& other)
 }
 ```
 
-ההרצאה גם מראה את אותו בנאי כשהוא נכתב בהאצלה (delegating constructor) ל-`Image(int, int, char*)`, כך שההקצאה חיה במקום אחד. אחרי זה ל-`processImage` יש חוצץ משלו. הדיסטרקטור שלו משחרר רק את החוצץ הזה. התמונה של הקורא שלמה.
+The lecture also writes that constructor as a delegating constructor, forwarding to `Image(int, int, char*)`, so the allocation lives in one place. After that change, `processImage` has a buffer of its own. Its destructor releases only that buffer. The caller's image is intact.
 
-![העתקה רדודה חולקת חוצץ אחד, ולכן דיסטרקטור אחד משחרר אותו מתחת לאובייקט האחר. העתקה עמוקה נותנת לכל Image חוצץ משלו](../assets/figures/shallow-copy.svg)
+![A shallow copy shares one buffer, so one destructor releases it while the other object still uses it. A deep copy gives each Image a buffer of its own](../assets/figures/shallow-copy.svg)
 
-### השמה אינה בנייה
+### Assignment and construction
 
 ```cpp
 Image avi(1080, 1920, bytesAvi);
@@ -58,9 +60,9 @@ Image benni(1080, 1920, bytesBenni);
 avi = benni;
 ```
 
-שני האובייקטים כבר מחזיקים חוצץ. ההשמה שהמהדר מייצר מעתיקה את `benni._bytes` אל `avi._bytes` ונוטשת את המערך הישן של `avi`: דליפה (leak), וגם חוצץ משותף. פונקציית `assign` שנכתבה ביד, שמבצעת `delete[]` קודם ואז מקצה, חייבת גם לסרב להשמה עצמית (self-assignment). `avi.assign(avi)` ישחרר את החוצץ ואז יעתיק מהזיכרון ששוחרר.
+Both objects already hold a buffer. The assignment the compiler generates copies `benni._bytes` into `avi._bytes` and abandons `avi`'s old array. That array has leaked, and the two objects now share one buffer. A hand-written `assign` that runs `delete[]` first and then allocates also has to survive self-assignment. `avi.assign(avi)` would release the buffer and then copy from the memory it had just released.
 
-הצורה שההרצאה מעדיפה היא שיטת copy-and-swap.
+The form the lecture prefers is copy-and-swap.
 
 ```cpp
 void Image::swap(Image& other) {
@@ -76,22 +78,22 @@ Image& Image::operator=(const Image& other) {
 }
 ```
 
-עקבו אחרי הציורים בשקפים. לפני הקריאה, ל-`avi` ול-`benni` יש לכל אחד חוצץ. `temp` הוא תמונה שלישית, העתקה עמוקה של `benni`. פונקציית החלפה מחליפה את `avi` עם `temp`, כך ש-`avi` מחזיק עכשיו את החוצץ החדש ו-`temp` מחזיק את הישן. היציאה מהפונקציה מפעילה את הדיסטרקטור של `temp` ומשחררת את החוצץ הישן. השמה עצמית בטוחה: `temp` הוא עותק, והחלפה עם עותק של עצמכם היא פעולה ריקה על הערכים.
+The slides draw the steps. Before the call, `avi` and `benni` each hold a buffer. `temp` is a third image, a deep copy of `benni`. `swap` exchanges `avi` with `temp`, so `avi` holds the new buffer and `temp` holds the old one. When the function returns, `temp`'s destructor runs and releases the old buffer. Self-assignment is safe because `temp` is a separate copy. Swapping an object with a copy of itself leaves the values as they were.
 
-ההשמה מחזירה `Image&` כי `=` נקשר ימינה. `avi = benni = carmi` הוא `avi = (benni = carmi)`, ולכן הקריאה הפנימית חייבת להחזיר משהו שהקריאה החיצונית יכולה לקשור כ-`const Image&`. החזרת `*this` היא האובייקט הזה. החזרת `void` לא תשרשר.
+Assignment returns `Image&` because `=` associates to the right. The expression `avi = benni = carmi` is parsed as `avi = (benni = carmi)`, so the inner call has to return an object the outer call can bind as a `const Image&`. Returning `*this` provides that object, which is why the return type is `Image&` and the calls can be chained.
 
-![שיטת copy-and-swap: temp מקבל חוצץ חדש B2, ההחלפה מוסרת את B2 ל-avi, והדיסטרקטור של temp משחרר את החוצץ הישן A](../assets/figures/copy-swap.svg)
+![Copy-and-swap: temp receives a new buffer B2, the swap gives B2 to avi, and temp's destructor releases the old buffer A](../assets/figures/copy-swap.svg)
 
-תרגול 3 מנסח את אותו כלל במשפט אחד, ומוסיף הערת חריגה (exception): אם ההשמה זורקת אחרי שכבר שחררה את החוצץ הישן, האובייקט שבור. שיטת copy-and-swap עושה את עבודת ההקצאה קודם ב-`temp`. אם זו זורקת, `avi` לא השתנה.
+Session 3 states the same rule in one sentence and adds a note about exceptions. If assignment throws after it has already released the old buffer, the object is left broken. Copy-and-swap does the allocating first, inside `temp`. If that allocation throws, `avi` is unchanged.
 
-| | בנאי העתקה | אופרטור השמה |
+| | Copy constructor | Copy assignment operator |
 | --- | --- | --- |
-| האובייקט בצד שמאל | עדיין לא קיים | כבר מחזיק משאב |
-| השמה עצמית | לא יכולה לקרות | חייבת להיות לא מזיקה |
-| משחרר חוצץ ישן | לא | כן |
+| The object on the left | does not exist yet | already holds a resource |
+| Self-assignment | cannot occur | must be harmless |
+| Releases the old buffer | no | yes |
 
-:::problem id=worked-copy-and-swap title="השמה בהעתקה והחלפה" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=worked solution_origin=source
-`avi` מחזיק את החוצץ A. `benni` מחזיק את החוצץ B. עקבו אחרי `avi = benni` ואמרו איזה חוצץ משוחרר.
+:::problem id=worked-copy-and-swap title="Assignment by copy and swap" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=worked solution_origin=source
+`avi` holds buffer A. `benni` holds buffer B. Follow `avi = benni` and say which buffer is released.
 
 ```cpp
 Image& Image::operator=(const Image& other) {
@@ -102,12 +104,12 @@ Image& Image::operator=(const Image& other) {
 ```
 
 :::solution
-`Image temp(other)` מעתיק עמוק את B אל חוצץ חדש B2. `avi` עדיין הבעלים של A. `swap(temp)` גורם ל-`avi._bytes` להצביע על B2 ול-`temp._bytes` להצביע על A. `temp` מושמד בסוף האופרטור, ו-`~Image` מבצע `delete[]` על A. `benni` עדיין הבעלים של B. `avi` הבעלים של B2. אין מצביע משותף.
+`Image temp(other)` makes a deep copy of B in a new buffer, B2. `avi` still owns A. `swap(temp)` makes `avi._bytes` point at B2 and `temp._bytes` point at A. `temp` is destroyed at the end of the operator, and `~Image` runs `delete[]` on A. `benni` still owns B. `avi` owns B2. Each object has its own buffer.
 :::
 :::
 
 :::check id=chk-init-vs-assign
-איזו שורה קוראת לבנאי ההעתקה?
+Which line calls the copy constructor?
 
 ```cpp
 Image a(...);
@@ -115,25 +117,25 @@ Image b = a;
 b = a;
 ```
 
-- [ ] שתי השורות
-- [x] רק `Image b = a`
-- [ ] רק `b = a`
+- [ ] Both lines
+- [x] Only `Image b = a`
+- [ ] Only `b = a`
 
-`Image b = a` מאתחל אובייקט חדש. `b = a` משים לאובייקט שכבר קיים. סימני הפיסוק נראים כמו השמה בשתי השורות. הם לא.
+`Image b = a` initializes a new object, so the copy constructor runs. `b = a` assigns to an object that already exists, so the copy assignment operator runs. The `=` token appears in both lines. The first line is initialization.
 :::
 
 :::trap
-`if (this == other)` משווה מצביע עם אובייקט. הבדיקה העצמית היא `if (this == &other)`. הצורה של copy-and-swap לא צריכה את הבדיקה כדי להיות נכונה, כי היא אף פעם לא משחררת את `*this` לפני שהעותק קיים.
+`if (this == other)` compares a pointer with an object. The test for self-assignment is `if (this == &other)`. Copy-and-swap is correct without that test: it releases `*this` only after the copy exists, and the copy is a different object.
 :::
 
 :::trap
-`operator()` על ה-`Image` של ההרצאה הוא רק העמסה (overload) של `avi(x, y)`, ומחזיר `_bytes[y * _width + x]`. הוא אינו אחת משלוש הפונקציות המיוחדות. העמסה של אופרטור קוסמטי לא כופה לכתוב את חוק השלושה. בעלות על מצביע גולמי (raw pointer) כן כופה.
+`operator()` on the lecture's `Image` is the overload that makes `avi(x, y)` return `_bytes[y * _width + x]`. It sits outside the three special members. An overload that only computes a value leaves those three functions to the compiler. Owning a raw pointer is what requires the rule of three.
 :::
 
-## תרגול
+## Practice
 
-:::problem id=ps3-rule-of-three title="שלוש הפונקציות של List" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
-אם מחלקה צריכה דיסטרקטור, בנאי העתקה, או אופרטור השמה שמוגדרים על ידי המשתמש, היא כמעט תמיד צריכה את שלושתם. `List` מחזיק `Node* head` שהוקצה עם `new`, והפונקציות המיוחדות שהמהדר מייצר עדיין במקום. מה נשבר, ואילו שלוש פונקציות כותבים?
+:::problem id=ps3-rule-of-three title="The three functions of List" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
+If a class needs a user-defined destructor, copy constructor, or copy assignment operator, it almost always needs all three. `List` holds a `Node* head` allocated with `new`, and the special members the compiler generates are still in place. What breaks, and which three functions do you write?
 
 ```cpp
 class List {
@@ -142,39 +144,38 @@ class List {
 ```
 
 :::hint
-הפעולות שהמהדר מייצר מעתיקות את המצביע ולא מקצות רשימה שנייה.
+The operations the compiler generates copy the pointer, so both lists end up owning one chain.
 :::
 :::hint
-שני אובייקטים, `head` אחד, שני דיסטרקטורים.
+Two objects, one `head`, two destructors.
 :::
 :::hint
-נקבו בשלוש: דיסטרקטור, בנאי העתקה, אופרטור השמה. אמרו מה כל אחת עושה ל-`head`.
+Name the three: the destructor, the copy constructor, and the copy assignment operator. Say what each one does with `head`.
 :::
 :::solution
-`List b = a` מעתיק את `head`. `b` ו-`a` חולקים שרשרת אחת. כשדיסטרקטור אחד מבצע `delete` לאורך השרשרת, המצביע של הרשימה האחרת תלוי (dangling pointer), והדיסטרקטור שלה מבצע `delete` על אותם צמתים שוב.
+`List b = a` copies `head`. `b` and `a` share one chain. When one destructor walks the chain and `delete`s each node, the other list is left with a dangling pointer, and its destructor `delete`s those same nodes again.
 
-כותבים את שלושתן. הדיסטרקטור הולך לאורך השרשרת ומבצע `delete` על כל צומת. בנאי ההעתקה מקצה צומת חדש לכל איבר ושם את `head` על השרשרת הזאת. אופרטור ההשמה משחרר את השרשרת ש-`this` כבר מחזיק, ואז מעתיק עמוק, ומחזיר `*this`. שיטת copy-and-swap היא ההשמה שמשתמשת שוב בבנאי ההעתקה ובדיסטרקטור: בונים עותק זמני, מחליפים את שני מצביעי ה-`head`, ונותנים לדיסטרקטור של הזמני לשחרר את השרשרת הישנה.
+Write all three. The destructor walks the chain and `delete`s every node. The copy constructor allocates a new node for each element and points `head` at that new chain. The copy assignment operator releases the chain `this` already holds, then makes a deep copy, and returns `*this`. Copy-and-swap is the assignment that reuses the copy constructor and the destructor: build a temporary copy, swap the two `head` pointers, and let the temporary's destructor release the old chain.
 
-ההערה בתרגול על איברים שהמהדר מייצר: הם נכונים למחלקה שהאיברים שלה כבר מנהלים את עצמם. `Node*` גולמי אינו איבר כזה.
+The session's note on compiler-generated members: they are the right functions when each member already manages itself. A raw `Node*` leaves the chain for `List` to free.
 :::
 :::
-
 
 :::examnote
-השאלה נותנת מחלקה קטנה עם מצביע גולמי או מערך גולמי ומבקשת את הדיסטרקטור ובנאי העתקה עמוק, לפעמים את שני הבנאים של לוח דו-ממדי. המלכודת היא העתקת ברירת המחדל איבר-איבר, או השמה שמשחררת את החוצץ לפני שיש לה חוצץ חדש.
+The question gives a small class with a raw pointer or a raw array and asks for the destructor and a deep copy constructor, sometimes for both constructors of a two-dimensional board. The trap is the default memberwise copy, or an assignment that releases the buffer before it has a new one.
 :::
 
-:::problem id=exam-17a-q2 title="בעלות על תיאור" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
-סטודנטים ב-«C-Kalkel» שומרים תוצאות מבחנים ב-C++. `TestRes` מחזיק `char* description_`. `Test` מנהל אוסף של התוצאות האלה. השאלה מבקשת להפוך את המחלקות לנכונות תחת העתקה והשמדה: חוצץ התיאור בבעלות התוצאה, ומבחן שהועתק לא יכול לחלוק את החוצץ הזה. ממשו את הפונקציות המיוחדות שהבעלות דורשת. אל תדליפו את התיאור הקודם בהשמה.
+:::problem id=exam-17a-q2 title="Ownership of a description" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
+Students in "C-Kalkel" store exam results in C++. `TestRes` holds a `char* description_`. `Test` manages a collection of those results. Make the classes correct under copying and destruction: the result owns its description buffer, and a copied test owns a separate copy of that buffer. Implement the special functions that this ownership requires. On assignment, release the previous description exactly once.
 
 :::hint
-איבר `char*` הוא המצב של `Image::_bytes` בשם אחר.
+A `char*` member is `Image::_bytes` under another name.
 :::
 :::hint
-ההעתקה בונה חוצץ חדש עם `new char[...]` ועם `memcpy` או `strcpy`. הדיסטרקטור הוא `delete[]`.
+The copy builds a new buffer with `new char[...]` and with `memcpy` or `strcpy`. The destructor is `delete[]`.
 :::
 :::hint
-להשמה, או copy-and-swap או הסדר «מקצים את החוצץ החדש, ואז `delete` על הישן», כדי שזריקה או השמה עצמית לא יוכלו לשחרר את העותק היחיד.
+For assignment, use copy-and-swap, or allocate the new buffer and only then `delete` the old one, so that a throw or a self-assignment cannot release the only copy.
 :::
 :::solution
 ```cpp
@@ -196,12 +197,12 @@ public:
 };
 ```
 
-`Test` שמחזיק מערך של `TestRes*` משתמש באותן שלוש פעולות על המערך: `delete[]` בדיסטרקטור, מערך חדש ועוד העתקת איברים בבנאי ההעתקה, ו-copy-and-swap להשמה. אם `Test` במקום זה שומר `TestRes` לפי ערך במכל שכבר יש לו את הפונקציות המיוחדות הנכונות, `Test` עצמו יכול להישאר עם אלה שהמהדר מייצר. הבאג שהשאלה מכוונת אליו הוא ה-`char*` הגולמי.
+A `Test` that holds an array of `TestRes*` uses the same three operations on that array: `delete[]` in the destructor, a new array and a per-element copy in the copy constructor, and copy-and-swap for assignment. If `Test` instead stores `TestRes` by value in a container that already has the right special members, `Test` itself can keep the members the compiler generates. The bug the question is aimed at is the raw `char*`.
 :::
 :::
 
-:::problem id=exam-17b-q2 title="העתקה עמוקה של לוח" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-`Terrain<T>` שומר לוח כבלוק `T*` של `height_ * width_` תאים. ממשו את שני הבנאים ואת הדיסטרקטור. בנאי ההעתקה חייב להיות העתקה עמוקה.
+:::problem id=exam-17b-q2 title="A deep copy of a board" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
+`Terrain<T>` stores a board as one `T*` block of `height_ * width_` cells. Implement the two constructors and the destructor. The copy constructor has to be a deep copy.
 
 ```cpp
 template <typename T>
@@ -214,13 +215,13 @@ public:
 ```
 
 :::hint
-`new T[w * h]` אחד הוא הבעלים של הלוח. הרוחב והגובה הם מספרים שלמים פשוטים ומעתיקים את עצמם.
+One `new T[w * h]` owns the board. The width and the height are plain integers, and they copy themselves.
 :::
 :::hint
-ההעתקה מקצה מערך משלה. השמה של כל תא מעתיקה `T`. אם `T` הוא רק מצביע, זה עמוק כמו ההעתקה של `T` עצמו.
+The copy allocates an array of its own. Assigning each cell copies a `T`. If `T` is itself only a pointer, the result is as deep as the copy that `T` performs.
 :::
 :::hint
-התחילו את בנאי ההעתקה ב-`_w(other._w), _h(other._h), _cells(new T[_w * _h])`.
+Start the copy constructor with `_w(other._w), _h(other._h), _cells(new T[_w * _h])`.
 :::
 :::solution
 ```cpp
@@ -239,8 +240,8 @@ template <typename T>
 Terrain<T>::~Terrain() { delete[] _cells; }
 ```
 
-העתקת ברירת המחדל הייתה מעתיקה את `_cells` וחולקת לוח אחד. הדיסטרקטור של העותק היה אז משחרר את הלוח של המקור. חוק השלושה אומר שהדיסטרקטור שזה עתה נכתב כופה את בנאי ההעתקה, והוא גם כופה אופרטור השמה אם המחלקה מרשה `a = b`. השאלה מבקשת את הבנאים ואת הדיסטרקטור; מחלקה שלמה כותבת גם השמה, ב-copy-and-swap, או שמה עליו `= delete`.
+The default copy would copy `_cells` and share one board. The copy's destructor would then release the original's board. The rule of three says that the destructor just written requires the copy constructor, and that it also requires a copy assignment operator if the class allows `a = b`. The question asks for the constructors and the destructor. A complete class also writes the assignment, with copy-and-swap, or removes it with `= delete`.
 :::
 :::
 
-שיטת copy-and-swap היא הגשר אל [חוק החמישה](topic:rule-of-five): אותה פונקציית החלפה גונבת חוצץ מאובייקט זמני במקום לשכפל אותו. עד אז, כל העתקה בנושא הזה באמת מקצה.
+Copy-and-swap is the bridge to the [rule of five](topic:rule-of-five) (חוק החמישה). The same swap takes a buffer from a temporary, and that transfer is a move (העברה). In this chapter, every copy still allocates a new buffer.

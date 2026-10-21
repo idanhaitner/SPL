@@ -1,6 +1,6 @@
 # Systems Programming — Study Guide
 
-An interactive study site for **תכנות מערכות** (Systems Programming, 202-1-2031). It teaches the course from scratch in Hebrew: memory layout, pointers, C++ ownership, Java, concurrency, networking, the Reactor pattern, and persistence — with worked examples, diagrams, and practice drawn from lectures and past exams.
+An interactive study site for **Systems Programming** (תכנות מערכות, 202-1-2031). It teaches the course from scratch in English: the run-time environment, memory layout, pointers, C++ ownership, Java, concurrency, networking, the reactor, and persistence — with worked examples, diagrams, and practice drawn from lectures and past exams.
 
 **Live site:** [idanhaitner.github.io/SPL](https://idanhaitner.github.io/SPL/)
 
@@ -11,7 +11,7 @@ An interactive study site for **תכנות מערכות** (Systems Programming, 
 - Practice cards you can mark as solved (progress stays in the browser)
 - Diagrams for frames, heaps, vtables, reactors, and more
 - Search across chapters, practice, and the glossary
-- Fully RTL Hebrew reading experience
+- English, read left to right, with the course's Hebrew term on first use
 
 ## Stack
 

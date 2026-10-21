@@ -1,21 +1,21 @@
 ---
 id: classes-and-objects
-title: מחלקות ועצמים
+title: Classes and objects
 sources:
   - "materials/lectures/Chapter 3 - Classes and Objects.pptx"
   - "materials/sessions/SPL_PS1 (1).pptx"
   - "materials/sessions/SPL_PS3.pptx"
 ---
 
-מחלקה (class) ב-C++ מגדירה פריסת זיכרון (layout) של נתונים לצד פונקציות המקבלות מצביע סמוי (`this`) לפריסה זו. פרק זה מתאר את מסלול הבנייה של התוכנית: כיצד קוד מקור הופך לקובץ הרצה, כיצד אובייקטים מוקצים ומאותחלים, וכיצד פונקציות חבר ניגשות לאובייקט.
+A class defines the memory layout of its objects and the member functions that operate on them. Each object receives its own copy of the non-static data members. The member functions are shared, and every non-static member function receives the address of that object as a hidden parameter, `this`. This chapter follows the path from a source file to an executable, and then how an object is allocated, initialized, and used.
 
-## בניית תוכנית (Build Pipeline)
+## Building a program
 
-פונקציה ב-C++ אינה חייבת להיות מוגדרת בתוך מחלקה; פונקציות המוגדרות מחוץ למחלקה נמצאות בטווח הגלובלי (global scope).
+A function defined outside every class lives in the global scope.
 
-הצהרה (declaration) מציגה את שם הפונקציה וחתימתה (prototype). הגדרה (definition) מספקת גם את גוף הפונקציה. מותר להצהיר על פונקציה מספר פעמים, אך חובה להגדיר אותה פעם אחת בלבד (Rule One Definition - ODR).
+A declaration introduces the function's name and its signature. A definition also supplies the function body. A function may be declared many times. The One Definition Rule (ODR) requires that it be defined exactly once.
 
-הצהרה מוקדמת (forward declaration) מודיעה למהדר על קיומו של טיפוס או פונקציה. הצהרות המיועדות לשיימינג בין מספר קובצי `.cpp` מרוכזות בקובצי כותרת (`.h` / `.hpp`). הפקודה `#include` מעתיקה את תוכן קובץ הכותרת ישירות אל קובץ המקור. כדי למנוע הכללה מעגלית וכפולה, משתמשים בשומרי הכללה (include guards):
+A forward declaration tells the compiler that a type or a function exists. Declarations shared by several `.cpp` files are collected in header files (`.h` or `.hpp`). The `#include` directive pastes the header's text into the source file at that point. Include guards stop the same header from being pasted twice, including through a circular include:
 
 ```cpp
 #ifndef POINT_H
@@ -25,22 +25,22 @@ sources:
 
 ```
 
-תהליך הבנייה כולל ארבעה שלבים:
+The build has four stages:
 
-:::definition id=def-build title="ארבעת שלבי הבנייה" source="materials/sessions/SPL_PS1 (1).pptx"
+:::definition id=def-build title="The four stages of the build" source="materials/sessions/SPL_PS1 (1).pptx"
 
-1. **הקדם-מעבד (Preprocessor):** מעבד הנחיות `#` (`#include`, `#define`, `#ifndef`), מסיר הערות, ומפיק קוד מורחב.
-2. **המהדר (Compiler):** מתרגם את הקוד המורחב לשפת אסמבלי (Assembly).
-3. **האסמבלר (Assembler):** מתרגם את קוד האסמבלי לקובץ אובייקט בשפת מכונה (`.o` / `.obj`).
-4. **המקשר (Linker):** מחבר את קובצי האובייקט והספריות, פותר כתובות של סמלים וקריאות חיצוניות, ומפיק קובץ הרצה יחיד (Executable).
+1. **Preprocessor:** handles the `#` directives (`#include`, `#define`, `#ifndef`), strips comments, and writes the expanded source.
+2. **Compiler:** translates that expanded source into assembly.
+3. **Assembler:** translates the assembly into a machine-code object file (`.o` / `.obj`).
+4. **Linker:** combines the object files and the libraries, resolves the addresses of symbols and of external calls, and writes a single executable.
 :::
 
-![ארבעה שלבי בנייה לפי הסדר: קדם-מעבד, קומפיילר, אסמבלר, ואז המקשר שמייצר קובץ הרצה אחד](../assets/figures/build-pipeline.svg)
+![The four build stages in order: preprocessor, compiler, assembler, then the linker, which produces one executable](../assets/figures/build-pipeline.svg)
 
-שפת Java מקמפלת קוד לבייטקוד ומבצעת קישור דינמי בזמן ריצה. לעומת זאת, ב-C++ הקישור מבוצע מראש (Ahead-of-Time). הדגל `g++ -c` עוצר את התהליך לאחר שלב האסמבלר ומפיק קובץ `.o`. הדגל `g++ -o name` קובע את שם קובץ ההרצה (ברירת המחדל ב-Linux היא `a.out`).
+Java compiles source to bytecode, and the JVM links dynamically while the program runs, at the moment a class is loaded. C++ resolves those symbols ahead of time, so the executable is complete before it starts. The flag `g++ -c` stops the build after the assembler and writes a `.o` file. The flag `g++ -o name` sets the executable's name. On Linux the default name is `a.out`.
 
-:::problem id=worked-compile-vs-link title="קישור בלי main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
-הפקודה הראשונה מצליחה והשנייה נכשלת. איזה שלב נכשל ולמה?
+:::problem id=worked-compile-vs-link title="Linking without main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
+The first command succeeds and the second fails. Which stage fails, and why?
 
 ```text
 g++ -c student.cpp
@@ -49,11 +49,11 @@ g++ -o app student.o
 ```
 
 :::solution
-השלב השני (הקישור) נכשל. הפקודה `g++ -c` מפיקה קובץ אובייקט `student.o` ואינה מחפשת את נקודת הכניסה `main`. הפקודה השנייה מנסה לייצר קובץ הרצה ומפעילה את המקשר. כיוון ש-`main` אינה מוגדרת ב-`student.o`, המקשר מדווח על סמל חסר (undefined reference to `main`).
+The failure is in the linker, which is what the second command runs. `g++ -c` writes the object file `student.o` and stops before linking, so that command never searches for `main`. The second command is asked for an executable, so it invokes the linker. `student.o` has no definition of `main`, and the linker reports an undefined reference to `main`.
 :::
 :::
 
-קובץ `Makefile` מנהל תלויות בנייה. הפקודה `make` מריצה את המטרה הראשונה בקובץ אלא אם צוינה מטרה מפורשת. פקודות ב-Makefile חייבות להתחיל בתו Tab:
+A `Makefile` records the dependencies of a build. With no target on the command line, `make` runs the first target in the file. A recipe line begins with a Tab character:
 
 ```makefile
 hello: helloWorld.o run.o
@@ -61,12 +61,12 @@ hello: helloWorld.o run.o
 
 ```
 
-ב-C++, הטיפוסים הבסיסיים כוללים את `int`, `double`, `bool`, `char`. המילה השמורה `const` משמשת ליצירת קבועים (במקום `final` ב-Java). המחלקה `std::string` מייצגת מחרוזת משתנית ומשווה באמצעות `==`. המחלקה `std::vector<T>` מייצגת מערך דינמי.
+The fundamental types in C++ include `int`, `double`, `bool`, and `char`. The keyword `const` names a constant; Java uses `final` for that job. `std::string` is a mutable string, and strings compare with `==`. `std::vector<T>` is a dynamic array.
 
-## אובייקטים וערכים
+## Objects and values
 
-:::definition id=def-class title="מחלקה ו-struct" source="materials/lectures/Chapter 3 - Classes and Objects.pptx"
-מחלקה מגדירה אוסף של שדות ומתודות עם הרשאות גישה. ב-`class`, ברירת המחדל של הרשאת הגישה היא `private`. ב-`struct`, ברירת המחדל היא `public`. הגדרת מחלקה מסתיימת בנקודה-פסיק `;`:
+:::definition id=def-class title="Class and struct" source="materials/lectures/Chapter 3 - Classes and Objects.pptx"
+A class is a set of data members and member functions, together with access rules. In a `class`, the default access is `private`. In a `struct`, the default access is `public`. The definition ends with a semicolon, because the same statement may also declare objects:
 
 ```cpp
 struct Point {
@@ -78,7 +78,7 @@ struct Point {
 
 :::
 
-אתחול שדות המחלקה בבנאי מבוצע באמצעות רשימת אתחול (initializer list) המופיעה לפני גוף הבנאי. זוהי הדרך היחידה לאתחל שדות `const` ושדות רפרנס (`&`), והיא מונעת אתחול כפול (בניית מופע ברירת מחדל ולאחר מכן השמה):
+A constructor (בנאי) initializes the members through an initializer list, written before the constructor body. A `const` member and a reference member receive their values in that list: once the body runs, the member already exists, and assigning to it is a compile error. For any other member, the list initializes it directly. An assignment in the body would default-construct the member first and then assign.
 
 ```cpp
 // student.h
@@ -98,9 +98,9 @@ Student::Student(const std::string& name, int year)
 
 ```
 
-העברת אובייקטים גדולים כארגומנטים מבוצעת בדרך כלל ברפרנס לקבוע (`const T&`) כדי למנוע העתקה מיותרת.
+A large object is usually passed as `const T&`, a reference to const. The parameter then names the caller's object, and the call skips the copy.
 
-אובייקט המוקצה ללא `new` נוצר במסגרת המחסנית והגישה לאיבריו מבוצעת עם אופרטור הנקודה `.`. אובייקט המוקצה עם `new` נוצר בערימה, הגישה אליו מבוצעת דרך מצביע בעזרת אופרטור החץ `->`.
+An object created without `new` has automatic storage in the caller's stack frame, and its members are reached with the dot operator `.`. An object created with `new` lives on the heap. You hold a pointer to it, and you reach its members with the arrow operator `->`.
 
 ```cpp
 Student a("Avi", 2000);
@@ -111,17 +111,17 @@ delete pb;
 
 ```
 
-### המצביע this, מתודות const ו-static
+### The this pointer, const member functions, and static
 
-לכל מתודת איבר שאינה `static` מועבר מצביע סמוי בשם `this`, המחזיק את כתובתו של האובייקט עליו הופעלה המתודה.
+Every non-static member function receives a hidden pointer named `this`. It holds the address of the object the function was called on.
 
-אובייקט שהוגדר כ-`const` רשאי לקרוא רק למתודות שהוגדרו כ-`const` (מתודות המתחייבות שלא לשנות את שדות האובייקט). בתוך מתודת `const`, הטיפוס של `this` הוא `const ClassName*`.
+A `const` object may call only member functions that are themselves `const`. Those functions promise to leave the object's members unchanged. Inside a `const` member function, `this` has type `const ClassName*`.
 
-למתודה שהוגדרה כ-`static` אין מצביע `this`, ולכן היא אינה יכולה לפיכך הגישה לשדות איבר רגילים. בנאי יכול לקרוא לבנאי אחר של אותה מחלקה באמצעות דלגציה (delegation) ברשימת האתחול.
+A `static` member function has no `this` pointer, so the non-static members are out of its reach. A constructor can delegate to another constructor of the same class by naming that constructor in the initializer list.
 
-### החזרת אובייקטים ממתודות
+### Returning an object from a member function
 
-החזרת אובייקט לפי ערך מייצרת עותק של האובייקט. החזרת רפרנס למשתנה מקומי שהוקצה במחסנית היא טעות חמורה, כיוון שהאובייקט מושמד עם סיום הפונקציה:
+Returning an object by value creates a copy. Returning a reference to a local automatic object is undefined behavior: that object's lifetime ends when the function returns, and the caller would be left with a reference to storage that no longer holds the object.
 
 ```cpp
 Image& myPicture() {
@@ -131,27 +131,27 @@ Image& myPicture() {
 
 ```
 
-החזרת רפרנס מותרת כאשר היא מתייחסת לאובייקט שזמן חייו נמשך מעבר לקריאה (כגון שדה של המחלקה).
+A returned reference is valid when the object it names outlives the call. A member of the class is such an object: its lifetime is the lifetime of the class object.
 
-מתודות מיוחדות במחלקה:
+These are the special member functions that bound an object's lifetime and its copies:
 
-- **בנאי ברירת מחדל (Default Constructor):** נוצר אוטומטית על ידי המהדר רק אם לא הוגדר בנאי מפורש.
-- **בנאי העתקה (Copy Constructor):** מקבל רפרנס לאובייקט מאותו הטיפוס (`const ClassName&`).
-- **אופרטור השמה (Copy Assignment Operator):** מופעל בעת השמת אובייקט קיים לאובייקט קיים אחר.
-- **הורס (Destructor):** נקרא בעת השמדת האובייקט לשחרור משאבים.
+- **Default constructor:** the compiler generates one only when the class declares no constructor of its own.
+- **Copy constructor (בנאי העתקה):** takes a reference to another object of the same type (`const ClassName&`).
+- **Copy assignment operator (אופרטור השמה):** runs when one existing object is assigned to another existing object.
+- **Destructor (הורס):** runs at the end of the object's lifetime and releases the resources the object acquired.
 
 :::check id=chk-dot-arrow
-נתון `Student* pb = new Student("Benni", 2000);`. כיצד יש לקרוא למתודה `print`?
+Given `Student* pb = new Student("Benni", 2000);`, how do you call `print`?
 
 - [ ] `pb.print()`
 - [x] `pb->print()`
 - [ ] `(*pb)->print()`
 
-`pb` הוא מצביע. אופרטור `->` מבצע חילול מצביע וגישה לאיבר. הביטוי `(*pb).print()` שקול לו.
+`pb` is a pointer. The operator `->` dereferences that pointer and then accesses the member. `(*pb).print()` is the same call, written with an explicit dereference and a dot.
 :::
 
-:::problem id=worked-initializer title="רשימת אתחול" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
-מדוע המחלקה `Point` חייבת להשתמש ברשימת אתחול עבור `x` ו-`y`, ומדוע `Line` משתמשת בפונקציה סטטית לאתחול `len`?
+:::problem id=worked-initializer title="The initializer list" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
+Why must `Point` initialize `x` and `y` in the initializer list, and why does `Line` use a static function to initialize `len`?
 
 ```cpp
 struct Point {
@@ -170,38 +170,38 @@ struct Line {
 ```
 
 :::solution
-שדות `const` חייבים להיות מאותחלים ברשימת האתחול, כיוון שאי אפשר לבצע אליהם השמה בתוך גוף הבנאי לאחר שנוצרו.
+A `const` member receives its value in the initializer list. By the time the constructor body runs, the member already exists, and a `const` member cannot be assigned.
 
-ב-`Line`, השדה `len` הוא `const` ולכן חייב להיאפיין ברשימת האתחול. קריאה לפונקציית איבר רגילה מהרשימה אינה מותרת כיוון שהאובייקט (`this`) טרם סיים את אתחולו. פונקציה `static` אינה תלויה ב-`this` ולפיכך ניתן לקרוא לה בבטחה.
+In `Line`, `len` is `const`, so the initializer list is where it is initialized. A call to an ordinary member function from that list would use `this` on an object that is still being initialized, and the language rejects that call. A `static` function runs with no object, so `calcLen` is a safe call from the list.
 :::
 :::
 
 :::trap
-שכחת נקודה-פסיק `;` בסוף הגדרת `class` או `struct` היא שגיאת הידור נפוצה, שכן התחביר מאפשר הצהרת מופעים בצמוד להגדרה.
+Forgetting the semicolon after a `class` or `struct` definition is a common compile error. The grammar allows object declarations in the same statement as the type, so the compiler keeps reading past the type and reports the mistake later.
 :::
 
-## תרגול
+## Practice
 
-:::problem id=ps1-link-vs-java title="איפה הקישור קורה" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-הסבר מתי מתרחש שלב הקישור ב-Java מול C++, ואיזה קובץ מייצרת הפקודה `g++ -c`.
+:::problem id=ps1-link-vs-java title="Where linking happens" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
+Explain when linking happens in Java and when it happens in C++, and say which file `g++ -c` produces.
 :::hint
-הקומפיילר של Java לא פולט קוד מכונה למערכת הפעלה אחת.
+The Java compiler emits bytecode. The JVM turns that bytecode into machine code later, on the machine that runs the program.
 :::
 :::hint
-קובצי אובייקט של C++ עדיין מכילים סמלים שקובצי `.cpp` אחרים מגדירים. משהו אחרי `-c` צריך לתקן אותם פנימה.
+A C++ object file still names symbols that other `.cpp` files define. The step after `-c` is what resolves those names.
 :::
 :::hint
-שלב האסמבלר בתרגול כותב `*.o` ב-Unix.
+In this session the assembler writes `*.o` on Unix.
 :::
 :::solution
-ב-Java, הקוד מקומפל לבייטקוד והקישור מבוצע דינמית בזמן ריצה על ידי ה-JVM בעת טעינת המחלקות.
+In Java, source is compiled to bytecode, and the JVM links dynamically while the program runs, when it loads a class.
 
-ב-C++, הפקודה `g++ -c` מריצה את הקדם-מעבד, המהדר והאסמבלר, ומפיקה קובץ אובייקט (`.o`). קובץ זה מכיל קוד מכונה אך סמלים חיצוניים טרם נפתרו. הקישור מבוצע בשלב נפרד לפני יצירת קובץ ההרצה.
+In C++, `g++ -c` runs the preprocessor, the compiler, and the assembler, and it writes an object file (`.o`). That file contains machine code, and its external symbols are still unresolved. Linking is a separate step, and it runs before the executable exists.
 :::
 :::
 
-:::problem id=ps1-makefile-first-target title="המטרה הראשונה של make" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-מה יקרה בעת הרצת הפקודה `make` עבור הקובץ הבא?
+:::problem id=ps1-makefile-first-target title="The first target of make" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
+What happens when you run `make` on the following file?
 
 ```makefile
 clean:
@@ -212,21 +212,21 @@ hello: helloWorld.o run.o
 
 ```
 :::hint
-`make` בלי ארגומנטים לא מחפש מטרה בשם `all` אלא אם זו המטרה שהוא מוצא ראשונה.
+`make` with no arguments runs the first target in the file. A target named `all` runs when it is that first target.
 :::
 :::hint
-התרגול אומר שברירת המחדל היא המטרה הראשונה בקובץ.
+The session states the default directly: it is the first target in the file.
 :::
 :::hint
-הפקודה מתחת למטרה מוזחת בטאב. שורת התלות היא `target: dep1 dep2`.
+The recipe under a target is indented with a Tab. The dependency line has the form `target: dep1 dep2`.
 :::
 :::solution
-הפקודה `make` ללא ארגומנטים מריצה את המטרה הראשונה בקובץ, שהיא `clean`. לפיכך היא תמחק את התוצרים ולא תבנה את `hello`. כדי לבנות את התוכנית יש להריץ `make hello` או להעביר את המטרה `hello` להיות הראשונה בקובץ.
+`make` with no arguments runs the first target in the file, which is `clean`. That recipe deletes the build products, and `hello` stays unbuilt. To build the program, run `make hello`, or move the `hello` target so that it is the first target in the file.
 :::
 :::
 
-:::problem id=ps3-pass-by-value title="שלוש חתימות של emphasize" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
-נתונות החתימות הבאות. אילו מהן מאפשרות לשנות את המחרוזת של הקורא, ואיזו מאפשרת העברת `nullptr`?
+:::problem id=ps3-pass-by-value title="Three signatures of emphasize" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
+Here are three signatures. Which of them can modify the caller's string, and which of them can accept `nullptr`?
 
 ```cpp
 void emphasize1(std::string word);
@@ -235,20 +235,20 @@ void emphasize3(std::string* word);
 
 ```
 :::hint
-פרמטר לפי ערך הוא אובייקט אחר מזה של הקורא.
+A parameter passed by value is a different object from the caller's object.
 :::
 :::hint
-רפרנס חייב להיקשר לאובייקט. מצביע יכול להחזיק `nullptr`, והגוף צריך לבדוק אותו.
+A reference has to bind to an object. A pointer may hold `nullptr`, and the function body has to test for that.
 :::
 :::hint
-הגוף בשקף הוא `word.append(3, '!')` או `word->append(3, '!')`.
+On the slide, the body is `word.append(3, '!')` or `word->append(3, '!')`.
 :::
 :::solution
 
-- `emphasize1`: מקבלת עותק (by value). שינויים בתוך הפונקציה אינם משפיעים על הקורא.
-- `emphasize2`: מקבלת רפרנס (by reference). שינויים משפיעים ישירות על המחרוזת של הקורא. אינה יכולה לקבל `nullptr`.
-- `emphasize3`: מקבלת מצביע. שינויים דרך חילול המצביע משפיעים על הקורא. יכולה לקבל `nullptr` (ונדרשת בדיקת תקינות בגוף הפונקציה).
+- `emphasize1` receives a copy, passed by value. Changes inside the function leave the caller's string as it was.
+- `emphasize2` receives a reference. Changes inside the function modify the caller's string. A reference cannot be `nullptr`.
+- `emphasize3` receives a pointer. Changes made through that pointer modify the caller's string. The pointer may be `nullptr`, and the function body has to check before it uses it.
 :::
 :::
 
-רשימת האתחול ו-`this` הם החצי הרגיל של מחלקה. [חוק השלושה](topic:rule-of-three) הוא מה שמשתנה כשאחד האיברים הוא מצביע לחוצץ שהקציתם. [ירושה](topic:inheritance) היא מה שמשתנה כשקריאה דרך מצביע למחלקת בסיס צריכה להגיע לפונקציה הנגזרת.
+The initializer list is how a constructor gives members their first values, and `this` is how a member function finds the object it was called on. The [rule of three](topic:rule-of-three) (חוק השלושה) is what changes when one of those members is a pointer to a buffer the class allocated. [Inheritance](topic:inheritance) is what changes when a call through a base-class pointer has to reach the function in the derived class.

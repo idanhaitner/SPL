@@ -6,9 +6,9 @@ import { Mixed } from "@/lib/bidi";
 import type { SearchHit } from "@/lib/types";
 
 const KINDS: Record<string, string> = {
-  Chapter: "פרק",
-  Practice: "תרגול",
-  Glossary: "מונח",
+  Chapter: "Chapter",
+  Practice: "Practice",
+  Glossary: "Term",
 };
 
 export function SearchBox({ hits }: { hits: SearchHit[] }) {
@@ -30,11 +30,11 @@ export function SearchBox({ hits }: { hits: SearchHit[] }) {
 
   return (
     <div className="search" ref={box}>
-      <label className="sr-only" htmlFor="q">חיפוש בקורס</label>
+      <label className="sr-only" htmlFor="q">Search the course</label>
       <input
         id="q"
         type="search"
-        placeholder="חיפוש"
+        placeholder="Search"
         value={query}
         autoComplete="off"
         onChange={(event) => {
@@ -45,7 +45,7 @@ export function SearchBox({ hits }: { hits: SearchHit[] }) {
       />
       {open && needle && (
         <div className="search-results">
-          {matches.length === 0 && <p>אין תוצאות.</p>}
+          {matches.length === 0 && <p>No results.</p>}
           {matches.map((hit) => (
             <Link key={hit.href + hit.title} href={hit.href} onClick={() => setOpen(false)}>
               <span>{KINDS[hit.kind] ?? hit.kind}</span>

@@ -7,7 +7,7 @@ export default function HomePage() {
   const course = loadCourse();
   return (
     <article className="page">
-      <p className="kicker">קורס</p>
+      <p className="kicker">Course</p>
       <h1><Mixed text={course.title} /></h1>
       <p className="lead"><Mixed text={course.summary} /></p>
       <Continue
