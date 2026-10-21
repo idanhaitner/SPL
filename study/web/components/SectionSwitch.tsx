@@ -108,10 +108,7 @@ function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "n
   const isPrev = side === "prev";
   const copy = (
     <span className="chapter-hop-copy">
-      <span className="chapter-hop-kicker">
-        <span className="chapter-hop-badge">Chapter {chapter.num}</span>
-        {isPrev ? "Previous chapter" : "Next chapter"}
-      </span>
+      <span className="chapter-hop-kicker">{isPrev ? "Previous chapter" : "Next chapter"}</span>
       <span className="chapter-hop-title">
         <Inline text={chapter.title} />
       </span>
@@ -122,11 +119,11 @@ function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "n
       {isPrev ? (
         <>
           <DirectionMark way="back" />
-          Back to chapter {chapter.num}
+          Chapter {chapter.num}
         </>
       ) : (
         <>
-          Start chapter {chapter.num}
+          Chapter {chapter.num}
           <DirectionMark way="forward" />
         </>
       )}
