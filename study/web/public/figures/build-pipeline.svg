@@ -19,23 +19,23 @@
     <text x="281" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">one <tspan direction="ltr">.cpp</tspan> file to <tspan direction="ltr">asm</tspan></text>
   </g>
   <g class="draw d3">
-    <rect x="392" y="48" width="150" height="110" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <rect x="392" y="48" width="150" height="110" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
     <text x="467" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">assembler</text>
     <text x="467" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">writes a <tspan direction="ltr">.o</tspan> file</text>
   </g>
   <g class="draw d4">
-    <rect x="578" y="48" width="160" height="110" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <rect x="578" y="48" width="160" height="110" rx="12" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
     <text x="658" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">linker</text>
     <text x="658" y="114" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">finds <tspan direction="ltr">main</tspan></text>
     <text x="658" y="134" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">one executable</text>
   </g>
   <g class="draw d2">
-    <polygon points="198,103 184,96 184,110" fill="#c47b2b" />
+    <polygon points="198,103 184,96 184,110" fill="#3d7eb8" />
   </g>
   <g class="draw d3">
-    <polygon points="384,103 370,96 370,110" fill="#c47b2b" />
+    <polygon points="384,103 370,96 370,110" fill="#3d7eb8" />
   </g>
   <g class="draw d4">
-    <polygon points="570,103 556,96 556,110" fill="#c47b2b" />
+    <polygon points="570,103 556,96 556,110" fill="#3d7eb8" />
   </g>
 </svg>

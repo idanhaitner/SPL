@@ -7,15 +7,15 @@
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
   <rect width="780" height="460" fill="#f6f1e7" />
-  <text x="200" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22" direction="ltr">while <tspan direction="ltr">foo</tspan> runs</text>
-  <text x="580" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#8a5a22" direction="ltr">after <tspan direction="ltr">foo</tspan> returns</text>
+  <text x="200" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2f5f8a" direction="ltr">while <tspan direction="ltr">foo</tspan> runs</text>
+  <text x="580" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2f5f8a" direction="ltr">after <tspan direction="ltr">foo</tspan> returns</text>
   <g class="draw">
-    <text x="352" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">high addresses</text>
-    <rect x="36" y="80" width="328" height="92" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <text x="352" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#2f5f8a" text-anchor="end" direction="ltr">high addresses</text>
+    <rect x="36" y="80" width="328" height="92" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
     <text x="344" y="110" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
     <text x="344" y="136" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">a = 4</text>
     <text x="344" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">stays for the call</text>
-    <rect x="36" y="184" width="328" height="168" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <rect x="36" y="184" width="328" height="168" rx="12" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
     <text x="344" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr"><tspan direction="ltr">foo</tspan>'s frame</text>
     <text x="344" y="242" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end" direction="ltr">return address</text>
     <text x="344" y="268" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">n = 4</text>
@@ -23,11 +23,11 @@
     <text x="344" y="294" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">x = 8</text>
     <text x="200" y="294" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">local</text>
     <text x="344" y="328" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">pushed on call <tspan direction="ltr">foo(a)</tspan></text>
-    <text x="352" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">low addresses</text>
+    <text x="352" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#2f5f8a" text-anchor="end" direction="ltr">low addresses</text>
   </g>
   <g class="draw d2">
-    <text x="732" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">high addresses</text>
-    <rect x="416" y="80" width="328" height="92" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <text x="732" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#2f5f8a" text-anchor="end" direction="ltr">high addresses</text>
+    <rect x="416" y="80" width="328" height="92" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
     <text x="724" y="110" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
     <text x="724" y="136" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">a = 4</text>
     <text x="724" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">still here</text>
@@ -36,7 +36,7 @@
     <text x="724" y="258" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">n</tspan> does not exist</text>
     <text x="724" y="284" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348" text-anchor="end" direction="ltr"><tspan direction="ltr">x</tspan> does not exist</text>
     <text x="724" y="320" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">return popped the frame</text>
-    <text x="732" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#8a5a22" text-anchor="end" direction="ltr">low addresses</text>
+    <text x="732" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#2f5f8a" text-anchor="end" direction="ltr">low addresses</text>
   </g>
   <text class="draw d3" x="390" y="428" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">A <tspan direction="ltr">new</tspan> inside <tspan direction="ltr">foo</tspan> would leave the block on the heap. The pointer to it would not remain in the frame.</text>
 </svg>

@@ -19,7 +19,7 @@
   </g>
 
   <g>
-    <rect x="316" y="12" width="288" height="168" rx="12" fill="#fffaf3" stroke="#e2c48a" stroke-width="1.5"/>
+    <rect x="316" y="12" width="288" height="168" rx="12" fill="#fffaf3" stroke="#a8c4dc" stroke-width="1.5"/>
     <text x="460" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">StudentsCourses</text>
     <rect x="332" y="54" width="256" height="26" rx="6" fill="#243044"/>
     <text x="396" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f7f4ee">student_id</text>

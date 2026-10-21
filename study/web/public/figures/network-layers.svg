@@ -9,7 +9,7 @@
   </style>
   <rect width="640" height="340" fill="#f6f1e7" />
   <g class="draw">
-    <rect x="80" y="24" width="480" height="64" rx="12" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <rect x="80" y="24" width="480" height="64" rx="12" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
     <text x="320" y="52" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">application layer</text>
     <text x="320" y="72" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr">the message, e.g. an <tspan direction="ltr">echo</tspan> line</text>
   </g>

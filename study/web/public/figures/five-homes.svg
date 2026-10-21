@@ -9,9 +9,9 @@
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
   <rect width="720" height="640" fill="#f6f1e7" />
-  <text x="684" y="32" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">high addresses</text>
+  <text x="684" y="32" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">high addresses</text>
   <g class="draw">
-    <rect x="32" y="48" width="656" height="128" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <rect x="32" y="48" width="656" height="128" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
     <text x="668" y="76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">stack, second call to <tspan direction="ltr">note</tspan></text>
     <text x="668" y="104" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
     <text x="668" y="130" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">x = 1</text>
@@ -44,5 +44,5 @@
     <text x="668" y="556" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="end">main, note</text>
     <text x="500" y="556" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="end" direction="ltr">instructions, read only</text>
   </g>
-  <text x="684" y="620" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">low addresses</text>
+  <text x="684" y="620" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">low addresses</text>
 </svg>

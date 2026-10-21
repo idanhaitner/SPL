@@ -12,21 +12,21 @@
     <text x="124" y="84" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr"><tspan direction="ltr">Pet</tspan> on the heap</text>
     <text x="124" y="114" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">name = "A"</text>
     <text x="124" y="140" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">age = 3</text>
-    <text x="124" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#8a5a22">hash cached</text>
+    <text x="124" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2f5f8a">hash cached</text>
   </g>
   <g class="draw d2">
-    <rect x="280" y="72" width="200" height="100" rx="14" fill="#f3e0c4" stroke="#e2c48a" stroke-width="1.5" />
+    <rect x="280" y="72" width="200" height="100" rx="14" fill="#d4e4f4" stroke="#a8c4dc" stroke-width="1.5" />
     <text x="380" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">byte stream</text>
     <text x="380" y="136" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr"><tspan direction="ltr">name</tspan> and <tspan direction="ltr">age</tspan></text>
     <text x="380" y="154" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" direction="ltr"><tspan direction="ltr">hash</tspan> not written</text>
-    <polygon points="268,122 254,116 254,128" fill="#c47b2b" />
+    <polygon points="268,122 254,116 254,128" fill="#3d7eb8" />
   </g>
   <g class="draw d3">
     <rect x="536" y="48" width="200" height="150" rx="14" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
     <text x="636" y="84" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">new <tspan direction="ltr">Pet</tspan></text>
     <text x="636" y="114" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">name = "A"</text>
     <text x="636" y="140" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2a3142">age = 3</text>
-    <text x="636" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#8a5a22" direction="ltr"><tspan direction="ltr">hash</tspan> is <tspan direction="ltr">null</tspan></text>
-    <polygon points="524,122 510,116 510,128" fill="#c47b2b" />
+    <text x="636" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2f5f8a" direction="ltr"><tspan direction="ltr">hash</tspan> is <tspan direction="ltr">null</tspan></text>
+    <polygon points="524,122 510,116 510,128" fill="#3d7eb8" />
   </g>
 </svg>

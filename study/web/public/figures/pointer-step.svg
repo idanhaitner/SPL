@@ -8,7 +8,7 @@
   </style>
   <rect width="760" height="260" fill="#f6f1e7" />
   <g class="draw">
-    <rect x="48" y="88" width="160" height="88" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+    <rect x="48" y="88" width="160" height="88" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
     <text x="128" y="122" text-anchor="middle" font-family="ui-monospace, monospace" font-size="16" fill="#2a3142">x</text>
     <text x="128" y="148" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">address 16</text>
     <rect x="228" y="88" width="160" height="88" rx="12" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
@@ -19,14 +19,14 @@
     <text x="488" y="148" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">address 24</text>
   </g>
   <g class="draw d2">
-    <text x="128" y="206" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">px</text>
-    <line x1="128" y1="192" x2="128" y2="176" stroke="#c47b2b" stroke-width="2" />
-    <polygon points="128,176 122,188 134,188" fill="#c47b2b" />
+    <text x="128" y="206" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#2f5f8a">px</text>
+    <line x1="128" y1="192" x2="128" y2="176" stroke="#3d7eb8" stroke-width="2" />
+    <polygon points="128,176 122,188 134,188" fill="#3d7eb8" />
   </g>
   <g class="draw d3">
-    <text x="308" y="236" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#8a5a22">px + 1</text>
-    <line x1="308" y1="220" x2="308" y2="176" stroke="#c47b2b" stroke-width="2" />
-    <polygon points="308,176 302,188 314,188" fill="#c47b2b" />
+    <text x="308" y="236" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#2f5f8a">px + 1</text>
+    <line x1="308" y1="220" x2="308" y2="176" stroke="#3d7eb8" stroke-width="2" />
+    <polygon points="308,176 302,188 314,188" fill="#3d7eb8" />
     <text x="724" y="132" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">the step is</text>
     <text x="724" y="154" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">4 bytes</text>
   </g>

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 560" width="680" height="560">
   <rect width="680" height="560" fill="#f6f1e7" />
-  <text x="640" y="36" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">high addresses</text>
-  <rect x="36" y="52" width="608" height="84" rx="12" fill="#f8ecd9" stroke="#e2d0b0" stroke-width="1.5" />
+  <text x="640" y="36" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">high addresses</text>
+  <rect x="36" y="52" width="608" height="84" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
   <text x="620" y="88" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">stack</text>
   <text x="620" y="112" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">grows and shrinks, released on return</text>
   <rect x="36" y="148" width="608" height="84" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
@@ -16,5 +16,5 @@
   <rect x="36" y="424" width="608" height="72" rx="12" fill="#e7eef6" stroke="#c9d7e4" stroke-width="1.5" />
   <text x="620" y="454" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142" text-anchor="end" direction="ltr">code</text>
   <text x="620" y="476" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" text-anchor="end" direction="ltr">fixed, read only</text>
-  <text x="640" y="532" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#8a5a22" direction="ltr">low addresses</text>
+  <text x="640" y="532" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#2f5f8a" direction="ltr">low addresses</text>
 </svg>
