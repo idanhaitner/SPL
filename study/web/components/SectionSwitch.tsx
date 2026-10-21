@@ -6,7 +6,7 @@ import { Inline } from "@/lib/inline";
 
 type Group = { title: string; ids: string[]; body: ReactNode };
 type Part = { title: string; ids: string[]; intro: ReactNode; groups: Group[] };
-export type ChapterHop = { href: string; title: string; num: string; blurb?: string };
+export type ChapterHop = { href: string; title: string; num: string };
 
 function hashId() {
   return decodeURIComponent(window.location.hash.replace(/^#/, ""));
@@ -115,7 +115,6 @@ function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "n
       <span className="chapter-hop-title">
         <Inline text={chapter.title} />
       </span>
-      {chapter.blurb && <span className="chapter-hop-detail">{chapter.blurb}</span>}
     </span>
   );
   const go = (

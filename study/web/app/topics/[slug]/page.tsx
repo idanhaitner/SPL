@@ -27,8 +27,8 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
       <Chapter
         blocks={topic.blocks}
         courseId={course.id}
-        previousChapter={previous ? { href: `/topics/${previous.id}`, title: previous.title, num: String(index).padStart(2, "0"), blurb: previous.blurb } : null}
-        nextChapter={next ? { href: `/topics/${next.id}`, title: next.title, num: String(index + 2).padStart(2, "0"), blurb: next.blurb } : null}
+        previousChapter={previous ? { href: `/topics/${previous.id}`, title: previous.title, num: String(index).padStart(2, "0") } : null}
+        nextChapter={next ? { href: `/topics/${next.id}`, title: next.title, num: String(index + 2).padStart(2, "0") } : null}
       />
     </article>
   );
