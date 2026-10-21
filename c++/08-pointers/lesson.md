@@ -8,7 +8,7 @@ int* p = &x;     // p holds the address of x
 *p = 20;         // the int at that address is now 20, so x is 20
 ```
 
-Two operators, and the lecture uses both names:
+Two operators, each with its own name:
 
 | In an expression | Name | What it does |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ Read `int* p = &x` as: take the address of `x`, and store it in a pointer-to-int
 
 ## nullptr
 
-`nullptr` is the pointer that points at no object. Dereferencing it is undefined behavior. On this operating system it usually becomes a segmentation fault, which is the crash the lecture names.
+`nullptr` is the pointer that points at no object. Dereferencing it is undefined behavior. On this operating system it usually becomes a segmentation fault.
 
 ```cpp
 int* p = nullptr;
@@ -59,7 +59,7 @@ int* const p2 = &x;         // const pointer to int: *p2 = 3 is fine, p2 = &y is
 const int* const p3 = &x;   // neither the int nor the pointer can change
 ```
 
-A short way to read it: `const` applies to whatever is on its left. When `const` is the first word, it applies to the `int`. The lecture's check is exactly `*ps1 = 3` failing to compile when `ps1` has type `const short*`.
+A short way to read it: `const` applies to whatever is on its left. When `const` is the first word, it applies to the `int`. `*ps1 = 3` fails to compile when `ps1` has type `const short*`.
 
 A const reference and a pointer to const are the two ways to say "I will not write this object." Prefer the reference for a required object. Use the pointer when the object is optional.
 
@@ -73,7 +73,7 @@ int* p = a;          // same as &a[0]
 p = p + 1;           // now points at a[1]
 ```
 
-If `sizeof(int)` is 4 and `p` held address 16, then `p + 1` holds address 20. The lecture draws this step. `*(p + 1)` is the int that starts 4 bytes later. It is also spelled `p[1]`. `a[i]` means `*(a + i)`.
+If `sizeof(int)` is 4 and `p` held address 16, then `p + 1` holds address 20. That is one step of the pointer. `*(p + 1)` is the int that starts 4 bytes later. It is also spelled `p[1]`. `a[i]` means `*(a + i)`.
 
 Two pointers into the same array can mark a half-open range `[begin, end)`. `end` points one past the last element. You may form that address. You may not dereference it.
 
@@ -120,4 +120,4 @@ You will see `T**` when a function needs to change the caller's pointer, and ins
 
 `sum_range` adds the ints in `[begin, end)`. `find_min` returns a pointer to the smallest int in that range. `n` is at least 1 for `find_min`, so the range is not empty. `set_through` does nothing when `p` is null.
 
-Next: [memory](../09-memory/lesson.md). The study site's pointers chapter is the same material with the lecture's drawings: read it after this lesson, not instead of the exercises.
+Next: [memory](../09-memory/lesson.md). The study site's pointers chapter covers the same material, with diagrams. Read it after this lesson, not instead of the exercises.

@@ -87,7 +87,7 @@ A channel's write queue is empty, and `OP_WRITE` is still set. What does the sel
 - [x] It spins, because the channel is already ready for writing
 - [ ] It closes the channel
 
-A channel with free space in its send buffer is ready for writing. `select` returns at once. The lecture calls the resulting loop a spin. Clear `OP_WRITE` from the interest set until a later step has placed a reply on the write queue.
+A channel with free space in its send buffer is ready for writing. `select` returns at once. That loop is a spin. Clear `OP_WRITE` from the interest set until a later step has placed a reply on the write queue.
 :::
 
 ## Practice
@@ -198,9 +198,9 @@ Which of these hold?
 - [ ] `interestOps` from another thread is the same bug as the spin
 - [x] The `interestOps` call that clears `OP_WRITE` is made on the selector thread
 - [ ] Clearing `OP_WRITE` is what makes `select` spin
-- [x] The lecture counts `interestOps` from another thread as a separate bug
+- [x] Calling `interestOps` from another thread is a separate bug
 
-Make that `interestOps` call on the selector thread. The lecture counts `interestOps` from another thread as a separate bug.
+Make that `interestOps` call on the selector thread. Calling it from another thread is a separate bug.
 :::
 :::
 

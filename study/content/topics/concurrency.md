@@ -266,7 +266,7 @@ Which claims match the three ways?
 - [x] Sleep-and-check notices the condition late, by as much as the sleep interval
 - [ ] `wait` keeps testing the condition in a tight loop while it holds the monitor
 
-The session recommends busy-waiting only for a wait that is expected to be very short. Sleep-and-check spends less processor time and notices the condition late.
+Busy-waiting is appropriate only for a wait that is expected to be very short. Sleep-and-check spends less processor time and notices the condition late.
 :::
 
 :::check id=ps7-wait-vs-spin-q3
@@ -291,7 +291,7 @@ In (1) both threads are blocked, and each is waiting for a lock the other holds.
 :::
 
 :::check id=ps7-liveness-names-q2
-Which repairs match the session?
+Which repairs are the right ones?
 
 - [x] A total order on the locks breaks the cycle in (1)
 - [ ] Stopping the threads repairs (3), because those threads are blocked
@@ -614,7 +614,7 @@ Each thread holds one monitor and waits for the other. The calls do not return.
 :::check id=exam-18b-q2-q3
 The repair is one order. In both threads, lock the `Stack` with the {{=lower identity|higher capacity|lock already held}} first.
 
-That order removes the cycle. The same cycle appears in `Image.mix` from the lecture.
+That order removes the cycle. The same cycle appears when `Image.mix` locks two images in opposite orders.
 :::
 :::
 

@@ -26,7 +26,7 @@ Networking is how two processes exchange data, on one machine or across a networ
 | **Network** | Routing packets across the network (IP) | Packet |
 | **Link** | Carrying bits over the physical medium | Frame |
 
-![The four layers the lecture keeps: application on top, then transport, network, and link](../assets/figures/network-layers.svg)
+![Four layers, application on top, then transport, network, and link](../assets/figures/network-layers.svg)
 
 :::definition id=def-host-port title="IP address and port" source="materials/lectures/Chapter 10 - Networking.pptx"
 
@@ -88,7 +88,7 @@ An accept loop that calls `accept`, handles one client until that client is fini
 :::
 
 :::check id=chk-tcp-udp
-Which protocol in the lecture's table preserves order and retransmits a lost segment?
+Which protocol preserves order and retransmits a lost segment?
 
 - [ ] UDP
 - [x] TCP
@@ -125,7 +125,7 @@ The cost is that either datagram can disappear, and the client cannot tell a los
 :::check id=ps9-tcp-udp-q3
 TCP still makes the application decide where the reply {{=ends|begins|retries}}.
 
-TCP opens a connection, retransmits lost segments, and delivers bytes in order. The reply arrives, or the connection fails in a way the client can observe. The cost is the handshake and the framing of the stream. When the user will simply try the request again by hand, the practical session treats TCP as the default. When a measurement can omit a sample, UDP matches the lecture's best-effort row.
+TCP opens a connection, retransmits lost segments, and delivers bytes in order. The reply arrives, or the connection fails in a way the client can observe. The cost is the handshake and the framing of the stream. When the user will simply try the request again by hand, TCP is the default. When a measurement can omit a sample, UDP fits: it is best-effort and does not retransmit.
 :::
 :::
 

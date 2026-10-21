@@ -1,6 +1,6 @@
 # 12 — The rule of three
 
-The lecture's `Image` holds `char* _bytes` from `new[]`. Copying the object one member at a time copies the pointer. Both objects then believe they own one buffer. The first destructor runs `delete[]`, and the second object is holding a dead address.
+`Image` holds `char* _bytes` from `new[]`. Copying the object one member at a time copies the pointer. Both objects then believe they own one buffer. The first destructor runs `delete[]`, and the second object is holding a dead address.
 
 If a class needs a destructor you wrote, a copy constructor you wrote, or an assignment operator you wrote, it almost always needs all three. That is the rule of three (חוק השלושה).
 
@@ -36,7 +36,7 @@ Image::Image(const Image& other)
 }
 ```
 
-The lecture also writes this by delegating to `Image(int, int, char*)`, so the allocation lives in one constructor. Either form is a deep copy. After that, `process` has its own buffer, and its destructor frees only that buffer.
+The same constructor can delegate to `Image(int, int, char*)`, so the allocation lives in one constructor. Either form is a deep copy. After that, `process` has its own buffer, and its destructor frees only that buffer.
 
 ## Assignment is not construction
 
@@ -62,7 +62,7 @@ The test for self-assignment, if you write it by hand, is `if (this == &other)`.
 
 ## Copy-and-swap
 
-The lecture's preferred assignment does the allocating first, in a temporary, and only then touches `*this`.
+The assignment to write does the allocating first, in a temporary, and only then touches `*this`.
 
 ```cpp
 void Image::swap(Image& other) {
@@ -85,7 +85,7 @@ Follow one assignment `avi = benni`. `avi` owns buffer A. `benni` owns buffer B.
 3. `temp` dies at the end of the function. `~Image` does `delete[]` on A.
 4. `benni` still owns B. `avi` owns B2. No pointer is shared.
 
-Self-assignment is harmless. `temp` is a copy, and swapping with your own copy puts the same pixels back. If `new[]` throws, it throws while building `temp`, and `avi` has not changed. That is the exception-safety remark in the session: an assignment that deletes first and then fails to allocate leaves a broken object.
+Self-assignment is harmless. `temp` is a copy, and swapping with your own copy puts the same pixels back. If `new[]` throws, it throws while building `temp`, and `avi` has not changed. An assignment that deletes first and then fails to allocate leaves a broken object.
 
 `operator=` returns `Image&` because `avi = benni = carmi` is `avi = (benni = carmi)`. The inner call has to return an object the outer call can bind to. Returning `*this` is that object. Returning `void` will not chain.
 

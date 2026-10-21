@@ -86,7 +86,7 @@ void crop(int x, int y, int w, int h);
 :::
 
 :::check id=chk-whose-bug
-`crop` is called with a negative width. Whose bug is that, in the terms of the lecture?
+`crop` is called with a negative width. Whose bug is that?
 
 - [ ] The implementation, because the invariant failed
 - [x] The caller, because a precondition failed

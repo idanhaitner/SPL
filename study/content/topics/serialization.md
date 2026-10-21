@@ -44,7 +44,7 @@ An enum constant is written by its name, a `String` by its characters, and an `i
 
 ### What is left out
 
-Static fields belong to the class, and every instance shares them, so the stream omits them. A field marked `transient` is omitted as well. The lecture's example is a cached hash:
+Static fields belong to the class, and every instance shares them, so the stream omits them. A field marked `transient` is omitted as well. A cached hash is the usual case:
 
 ```java
 private transient Integer hash;
@@ -58,11 +58,11 @@ After deserialization, `hash` is null, and the next `hashCode` computes it again
 
 ### Versions
 
-Changing a class that is already `Serializable` is a compatibility problem. You wrote a file, then changed the class, then tried to read the file. `serialVersionUID` is the version number you assign so the JVM can tell these classes apart. The lecture's rule of thumb is that an old stream stays readable by the new class only when the change is on the compatible list.
+Changing a class that is already `Serializable` is a compatibility problem. You wrote a file, then changed the class, then tried to read the file. `serialVersionUID` is the version number you assign so the JVM can tell these classes apart. An old stream stays readable by the new class only when the change is on the compatible list.
 
 Compatible changes: adding a field (it comes back as the default, `null` or `0` or `false`), changing `public` / `protected` / `private`, adding a `static` or `transient` field, and changing the order of the fields.
 
-Incompatible changes: removing a field that is not `transient`, or changing its type, and changing a class in the hierarchy in the ways the lecture counts as breaking. A mismatch of `serialVersionUID` fails the read even when the fields would otherwise have matched.
+Incompatible changes include removing a field that is not `transient`, changing a field's type, and changing the class hierarchy. A mismatch of `serialVersionUID` fails the read even when the fields would otherwise have matched.
 
 :::problem id=worked-transient-hash title="A transient field" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
 `pet` was serialized after `hashCode` had already filled the cache. What does `hash` contain in the object that `readObject` returns, and what does `name` contain?
@@ -86,7 +86,7 @@ Why does `class Pet` without `implements Serializable` fail in `writeObject`?
 - [x] Because `Serializable` is the marker interface the stream checks, and it declares no methods
 - [ ] Because `final` classes cannot be serialized
 
-The lecture calls `Serializable` a marker interface: it has no methods, and the streams refuse an object that does not implement it.
+`Serializable` is a marker interface. It has no methods, and the streams refuse an object that does not implement it.
 :::
 
 :::trap
@@ -94,7 +94,7 @@ A field that points at an object that cannot be serialized makes the whole `writ
 :::
 
 :::trap
-Relying on the computed `serialVersionUID` means an edit that looks harmless changes the identifier, and old files stop loading. The lecture wants an explicit identifier when the class is part of a protocol.
+Relying on the computed `serialVersionUID` means an edit that looks harmless changes the identifier, and old files stop loading. Give the class an explicit identifier when it is part of a protocol.
 :::
 
-A Reactor protocol can carry these bytes inside a `MessageEncoderDecoder<Serializable>`. The encoder is an `ObjectOutputStream` on the way out and an `ObjectInputStream` on the way in, framed so the decoder knows when a chunk of the stream has ended. [Persistence](topic:persistence) is the other way to keep an object. The lecture opens by saying why a pile of serialized files is a poor database: a search for one field has to read every object, an update rewrites the whole graph, and transactions are left to the application.
+A Reactor protocol can carry these bytes inside a `MessageEncoderDecoder<Serializable>`. The encoder is an `ObjectOutputStream` on the way out and an `ObjectInputStream` on the way in, framed so the decoder knows when a chunk of the stream has ended. [Persistence](topic:persistence) is the other way to keep an object. A pile of serialized files is a poor database. A search for one field has to read every object, an update rewrites the whole graph, and transactions are left to the application.

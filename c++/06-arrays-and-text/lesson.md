@@ -1,6 +1,6 @@
 # 06 — Arrays and text
 
-The memory lecture draws an image as a pointer plus a block of bytes. Before that pointer means anything, you need a block of values sitting next to each other. That block is an array.
+An image is a pointer plus a block of bytes. Before that pointer means anything, you need a block of values sitting next to each other. That block is an array.
 
 ## A C array
 
@@ -33,7 +33,7 @@ int sum(const int a[], int n) {
 
 ## std::vector
 
-`std::vector<T>` is the array you want when the length changes, and it is the array the rule-of-zero lecture wants you to store inside a class.
+`std::vector<T>` is the array to use when the length changes, and it is the member to store inside a class when you want the rule of zero.
 
 ```cpp
 #include <vector>
@@ -87,7 +87,7 @@ char buffer[] = "Avi";
 
 `"Avi"` in memory is the four bytes `'A'`, `'v'`, `'i'`, `'\0'`. Functions inherited from C, such as `std::strlen`, walk until they see that zero. `buffer` is a mutable array of those four chars. `word` points at a literal, which you must not write through.
 
-The image class in the lectures does not store a C string. It stores `char* _bytes` of length `_width * _height`, and those bytes are pixel data, not text. There may be no `'\0'`. Do not run `strlen` on a pixel buffer. Keep the length beside the pointer.
+`Image` does not store a C string. It stores `char* _bytes` of length `_width * _height`, and those bytes are pixel data, not text. There may be no `'\0'`. Do not run `strlen` on a pixel buffer. Keep the length beside the pointer.
 
 ## Which one to pick
 
@@ -96,7 +96,7 @@ The image class in the lectures does not store a C string. It stores `char* _byt
 | a fixed handful of ints inside a function | `int a[4]` |
 | text | `std::string` |
 | a growable sequence, or a member of a class | `std::vector<T>` |
-| a pixel buffer the lecture drew as `new char[...]` | `char*` plus a length, and lesson 12 |
+| a pixel buffer from `new char[...]` | `char*` plus a length, and lesson 12 |
 
 ## Exercise
 

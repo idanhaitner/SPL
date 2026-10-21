@@ -26,7 +26,7 @@ An rvalue is a value that may be consumed. It stands on the right of an assignme
 A const lvalue reference, written `const T&`, binds to an lvalue and also to an rvalue. When the rvalue is a temporary, the binding extends that temporary's lifetime to the end of the reference's scope. The reference is const, so code cannot modify the object through it.
 :::
 
-`std::move(x)` is a cast. It tells the compiler to treat the lvalue `x` as an rvalue, so overload resolution can select the function that takes an rvalue reference and steals the resource. The cast itself transfers nothing. After the selected function runs, `x` is in a valid but unspecified state. The lecture's moved-from `Image` holds a null pointer, and destroying it is safe.
+`std::move(x)` is a cast. It tells the compiler to treat the lvalue `x` as an rvalue, so overload resolution can select the function that takes an rvalue reference and steals the resource. The cast itself transfers nothing. After the selected function runs, `x` is in a valid but unspecified state. A moved-from `Image` holds a null pointer, and destroying it is safe.
 
 An rvalue reference is written `&&`, as in `Image&&`. It binds only to an rvalue. That is the parameter type of a move constructor and of a move-assignment operator.
 
@@ -116,7 +116,7 @@ Copy elision is an optimization the compiler may apply when a function returns a
 * **RVO (Return Value Optimization):** the function returns an unnamed temporary, as in `return Image(...);`.
 * **NRVO (Named Return Value Optimization):** the function returns a named local, as in `return pic;`.
 
-The lecture warns about this return in particular:
+This return is the one to avoid:
 
 ```cpp
 Image myPicture() {
@@ -165,7 +165,7 @@ What does `std::move` do?
 :::
 
 :::trap
-An object that was moved from is still in memory, in a valid but unspecified state. For the lecture's `Image`, that state is empty. `processImage(avi)` after `std::move(avi)` runs on that empty image.
+An object that was moved from is still in memory, in a valid but unspecified state. For `Image`, that state is empty. `processImage(avi)` after `std::move(avi)` runs on that empty image.
 :::
 
 :::trap

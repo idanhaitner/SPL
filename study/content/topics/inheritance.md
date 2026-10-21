@@ -133,7 +133,7 @@ In a typical implementation the derived destructor is skipped, so resources the 
 :::check id=ps3-virtual-destructor-q3
 If a class is meant to be inherited from, give it a {{=virtual|non-virtual|private}} destructor.
 
-The exercise states the rule this way: if a class is meant to be inherited from, give it a virtual destructor. The lecture uses a stricter wording and reaches the same outcome: a polymorphic class must have a virtual destructor.
+A class that is meant to be inherited from needs a virtual destructor. A polymorphic class must have one.
 :::
 
 :::check id=ps3-virtual-destructor-q4
@@ -327,7 +327,7 @@ Which signature does `tester->test(app)` select?
 :::check id=exam-19b-q1-q2
 Dispatch that follows the application's dynamic type needs a virtual {{=accept|test|run}} on `APP`, or a chain of `dynamic_cast`.
 
-Dispatch that follows the application's dynamic type needs a virtual `accept` on `APP`, which is the visitor, or a chain of `dynamic_cast`. The lecture presents the `dynamic_cast` chain as the weaker of those two tools.
+Dispatch that follows the application's dynamic type needs a virtual `accept` on `APP`, which is the visitor, or a chain of `dynamic_cast`. The `dynamic_cast` chain is the weaker of those two tools.
 :::
 
 :::check id=exam-19b-q1-q3

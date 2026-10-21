@@ -10,7 +10,7 @@ sources:
   - "materials/exams/17-b-solution.pdf"
 ---
 
-When a class owns a resource, a memberwise copy copies the pointer and leaves both objects believing they own one buffer. The `Image` in the lecture holds a `char* _bytes` that its constructor (בנאי) allocated. Copying the `Image` copies that pointer. The first destructor (הורס) then releases the buffer while the other object is still using it.
+When a class owns a resource, a memberwise copy copies the pointer and leaves both objects believing they own one buffer. `Image` holds a `char* _bytes` that its constructor (בנאי) allocated. Copying the `Image` copies that pointer. The first destructor (הורס) then releases the buffer while the other object is still using it.
 
 ## The three operations
 
@@ -30,13 +30,13 @@ b = a;         // assignment, both objects already exist
 ```
 :::
 
-A destructor has an empty parameter list and no return type. The lecture writes it as `~Image()`, and that function calls `delete[] _bytes`. In Java, once the last reference to an `Image` becomes unreachable, the byte array becomes unreachable with it. In C++, ending the `Image` object's lifetime destroys the pointer. The bytes remain allocated, and the destructor is the function that releases them.
+A destructor has an empty parameter list and no return type. For `Image` it is `~Image()`, and that function calls `delete[] _bytes`. In Java, once the last reference to an `Image` becomes unreachable, the byte array becomes unreachable with it. In C++, ending the `Image` object's lifetime destroys the pointer. The bytes remain allocated, and the destructor is the function that releases them.
 
 ![An Image object on the stack: width, height, and a pointer to a separate byte buffer on the heap](../assets/figures/image-object-layout.svg)
 
 ### Shallow copy (העתקה רדודה), then the crash
 
-`void processImage(Image img)` takes the image by value, so the copy constructor runs at the call and the destructor runs when the function returns. The copy constructor the compiler generates copies `_width`, `_height`, and `_bytes`. Both objects point at one array. The parameter's destructor runs `delete[]` on that array. The caller's `_bytes` is then a dangling pointer. The lecture's last drawing still shows the caller's pointer inside the object, and the heap block is gone.
+`void processImage(Image img)` takes the image by value, so the copy constructor runs at the call and the destructor runs when the function returns. The copy constructor the compiler generates copies `_width`, `_height`, and `_bytes`. Both objects point at one array. The parameter's destructor runs `delete[]` on that array. The caller's `_bytes` is then a dangling pointer. The pointer is still inside the object, and the heap block is gone.
 
 The repair allocates a new buffer and copies the other image's bytes into it.
 
@@ -48,7 +48,7 @@ Image::Image(const Image& other)
 }
 ```
 
-The lecture also writes that constructor as a delegating constructor, forwarding to `Image(int, int, char*)`, so the allocation lives in one place. After that change, `processImage` has a buffer of its own. Its destructor releases only that buffer. The caller's image is intact.
+The same constructor can delegate to `Image(int, int, char*)`, so the allocation lives in one place. After that change, `processImage` has a buffer of its own. Its destructor releases only that buffer. The caller's image is intact.
 
 ![A shallow copy shares one buffer, so one destructor releases it while the other object still uses it. A deep copy gives each Image a buffer of its own](../assets/figures/shallow-copy.svg)
 
@@ -62,7 +62,7 @@ avi = benni;
 
 Both objects already hold a buffer. The assignment the compiler generates copies `benni._bytes` into `avi._bytes` and abandons `avi`'s old array. That array has leaked, and the two objects now share one buffer. A hand-written `assign` that runs `delete[]` first and then allocates also has to survive self-assignment. `avi.assign(avi)` would release the buffer and then copy from the memory it had just released.
 
-The form the lecture prefers is copy-and-swap.
+The form to use is copy-and-swap.
 
 ```cpp
 void Image::swap(Image& other) {
@@ -78,13 +78,13 @@ Image& Image::operator=(const Image& other) {
 }
 ```
 
-The slides draw the steps. Before the call, `avi` and `benni` each hold a buffer. `temp` is a third image, a deep copy of `benni`. `swap` exchanges `avi` with `temp`, so `avi` holds the new buffer and `temp` holds the old one. When the function returns, `temp`'s destructor runs and releases the old buffer. Self-assignment is safe because `temp` is a separate copy. Swapping an object with a copy of itself leaves the values as they were.
+Before the call, `avi` and `benni` each hold a buffer. `temp` is a third image, a deep copy of `benni`. `swap` exchanges `avi` with `temp`, so `avi` holds the new buffer and `temp` holds the old one. When the function returns, `temp`'s destructor runs and releases the old buffer. Self-assignment is safe because `temp` is a separate copy. Swapping an object with a copy of itself leaves the values as they were.
 
 Assignment returns `Image&` because `=` associates to the right. The expression `avi = benni = carmi` is parsed as `avi = (benni = carmi)`, so the inner call has to return an object the outer call can bind as a `const Image&`. Returning `*this` provides that object, which is why the return type is `Image&` and the calls can be chained.
 
 ![Copy-and-swap: temp receives a new buffer B2, the swap gives B2 to avi, and temp's destructor releases the old buffer A](../assets/figures/copy-swap.svg)
 
-Session 3 states the same rule in one sentence and adds a note about exceptions. If assignment throws after it has already released the old buffer, the object is left broken. Copy-and-swap does the allocating first, inside `temp`. If that allocation throws, `avi` is unchanged.
+If assignment throws after it has already released the old buffer, the object is left broken. Copy-and-swap does the allocating first, inside `temp`. If that allocation throws, `avi` is unchanged.
 
 | | Copy constructor | Copy assignment operator |
 | --- | --- | --- |
@@ -129,7 +129,7 @@ b = a;
 :::
 
 :::trap
-`operator()` on the lecture's `Image` is the overload that makes `avi(x, y)` return `_bytes[y * _width + x]`. It sits outside the three special members. An overload that only computes a value leaves those three functions to the compiler. Owning a raw pointer is what requires the rule of three.
+`operator()` on `Image` is the overload that makes `avi(x, y)` return `_bytes[y * _width + x]`. It sits outside the three special members. An overload that only computes a value leaves those three functions to the compiler. Owning a raw pointer is what requires the rule of three.
 :::
 
 ## Practice

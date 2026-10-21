@@ -1,6 +1,6 @@
 # 10 — Building a program
 
-Until now, one `.cpp` file was the whole program. A real lab is several files, and the four-stage build (בניית תוכנית) is how they become one executable. PS1 and the classes lecture both start here.
+Until now, one `.cpp` file was the whole program. A real lab is several files, and the four-stage build (בניית תוכנית) is how they become one executable. The first lab and the classes chapter both start here.
 
 ## Declaration and definition
 
@@ -35,11 +35,11 @@ Those three lines are an include guard (שומר הכללה). The first time the
 
 `#include <iostream>` searches the standard library. `#include "mathx.hpp"` searches next to the file that wrote the include.
 
-This course writes guards. `#pragma once` is a common alternative. Use the guards, so the code matches the slides.
+Use include guards. `#pragma once` is a common alternative, and the guards are the form to write.
 
 ## The four stages
 
-The lecture names four stages. `c++` hides the middle two unless you ask.
+The build has four stages. `c++` hides the middle two unless you ask.
 
 1. **Preprocessor** (קדם-מעבד). Handles `#include`, `#define`, `#ifndef`. Removes comments. Produces one expanded source.
 2. **Compiler** (מהדר). Translates that source to assembly.
@@ -54,7 +54,7 @@ c++ -std=c++17 -o build/10-build-split build/main.o build/mathx.o
 
 `-c` stops after the object file. It does not look for `main`. The third command is the link.
 
-The failure the session asks you to explain:
+The failure to account for:
 
 ```bash
 c++ -std=c++17 -c 10-build/split/mathx.cpp -o build/mathx.o

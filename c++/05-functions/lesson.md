@@ -1,6 +1,6 @@
 # 05 — Functions
 
-A function has a name, a parameter list, a return type, and a body. The lectures separate two words that sound similar:
+A function has a name, a parameter list, a return type, and a body. Two words that sound similar mean different things:
 
 - A **declaration** (הצהרה) introduces the name and the signature. It ends at the semicolon. The body is elsewhere.
 - A **definition** (הגדרה) is the declaration plus the body.
@@ -60,7 +60,7 @@ int factorial(int n) {
 }
 ```
 
-Each call gets its own parameters and local variables. Lesson 9 draws those as stack frames (מסגרות מחסנית). The lecture's recursion picture is this mechanism. A recursive function needs a base case that does not call itself, or it will run until the stack runs out.
+Each call gets its own parameters and local variables. Lesson 9 draws those as stack frames (מסגרות מחסנית). Recursion is this mechanism. A recursive function needs a base case that does not call itself, or it will run until the stack runs out.
 
 Use a loop when the loop is clearer. Use recursion when the data is recursive (a list of nodes, a tree). Both are legal.
 

@@ -48,7 +48,7 @@ int bigger(const int& a, const int& b) {
 
 `const` means the function will not assign through that name. For an `int`, the copy would have been cheap, and a const reference is still a good habit because the same signature is how you pass `std::string`, `std::vector`, and the course's `Image` when you do not want a copy.
 
-The lecture's rule of thumb:
+A useful rule of thumb:
 
 | The function | The parameter |
 | --- | --- |
@@ -62,7 +62,7 @@ Pointers, next lesson, are for "there might be no object," "I need to reseat whi
 
 Returning `T&` is legal when the object will still be alive after the function returns: a parameter, a global, or a member of an object the caller still holds.
 
-Returning a reference to a local is forbidden. The local dies at the closing brace. The caller would hold a name for storage that has already been reused. That is undefined behavior. The lecture writes it like this:
+Returning a reference to a local is forbidden. The local dies at the closing brace. The caller would hold a name for storage that has already been reused. That is undefined behavior. The forbidden form is:
 
 ```cpp
 int& bad() {

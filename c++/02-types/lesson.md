@@ -1,6 +1,6 @@
 # 02 — Types
 
-Every value in C++ has a type. The type decides how many bytes the value occupies, which operations are legal, and what bit pattern counts as a number. The lectures use `int`, `double`, `bool`, `char`, and later `const`.
+Every value in C++ has a type. The type decides how many bytes the value occupies, which operations are legal, and what bit pattern counts as a number. The types to know first are `int`, `double`, `bool`, `char`, and later `const`.
 
 ## The types you will actually write
 
@@ -45,7 +45,7 @@ int n = static_cast<int>(d);   // n is 3
 
 `int` is signed: it can be negative. Overflow of a signed integer (a result that does not fit) is undefined behavior. Do not rely on wraparound for `int`.
 
-`unsigned` cannot be negative. It wraps. An `unsigned char` holds 0 through 255. `255 + 1` is `0`. The lectures' image buffers are raw bytes; when you need a byte that is definitely 0..255, `unsigned char` says that. Plain `char` may be signed. The course still writes `char*` for an image, and you should know the signedness is not portable.
+`unsigned` cannot be negative. It wraps. An `unsigned char` holds 0 through 255. `255 + 1` is `0`. An image buffer is raw bytes. When you need a byte that is definitely 0..255, `unsigned char` says that. Plain `char` may be signed. `Image` still uses `char*`, and that signedness is not portable.
 
 ## Characters
 

@@ -1,6 +1,6 @@
 # 15 — A stack, twice
 
-A stack (מחסנית) of integers is the smallest class that uses the whole path. You push a value, the top is the last value you pushed, and pop removes it. The session later writes this idea again in Java as a contract. Here the point is ownership.
+A stack (מחסנית) of integers is the smallest class that uses the whole path. You push a value, the top is the last value you pushed, and pop removes it. The same idea appears later as a Java contract. Here the point is ownership.
 
 You will write it twice.
 
@@ -26,7 +26,7 @@ heap:  [10, 20, ?, ?]
 
 ## What this folder stopped short of
 
-The C++ on the exams is the material in lessons 8 through 14: pointers, `new`/`delete`, constructors, the rule of three, move and smart pointers, and virtual calls. The study site teaches those chapters again in Hebrew, with the lecture's diagrams and the past-paper questions:
+The C++ on the exams is the material in lessons 8 through 14: pointers, `new`/`delete`, constructors, the rule of three, move and smart pointers, and virtual calls. The study site teaches those chapters again, with the diagrams and the past-paper questions:
 
 [idanhaitner.github.io/SPL](https://idanhaitner.github.io/SPL/)
 

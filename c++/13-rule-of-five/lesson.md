@@ -14,7 +14,7 @@ An rvalue (ערך זמני) is a temporary. It has no name you can come back to.
 
 `std::move(avi)` is a cast. It produces an rvalue referring to `avi`, so overload resolution can pick `Image(Image&&)`. The cast itself copies nothing and frees nothing. The move constructor does the steal.
 
-After a move, the source is still an object. It is in a valid, empty state: safe to destroy, safe to assign over. It is not safe to treat as a picture. The lecture's moved-from `Image` holds `nullptr`, and `delete[] nullptr` does nothing, so the destructor is safe.
+After a move, the source is still an object. It is in a valid, empty state: safe to destroy, safe to assign over. It is not safe to treat as a picture. A moved-from `Image` holds `nullptr`, and `delete[] nullptr` does nothing, so the destructor is safe.
 
 ```cpp
 Image avi(1080, 1920, pixels);
@@ -46,7 +46,7 @@ Swapping an object with itself is harmless, so self-move needs no extra test. A 
 
 The rule of five (חוק החמישה) extends the rule of three. If you write any one of the five, write all five: destructor, copy constructor, copy assignment, move constructor, move assignment.
 
-The rule of zero (חוק האפס) is the design the lecture wants when you can use it. Do not own a raw resource. Store a `std::vector`, a `std::string`, or a smart pointer. Those members already copy, move, and free themselves. The compiler-generated five are then correct, and you write none of them.
+The rule of zero (חוק האפס) is the design to use when you can. Do not own a raw resource. Store a `std::vector`, a `std::string`, or a smart pointer. Those members already copy, move, and free themselves. The compiler-generated five are then correct, and you write none of them.
 
 ```cpp
 class Image {
@@ -81,7 +81,7 @@ auto filter = std::make_shared<Filter>(args...);
 
 `make_shared` allocates the object and the count in one block. Both factories avoid a leak window that `unique_ptr<T>(new T(...))` can have when an expression contains several `new`s and one of them throws.
 
-`shared_ptr` does not collect cycles. If two objects each hold a `shared_ptr` to the other, the count never reaches zero. The lecture's tool for the back-edge is `std::weak_ptr`, which observes without owning.
+`shared_ptr` does not collect cycles. If two objects each hold a `shared_ptr` to the other, the count never reaches zero. `std::weak_ptr` is the tool for the back-edge. It observes without owning.
 
 ## Do not move a local on the way out
 
@@ -99,7 +99,7 @@ Image picture() {
 
 `make try LESSON=13-rule-of-five`
 
-The copy operations of `MoveBuf` are done. You write the move constructor and the move assignment. The constructor must leave the source with a null pointer and size 0, which is what the lecture draws. Assignment may swap; the source then holds whatever the destination used to hold, and that is a valid empty-enough state as long as the two objects do not share a pointer.
+The copy operations of `MoveBuf` are done. You write the move constructor and the move assignment. The constructor must leave the source with a null pointer and size 0, which is the empty state. Assignment may swap; the source then holds whatever the destination used to hold, and that is a valid empty-enough state as long as the two objects do not share a pointer.
 
 `owned_int` returns a `unique_ptr<int>`. `shared_users` returns the `use_count` after one copy, which is 2. `ScoreList` holds a `vector` and needs no destructor. Write `sum`.
 

@@ -187,7 +187,7 @@ The inner join matches `ps.TA_ID` to `ta.ID` and selects those four columns.
 :::check id=ps12-join-q2
 Matan and Yair stay in the result, with `Time`, `Location`, and `GroupNum` all null, under a {{=LEFT JOIN|INNER JOIN|CROSS JOIN}} from `TEACHING_ASSISTANTS` to the practical sessions.
 
-A `LEFT JOIN` from `TEACHING_ASSISTANTS` keeps Matan and Yair with those three columns null. That is the second result table on the session 12 slide.
+A `LEFT JOIN` from `TEACHING_ASSISTANTS` keeps Matan and Yair with those three columns null.
 :::
 
 :::check id=ps12-join-q3
@@ -228,7 +228,7 @@ The method is about more than one table. Each DAO holds the connection and imple
 :::check id=ps13-dto-dao-q3
 Bob's submission `"main"` against `expected_output` `"Main"` is recorded as a mismatch because the comparison is {{=case-sensitive|case-insensitive|skipped}}.
 
-His grade row records the mismatch. The session prints that he fails for exactly this reason.
+His grade row records the mismatch, and the comparison reports a failure.
 :::
 
 :::check id=ps13-dto-dao-q4
@@ -243,7 +243,7 @@ It belongs on the repository for the same reason as the join: it is about more t
 :::
 
 :::problem id=ps13-orm-find title="Mapping columns onto a DTO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
-The session replaces a hand-written `find` with `row_map(row, col_mapping, dto_type)`, which builds constructor arguments by field index and calls the DTO's constructor. This is the session's object-relational mapping (ORM). `row_map` is the row mapper. `Assignment.find` used to be `return Assignment(*c.fetchone())`. The generic `find` still builds `Assignment(num, expected_output)`.
+`row_map(row, col_mapping, dto_type)` replaces a hand-written `find`. It builds constructor arguments by field index and calls the DTO's constructor. This is object-relational mapping (ORM). `row_map` is the row mapper. `Assignment.find` used to be `return Assignment(*c.fetchone())`. The generic `find` still builds `Assignment(num, expected_output)`.
 
 :::check id=ps13-orm-find-q1
 When the row is `(num, expected_output)`, `col_mapping` is {{=[0, 1]|[1, 0]|[0]}}.
@@ -268,7 +268,7 @@ Which of these hold?
 - [ ] `row_map` ignores `col_mapping` and always calls `Assignment(*row)`
 - [x] A mapping that follows `SELECT *` blindly breaks when the table's column order changes
 
-A mapping that follows `SELECT *` blindly breaks as soon as the table's column order changes. That is the same warning the SQL lecture gave about an `INSERT` that omits the column list.
+A mapping that follows `SELECT *` blindly breaks as soon as the table's column order changes. An `INSERT` that omits the column list has the same problem: the statement depends on a column order that can change.
 :::
 :::
 
@@ -583,7 +583,7 @@ A booking writes one `nights` row for each night of the stay. A second guest on 
 :::
 
 :::check id=exam-19b-q4-q2
-A `CHECK` constraint, in the SQL this lecture taught:
+A `CHECK` constraint:
 
 - [x] looks at the row being written
 - [ ] compares two rental rows and rejects overlapping dates by itself

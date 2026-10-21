@@ -1,8 +1,8 @@
 # 09 — Memory
 
-A running program is a process (תהליך). The operating system gives that process its own address space (מרחב כתובות). C++ does not put every value in one bag inside that space. The lecture draws five regions. Three of them show up constantly in code you write.
+A running program is a process (תהליך). The operating system gives that process its own address space (מרחב כתובות). C++ does not put every value in one bag inside that space. Five regions sit in that space. Three of them show up constantly in code you write.
 
-| Region | Hebrew on the slides | What lives there | Who frees it |
+| Region | Hebrew name | What lives there | Who frees it |
 | --- | --- | --- | --- |
 | Code | קוד, Text | the machine instructions | the process ending |
 | Initialized statics | Data | globals you initialized | the process ending |
@@ -32,7 +32,7 @@ Recursion works because each call has its own frame. Infinite recursion fills th
 
 ## static
 
-`static` has three shapes in the slides. All three live for the whole run of the process. None of them is recreated on each call.
+`static` has three shapes. All three live for the whole run of the process. None of them is recreated on each call.
 
 ```cpp
 int a = 1;                 // global: the whole run, visible to other files that say extern
@@ -62,11 +62,11 @@ a[1] = 21;
 delete[] a;
 ```
 
-`new` and `delete` match. `new[]` and `delete[]` match. `delete` on a pointer from `new[]`, or `delete[]` on a pointer from `new`, is undefined behavior. The lecture is explicit: they are not the same operation. An array allocation may store a count next to the elements, and `delete[]` is what reads that count and destroys each element.
+`new` and `delete` match. `new[]` and `delete[]` match. `delete` on a pointer from `new[]`, or `delete[]` on a pointer from `new`, is undefined behavior. They are not the same operation. An array allocation may store a count next to the elements, and `delete[]` is what reads that count and destroys each element.
 
 `delete nullptr` and `delete[] nullptr` are legal and do nothing. That fact is what makes a moved-from object safe in lesson 13: its pointer is null, and its destructor still runs `delete[]`.
 
-The heap block is not inside the caller's frame. `make_filled` can return the pointer, and the caller frees it later. Forgetting `delete` is a leak (זליגת זיכרון): the block stays reserved until the process ends. The pointer variable itself can die with the frame, and the block remains, unreachable. That is the lecture's "the key was never returned."
+The heap block is not inside the caller's frame. `make_filled` can return the pointer, and the caller frees it later. Forgetting `delete` is a leak (זליגת זיכרון): the block stays reserved until the process ends. The pointer variable itself can die with the frame, and the block remains, unreachable. The pointer was the only key to that block, and it was never used to return the block.
 
 What is still true after a leak: the rest of the program is allowed to keep running. The leak is a missing `delete`, not an immediate crash. Tools such as `make test-asan` exist because a leak is silent.
 
@@ -89,6 +89,6 @@ Set a pointer to `nullptr` after you delete it if any later code might look at t
 
 `make try LESSON=09-memory`
 
-`copy_to_new` allocates a fresh array, copies `n` ints, and returns it. The caller frees both arrays. `tick` is the lecture's function: the first call returns 0, the second returns 1, because the `static` survives.
+`copy_to_new` allocates a fresh array, copies `n` ints, and returns it. The caller frees both arrays. `tick` returns 0 on the first call and 1 on the second, because the `static` survives.
 
 Next: [building a program](../10-build/lesson.md).

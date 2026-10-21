@@ -61,7 +61,7 @@ The virtual address space runs from low addresses up to high addresses. Separate
 :::definition id=def-address-space title="The address space of a process" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
 A running process has an address range of its own. Five main regions sit inside that range:
 
-| Region | Name on the slides | Size | Release | Access |
+| Region | Also called | Size | Release | Access |
 | --- | --- | --- | --- | --- |
 | Stack | Stack | Dynamic (grows and shrinks) | Automatic, in LIFO order | Read and write |
 | Heap | Heap | Dynamic (grows and shrinks) | Manual, by the programmer (for example `delete`) | Read and write |
@@ -82,7 +82,7 @@ The two static regions, Data and BSS, hold variables whose lifetime is the lifet
 
 ### Static variables
 
-A static variable is initialized with a value the compiler (מהדר) can compute at compile time. The initializer is a constant expression, fixed before the program runs. The slides show three forms of the keyword `static`:
+A static variable is initialized with a value the compiler (מהדר) can compute at compile time. The initializer is a constant expression, fixed before the program runs. The keyword `static` has three forms:
 
 ```cpp
 int a = 1;                 // global: whole run, visible from every file

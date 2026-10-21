@@ -11,13 +11,13 @@ public:
 };
 ```
 
-`: public Filter` is the inheritance this course uses. Public inheritance means "is a": a `BlurFilter` may be used where a `Filter` is required. The derived constructor calls a base constructor in the initializer list, before its own members. If you omit that call, the base's default constructor runs. If the base has no default constructor, the code does not compile until you call one.
+`: public Filter` is public inheritance. It means "is a": a `BlurFilter` may be used where a `Filter` is required. The derived constructor calls a base constructor in the initializer list, before its own members. If you omit that call, the base's default constructor runs. If the base has no default constructor, the code does not compile until you call one.
 
 ## Substitution
 
-The Liskov substitution principle, as the lecture states it: a derived object must be usable wherever a base object is required, without breaking the base's rules. A `Square` class that inherits from `Rectangle` and makes `setWidth` also change the height breaks that rule. Callers of `Rectangle` were entitled to change the width alone. The course's filters do not do this. A blur filter is a filter.
+The Liskov substitution principle: a derived object must be usable wherever a base object is required, without breaking the base's rules. A `Square` class that inherits from `Rectangle` and makes `setWidth` also change the height breaks that rule. Callers of `Rectangle` were entitled to change the width alone. A blur filter is a filter, and it keeps the base's rules.
 
-`protected` members are visible to the class and to derived classes, and hidden from everyone else. `private` stays hidden even from the derived class. With `public` inheritance, a public member of the base stays public. This course writes `public` inheritance.
+`protected` members are visible to the class and to derived classes, and hidden from everyone else. `private` stays hidden even from the derived class. With `public` inheritance, a public member of the base stays public. Use `public` inheritance.
 
 ## Virtual functions
 

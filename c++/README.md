@@ -2,7 +2,7 @@
 
 This folder teaches the C++ you need for **תכנות מערכות** (Systems Programming, 202-1-2031), from a first program through the material the exams actually use: memory, pointers, classes, the rule of three, move, and inheritance.
 
-The lectures are in Hebrew. These lessons are in English. The first time a lecture term appears, the Hebrew name is in parentheses. The rest of the course (Java, threads, sockets, the Reactor, SQL) stays on the study site: [idanhaitner.github.io/SPL](https://idanhaitner.github.io/SPL/).
+These lessons are in English. The first time a course term appears, the Hebrew name is in parentheses. The rest of the course (Java, threads, sockets, the Reactor, SQL) stays on the study site: [idanhaitner.github.io/SPL](https://idanhaitner.github.io/SPL/).
 
 You are assumed to know what a variable, a function, an `if`, and a loop are from another language (this course's students usually know Java). You are not assumed to know C++.
 
@@ -32,13 +32,13 @@ The compiler on this Mac is Apple clang. The command `c++` and the command `clan
 | Lesson | What you can do after it | Course chapter |
 | --- | --- | --- |
 | [01 A program](01-program/lesson.md) | Compile `main`, print, use a variable | Build pipeline, first hour |
-| [02 Types](02-types/lesson.md) | Choose `int`, `double`, `bool`, `char`, and read `sizeof` | Primitives the slides use |
+| [02 Types](02-types/lesson.md) | Choose `int`, `double`, `bool`, `char`, and read `sizeof` | Built-in types |
 | [03 Expressions](03-expressions/lesson.md) | Trust integer division, precedence, and `++` | Everyday code |
 | [04 Control flow](04-control-flow/lesson.md) | Write `if`, `while`, and `for` | Everyday code |
 | [05 Functions](05-functions/lesson.md) | Declare, define, pass by value, overload | Build pipeline |
 | [06 Arrays and text](06-arrays-and-text/lesson.md) | Use a C array, `std::string`, and `std::vector` | `Image` bytes, `std::string` |
-| [07 References](07-references/lesson.md) | Pass `const T&` and change a caller's variable | Pointers lecture |
-| [08 Pointers](08-pointers/lesson.md) | Take an address, dereference, walk an array | Pointers lecture |
+| [07 References](07-references/lesson.md) | Pass `const T&` and change a caller's variable | Pointers |
+| [08 Pointers](08-pointers/lesson.md) | Take an address, dereference, walk an array | Pointers |
 | [09 Memory](09-memory/lesson.md) | Place a value on the stack, the heap, or in static storage | Memory model |
 | [10 Building](10-build/lesson.md) | Split a header and a `.cpp`, and read a linker error | PS1 |
 | [11 Classes](11-classes/lesson.md) | Write a constructor, an initializer list, and a `const` method | Classes and objects |
@@ -49,7 +49,7 @@ The compiler on this Mac is Apple clang. The command `c++` and the command `clan
 
 Lessons 1–6 are the language. Lessons 7–10 are how a running program holds values. Lessons 11–15 are the part the C++ exam questions are about.
 
-## Words the lectures use
+## Course terms
 
 | English | Hebrew | In code |
 | --- | --- | --- |
