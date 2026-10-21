@@ -703,22 +703,33 @@ blockquote {
   color: var(--muted);
 }
 .masthead {
-  position: relative;
-  padding-inline-end: 5.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1.1rem;
+  align-items: start;
   margin-bottom: 1.75rem;
 }
-.masthead h1 { margin-bottom: 0; }
+.masthead .kicker {
+  grid-column: 1;
+  margin-bottom: 0.35rem;
+}
+.masthead h1 {
+  grid-column: 1;
+  margin-bottom: 0;
+  max-width: 100%;
+}
 .masthead-num {
-  position: absolute;
-  inset-inline-end: 0;
-  top: -0.15rem;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
   font-family: var(--serif);
-  font-size: clamp(4.2rem, 10vw, 6.4rem);
-  line-height: 0.8;
+  font-size: clamp(3.4rem, 8vw, 5.4rem);
+  line-height: 0.85;
   letter-spacing: -0.04em;
   color: color-mix(in oklch, var(--accent) 42%, transparent);
   pointer-events: none;
   user-select: none;
+  white-space: nowrap;
 }
 .reading-progress {
   position: fixed;
@@ -834,8 +845,8 @@ blockquote {
   .chapters-nav { max-height: 16rem; overflow: auto; }
   .page { padding: 1.6rem 1rem 3.5rem; }
   h1 { font-size: 2.15rem; }
-  .masthead { padding-inline-end: 3.4rem; }
-  .masthead-num { font-size: 3.4rem; }
+  .masthead { column-gap: 0.7rem; }
+  .masthead-num { font-size: 2.8rem; }
 }
 
 [dir="rtl"] body {
