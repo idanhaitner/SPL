@@ -900,6 +900,8 @@ blockquote {
 }
 
 @media (max-width: 800px) {
+  html { font-size: 150%; }
+  body { line-height: 1.7; }
   :root { --rail-bar: calc(3.4rem + env(safe-area-inset-top, 0px)); }
   .shell {
     display: block;
