@@ -223,20 +223,44 @@ const int& i = next(x); // ok: the returned temporary lives as long as i does
 
 ### Passing a parameter
 
-The declaration of the parameter says which of the three forms is in use.
+The declaration of the parameter says which form is in use. The call site then has to match that form.
 
 ```cpp
-void byValue(int n);           // a copy of the caller's int
-void byPointer(int* p);        // a copy of an address; p may be nullptr
-void byRef(int& n);            // another name for the caller's int
-void byConstRef(const int& n); // read the caller's object, with no copy
+void byValue(int n) {
+    n = n + 1;             // writes the copy only
+}
+
+void byPointer(int* p) {
+    if (p == nullptr) return;
+    *p = *p + 1;           // writes the caller's int
+}
+
+void byRef(int& n) {
+    n = n + 1;             // writes the caller's int
+}
+
+void byConstRef(const int& n) {
+    // int seen = n;      // a read is allowed
+    // n = n + 1;         // error: a const reference cannot write
+}
+
+int x = 10;
+byValue(x);                // x is still 10
+byPointer(&x);             // x is 11; the call passes the address of x
+byPointer(nullptr);        // legal; byPointer has to handle the null case
+byRef(x);                  // x is 12
+byConstRef(x);             // reads x; x stays 12
+byConstRef(x + 1);         // legal: the temporary lasts for this call
+byConstRef(3);             // legal: a literal is an rvalue
+byRef(x + 1);              // error: a plain reference needs a real object
+byRef(3);                  // error: 3 is an rvalue
 
 ```
 
-- **Pass by value** copies the argument into the called function's frame. A later write to the parameter changes that copy, not the caller.
-- **Pass by pointer** copies an address into the called function's frame. Dereference reads or writes the caller's object. Null is allowed, so the function has a null case to consider.
-- **Pass by reference** initializes a reference from the caller's object. A non-const reference can write that object. A reference has no null value.
-- **`const` reference** reads a large object in place. A write through it is rejected at compile time. Use it when the function only reads and a copy would be expensive. Pass by value when the object is cheap to copy.
+- **Pass by value** copies the argument into the called function's frame. `byValue(x)` leaves `x` unchanged, because `n = n + 1` writes that copy.
+- **Pass by pointer** copies an address. `byPointer(&x)` lets `*p` read or write `x`. `nullptr` is a legal argument, so the function has a null case to consider.
+- **Pass by reference** initializes a reference from the caller's object. `byRef(x)` writes `x` itself. A reference has no null value, and it cannot be initialized from `x + 1` or from `3`.
+- **`const` reference** reads an object in place, including a temporary. `byConstRef(x)`, `byConstRef(x + 1)`, and `byConstRef(3)` all compile. A write through `n` is rejected at compile time. Use it when the function only reads and a copy would be expensive. Pass by value when the object is cheap to copy, as with an `int`.
 
 ### Returning a value
 
