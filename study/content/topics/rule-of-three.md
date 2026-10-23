@@ -6,6 +6,8 @@ sources:
   - "materials/sessions/SPL_PS3.pptx"
   - "materials/exams/15-a.pdf"
   - "materials/exams/15-a-solution.pdf"
+  - "materials/exams/20-a.pdf"
+  - "materials/exams/20-a-solution.pdf"
   - "materials/exams/17-a.pdf"
   - "materials/exams/17-a-solution.pdf"
   - "materials/exams/17-b.pdf"
@@ -214,7 +216,7 @@ Which bodies are required?
 :::
 
 :::check id=ps3-rule-of-three-q3
-Copy-and-swap builds a {{=temporary|shared_ptr|reference}}, swaps the two `head` pointers, and lets that object's destructor release the old chain.
+Copy-and-swap builds a {{=temporary|second list|reference}}, swaps the two `head` pointers, and lets that object's destructor release the old chain.
 
 That assignment reuses the copy constructor and the destructor.
 :::
@@ -276,13 +278,109 @@ delete _head;
 Which description of the stack and the heap is right for `foo(mvector<T> vec)`?
 
 - [ ] The parameter is another name for the caller's vector, so both share one `_head` cell on the stack.
-- [ ] The nodes live in `foo`'s frame, and the class has a vtable because it is a template.
-- [x] A new `mvector` is created in `foo`'s stack frame, with its own `_head` and `_len`. A deep copy puts a new chain on the heap. A shallow copy leaves both stack pointers on one heap chain. There is no vtable.
+- [ ] The nodes live in `foo`'s frame, next to `_head`.
+- [x] A new `mvector` is created in `foo`'s stack frame, with its own `_head` and `_len`. A deep copy puts a new chain on the heap. A shallow copy leaves both stack pointers on one heap chain.
 
 - **Pass by value** creates a new `mvector` object in `foo`'s stack frame with its own `_head` and its own `_len`.
 - **Deep copy** duplicates the nodes on the heap into a new chain.
 - **Shallow copy** leaves the two pointers on the stack addressing one chain of nodes on the heap.
-- **No vtable** applies because this class has no virtual methods.
+:::
+:::
+
+:::examnote
+The question builds an image repository behind an array of pointers, then returns that repository by value from a function whose local was built by the default constructor. The trap is to treat the returned object as a copy of the pixels, and to treat the `sizeof` of a pointer as a length.
+:::
+
+:::problem id=exam-20a-q1 title="An image repository" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
+`Portrait` and `Scenery` are images. Each pixel is a gray level in `0..255`. The pixels of one image are stored in a one-dimensional `BYTES` array, row after row. `ImageRepository` holds many images in an array named `_images`. The constructor allocates an array of `capacity` pointers. `Insert` receives an array of images, allocates a new array, and copies the pointers into it. The `BYTES` arrays of the images stay as they are.
+
+```cpp
+ImageRepository CreateEmptyRep() {
+    ImageRepository rep;
+    return rep;
+}
+```
+
+:::check id=exam-20a-q1-q1
+Which constructor and `Insert` match that design?
+
+```cpp
+// A
+ImageRepository(int capacity)
+    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
+void Insert(Image** src, int n) {
+    Image** copy = new Image*[n];
+    for (int i = 0; i < n; ++i) copy[i] = new Image(*src[i]);
+    delete[] _images;
+    _images = copy;
+    _capacity = n;
+    _size = n;
+}
+```
+
+```cpp
+// B
+ImageRepository(int capacity)
+    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
+void Insert(Image** src, int n) {
+    Image** copy = new Image*[n];
+    for (int i = 0; i < n; ++i) copy[i] = src[i]; // pointers only
+    delete[] _images;
+    _images = copy;
+    _capacity = n;
+    _size = n;
+}
+```
+
+```cpp
+// C
+ImageRepository(int capacity)
+    : _images(nullptr), _capacity(capacity), _size(0) {}
+void Insert(Image** src, int n) {
+    _images = src;
+    _size = n;
+}
+```
+
+- [ ] A. `Insert` allocates a new `Image` for each element, so the pixels are copied.
+- [x] B. The constructor allocates `new Image*[capacity]`. `Insert` copies pointers into a new array. The `BYTES` blocks stay where they are.
+- [ ] C. The constructor leaves `_images` null. `Insert` stores the caller's array and does not allocate.
+
+- **Constructor** allocates `_images` with `new Image*[capacity]` and records `capacity` and `_size == 0`.
+- **`Insert`** allocates a new array of pointers and copies those pointers.
+- **Byte arrays** stay where the images already allocated them.
+:::
+
+:::check id=exam-20a-q1-q2
+`Insert` releases the previous `_images` array with {{=delete[]|delete|no delete}}. It copies {{=pointers|pixels|BYTES blocks}}. Two repositories can hold the same {{=Image*|stack frame|BYTES block}}. A `delete` of an `Image` is safe only for a {{=sole owner|second repository|null pointer}}.
+
+`Insert` copies the pointer and releases the previous array with `delete[]`. The byte arrays stay where the images already allocated them. Two repositories can hold the same `Image*`. A `delete` of an `Image` is safe only for a sole owner.
+:::
+
+:::check id=exam-20a-q1-q3
+What does `CreateEmptyRep` return?
+
+- [ ] `return rep` returns the local object itself, so the destructor of `rep` does not run.
+- [ ] The default copy constructor duplicates every `BYTES` array, so the caller owns new pixels.
+- [x] `return rep` copies `_images`. If the destructor then executes `delete[] _images`, the returned object holds a dangling pointer. If it leaves the array allocated, the caller shares that buffer with a destroyed local, and other paths leak.
+
+- **`rep`** is constructed in the frame of `CreateEmptyRep`.
+- **`return rep`** is a return by value, so it uses the copy constructor.
+- **Default copy** copies the pointer `_images`. The destructor of `rep` then runs.
+- **`delete[] _images`** in that destructor leaves the returned object with a dangling pointer.
+- **Leaving the array allocated** makes every other path a memory leak, and the caller shares the buffer with a local that has already been destroyed.
+:::
+
+:::check id=exam-20a-q1-q4
+Which object is an empty repository?
+
+- [x] `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
+- [ ] The object returned by `CreateEmptyRep` after its destructor has executed `delete[] _images`.
+- [ ] A repository whose `_images` still addresses the array of a local that has been destroyed.
+
+- **Return by value** copies `_images` and then runs the local destructor.
+- **Empty repository** is `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
+- **Destroyed local** that already executed `delete[] _images` does not leave a usable repository.
 :::
 :::
 
@@ -311,7 +409,7 @@ Which of these hold for the other special members?
 :::
 
 :::check id=exam-17a-q2-q3
-The copy constructor delegates with {{=TestRes(other.description_)|std::move(other)|other.description_}}.
+The copy constructor delegates with {{=TestRes(other.description_)|other|nullptr}}.
 
 That call reuses the constructor that allocates and copies the characters.
 :::

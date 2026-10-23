@@ -5,8 +5,6 @@ sources:
   - "materials/lectures/Chapter 2 - Pointers.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
   - "materials/sessions/SPL_PS2 (1).pptx"
-  - "materials/exams/20-a.pdf"
-  - "materials/exams/20-a-solution.pdf"
 ---
 
 This chapter is how C++ names and follows addresses in memory.
@@ -296,11 +294,9 @@ delete arry;
 :::
 
 :::check id=ps2-delete-2d-q2
-Each `arry[i]` is an array on the {{=heap|stack|vtable}} and is released with {{=delete[]|delete|no delete}}. The array of pointers is released with {{=delete[]|delete|no delete}}. `delete` releases {{=one object|an array|the stack frame}}.
+Each `arry[i]` is an array on the {{=heap|stack|code region}} and is released with {{=delete[]|delete|no delete}}. The array of pointers is released with {{=delete[]|delete|no delete}}. `delete` releases {{=one object|an array|the stack frame}}.
 
-- **Each `arry[i]`** came from `new int[colCount]`, an array on the heap, so `delete[]` matches it.
-- **Pointer array** came from `new int*[rowCount]`, so it too is released with `delete[]`.
-- **`delete`** releases one object.
+Each `arry[i]` came from `new int[colCount]`, an array on the heap, so `delete[]` matches it. The pointer array came from `new int*[rowCount]`, so it too is released with `delete[]`. `delete` releases one object.
 :::
 
 :::check id=ps2-delete-2d-q3
@@ -314,105 +310,5 @@ Releasing the pointer array first drops the only copies of the row addresses, an
 :::
 :::
 
-:::examnote
-The question builds an image repository behind an array of pointers, then returns that repository by value from a function whose local was built by the default constructor. The trap is to treat the returned object as a copy of the pixels, and to treat the `sizeof` of a pointer as a length.
-:::
-
-:::problem id=exam-20a-q1 title="An image repository" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
-`Portrait` and `Scenery` are images. Each pixel is a gray level in `0..255`. The pixels of one image are stored in a one-dimensional `BYTES` array, row after row. `ImageRepository` holds many images in an array named `_images`. The constructor allocates an array of `capacity` pointers. `Insert` receives an array of images, allocates a new array, and copies the pointers into it. The `BYTES` arrays of the images stay as they are.
-
-```cpp
-ImageRepository CreateEmptyRep() {
-    ImageRepository rep;
-    return rep;
-}
-```
-
-:::check id=exam-20a-q1-q1
-Which constructor and `Insert` match that design?
-
-```cpp
-// A
-ImageRepository(int capacity)
-    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
-void Insert(Image** src, int n) {
-    Image** copy = new Image*[n];
-    for (int i = 0; i < n; ++i) copy[i] = new Image(*src[i]);
-    delete[] _images;
-    _images = copy;
-    _capacity = n;
-    _size = n;
-}
-```
-
-```cpp
-// B
-ImageRepository(int capacity)
-    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
-void Insert(Image** src, int n) {
-    Image** copy = new Image*[n];
-    for (int i = 0; i < n; ++i) copy[i] = src[i]; // pointers only
-    delete[] _images;
-    _images = copy;
-    _capacity = n;
-    _size = n;
-}
-```
-
-```cpp
-// C
-ImageRepository(int capacity)
-    : _images(nullptr), _capacity(capacity), _size(0) {}
-void Insert(Image** src, int n) {
-    _images = src;
-    _size = n;
-}
-```
-
-- [ ] A. `Insert` allocates a new `Image` for each element, so the pixels are copied.
-- [x] B. The constructor allocates `new Image*[capacity]`. `Insert` copies pointers into a new array. The `BYTES` blocks stay where they are.
-- [ ] C. The constructor leaves `_images` null. `Insert` stores the caller's array and does not allocate.
-
-- **Constructor** allocates `_images` with `new Image*[capacity]` and records `capacity` and `_size == 0`.
-- **`Insert`** allocates a new array of pointers and copies those pointers.
-- **Byte arrays** stay where the images already allocated them.
-:::
-
-:::check id=exam-20a-q1-q2
-`Insert` releases the previous `_images` array with {{=delete[]|delete|no delete}}. It copies {{=pointers|pixels|BYTES blocks}}. Two repositories can hold the same {{=Image*|stack frame|vtable}}. A `delete` of an `Image` is safe only for a {{=sole owner|second repository|null pointer}}.
-
-- **`Insert`** copies the pointer and releases the previous array with `delete[]`.
-- **Byte arrays** stay where the images already allocated them.
-- **Two repositories** can hold the same `Image*`. That sharing is the shallow copy the question asked for.
-- **`delete` of an `Image`** is safe only for a sole owner. Several repositories can hold the same pointer.
-:::
-
-:::check id=exam-20a-q1-q3
-What does `CreateEmptyRep` return?
-
-- [ ] `return rep` returns the local object itself, so the destructor of `rep` does not run.
-- [ ] The default copy constructor duplicates every `BYTES` array, so the caller owns new pixels.
-- [x] `return rep` copies `_images`. If the destructor then executes `delete[] _images`, the returned object holds a dangling pointer. If it leaves the array allocated, the caller shares that buffer with a destroyed local, and other paths leak.
-
-- **`rep`** is constructed in the frame of `CreateEmptyRep`.
-- **`return rep`** is a return by value, so it uses the copy constructor.
-- **Default copy** copies the pointer `_images`. The destructor of `rep` then runs.
-- **`delete[] _images`** in that destructor leaves the returned object with a dangling pointer.
-- **Leaving the array allocated** makes every other path a memory leak, and the caller shares the buffer with a local that has already been destroyed.
-:::
-
-:::check id=exam-20a-q1-q4
-Which object is an empty repository?
-
-- [x] `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
-- [ ] The object returned by `CreateEmptyRep` after its destructor has executed `delete[] _images`.
-- [ ] A repository whose `_images` still addresses the array of a local that has been destroyed.
-
-- **Return by value** of an object that owns a pointer array is the problem the rule of three addresses.
-- **Empty repository** is built by returning an object constructed in the caller's storage, or by returning by move.
-- **Move** is the tool of the next chapter.
-- **Correct empty repository** is `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
-:::
-:::
 
 Pointers are how [Classes and objects](topic:classes-and-objects) name a `Student` on the heap, and how [The rule of three](topic:rule-of-three) decides whether a copy shares a buffer or allocates a new one.

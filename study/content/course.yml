@@ -51,6 +51,8 @@ changelog:
     note: "Every chapter opening is a short what-you-will-learn roadmap. Bold terms load Heebo 700; the old Key-terms overview fold is gone."
   - date: 2026-10-23
     note: "Memory-model practice stays on regions, frames, and delete. The mvector exam items moved to rule-of-three and inheritance."
+  - date: 2026-10-23
+    note: "Practice stays inside the chapter that teaches it: image-repository copies, C++ locks, and the store-prices reactor wiring each moved to that chapter."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -483,8 +485,7 @@ topics:
   - id: pointers
     file: topics/pointers.md
     title: Pointers and references
-    exam_weight: tested
-    exam_shape: "A repository of images behind a pointer array, returned by value from a local. The trap is treating the return as a copy of the pixels, or using sizeof of a pointer as a length."
+    exam_weight: taught
     prerequisites: [memory-model]
     unlocks: [classes-and-objects]
   - id: classes-and-objects
@@ -780,7 +781,7 @@ exams:
     pattern: "A pointer repository, threads, a reactor edit, and a DVD catalog."
     questions:
       - id: exam-20a-q1
-        topic: pointers
+        topic: rule-of-three
       - id: exam-20a-q2
         topic: concurrency
       - id: exam-20a-q3
@@ -796,7 +797,7 @@ exams:
       - id: exam-20b-q2
         topic: concurrency
       - id: exam-20b-q3
-        topic: networking
+        topic: reactor
       - id: exam-20b-q4
         topic: persistence
   - year: 2024

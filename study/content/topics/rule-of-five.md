@@ -320,7 +320,7 @@ Exam questions on the rule of five, or on smart pointers, often ask for a transf
 :::
 
 :::problem id=exam-16b-q2 title="A collection by value" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-`ITEM_COLLECTION<T>` manages a collection of items. `byVal` takes the collection by value. `SPHERE` and `BOX` both inherit from `SHAPE`.
+`ITEM_COLLECTION<T>` manages a collection of items. `byVal` takes the collection by value.
 
 :::check id=exam-16b-q2-q1
 Which copy-constructor body is required for a deep copy?
@@ -333,14 +333,14 @@ The deep copy constructor copies the capacity and the size, allocates `new T[oth
 :::
 
 :::check id=exam-16b-q2-q2
-Which element types keep a `SPHERE` and a `BOX` without slicing the derived object?
+Which holdings share one object instead of copying the `T` value?
 
-- [ ] `ITEM_COLLECTION<SHAPE>`
-- [x] `ITEM_COLLECTION<SHAPE*>`
-- [x] `ITEM_COLLECTION<std::shared_ptr<SHAPE>>`
+- [ ] `ITEM_COLLECTION<T>` that stores each element by value
+- [x] `ITEM_COLLECTION<T*>`
+- [x] `ITEM_COLLECTION<std::shared_ptr<T>>`
 
-- **`SHAPE` by value** slices the derived object.
-- **`SHAPE*` or `std::shared_ptr<SHAPE>`** keeps the dynamic type.
+- **By value** copies each `T`.
+- **`T*` or `std::shared_ptr<T>`** shares the object the pointer already owns.
 :::
 
 :::check id=exam-16b-q2-q3

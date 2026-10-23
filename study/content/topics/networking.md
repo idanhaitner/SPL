@@ -201,54 +201,6 @@ The class that applies the charset to the socket input is {{=InputStreamReader|B
 :::
 :::
 
-:::problem id=ps10-lock-guard title="A lock in C++" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
-A Java block locks around a print, starts a worker, and waits for it.
-
-```java
-synchronized (mutex) {
-    System.out.println(taskId);
-}
-Thread worker = new Thread(task);
-worker.start();
-worker.join();
-```
-
-:::check id=ps10-lock-guard-q1
-Which body is the lock inside `Task::run`?
-
-- [ ] `mutex.lock();` at the start of `run`, with no unlock
-- [x] `std::lock_guard<std::mutex> guard(mutex);`
-- [ ] `std::thread guard(mutex);`
-
-`std::lock_guard<std::mutex> guard(mutex);` locks on construction and unlocks when `guard` leaves the scope, including on return. That is the practical session's RAII replacement for `synchronized`.
-:::
-
-:::check id=ps10-lock-guard-q2
-Which body starts the thread and waits for it?
-
-- [x] `std::thread th1(&Task::run, &task1);` then `th1.join();`
-- [ ] `task1.run();` then `task1.join();`
-- [ ] `std::thread th1(task1);` then `th1.detach();`
-
-The translation builds `Task task1(1, mutex);`, then `std::thread th1(&Task::run, &task1);`, then `th1.join();`.
-:::
-
-:::check id=ps10-lock-guard-q3
-If the destructor of `th1` runs while the thread is still joinable, the program calls {{=std::terminate|std::exit|std::join}}.
-
-Every `std::thread` is joined or detached before that destructor runs. If the destructor runs while the thread is still joinable, the program calls `std::terminate`.
-:::
-
-:::check id=ps10-lock-guard-q4
-Which of these hold?
-
-- [ ] The `lock_guard` stays locked after `run` returns
-- [x] The `lock_guard` unlocks when `guard` leaves the scope, including on return
-- [x] Every `std::thread` is joined or detached before its destructor runs
-
-The guard unlocks when it leaves the scope, including on return. Every `std::thread` is joined or detached before its destructor runs.
-:::
-:::
 
 :::problem id=ps10-stomp title="STOMP frames" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
 A client wants to receive messages for `/topic/a`.
@@ -358,7 +310,7 @@ A printer service was an RMI interface named `Printer.print(String)`.
 - **Handlers:** Handlers are capped at ten threads.
 - **Framing:** Framing is a length prefix that fits in a Java `int`.
 - **Earlier design:** The earlier design used a delimiter.
-- **UDP and Reactor:** The same service is also placed on UDP, and on a Reactor.
+- **UDP:** The same service is also placed on UDP.
 - **`Math`:** It has a stub and a skeleton in that style.
 
 :::check id=exam-16a-q3-q1
@@ -397,19 +349,16 @@ Which of these hold when the printer speaks UDP?
 :::
 
 :::check id=exam-16a-q3-q4
-Which of these hold for `Math` and for the Reactor?
+Which of these hold for the stub and the skeleton?
 
 - [x] `Math_Stub` implements `Math`, writes a command such as `add 2 3`, and reads the reply line
 - [ ] `Math_Skel` implements `Math` on the client and turns a decimal result into the command string
 - [x] `Math_Skel` parses the command, calls the real `Math`, and returns the decimal result
-- [x] A `ServerSocketChannel` is registered with the Reactor, the selector thread replaces the accept loop, and the handlers are no longer one thread each
+- [x] An exception on the server becomes an error line, which the stub turns into a `RemoteException`
 
 - **`Math_Stub`:** It implements `Math`, and each method writes a command string such as `add 2 3` through the socket and reads the reply line.
-- **`Math_Skel`:** It implements the protocol factory, parses the command, calls the real `Math`, and returns the decimal result.
+- **`Math_Skel`:** It parses the command, calls the real `Math`, and returns the decimal result.
 - **Server exception:** An exception on the server becomes an error line, which the stub turns into a `RemoteException`.
-- **Reactor registration:** Register a `ServerSocketChannel` with the Reactor from class, with the printer protocol as the protocol factory and the length tokenizer as the tokenizer factory.
-- **Selector thread:** It replaces the accept loop.
-- **Handlers:** They are no longer one thread each.
 :::
 :::
 
@@ -433,9 +382,9 @@ Which of these hold for `execute`?
 :::
 
 :::check id=exam-17b-q3-q2
-A deposit before login returns {{=an error string|"ack"|the balance}}, so the failure stays off the selector thread.
+A deposit before login returns {{=an error string|"ack"|the balance}}.
 
-A deposit before login returns an error string, so the failure stays off the selector thread.
+A deposit before login returns an error string.
 :::
 
 :::check id=exam-17b-q3-q3
@@ -454,53 +403,13 @@ Which of these hold for the bank and the session?
 Which `main` is correct?
 
 - [ ] It builds a new `Bank` inside every connection
-- [x] It builds one `Bank`, a protocol factory that closes over that bank, and the Reactor or the thread-per-client server from the appendix
+- [x] It builds one `Bank`, a protocol factory that closes over that bank, and the thread-per-client server from the appendix
 - [ ] It builds the protocol factory and constructs the `Bank` on the first `LOGIN`
 
-The server `main` builds one `Bank`, a protocol factory that closes over it, and the Reactor or thread-per-client server from the appendix, on the port in the question.
+The server `main` builds one `Bank`, a protocol factory that closes over it, and the thread-per-client server from the appendix, on the port in the question.
 :::
 :::
 
-:::problem id=exam-20b-q3 title="Store prices" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-`Stores` maps a store name to the prices of its products.
-
-- **Commands:** They arrive through the command-invocation protocol and run on one shared `Stores` object inside a Reactor on port 7777.
-- **`GetProductPrices`:** It takes a product name and returns the map from store name to price.
-
-:::check id=exam-20b-q3-q1
-Which `execute` body is correct?
-
-- [ ] `return stores.getProductsOfStore(product).toString();`
-- [x] Walk `stores.getStores()`, and append `store=price` when `getProductsOfStore(store).get(product)` is not null
-- [ ] Open a socket to port 7777 inside `execute` and write the product name
-
-- **`execute`:** It receives the `Stores` object.
-- **Walk:** It walks `stores.getStores()`, reads `stores.getProductsOfStore(store).get(product)`, and appends `store=price` when that price is not null.
-- **Return value:** It is that string.
-:::
-
-:::check id=exam-20b-q3-q2
-`main` creates `new StoresImpl()` {{=once|per connection|inside execute}}.
-
-`main` creates `Stores stores = new StoresImpl()` once, then passes that same object into the protocol factory.
-:::
-
-:::check id=exam-20b-q3-q3
-Which of these hold for the Reactor and the protocol?
-
-- [x] The call is `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`
-- [ ] Each connection constructs a fresh `StoresImpl`
-- [x] The protocol parses a line into a `Command<Stores>` and calls `execute(stores)`
-
-`main` creates one `StoresImpl`, then `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`. The protocol parses a line into a `Command<Stores>` and calls `execute(stores)`.
-:::
-
-:::check id=exam-20b-q3-q4
-The methods of `StoresImpl` are synchronized, or the map is a {{=concurrent map|private map|socket}}, because the Reactor runs several commands at once on this one object.
-
-The methods of `StoresImpl` are synchronized, or the map is a concurrent map, because the Reactor runs several commands at once on this one object.
-:::
-:::
 
 A blocking read on a socket is where a naive server gets stuck.
 

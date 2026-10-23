@@ -21,6 +21,8 @@ sources:
   - "materials/exams/19-b-solution.pdf"
   - "materials/exams/20-a.pdf"
   - "materials/exams/20-a-solution.pdf"
+  - "materials/exams/20-b.pdf"
+  - "materials/exams/20-b-solution.pdf"
   - "materials/exams/24-a.pdf"
   - "materials/exams/24-a-solution.pdf"
   - "materials/exams/24-b.pdf"
@@ -761,3 +763,44 @@ The reactor moves bytes.
 
 - **[Serialization](topic:serialization):** how those bytes become an object.
 - **[Persistence](topic:persistence):** the database these protocol tasks query.
+
+:::problem id=exam-20b-q3 title="Store prices" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
+`Stores` maps a store name to the prices of its products.
+
+- **Commands:** They arrive through the command-invocation protocol and run on one shared `Stores` object inside a Reactor on port 7777.
+- **`GetProductPrices`:** It takes a product name and returns the map from store name to price.
+
+:::check id=exam-20b-q3-q1
+Which `execute` body is correct?
+
+- [ ] `return stores.getProductsOfStore(product).toString();`
+- [x] Walk `stores.getStores()`, and append `store=price` when `getProductsOfStore(store).get(product)` is not null
+- [ ] Open a socket to port 7777 inside `execute` and write the product name
+
+- **`execute`:** It receives the `Stores` object.
+- **Walk:** It walks `stores.getStores()`, reads `stores.getProductsOfStore(store).get(product)`, and appends `store=price` when that price is not null.
+- **Return value:** It is that string.
+:::
+
+:::check id=exam-20b-q3-q2
+`main` creates `new StoresImpl()` {{=once|per connection|inside execute}}.
+
+`main` creates `Stores stores = new StoresImpl()` once, then passes that same object into the protocol factory.
+:::
+
+:::check id=exam-20b-q3-q3
+Which of these hold for the Reactor and the protocol?
+
+- [x] The call is `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`
+- [ ] Each connection constructs a fresh `StoresImpl`
+- [x] The protocol parses a line into a `Command<Stores>` and calls `execute(stores)`
+
+`main` creates one `StoresImpl`, then `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`. The protocol parses a line into a `Command<Stores>` and calls `execute(stores)`.
+:::
+
+:::check id=exam-20b-q3-q4
+The methods of `StoresImpl` are synchronized, or the map is a {{=concurrent map|private map|socket}}, because the Reactor runs several commands at once on this one object.
+
+The methods of `StoresImpl` are synchronized, or the map is a concurrent map, because the Reactor runs several commands at once on this one object.
+:::
+:::

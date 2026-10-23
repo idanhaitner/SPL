@@ -569,17 +569,17 @@ void demo() {
 :::check id=ps2-stack-vs-heap-q1
 Where does each object live, and which release matches it?
 
-`local` is an `int` on the {{=stack|heap|vtable}} and takes {{=no delete|delete|delete[]}}.
+`local` is an `int` on the {{=stack|heap|code region}} and takes {{=no delete|delete|delete[]}}.
 
-`one` is a pointer on the {{=stack|heap|vtable}}. The `int` from `new int(2)` lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
+`one` is a pointer on the {{=stack|heap|code region}}. The `int` from `new int(2)` lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
 
 `local` is an `int` in `demo`'s stack frame; the return releases it and it takes no `delete`. `one` is a local pointer on the stack; the `int` it addresses is a block on the heap and is released with `delete one`.
 :::
 
 :::check id=ps2-stack-vs-heap-q2
-`many` is a pointer on the {{=stack|heap|vtable}}. The array of ten integers lives on the {{=heap|stack|frame of demo}} and is released with {{=delete[]|delete|no delete}}.
+`many` is a pointer on the {{=stack|heap|code region}}. The array of ten integers lives on the {{=heap|stack|frame of demo}} and is released with {{=delete[]|delete|no delete}}.
 
-`s` is a pointer on the {{=stack|heap|vtable}}. The `string` object lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
+`s` is a pointer on the {{=stack|heap|code region}}. The `string` object lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
 
 `many` is a local pointer on the stack; the array of ten integers is a block on the heap and is released with `delete[] many`. `s` is a local pointer on the stack; the `string` object itself is a block on the heap and is released with `delete s`.
 :::

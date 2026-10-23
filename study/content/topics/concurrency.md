@@ -7,6 +7,7 @@ sources:
   - "materials/sessions/PS6-2026-1.pptx"
   - "materials/sessions/SPL_PS7.pptx"
   - "materials/sessions/SPL_PS8.pptx"
+  - "materials/sessions/SPL_PS10.pptx"
   - "materials/exams/15-a.pdf"
   - "materials/exams/15-a-solution.pdf"
   - "materials/exams/15-b.pdf"
@@ -203,6 +204,15 @@ synchronized (v) {
 - **Per-method safety:** Each method is safe on its own.
 - **Repair:** The pair becomes one action when the caller locks `v` around both calls, or when the class offers one method that performs both under the same lock.
 :::
+
+
+## The same lock in C++
+
+The practical session writes the Java lock and the Java thread in C++.
+
+- **`std::lock_guard<std::mutex>`** locks when it is constructed and unlocks when it leaves the scope, including on return. That is the RAII form of `synchronized (mutex)`.
+- **`std::thread`** starts a function on a new thread. `join` waits until that function returns.
+- **Joinable destructor** calls `std::terminate` if a `std::thread` is destroyed before `join` or `detach`.
 
 ## Practice
 
@@ -447,11 +457,60 @@ Which claim about `stop` is right?
 - [ ] `stop` is safe, because it sets the interrupt status the way `interrupt` does
 - [ ] A running worker calls `stop` on each iteration of its loop
 - [ ] The catch block of `sleep` is required to call `stop`
-- [x] `stop` cuts the thread off at an arbitrary instruction and can leave an invariant unrestored
+- [x] `stop` cuts the thread off at an arbitrary instruction and can leave shared state half-updated
 
-`stop()` is unsafe. It leaves an application invariant unrestored, because the thread stops at an arbitrary instruction.
+`stop()` is unsafe. It can leave shared state half-updated, because the thread stops at an arbitrary instruction.
 :::
 
+:::
+
+:::problem id=ps10-lock-guard title="A lock in C++" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
+A Java block locks around a print, starts a worker, and waits for it.
+
+```java
+synchronized (mutex) {
+    System.out.println(taskId);
+}
+Thread worker = new Thread(task);
+worker.start();
+worker.join();
+```
+
+:::check id=ps10-lock-guard-q1
+Which body is the lock inside `Task::run`?
+
+- [ ] `mutex.lock();` at the start of `run`, with no unlock
+- [x] `std::lock_guard<std::mutex> guard(mutex);`
+- [ ] `std::thread guard(mutex);`
+
+`std::lock_guard<std::mutex> guard(mutex);` locks on construction and unlocks when `guard` leaves the scope, including on return. That is the practical session's RAII replacement for `synchronized`.
+:::
+
+:::check id=ps10-lock-guard-q2
+Which body starts the thread and waits for it?
+
+- [x] `std::thread th1(&Task::run, &task1);` then `th1.join();`
+- [ ] `task1.run();` then `task1.join();`
+- [ ] `std::thread th1(task1);` then `th1.detach();`
+
+The translation builds `Task task1(1, mutex);`, then `std::thread th1(&Task::run, &task1);`, then `th1.join();`.
+:::
+
+:::check id=ps10-lock-guard-q3
+If the destructor of `th1` runs while the thread is still joinable, the program calls {{=std::terminate|std::exit|std::join}}.
+
+Every `std::thread` is joined or detached before that destructor runs. If the destructor runs while the thread is still joinable, the program calls `std::terminate`.
+:::
+
+:::check id=ps10-lock-guard-q4
+Which of these hold?
+
+- [ ] The `lock_guard` stays locked after `run` returns
+- [x] The `lock_guard` unlocks when `guard` leaves the scope, including on return
+- [x] Every `std::thread` is joined or detached before its destructor runs
+
+The guard unlocks when it leaves the scope, including on return. Every `std::thread` is joined or detached before its destructor runs.
+:::
 :::
 
 :::examnote
@@ -487,9 +546,9 @@ Without synchronization the class is unsafe, because the `_state` updates and th
 :::
 
 :::check id=exam-15a-q1-q3
-The precondition of `move` requires that the neighbor chain {{=contains no cycle this call would follow forever|is empty|is locked once per gear}}. The postcondition says this gear's angle {{=has changed by its own step|is unchanged|equals the neighbor's angle}} and each neighbor's angle {{=has changed by the opposite step|has changed by the same step|stays at 0}}.
+Before `move` runs, the neighbor chain {{=contains no cycle this call would follow forever|is empty|is locked once per gear}}. After `move` returns, this gear's angle {{=has changed by its own step|is unchanged|equals the neighbor's angle}} and each neighbor's angle {{=has changed by the opposite step|has changed by the same step|stays at 0}}.
 
-The precondition also requires that the invariant holds. The postcondition includes that the invariant still holds.
+The neighbor chain must not contain a cycle this call would follow forever. After the call, this gear has turned by its own step and each neighbor has turned by the opposite step.
 :::
 
 :::check id=exam-15a-q1-q4
@@ -549,18 +608,18 @@ The lock order and the mesh semaphore are correct, and they are coarser: each ho
 `SynchQueue` implements `Queue` with every method `synchronized` on `this`. `ExtIntQueue` adds `sum()` over the integers. Mystics look at a fork while they think, and a look is allowed only while nobody is eating with that fork.
 
 :::check id=exam-16b-q1-q1
-Which claims belong to the contract of `sum`?
+Which claims are true of `sum`?
 
-- [x] The precondition is that `size` matches the chain
+- [x] `size` matches the length of the chain
 - [x] The result equals the sum of the integers present at one moment during the call
 - [ ] `sum` may add or remove an element while it walks
 - [x] `sum` leaves the queue unchanged
 
-The queue's invariant is that `size` matches the chain. `sum` is a query of the integers that were in the queue at one moment.
+`size` matches the length of the chain. `sum` is a query of the integers that were in the queue at one moment.
 :::
 
 :::check id=exam-16b-q1-q2
-Which interleaving makes the postcondition fail?
+Which interleaving makes the returned sum wrong?
 
 - [ ] `sum` holds the lock, so `add` cannot land in the middle of the walk
 - [ ] `sum` reads every element, then `add` and `remove` run, so the sum matches the later state
@@ -631,14 +690,14 @@ Two players cannot both write the same cell. A strategy that reads only immutabl
 - **Concurrency:** Several player threads call `move` and `lookAhead`.
 
 :::check id=exam-17b-q1-q1
-Which claims belong to the contract of `lookAhead`?
+Which claims are true of `lookAhead`?
 
 - [ ] The method may move the player while it measures the distance
 - [x] `dir` is a legal direction, and the player's position is on the board
 - [x] The result counts steps along `dir` until the first other player, the cup, or the edge
 - [x] The distance comes from the board state at one moment during the call, and the method leaves the board unchanged
 
-The precondition is a legal direction and a position on the board. The postcondition is that distance on one board state, and the call does not change the board.
+`dir` is a legal direction and the player is on the board. The distance comes from one board state, and the call does not change the board.
 :::
 
 :::check id=exam-17b-q1-q2
@@ -661,7 +720,7 @@ The walk follows `intersect` to another object's cell or the edge. The same boar
 :::
 
 :::problem id=exam-18b-q2 title="Two stacks in deadlock" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-- **Invariant:** A bounded `Stack` has `0 <= size() <= capacity()`; `push` and `pop` can fail their preconditions.
+- **Rule:** A bounded `Stack` has `0 <= size() <= capacity()`. `push` and `pop` can refuse a call that would break that rule.
 - **Locking:** The methods lock the `Stack` they belong to, and a `push` that moves a value from one `Stack` into the other locks both.
 - **Threads:** `T1` and `T2` use stacks `S1` and `S2`.
 
