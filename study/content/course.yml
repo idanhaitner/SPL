@@ -55,6 +55,8 @@ changelog:
     note: "Practice stays inside the chapter that teaches it: image-repository copies, C++ locks, and the store-prices reactor wiring each moved to that chapter."
   - date: 2026-10-23
     note: "The pointers chapter explains references with binding examples: lvalue versus rvalue, const references, and what a return may name."
+  - date: 2026-10-23
+    note: "The lvalue and rvalue section now walks each expression and a table of which references may bind to it."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"

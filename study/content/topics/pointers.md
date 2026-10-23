@@ -154,30 +154,72 @@ ref = 20;       // writes x, so x is now 20
 
 ### Lvalues and rvalues
 
-Every expression is an lvalue or an rvalue. The practical test is whether the expression names an object that is still there after the line, or only a temporary value.
+Every expression is an lvalue or an rvalue. An lvalue names an object that is still there after the line. An rvalue is a temporary value that the line uses and then drops.
 
 ```cpp
 int x = 10;
-int y = x + 1;   // x is an lvalue; the sum x + 1 is an rvalue
+int y = x + 1;
 
 ```
 
-- **Lvalue** names an object whose lifetime extends past the current expression. You can take its address. A variable is an lvalue, including a variable declared `const`.
-- **`const` does not make an rvalue.** `const int n = 3` still names an object. You cannot assign to `n`, and `n` is still an lvalue.
-- **Rvalue** is a temporary that lasts for the expression that uses it. The sum `3 + 4` is an rvalue, and so is the object a function returns by value. There is no name left behind after the line.
+- **`x`** is an lvalue. It is a variable, it has an address, and it is still there on the next line.
+- **`x + 1`** is an rvalue. The sum is computed for this line and is not stored under a name.
+- **`3` and `3 + 4`** are rvalues. A literal and an arithmetic result have no address you can keep.
+- **Address** can be taken of an lvalue: `&x` is legal. `&(x + 1)` is an error, because a temporary has no lasting address.
 
-What a reference is allowed to bind to:
+A variable declared `const` is still an lvalue. `const` forbids assignment. It does not turn the variable into a temporary.
+
+```cpp
+const int n = 3;
+const int* pn = &n;   // ok: n is an lvalue, so it has an address
+n = 4;                // error: n is const, so assignment is forbidden
+
+```
+
+A function call has the category of what it returns.
+
+```cpp
+int next(int v) { return v + 1; }  // returns a temporary int
+int& slot(int& v) { return v; }    // returns another name for v
+
+int x = 10;
+int y = next(x);   // next(x) is an rvalue
+slot(x) = 5;       // slot(x) is an lvalue, so this writes x
+next(x) = 5;       // error: cannot assign to the temporary
+
+```
+
+What each kind of reference may be initialized from:
+
+| Expression | Kind | `int&` | `const int&` |
+| --- | --- | --- | --- |
+| `x` | lvalue | allowed | allowed |
+| `n` (`const int`) | lvalue | error: would drop `const` | allowed |
+| `x + 1` | rvalue | error | allowed |
+| `3` | rvalue | error | allowed |
+| `next(x)` | rvalue | error | allowed |
+| `slot(x)` | lvalue | allowed | allowed |
 
 ```cpp
 int x = 10;
-int& a = x;            // ok: x is an lvalue
-int& b = x + 1;        // error: a plain reference cannot bind to a temporary
-const int& c = x + 1;  // ok: the temporary lives as long as c does
+const int n = 3;
+
+int& a = x;            // ok
+int& b = n;            // error: a plain reference could write a const object
+int& c = x + 1;        // error: a plain reference cannot bind to a temporary
+int& d = 3;            // error: 3 is an rvalue
+const int& e = x;      // ok: a const reference may also name an lvalue
+const int& f = n;      // ok
+const int& g = x + 1;  // ok: the temporary lives as long as g does
+const int& h = 3;      // ok: same rule, the literal is kept alive for h
+const int& i = next(x); // ok: the returned temporary lives as long as i does
 
 ```
 
-- **Plain reference** (`T&`) is initialized only from an lvalue.
-- **Reference to const** (`const T&`) may also be initialized from an rvalue. That binding keeps the temporary alive until the reference itself ends.
+- **Plain reference** (`T&`) is initialized only from a non-const lvalue.
+- **Reference to const** (`const T&`) is initialized from an lvalue or from an rvalue. Binding an rvalue keeps that temporary alive until the reference itself ends.
+- **Parameter** `void show(const int& v)` may be called as `show(x)`, `show(n)`, `show(x + 1)`, or `show(3)`. The temporary for `show(x + 1)` lasts for that call.
+- **Parameter** `void edit(int& v)` may be called only as `edit(x)` or `edit(slot(x))`. `edit(x + 1)` and `edit(3)` are errors.
 
 ### Passing a parameter
 
