@@ -740,16 +740,17 @@ button:disabled { opacity: 0.45; cursor: default; }
   padding: 0;
   color: inherit;
   font-size: 0.88rem;
-  line-height: 1.55;
-  white-space: pre;
+  line-height: 1.45;
+  white-space: normal;
 }
 .code-panel .line {
   display: block;
   position: relative;
   padding-inline-start: 3.6rem;
   padding-inline-end: 1rem;
-  line-height: 1.55;
-  min-height: 1.55em;
+  line-height: 1.45;
+  min-height: 1.45em;
+  white-space: pre;
 }
 .code-panel .line::before {
   counter-increment: line;
