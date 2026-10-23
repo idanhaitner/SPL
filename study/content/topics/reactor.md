@@ -91,6 +91,7 @@ channel.write(buf);
 ```
 
 :::solution
+
 - **`flip`:** sets `limit` to 5 and `position` to 0, and switches the buffer from writing into it to reading out of it.
 - **`channel.write(buf)`:** writes those five bytes; capacity is still 16.
 - **Skipping `flip`:** starts the write at position 5 and stops at limit 16, which is the empty tail, so nothing useful is sent.
@@ -369,6 +370,7 @@ What does a slow protocol do to the two numbers?
 The two numbers measure different stages, so a slow protocol lowers `compThroughput` while `ioThroughput` stays high.
 :::
 
+:::
 :::problem id=exam-18a-q3 title="A saturated selector" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
 The selector thread is saturated. Shraga says: add workers to the actor pool, and move the server to a machine with more processors, in order to take load off the selector. Nahum's team adds capacity on the selector side.
 

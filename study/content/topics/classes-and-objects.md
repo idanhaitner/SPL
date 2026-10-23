@@ -7,15 +7,26 @@ sources:
   - "materials/sessions/SPL_PS3.pptx"
 ---
 
-A class defines the memory layout of its objects and the member functions that operate on them. Each object receives its own copy of the non-static data members. The member functions are shared, and every non-static member function receives the address of that object as a hidden parameter, `this`. This chapter follows the path from a source file to an executable, and then how an object is allocated, initialized, and used.
+A class defines the memory layout of its objects and the member functions that operate on them.
+
+- **Non-static data** is copied once into each object.
+- **Member functions** are shared.
+- **`this`** is the hidden parameter that carries the address of the object into every non-static member function.
+- **This chapter** follows a source file to an executable, then how an object is allocated, initialized, and used.
 
 ## Building a program
 
 A function defined outside every class lives in the global scope.
 
-A declaration introduces the function's name and its signature. A definition also supplies the function body. A function may be declared many times. The One Definition Rule (ODR) requires that it be defined exactly once.
+- **Declaration** introduces the function's name and its signature.
+- **Definition** also supplies the function body.
+- **One Definition Rule (ODR)** allows many declarations and exactly one definition.
 
-A forward declaration tells the compiler that a type or a function exists. Declarations shared by several `.cpp` files are collected in header files (`.h` or `.hpp`). The `#include` directive pastes the header's text into the source file at that point. Include guards stop the same header from being pasted twice, including through a circular include:
+A forward declaration tells the compiler that a type or a function exists.
+
+- **Header files** (`.h` or `.hpp`) collect declarations shared by several `.cpp` files.
+- **`#include`** pastes the header's text into the source file at that point.
+- **Include guards** stop the same header from being pasted twice, including through a circular include.
 
 ```cpp
 #ifndef POINT_H
@@ -37,7 +48,12 @@ The build has four stages:
 
 ![The four build stages in order: preprocessor, compiler, assembler, then the linker, which produces one executable](../assets/figures/build-pipeline.svg)
 
-Java compiles source to bytecode, and the JVM links dynamically while the program runs, at the moment a class is loaded. C++ resolves those symbols ahead of time, so the executable is complete before it starts. The flag `g++ -c` stops the build after the assembler and writes a `.o` file. The flag `g++ -o name` sets the executable's name. On Linux the default name is `a.out`.
+Java and C++ finish the link at different times.
+
+- **Java** compiles source to bytecode. The JVM links dynamically while the program runs, at the moment a class is loaded.
+- **C++** resolves those symbols ahead of time, so the executable is complete before it starts.
+- **`g++ -c`** stops the build after the assembler and writes a `.o` file.
+- **`g++ -o name`** sets the executable's name. On Linux the default name is `a.out`.
 
 :::problem id=worked-compile-vs-link title="Linking without main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
 The first command succeeds and the second fails. Which stage fails, and why?
@@ -49,11 +65,17 @@ g++ -o app student.o
 ```
 
 :::solution
-The failure is in the linker, which is what the second command runs. `g++ -c` writes the object file `student.o` and stops before linking, so that command never searches for `main`. The second command is asked for an executable, so it invokes the linker. `student.o` has no definition of `main`, and the linker reports an undefined reference to `main`.
+- **Failure** is in the linker, which is what the second command runs.
+- **`g++ -c`** writes `student.o` and stops before linking, so that command never searches for `main`.
+- **Second command** asks for an executable, so it invokes the linker.
+- **`student.o`** has no definition of `main`, and the linker reports an undefined reference to `main`.
 :::
 :::
 
-A `Makefile` records the dependencies of a build. With no target on the command line, `make` runs the first target in the file. A recipe line begins with a Tab character:
+A `Makefile` records the dependencies of a build.
+
+- **No target** on the command line means `make` runs the first target in the file.
+- **Recipe line** begins with a Tab character.
 
 ```makefile
 hello: helloWorld.o run.o
@@ -61,12 +83,20 @@ hello: helloWorld.o run.o
 
 ```
 
-The fundamental types in C++ include `int`, `double`, `bool`, and `char`. The keyword `const` names a constant; Java uses `final` for that job. `std::string` is a mutable string, and strings compare with `==`. `std::vector<T>` is a dynamic array.
+The fundamental types in C++ include `int`, `double`, `bool`, and `char`.
+
+- **`const`** names a constant. Java uses `final` for that job.
+- **`std::string`** is a mutable string, and strings compare with `==`.
+- **`std::vector<T>`** is a dynamic array.
 
 ## Objects and values
 
 :::definition id=def-class title="Class and struct" source="materials/lectures/Chapter 3 - Classes and Objects.pptx"
-A class is a set of data members and member functions, together with access rules. In a `class`, the default access is `private`. In a `struct`, the default access is `public`. The definition ends with a semicolon, because the same statement may also declare objects:
+A class is a set of data members and member functions, together with access rules.
+
+- **`class`** defaults to `private`.
+- **`struct`** defaults to `public`.
+- **Semicolon** ends the definition, because the same statement may also declare objects.
 
 ```cpp
 struct Point {
@@ -78,7 +108,11 @@ struct Point {
 
 :::
 
-A constructor (בנאי) initializes the members through an initializer list, written before the constructor body. A `const` member and a reference member receive their values in that list: once the body runs, the member already exists, and assigning to it is a compile error. For any other member, the list initializes it directly. An assignment in the body would default-construct the member first and then assign.
+A constructor (בנאי) initializes the members through an initializer list, written before the constructor body.
+
+- **`const` member** and a reference member receive their values in that list.
+- **Body** runs after the member already exists, so assigning to a `const` member there is a compile error.
+- **Other members** are initialized directly by the list. An assignment in the body would default-construct the member first and then assign.
 
 ```cpp
 // student.h
@@ -98,9 +132,14 @@ Student::Student(const std::string& name, int year)
 
 ```
 
-A large object is usually passed as `const T&`, a reference to const. The parameter then names the caller's object, and the call skips the copy.
+A large object is usually passed as `const T&`, a reference to const.
 
-An object created without `new` has automatic storage in the caller's stack frame, and its members are reached with the dot operator `.`. An object created with `new` lives on the heap. You hold a pointer to it, and you reach its members with the arrow operator `->`.
+- **Parameter** then names the caller's object, and the call skips the copy.
+
+Where an object lives decides how you reach its members.
+
+- **Automatic storage** is an object created without `new`, in the caller's stack frame. Members are reached with the dot operator `.`.
+- **Heap** is an object created with `new`. You hold a pointer, and you reach its members with the arrow operator `->`.
 
 ```cpp
 Student a("Avi", 2000);
@@ -113,15 +152,20 @@ delete pb;
 
 ### The this pointer, const member functions, and static
 
-Every non-static member function receives a hidden pointer named `this`. It holds the address of the object the function was called on.
+Every non-static member function receives a hidden pointer named `this`.
 
-A `const` object may call only member functions that are themselves `const`. Those functions promise to leave the object's members unchanged. Inside a `const` member function, `this` has type `const ClassName*`.
-
-A `static` member function has no `this` pointer, so the non-static members are out of its reach. A constructor can delegate to another constructor of the same class by naming that constructor in the initializer list.
+- **`this`** holds the address of the object the function was called on.
+- **`const` object** may call only member functions that are themselves `const`. Those functions promise to leave the object's members unchanged.
+- **`const` member function** gives `this` the type `const ClassName*`.
+- **`static` member function** has no `this` pointer, so the non-static members are out of its reach.
+- **Delegating constructor** names another constructor of the same class in the initializer list.
 
 ### Returning an object from a member function
 
-Returning an object by value creates a copy. Returning a reference to a local automatic object is undefined behavior: that object's lifetime ends when the function returns, and the caller would be left with a reference to storage that no longer holds the object.
+Returning an object by value creates a copy.
+
+- **Local reference** is undefined behavior. That object's lifetime ends when the function returns, and the caller is left with a reference to storage that no longer holds the object.
+- **Valid reference** names an object that outlives the call. A member of the class is such an object: its lifetime is the lifetime of the class object.
 
 ```cpp
 Image& myPicture() {
@@ -130,8 +174,6 @@ Image& myPicture() {
 }
 
 ```
-
-A returned reference is valid when the object it names outlives the call. A member of the class is such an object: its lifetime is the lifetime of the class object.
 
 These are the special member functions that bound an object's lifetime and its copies:
 
@@ -147,7 +189,9 @@ Given `Student* pb = new Student("Benni", 2000);`, how do you call `print`?
 - [x] `pb->print()`
 - [ ] `(*pb)->print()`
 
-`pb` is a pointer. The operator `->` dereferences that pointer and then accesses the member. `(*pb).print()` is the same call, written with an explicit dereference and a dot.
+- **`pb`** is a pointer.
+- **`->`** dereferences that pointer and then accesses the member.
+- **`(*pb).print()`** is the same call, written with an explicit dereference and a dot.
 :::
 
 :::problem id=worked-initializer title="The initializer list" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
@@ -170,14 +214,16 @@ struct Line {
 ```
 
 :::solution
-A `const` member receives its value in the initializer list. By the time the constructor body runs, the member already exists, and a `const` member cannot be assigned.
-
-In `Line`, `len` is `const`, so the initializer list is where it is initialized. A call to an ordinary member function from that list would use `this` on an object that is still being initialized, and the language rejects that call. A `static` function runs with no object, so `calcLen` is a safe call from the list.
+- **`const` member** receives its value in the initializer list. By the time the constructor body runs, the member already exists, and a `const` member cannot be assigned.
+- **`len`** in `Line` is `const`, so the initializer list is where it is initialized.
+- **Ordinary member function** called from that list would use `this` on an object that is still being initialized, and the language rejects that call.
+- **`static` function** runs with no object, so `calcLen` is a safe call from the list.
 :::
 :::
 
 :::trap
-Forgetting the semicolon after a `class` or `struct` definition is a common compile error. The grammar allows object declarations in the same statement as the type, so the compiler keeps reading past the type and reports the mistake later.
+- **Missing semicolon** after a `class` or `struct` definition is a common compile error.
+- **Grammar** allows object declarations in the same statement as the type, so the compiler keeps reading past the type and reports the mistake later.
 :::
 
 ## Practice
@@ -188,7 +234,8 @@ Java and C++ both turn source into a program that can run. In this session the C
 :::check id=ps1-link-vs-java-q1
 `g++ -c` writes an {{=object file|executable|bytecode}}.
 
-That file is a `.o`. It contains machine code, and its external symbols are still unresolved. The step runs the preprocessor, the compiler, and the assembler.
+- **`.o` file** contains machine code, and its external symbols are still unresolved.
+- **That step** runs the preprocessor, the compiler, and the assembler.
 :::
 
 :::check id=ps1-link-vs-java-q2
@@ -247,7 +294,8 @@ Which of these build the program?
 - [ ] Run `make` with no arguments
 - [x] Move `hello` so it is the first target, then run `make`
 
-`make hello` selects that target. `make` with no arguments stays on `clean` while `clean` is first.
+- **`make hello`** selects that target.
+- **`make` with no arguments** stays on `clean` while `clean` is first.
 :::
 :::
 
@@ -268,7 +316,8 @@ What does `emphasize1` do with the caller's string?
 - [ ] It modifies the caller's string
 - [ ] It accepts `nullptr` in place of the string
 
-It receives a copy, passed by value. Changes inside the function leave the caller's string as it was.
+- **Copy** is what `emphasize1` receives, passed by value.
+- **Changes** inside the function leave the caller's string as it was.
 :::
 
 :::check id=ps3-pass-by-value-q2
@@ -288,4 +337,7 @@ The pointer may be `nullptr`, and the function body has to check before it uses 
 :::
 :::
 
-The initializer list is how a constructor gives members their first values, and `this` is how a member function finds the object it was called on. The [rule of three](topic:rule-of-three) (חוק השלושה) is what changes when one of those members is a pointer to a buffer the class allocated. [Inheritance](topic:inheritance) is what changes when a call through a base-class pointer has to reach the function in the derived class.
+The initializer list is how a constructor gives members their first values, and `this` is how a member function finds the object it was called on.
+
+- **[Rule of three](topic:rule-of-three)** (חוק השלושה) is what changes when one of those members is a pointer to a buffer the class allocated.
+- **[Inheritance](topic:inheritance)** is what changes when a call through a base-class pointer has to reach the function in the derived class.

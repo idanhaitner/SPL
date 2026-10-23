@@ -18,7 +18,12 @@ sources:
   - "materials/exams/24-b-solution.pdf"
 ---
 
-Inheritance (ירושה) lets a derived class (מחלקה נגזרת) extend a base class (מחלקת בסיס), so a derived object can be used where the base type is expected. The derived class adds its own fields and can replace a virtual function (פונקציה וירטואלית) of the base. The call has to select that replacement from the object that exists at run time. C++ records the choice with a hidden vptr in the object layout and a vtable for the class. The substitution is sound only when the derived class still honors the base class's contract.
+Inheritance (ירושה) lets a derived class (מחלקה נגזרת) extend a base class (מחלקת בסיס), so a derived object can be used where the base type is expected.
+
+- **Derived class** adds its own fields and can replace a virtual function (פונקציה וירטואלית) of the base.
+- **Call** has to select that replacement from the object that exists at run time.
+- **vptr** is the hidden pointer C++ stores in the object layout. The class has a vtable.
+- **Substitution** is sound only when the derived class still honors the base class's contract.
 
 A derived class names its base after the colon and calls a base constructor from the member-initializer list:
 
@@ -32,15 +37,23 @@ public:
 
 ```
 
-The constructor of the derived class must invoke a constructor of the base class from that initializer list. If the list omits the call, the compiler invokes the base class's default constructor.
+- **Derived constructor** must invoke a constructor of the base class from that initializer list.
+- **Omitted call** makes the compiler invoke the base class's default constructor.
 
 ## The Liskov substitution principle
 
 :::definition id=def-lsp title="The Liskov substitution principle" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-The Liskov substitution principle says that an object of a derived class must be substitutable in every context that expects an object of the base class. The substitution must preserve the correctness of the program and the invariants of the base class.
+The Liskov substitution principle says that an object of a derived class must be substitutable in every context that expects an object of the base class.
+
+- **Correctness** of the program must be preserved.
+- **Invariants** of the base class must be preserved.
 :::
 
-Deriving `Square` from `Rectangle` breaks the principle. On a rectangle, `setWidth(w)` changes the width and leaves the height as it is. On a square, the same call has to change the height as well. That override replaces the base-class operation with behavior the base contract does not permit.
+Deriving `Square` from `Rectangle` breaks the principle.
+
+- **`setWidth(w)`** on a rectangle changes the width and leaves the height as it is.
+- **Same call** on a square has to change the height as well.
+- **Override** then replaces the base-class operation with behavior the base contract does not permit.
 
 ### Access levels and inheritance in C++
 
@@ -53,11 +66,16 @@ Deriving `Square` from `Rectangle` breaks the principle. On a rectangle, `setWid
 ### Virtual functions and the vtable
 
 :::definition id=def-virtual title="Virtual function and vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-A function that is not virtual is selected by **static binding** (קשירה סטטית). The compiler uses the static type of the pointer or reference and fixes the callee when it compiles the call.
+A function that is not virtual is selected by **static binding** (קשירה סטטית).
 
-A function declared `virtual` is selected by **dynamic binding** (קשירה דינמית), also called late binding. The callee is chosen at run time from the dynamic type of the object. The call loads the object's vptr, reads the function's address from the class vtable, and passes the object's address as the implicit `this` parameter.
+- **Compiler** uses the static type of the pointer or reference and fixes the callee when it compiles the call.
 
-A class with at least one virtual function is a polymorphic class. The compiler places a hidden vptr in every instance. The vptr points at the vtable of that instance's class.
+A function declared `virtual` is selected by **dynamic binding** (קשירה דינמית), also called late binding.
+
+- **Callee** is chosen at run time from the dynamic type of the object.
+- **Call** loads the object's vptr, reads the function's address from the class vtable, and passes the object's address as the implicit `this` parameter.
+- **Polymorphic class** has at least one virtual function. The compiler places a hidden vptr in every instance.
+- **vptr** points at the vtable of that instance's class.
 :::
 
 ### The virtual destructor
@@ -66,11 +84,16 @@ A class with at least one virtual function is a polymorphic class. The compiler 
 If a class has virtual functions, it is meant to be used as a polymorphic base class, and its destructor must be declared `virtual`.
 
 :::proof
-Deleting a derived object through a pointer to the base, as in `Base* p = new Derived(); delete p;`, follows the same binding rule as any other call. When the destructor is not virtual, the call uses static binding and runs `~Base` alone. `~Derived` does not run. Resources the derived class acquired are leaked, and the behavior is undefined.
+- **`delete p`** of `Base* p = new Derived()` follows the same binding rule as any other call.
+- **Non-virtual destructor** uses static binding and runs `~Base` alone.
+- **`~Derived`** does not run. Resources the derived class acquired are leaked, and the behavior is undefined.
 :::
 :::
 
-A pure virtual function is declared with `= 0`. A class that contains at least one pure virtual function is an **abstract class** (מחלקה מופשטת). The program cannot create instances of it.
+A pure virtual function is declared with `= 0`.
+
+- **Abstract class** (מחלקה מופשטת) contains at least one pure virtual function.
+- **Instances** of an abstract class cannot be created.
 
 :::problem id=worked-virtual-call title="Tracing a virtual call" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
 Which method runs when `apply` is declared `virtual`, and which method runs when it is not?
@@ -97,7 +120,8 @@ You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true 
 - [x] It must be virtual
 - [ ] It must be private
 
-The derived destructor has to run. A virtual destructor is dispatched through the vptr.
+- **Derived destructor** has to run.
+- **Virtual destructor** is dispatched through the vptr.
 :::
 
 ## Practice
@@ -127,13 +151,15 @@ Which of these hold in a typical implementation of that `delete`?
 - [ ] The derived destructor still runs
 - [x] The deallocation may use the size of the base subobject
 
-In a typical implementation the derived destructor is skipped, so resources the derived class owns are leaked, and the deallocation may use the size of the base subobject.
+- **Typical implementation** skips the derived destructor, so resources the derived class owns are leaked.
+- **Deallocation** may use the size of the base subobject.
 :::
 
 :::check id=ps3-virtual-destructor-q3
 If a class is meant to be inherited from, give it a {{=virtual|non-virtual|private}} destructor.
 
-A class that is meant to be inherited from needs a virtual destructor. A polymorphic class must have one.
+- **Inherited class** needs a virtual destructor.
+- **Polymorphic class** must have one.
 :::
 
 :::check id=ps3-virtual-destructor-q4
@@ -143,7 +169,9 @@ Which claim matches the rest of that rule?
 - [ ] Constructors are virtual, so the base constructor dispatches to the derived constructor
 - [ ] A pure virtual function removes the need for a virtual destructor
 
-Constructors are non-virtual. A pure virtual function, written `= 0`, makes the base an abstract class. The virtual destructor remains a requirement of its own.
+- **Constructors** are non-virtual.
+- **Pure virtual function**, written `= 0`, makes the base an abstract class.
+- **Virtual destructor** remains a requirement of its own.
 :::
 :::
 
@@ -161,13 +189,16 @@ Which `Sphere::Accept` body is correct?
 - [ ] `shader->Render(static_cast<Shape*>(this));`
 - [x] `sh->Render(this);`
 
-`Sphere::Accept` is `void Accept(Shader* sh) override { sh->Render(this); }`. `Box::Accept` is the same call with a `Box*`.
+- **`Sphere::Accept`** is `void Accept(Shader* sh) override { sh->Render(this); }`.
+- **`Box::Accept`** is the same call with a `Box*`.
 :::
 
 :::check id=exam-16a-q2-q2
 `Shader::Render` and `Shape::Accept` are declared {{== 0|inline|static}}.
 
-`Shader` declares `virtual void Render(Sphere* s) = 0` and `virtual void Render(Box* b) = 0`. `Shape` declares `virtual void Accept(Shader* sh) = 0`. Both bases also declare a virtual destructor with `= default`.
+- **`Shader`** declares `virtual void Render(Sphere* s) = 0` and `virtual void Render(Box* b) = 0`.
+- **`Shape`** declares `virtual void Accept(Shader* sh) = 0`.
+- **Both bases** also declare a virtual destructor with `= default`.
 :::
 
 :::check id=exam-16a-q2-q3
@@ -177,7 +208,9 @@ Which of these hold?
 - [ ] Copying the manager's pointer array gives the copy its own shapes and shaders
 - [x] `BasicShader` and `ComplexShader` override both `Render` overloads
 
-`RENDER_MGR::Render` calls `shape->Accept(shader)` for each pair. `BasicShader` and `ComplexShader` override both `Render` overloads. Copying the array of pointers is the bug. The copy constructor allocates new shapes and new shaders.
+- **`RENDER_MGR::Render`** calls `shape->Accept(shader)` for each pair.
+- **`BasicShader` and `ComplexShader`** override both `Render` overloads.
+- **Copying the array of pointers** is the bug. The copy constructor allocates new shapes and new shaders.
 :::
 
 :::check id=exam-16a-q2-q4
@@ -187,7 +220,8 @@ Which copy of `RENDER_MGR` is correct?
 - [ ] The copy constructor copies the pointer values, so the two managers share the objects
 - [ ] The copy constructor allocates new shaders and keeps the original shapes
 
-The copy constructor allocates new shapes and new shaders. When the hierarchy provides a virtual `clone()`, that function is the deep copy.
+- **Copy constructor** allocates new shapes and new shaders.
+- **Virtual `clone()`** is the deep copy when the hierarchy provides one.
 :::
 :::
 
@@ -201,7 +235,9 @@ What does `delete` through an `Image*` do when the destructor is not virtual?
 - [x] `~Image` runs alone, so `~ColorImage` never releases the pixel array
 - [ ] There is no leak, because `show` is already virtual
 
-`delete` through an `Image*` runs `~Image` alone when the destructor is not virtual, so `~ColorImage` never releases the pixel array. That is a leak. A claim that there is no leak is false.
+- **`delete` through an `Image*`** runs `~Image` alone when the destructor is not virtual.
+- **`~ColorImage`** never releases the pixel array. That is a leak.
+- **No-leak claim** is false.
 :::
 
 :::check id=exam-18a-q1-q2
@@ -217,7 +253,8 @@ Which of these hold when `ColorImage` owns a raw array?
 - [x] The copy constructor and the assignment operator must copy the array deeply
 - [ ] A virtual `~Image` releases the pixel array by itself
 
-If `ColorImage` owns a raw array, `~ColorImage` must apply `delete[]` to it, and the copy constructor and the assignment operator must copy it deeply.
+- **`~ColorImage`** must apply `delete[]` to a raw array it owns.
+- **Copy constructor** and the assignment operator must copy that array deeply.
 :::
 
 :::check id=exam-18a-q1-q4
@@ -227,7 +264,9 @@ Which of these hold for the other repairs?
 - [ ] That change of `main` makes every later `delete` through an `Image*` run `~ColorImage`
 - [x] The copy the compiler generates shares the array, and each of the two destructors releases that same array
 
-A repair that only changes `main` so the variable is declared with the dynamic type fixes that one line. The next `delete` through an `Image*` is still wrong. Copying under the rule of three is a separate bug: the copy the compiler generates shares the array, and each of the two destructors releases that same array.
+- **Change of `main`** so the variable is declared with the dynamic type fixes that one line.
+- **Next `delete`** through an `Image*` is still wrong.
+- **Generated copy** shares the array, and each of the two destructors releases that same array.
 :::
 :::
 
@@ -241,7 +280,8 @@ Which description of the layout is right during that call?
 - [x] The heap object begins with the vptr, then `n_pixels`, then the derived class's pointer to the pixel buffer. The buffer is a further block on the heap
 - [ ] The vptr and the pixel array both sit in the stack frame, next to the return address
 
-The object layout on the heap begins with the vptr, then `n_pixels`, then the derived class's pointer to the pixel buffer. The buffer itself is a further block on the heap.
+- **Heap object** begins with the vptr, then `n_pixels`, then the derived class's pointer to the pixel buffer.
+- **Buffer** itself is a further block on the heap.
 :::
 
 :::check id=exam-18b-q1-q2
@@ -257,7 +297,8 @@ During the call, the stack holds the pointer parameter and the return address.
 :::check id=exam-18b-q1-q3
 `dynamic_cast<ColorImage*>(p)` returns {{=null|the same pointer p|a new ColorImage}} when `p` does not point at a color image.
 
-`dynamic_cast<ColorImage*>(p)` returns null when `p` does not point at a color image, and it returns the pointer when it does. A C-style cast converts the pointer without consulting the vtable.
+- **`dynamic_cast<ColorImage*>(p)`** returns null when `p` does not point at a color image, and it returns the pointer when it does.
+- **C-style cast** converts the pointer without consulting the vtable.
 :::
 
 :::check id=exam-18b-q1-q4
@@ -267,7 +308,9 @@ Which of these hold?
 - [ ] A C-style cast consults the vtable and returns null when the type does not match
 - [x] The layout is right when every polymorphic subobject shows a vptr and the pixel array is outside the stack frame
 
-A grayscale image and a color image have different vtables, so `show` through an `Image*` reaches the override. A C-style cast converts the pointer without consulting the vtable. The layout is right when every polymorphic subobject shows a vptr and the pixel array is outside the stack frame.
+- **Different vtables** mean `show` through an `Image*` reaches the override.
+- **C-style cast** converts the pointer without consulting the vtable.
+- **Right layout** shows a vptr on every polymorphic subobject, and the pixel array stays outside the stack frame.
 :::
 :::
 
@@ -281,7 +324,8 @@ Which types can hold both kinds in one collection?
 - [ ] An array of `APP` objects
 - [x] `std::vector<std::unique_ptr<APP>>`
 
-`APP** apps_repo_arr_` or `std::vector<std::unique_ptr<APP>>`. The static type is a pointer to the base class.
+- **`APP**`** or `std::vector<std::unique_ptr<APP>>` can hold both kinds.
+- **Static type** is a pointer to the base class.
 :::
 
 :::check id=exam-19a-q1-q2
@@ -291,13 +335,15 @@ Which constructor body is correct for `MY_APPS_REPO(int n_pay_app, int n_play_ap
 - [ ] Allocate one array of `PAY_APP` and a second array of `PLAY_APP`
 - [ ] Store both kinds by value in an array of `APP`
 
-Allocate `n_pay_app + n_play_app` slots. The first `n_pay_app` slots hold `new PAY_APP`. The remaining slots hold `new PLAY_APP`.
+- **Slots** are `n_pay_app + n_play_app`.
+- **First slots** hold `new PAY_APP`. The remaining slots hold `new PLAY_APP`.
 :::
 
 :::check id=exam-19a-q1-q3
 Every constructor is private. A client obtains an instance by calling {{=create|new|Clone}}.
 
-Make every constructor private, and publish `static MY_APPS_REPO* create(...)`. The private constructor stops client code outside the class from writing `new MY_APPS_REPO`. The client obtains an instance by calling `create`.
+- **Private constructors** stop client code outside the class from writing `new MY_APPS_REPO`.
+- **`create`** is the published `static MY_APPS_REPO* create(...)` the client calls.
 :::
 
 :::check id=exam-19a-q1-q4
@@ -307,7 +353,9 @@ Which of these hold for `repo->test_apps_repo(test->Clone())`?
 - [x] If `Clone` returns by value, the argument is a temporary and the move constructor takes ownership of the pointer array
 - [x] `APP` needs a virtual destructor so that destroying the repository applies `delete` to the real application objects
 
-`Clone` must move the pointer array into a new repository, or deep-copy it there. If `Clone` returns by value, the argument of `test_apps_repo` is a temporary, and the repository's move constructor takes ownership of the pointer array. `APP` needs a virtual destructor so that destroying the repository applies `delete` to the real application objects.
+- **`Clone`** must move the pointer array into a new repository, or deep-copy it there.
+- **Return by value** makes the argument of `test_apps_repo` a temporary, and the move constructor takes ownership of the pointer array.
+- **Virtual destructor** on `APP` makes destroying the repository apply `delete` to the real application objects.
 :::
 :::
 
@@ -327,7 +375,8 @@ Which signature does `tester->test(app)` select?
 :::check id=exam-19b-q1-q2
 Dispatch that follows the application's dynamic type needs a virtual {{=accept|test|run}} on `APP`, or a chain of `dynamic_cast`.
 
-Dispatch that follows the application's dynamic type needs a virtual `accept` on `APP`, which is the visitor, or a chain of `dynamic_cast`. The `dynamic_cast` chain is the weaker of those two tools.
+- **Virtual `accept`** on `APP` is the visitor that follows the dynamic type.
+- **`dynamic_cast` chain** is the weaker of those two tools.
 :::
 
 :::check id=exam-19b-q1-q3
@@ -337,7 +386,10 @@ Which description of the layout is right?
 - [ ] Callable addresses sit in the application object, and the vtables hold the fields
 - [x] Each polymorphic object has a vptr, the pointer variable sits on the stack, and the argument stores the address of the application object
 
-The memory picture contains the tester object and the application object. Each has a vptr when it is polymorphic. The pointer variable sits on the stack. Callable addresses sit in the vtables. The argument stores the address of the application object.
+- **Memory picture** contains the tester object and the application object.
+- **vptr** sits in each object when it is polymorphic.
+- **Pointer variable** sits on the stack.
+- **Callable addresses** sit in the vtables. The argument stores the address of the application object.
 :::
 
 :::check id=exam-19b-q1-q4
@@ -347,7 +399,9 @@ Which of these hold?
 - [ ] The dynamic type of `app` changes which overload was selected at compile time
 - [x] Marking the three overloads `virtual` selects the tester's override of the signature that was already chosen
 
-The application's further fields sit in the derived part of its block. Declaring the three overloads `virtual` selects the tester's override of that exact signature. The signature itself was fixed from the static type of `app`.
+- **Further fields** sit in the derived part of the application's block.
+- **`virtual` overloads** select the tester's override of the signature that was already chosen.
+- **Signature** itself was fixed from the static type of `app`.
 :::
 :::
 
@@ -371,7 +425,10 @@ Which description of the layout of `t1` is right?
 - [ ] `t1` is the whole tree in the frame, and the children with data 1 and 3 are embedded beside datum 2
 - [ ] `t1` points at one heap block that contains datum 2 together with both children
 
-`t1` lives in the frame and holds a heap address. That heap object is an `InorderBinaryTree` whose base subobject stores the datum 2 and two child pointers. Each child is an `InorderBinaryTree` of its own on the heap, one with datum 1 and one with datum 3. The class is polymorphic through `Traversable`, so each of these three objects has a vptr.
+- **`t1`** lives in the frame and holds a heap address.
+- **Heap object** is an `InorderBinaryTree` whose base subobject stores the datum 2 and two child pointers.
+- **Each child** is an `InorderBinaryTree` of its own on the heap, one with datum 1 and one with datum 3.
+- **vptr** sits in each of these three objects, because the class is polymorphic through `Traversable`.
 :::
 
 :::check id=exam-24b-q1-q2
@@ -381,13 +438,16 @@ Which description of the layout of `t2` is right?
 - [ ] `t2` and both children sit in the frame, and none of them has a vptr
 - [x] `t2` is the whole derived object in the frame: datum 2, a vptr, and two pointers. The children with data 1 and 3 are heap objects, and each has a vptr
 
-`t2` is the whole derived object in the frame: the datum 2, a vptr, and two pointers. The children with data 1 and 3 are heap objects, and each has a vptr. The fields of `t2` belong in the frame. The fields of the children belong in their own heap blocks.
+- **`t2`** is the whole derived object in the frame: the datum 2, a vptr, and two pointers.
+- **Children** with data 1 and 3 are heap objects, and each has a vptr.
+- **Fields of `t2`** belong in the frame. The fields of the children belong in their own heap blocks.
 :::
 
 :::check id=exam-24b-q1-q3
 The `BinaryTree<int>(2)` argument was {{=copied into the parent|shared with the caller|left on the heap as a third child}}.
 
-The value `BinaryTree<int>(2)` that was passed as an argument was copied into the parent. Once the constructor returns, the live trees are the parent and the two children.
+- **Argument** `BinaryTree<int>(2)` was copied into the parent.
+- **Live trees** after the constructor returns are the parent and the two children.
 :::
 
 :::check id=exam-24b-q1-q4
@@ -397,8 +457,12 @@ Which of these hold?
 - [ ] The children of `t2` are embedded in the frame and have no vptr
 - [x] The fields of those children belong in their own heap blocks
 
-Each of the three objects behind `t1` has a vptr because the class is polymorphic through `Traversable`. The fields of the children belong in their own heap blocks.
+- **Three objects** behind `t1` each have a vptr, because the class is polymorphic through `Traversable`.
+- **Children's fields** belong in their own heap blocks.
 :::
 :::
 
-The vptr is the last hidden pointer in this object model. [Back to Java](topic:java-runtime) uses the same dispatch under a different rule: every method that is not `static` is virtual, and the garbage collector ends the object's lifetime. C++ ends that lifetime with `delete`.
+The vptr is the last hidden pointer in this object model.
+
+- **[Back to Java](topic:java-runtime)** uses the same dispatch under a different rule: every method that is not `static` is virtual, and the garbage collector ends the object's lifetime.
+- **C++** ends that lifetime with `delete`.

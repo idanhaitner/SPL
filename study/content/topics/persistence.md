@@ -122,6 +122,7 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 ```
 
 :::solution
+
 - **Inner join:** returns one row—Alice with `prog`.
 - **Bob:** has no junction row, so he is absent.
 - **Unused course:** a course that nobody takes is absent as well.
@@ -176,6 +177,7 @@ Inserting a practical session with `TA_ID = 8` fails when:
 That is the constraint the insert example in session 12 is about to hit.
 :::
 
+:::
 :::problem id=ps12-join title="Joining a session and a teaching assistant" source="materials/sessions/SPL_PS12.pptx" kind=exercise solution_origin=source
 Here are the two tables. In the example, Shaked is on two groups and Matan is on none.
 
@@ -220,6 +222,7 @@ Which of these hold for the inner join in the example?
 - **Matan:** is on none, so he is absent.
 :::
 
+:::
 :::problem id=ps13-dto-dao title="DTO versus DAO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
 The tester in session 13 has tables `students(id, name)`, `assignments(num, expected_output)`, and `grades(student_id, assignment_num, grade)`.
 
@@ -261,6 +264,7 @@ Bob's submission `"main"` against `expected_output` `"Main"` is recorded as a mi
 It belongs on the repository for the same reason as the join: it is about more than one table.
 :::
 
+:::
 :::problem id=ps13-orm-find title="Mapping columns onto a DTO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
 Session 13 replaces a hand-written `find` with generic row mapping.
 
@@ -301,6 +305,7 @@ Which of these hold?
 The question describes a small business in a few sentences and asks for tables, keys, and one `SELECT`. The trap is a list crammed into one column, or a join that multiplies rows because the junction table was left out.
 :::
 
+:::
 :::problem id=exam-15a-q4 title="The BigApple schema" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
 BigApple stores a customer (name, phone, join date, and links to other customers who are family) and every action on the account (date and kind: a message sent, an outgoing call, a missed call, a message received, together with the other phone number).
 
@@ -343,6 +348,7 @@ When family is symmetric, the rows in `Family` are stored as:
 Store both directions in `Family`, or insert the pair in both orders, when family is symmetric.
 :::
 
+:::
 :::problem id=exam-15b-q4 title="Number porting" source="materials/exams/15-b.pdf" kind=exam solution_origin=derived
 Extend BigApple with the kind of family relationship (parent, sibling, child), a table of competing carriers, and a history of number porting: the date the customer left, and the carrier they left for.
 
@@ -374,6 +380,7 @@ Which statement lists every carrier Ringo Starr moved to, with the date?
 The query joins `Customers` to `Portings` to `Carriers` and orders by `p.left_on`.
 :::
 
+:::
 :::problem id=exam-16a-q4 title="Abbey Road sessions" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 Abbey Road stores recording sessions. A session has a date, a song, a band, and many takes. A take has people in roles: players (a person may play several instruments on one take), singers, and technicians. Billy Preston played keyboards during the Beatles' Get Back sessions, from January 1969.
 
@@ -406,6 +413,7 @@ Which join path returns `t.take_no` and `s.song`?
 - **Filters:** band, song, date, person, and instrument are filters on that join.
 :::
 
+:::
 :::problem id=exam-16b-q4 title="A fixed set of roles" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
 The Abbey Road schema: a recording session has a date, a song, a band, and many takes. A take has people in roles (player, singer, technician), and the role is stored as text.
 
@@ -437,6 +445,7 @@ Which of these hold?
 - **`CHECK (role IN (...))`:** is the alternative on a single column.
 :::
 
+:::
 :::problem id=exam-17a-q4 title="A glasses shop" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
 An online glasses shop. The warehouse stores a model (model number, price). The shop registers a customer (name, id). A purchase records the customer id and the model, and the shop issues a receipt with a unique number and the purchase details. A customer can ask for the price of a model. The owner can list every receipt.
 
@@ -470,6 +479,7 @@ Which of these hold?
 - **Price at sale:** when a receipt must remember the price charged at the sale, copy `price` onto `Receipts` at insert.
 :::
 
+:::
 :::problem id=exam-17b-q4 title="Garage jobs" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
 A garage. A job has a car number, a fault description, and a job id. A worker has a name and an id. Assigning a worker to a job records the worker, the job, and that the job is unfinished. Finishing a job marks it done.
 
@@ -501,6 +511,7 @@ Which of these hold?
 - **Finishing:** setting `finished` to 1 marks that assignment done.
 :::
 
+:::
 :::problem id=exam-18a-q4 title="A question bank" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
 A question bank stores the text of each question, and a row for each year in which it was given, in one of the two sittings of that year. A question may return in a later year, and it must not be used twice in the same year.
 
@@ -533,6 +544,7 @@ Which statement enforces one use of a question per year?
 The primary key includes the year and not the sitting, so a second sitting in that year collides with the first insert.
 :::
 
+:::
 :::problem id=exam-18b-q4 title="Police wiretaps" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
 Police wiretaps. A recording stores the text, the caller's number, the destination number, and the date. Each phone number has an owner's name and an address.
 
@@ -576,6 +588,7 @@ Which of these hold for `recordings`?
 - **Number columns:** both are foreign keys to `phone(phone_num)`.
 :::
 
+:::
 :::problem id=exam-19a-q4 title="An Airbnb schema" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
 Airbnb. A user has an id and may be a guest, a host, or both. A property has an id, one host, a price per night, and a description. A rental has a guest, a property (and therefore the host of that property), a check-in, and a check-out. After check-out the host writes a recommendation of the guest and the guest writes one of the host.
 
@@ -609,6 +622,7 @@ Which column list matches `rentals`?
 - **`price` and `host_id`:** are columns of `properties`.
 :::
 
+:::
 :::problem id=exam-19b-q4 title="One night per property" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
 A user has an id and may be a guest, a host, or both. A property has an id, one host, a price per night, and a description. A rental has a guest, a property, a check-in, and a check-out. Two guests cannot share a property on the same night.
 
@@ -641,6 +655,7 @@ Which of these hold?
 - **`nights`:** adds `property_id`, `night`, and `rental_id`.
 :::
 
+:::
 :::problem id=exam-20a-q4 title="A DVD schema" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 A DVD service. Users have an id and a name. Movies have an id, a name, a description, any number of categories from {Action, Drama, Romance, kids}, an average `score`, and `num_scorers`. A viewing records the user, the movie, and the date.
 
@@ -673,6 +688,7 @@ A movie with two categories in this query:
 A movie with two categories appears twice, once per category, which is the junction table doing its work.
 :::
 
+:::
 :::problem id=exam-20b-q4 title="An average score" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 Users have an id and a name. Movies have an id, a name, a description, any number of categories from {Action, Drama, Romance, kids}, an average `score`, and `num_scorers`. A viewing records the user, the movie, and the date. A user submits a new score `s`.
 
@@ -714,3 +730,4 @@ The persistence layer in session 13 connects a Java or Python server to the data
 - **[Reactor](topic:reactor):** the server from this topic runs these SQL statements.
 - **DAO layer:** the SQL stays in the data-access objects.
 - **Repository:** the protocol calls the repository.
+:::

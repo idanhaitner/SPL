@@ -333,6 +333,18 @@ h2 { font-size: 1.7rem; margin: 2.6rem 0 0.7rem; }
 h3 { font-size: 1.25rem; margin: 1.4rem 0 0.4rem; }
 h4 { margin: 1.1rem 0 0.35rem; font-size: 1.05rem; }
 p { margin: 0.75rem 0; text-wrap: pretty; }
+.page :is(ul, ol):not(.chapter-list) {
+  margin: 0.85rem 0 1.1rem;
+  padding-inline-start: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.page ul:not(.chapter-list) { list-style: disc; }
+.page ol:not(.chapter-list) { list-style: decimal; }
+.page :is(ul, ol):not(.chapter-list) li::marker { color: var(--accent-ink); }
+.page :is(ul, ol):not(.chapter-list) li { padding-inline-start: 0.2rem; }
+.page :is(ul, ol):not(.chapter-list) :is(ul, ol) { margin: 0.35rem 0 0.15rem; }
 .lead {
   font-size: 1.2rem;
   color: var(--muted);

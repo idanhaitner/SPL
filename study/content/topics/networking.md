@@ -16,6 +16,7 @@ sources:
 ---
 
 Networking is how two processes exchange data, on one machine or across a network.
+
 - **Client-server:** In the client-server arrangement used in this course, the server stays available and the client opens the exchange through a socket.
 - **TCP and UDP:** They carry the bytes.
 - **Application layer:** The application above them agrees on a message format, because the transport does not hand the application a finished message by itself.
@@ -47,6 +48,7 @@ Networking is how two processes exchange data, on one machine or across a networ
 | **What is carried** | A continuous byte stream | Individual datagrams |
 
 TCP and UDP differ in how bytes reach the application.
+
 - **TCP:** It is a connection-oriented reliable byte stream.
 - **Read:** A read returns some bytes that have arrived.
 - **Framing:** Those bytes are not required to be one application message, so the application-level protocol frames each message with a delimiter or a length prefix, under an agreed encoding.
@@ -149,6 +151,7 @@ TCP still makes the application decide where the reply {{=ends|begins|retries}}.
 
 :::problem id=ps9-encoding title="Encoding at the two ends" source="materials/sessions/PS9 2026.pptx" kind=exercise solution_origin=source
 A Hebrew letter is encoded in UTF-8 as the bytes `D7 90`.
+
 - **Server:** The server writes those bytes.
 - **Client:** The client builds an `InputStreamReader` with the platform charset, which is not UTF-8.
 
@@ -169,7 +172,9 @@ Which construction is correct?
 - [ ] `new InputStreamReader(clientSocket.getInputStream())` together with an `OutputStreamWriter` that names `"UTF-8"`
 - [x] `new InputStreamReader(..., "UTF-8")` inside the `BufferedReader`, and `new OutputStreamWriter(..., "UTF-8")` inside the `PrintWriter`
 
-Both directions name UTF-8. The reader is `new InputStreamReader(clientSocket.getInputStream(), "UTF-8")`. The writer is `new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8")`.
+- **Both directions** name UTF-8.
+- **Reader** is `new InputStreamReader(clientSocket.getInputStream(), "UTF-8")`.
+- **Writer** is `new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8")`.
 :::
 
 :::check id=ps9-encoding-q3
@@ -290,6 +295,7 @@ The question replaces a delimiter with a length prefix, caps the number of clien
 
 :::problem id=exam-15b-q3 title="A spell-check server" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
 The message server in the appendix is a thread-per-client server: one thread for each accepted socket.
+
 - **Handlers:** Handlers are capped at 10.
 - **MessageLengthBasedTokenizer:** It frames a message as a length followed by that many bytes.
 - **Other design:** The other design used a delimiter.
@@ -312,7 +318,9 @@ Which body caps the running handlers at 10?
 :::check id=exam-15b-q3-q2
 `nextMessage` returns only after the tokenizer has the integer length and then {{=that many payload bytes|a delimiter|one line}}.
 
-The tokenizer accumulates bytes until it has the integer length and then that many payload bytes. Only then does `nextMessage` return. A delimiter is not examined.
+- **Tokenizer** accumulates bytes until it has the integer length and then that many payload bytes.
+- **`nextMessage`** returns only then.
+- **Delimiter** is not examined.
 :::
 
 :::check id=exam-15b-q3-q3
@@ -340,6 +348,7 @@ Which of these hold for `SpellChecker` and the client?
 
 :::problem id=exam-16a-q3 title="A printer protocol" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 A printer service was an RMI interface named `Printer.print(String)`.
+
 - **Replacement:** A student replaced the generated stub and skeleton with a protocol server.
 - **Handlers:** Handlers are capped at ten threads.
 - **Framing:** Framing is a length prefix that fits in a Java `int`.
@@ -401,6 +410,7 @@ Which of these hold for `Math` and for the Reactor?
 
 :::problem id=exam-17b-q3 title="Bank commands" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
 A bank server uses the command-invocation protocol from class.
+
 - **`LOGIN name`:** The server answers `ack` and remembers the client.
 - **`DEPOSIT money`:** It adds the amount to this client's balance and answers `ack`.
 - **Third command:** It reads the balance.
@@ -448,6 +458,7 @@ The server `main` builds one `Bank`, a protocol factory that closes over it, and
 
 :::problem id=exam-20b-q3 title="Store prices" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 `Stores` maps a store name to the prices of its products.
+
 - **Commands:** They arrive through the command-invocation protocol and run on one shared `Stores` object inside a Reactor on port 7777.
 - **`GetProductPrices`:** It takes a product name and returns the map from store name to price.
 

@@ -12,6 +12,7 @@ sources:
 ---
 
 Systems programming is the work of writing libraries and services that other programs use.
+
 - **Systems programming** keeps the programmer close to the machine: memory, protocols, and the run-time environment (סביבת זמן ריצה) that executes the program.
 - **Run-time environment (RTE)** is the layer between a program and the infrastructure.
 - **RTE roles** preserve the properties of that infrastructure, add an abstraction and a usable interface, and supply services the hardware does not offer on its own.
@@ -34,9 +35,11 @@ Systems programming is the work of writing libraries and services that other pro
 ## The run-time environment
 
 Consider a system that searches for a film on the network, downloads it, and plays it.
+
 - **Separate services** for searching the network, reading and writing the file system, and decoding video are provided by the layer between the program and the hardware, above the processor's instruction set.
 
 :::definition id=def-runtime title="Computer, program, process, and run-time environment" source="materials/notes/lecture-notes.docx.pdf"
+
 - **Computer** is a logical unit that carries out tasks on its own, through its instruction set.
 - **Program** is a passive collection of instructions: a formal description of a task.
 - **Process** is one execution of a program, with its own address space and its own state.
@@ -46,6 +49,7 @@ Consider a system that searches for a film on the network, downloads it, and pla
 :::
 
 The operating system is the run-time environment of a C++ process.
+
 - **Operating system** stands between the process and the hardware.
 - **Process creation** happens when a program is started: the operating system builds the process and moves it from state to state.
 - **Program counter (PC)** holds the address of the next instruction the processor will execute.
@@ -80,6 +84,7 @@ A process has five main states:
 ## The five regions
 
 The virtual address space runs from low addresses up to high addresses.
+
 - **Growing regions** sit separate and grow toward each other, so the free range between them can be used by whichever side needs it.
 
 :::definition id=def-address-space title="The address space of a process" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -110,6 +115,7 @@ High addresses sit at the end of the stack region, which grows downward. Low add
 ### Static variables
 
 A static variable is initialized with a value the compiler (מהדר) can compute at compile time.
+
 - **Constant expression** is fixed before the program runs as the initializer.
 - **Global** (`int a = 1`) lasts the whole run and is visible from every file.
 - **File-scope static** (`static int b = 2`) lasts the whole run and is visible in this file only.
@@ -130,6 +136,7 @@ void function() {
 - **Compiler and linker (מקשר)** give these variables a fixed address before `main` begins, and every later call finds those same variables.
 
 In the next example, `c` and `x` have different lifetimes, although both names appear inside `tick`.
+
 - **`c`** lives in the static region, and its initialization runs once.
 - **`x`** lives in the stack frame, and each call gets a new `x`.
 
@@ -158,6 +165,7 @@ int main() {
 ### The stack frame
 
 :::definition id=def-stack-frame title="Stack frame" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
+
 - **Stack frame** (activation record) is pushed on every function call.
 - **Frame contents** hold the return address, the parameters that were passed, and the function's local variables.
 - **LIFO pop** removes frames last in first out when the function returns.
@@ -185,6 +193,7 @@ int main() {
 ```
 
 While `foo` is running, the stack holds two frames.
+
 - **`main`'s frame** holds `a`.
 - **`foo`'s frame** holds the return address, the parameter `n`, and the local variable `x`.
 - **Return from `foo`** pops its frame.
@@ -215,6 +224,7 @@ int main() {
 ```
 
 :::solution
+
 - **`n` and `x`** are stored in `foo`'s stack frame.
 - **`n`** is the parameter, a copy of the value 4 passed from `main`.
 - **`x`** is a local whose value is 8.
@@ -324,6 +334,7 @@ int main() {
 ### Recursion and the stack
 
 Each recursive call pushes a new frame.
+
 - **Previous frame** stays in place because the call that created it is still in progress.
 - **`forever`** calls itself again with `n + 1`, so no call reaches its end and no frame is popped.
 - **`pad` array** of 256 integers takes space in every frame, and the stack grows until its region is full.
@@ -343,12 +354,14 @@ int main() {
 ![forever keeps pushing a frame for n and pad. The stack grows downward until the region is full](../assets/figures/recursion-frames.svg)
 
 This example never executes `new`, so the heap stays empty.
+
 - **Failure mode** is a stack overflow.
 - **Heap exhaustion** can happen with a single stack frame when one function loops on `new` and never releases the blocks: one frame remains while the free heap shrinks until allocation fails with `std::bad_alloc`.
 
 ## Design considerations
 
 The frame of a called function lives entirely inside the lifetime of the function that called it.
+
 - **Stack match** fits that nesting because frames leave in LIFO order: the frame pushed last is the frame popped first.
 - **Frame creation** moves the stack pointer by a size the compiler already knows.
 - **Frame leave** moves the pointer back by that same amount.
@@ -368,6 +381,7 @@ Two kinds of storage need the heap:
 In the von Neumann architecture, the RAM that holds a program's data also holds its code, the instructions.
 
 :::definition id=def-von-neumann title="The von Neumann machine" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
+
 - **Von Neumann architecture** is a processor (CPU), a bus, and a main memory (RAM) shared by code and data.
 - **Fetch-decode-execute cycle** repeats: the processor fetches an instruction from memory, decodes it, and executes it.
 :::
@@ -453,6 +467,7 @@ The stack and the heap correspond to a small set of operations:
 - `read` / `write`: access a cell that is currently allocated on the heap. A read or a write of a cell that has already been released is a run-time fault, a segmentation fault.
 
 A procedure call does the following.
+
 - **`createAF`** creates the frame.
 - **Return address** is pushed.
 - **`this` pointer** is pushed when the call is a method of an object.
@@ -493,6 +508,7 @@ pi[0] = 1;
 | The instructions | Code region (Text) | Machine instructions, read only |
 
 When the function returns, the local `pi` disappears with the frame.
+
 - **Ten integers** stay allocated on the heap until the program executes `delete[] pi`.
 - **Memory leak** happens once the only copy of that address has disappeared with the frame, because the integers are then unreachable and the block stays occupied.
 
@@ -508,6 +524,7 @@ int main() {
 ```
 
 :::solution
+
 - **`ps`** is a local pointer, so it occupies a cell in `main`'s stack frame.
 - **`Student` object** is allocated on the heap:
 
@@ -525,11 +542,17 @@ heap:                        v
 :::
 
 :::trap
-`delete` releases one object. `delete[]` releases an array. Applying `delete` to an array that was allocated with `new[]` is undefined behavior, and it corrupts the heap's bookkeeping. A memory leak is a separate failure: the block is never released.
+- **`delete`** releases one object.
+- **`delete[]`** releases an array.
+- **`delete` on `new[]`** is undefined behavior, and it corrupts the heap's bookkeeping.
+- **Memory leak** is a separate failure: the block is never released.
 :::
 
 :::trap
-Global variables, and local variables declared `static`, occupy the static region for the whole run of the program. Their storage is that static region for the entire lifetime. They sit outside every stack frame, and they sit outside the heap.
+Global variables, and local variables declared `static`, occupy the static region for the whole run of the program.
+
+- **Storage** is that static region for the entire lifetime.
+- **Outside frames** means they sit outside every stack frame, and outside the heap.
 :::
 
 ## Practice
@@ -627,7 +650,9 @@ delete _head;
 - [ ] 4. A compilation error (`sizeof` cannot be applied to a template).
 - [ ] 5. None of the answers is correct.
 
-Statement 3 is correct. `_head` is a pointer. On a 32-bit system the size of a pointer is 4 bytes, for any number of elements in the list it addresses.
+- **Statement 3** is correct.
+- **`_head`** is a pointer.
+- **32-bit system** makes the size of a pointer 4 bytes, for any number of elements in the list it addresses.
 :::
 
 :::check id=exam-15a-q2-q3
@@ -643,6 +668,7 @@ Which description of the stack and the heap is right for `foo(mvector<T> vec)`?
 - **No vtable** applies because this class has no virtual methods.
 :::
 
+:::
 :::problem id=exam-15b-q2 title="A vector that grows" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
 The class `mvector` is based on a dynamic array. When `insertAt` goes past the current size, it grows the array to the smallest power of 2 that is greater than `pos`. `removeAt` shrinks the array by half when the entire upper half is unused. `node` has a pure virtual method `duplicate()`.
 
@@ -714,10 +740,14 @@ Which description of the stack and the heap is right at the marked line?
 - [x] 4. Virtual methods are bound at run time (dynamic binding).
 - [ ] 5. None of the answers is correct.
 
-Statement 4 is correct. A call of a virtual function is resolved at run time from the real object on the heap. A C-style cast converts the pointer with no run-time type check. `dynamic_cast` performs that check.
+- **Statement 4** is correct.
+- **Virtual call** is resolved at run time from the real object on the heap.
+- **C-style cast** converts the pointer with no run-time type check.
+- **`dynamic_cast`** performs that check.
 :::
 :::
 
 The chapter [Pointers and references](topic:pointers) builds on this drawing.
+
 - **Stack cell** holds an address that is useful while the block on the heap is still alive.
 - **[The rule of three](topic:rule-of-three)** copy operations have to reproduce that drawing correctly.

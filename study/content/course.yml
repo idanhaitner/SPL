@@ -41,6 +41,8 @@ changelog:
     note: "Memory-model chapter replaced with the corrected wording. Diagrams and topic links that the paste dropped were put back."
   - date: 2026-10-21
     note: "The guide is in English again. Chapter prose, glossary, and the course introduction use the syllabus names for the run-time environment, ownership, concurrency, protocols, and persistence."
+  - date: 2026-10-23
+    note: "Lesson prose is short bullets with the key term in bold, so a chapter can be scanned instead of read as a wall of paragraphs."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
