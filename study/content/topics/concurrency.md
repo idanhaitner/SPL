@@ -31,23 +31,39 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
-In this course, concurrency (מקביליות) is about shared mutable state inside one process. Several threads execute in that process and read and write the same objects on the heap. The run-time environment expects two conditions on those accesses. Safety means a concurrent execution is a serial history (היסטוריה טורית): it is equivalent to some sequential order of the same calls. Liveness means a thread that is ready to run eventually makes progress. Deadlock, livelock, and starvation are the failures of that condition.
+In this course, **concurrency** (מקביליות) is about shared mutable state inside one process.
 
-A process (תהליך) owns an isolated address space. A thread (חוט) is a sequential flow of execution inside that process. The thread has its own stack. It shares the process heap and the static variables with the other threads.
+- **Shared state:** Several threads execute in that process and read and write the same objects on the heap.
+- **Safety (היסטוריה טורית):** A concurrent execution is a serial history—equivalent to some sequential order of the same calls.
+- **Liveness:** A thread that is ready to run eventually makes progress.
+- **Liveness failures:** Deadlock, livelock, and starvation are failures of that condition.
+
+- **Process (תהליך):** Owns an isolated address space.
+- **Thread (חוט):** A sequential flow of execution inside that process, with its own stack.
+- **Sharing:** Threads share the process heap and the static variables with the other threads.
 
 ## The memory model under concurrency
 
-Physical memory (RAM) is a sequence of cells with physical addresses. Virtual memory gives each process a private, contiguous address space. The operating system maps virtual pages to physical frames. Two processes that use the same virtual address share physical memory only when an explicit shared-memory mapping has been set up.
+- **Physical memory (RAM):** A sequence of cells with physical addresses.
+- **Virtual memory:** Gives each process a private, contiguous address space; the operating system maps virtual pages to physical frames.
+- **Cross-process sharing:** Two processes that use the same virtual address share physical memory only when an explicit shared-memory mapping has been set up.
 
-Threads of the same process share the heap and the static variables. Each thread keeps its own call stack.
+Each thread keeps its own call stack; threads of the same process share the heap and the static variables.
 
 ## Threads in Java
 
 :::definition id=def-thread title="Thread" source="materials/lectures/Chapter 8 - Concurrency.pptx"
-A thread is the basic unit of execution inside a process. Each thread has its own call stack. Distinct threads run at the same time on different processor cores, or the scheduler switches from one to another by a context switch.
+A thread is the basic unit of execution inside a process.
+
+- **Call stack:** Each thread has its own call stack.
+- **Scheduling:** Distinct threads run at the same time on different processor cores, or the scheduler switches from one to another by a context switch.
 :::
 
-In Java, the class `Thread` represents one thread of execution. `Runnable` is the task. `Thread.start` begins a new thread: it allocates that thread's stack and then runs the task's `run` on the new thread. A direct call to `run` runs the task on the caller's thread. `join()` waits until that thread's `run` returns.
+In Java, **`Thread`** represents one thread of execution and **`Runnable`** is the task.
+
+- **`Thread.start`:** Begins a new thread—it allocates that thread's stack and then runs the task's `run` on the new thread.
+- **Direct `run`:** Runs the task on the caller's thread.
+- **`join()`:** Waits until that thread's `run` returns.
 
 ```java
 public class Task implements Runnable {
@@ -60,32 +76,38 @@ public class Task implements Runnable {
 
 ```
 
-Calling `task.run()` runs the body on the current thread. Calling `new Thread(task).start()` runs the same body on a separate thread.
+- **`task.run()`:** Runs the body on the current thread.
+- **`new Thread(task).start()`:** Runs the same body on a separate thread.
 
-A local variable that lives on one thread's stack is confined to that thread. Only that thread can reach it, so the variable needs no lock. That confinement is called thread confinement.
+- **Thread confinement:** A local variable that lives on one thread's stack is confined to that thread; only that thread can reach it, so the variable needs no lock.
 
 ## Race conditions
 
-A data race (מרוץ) occurs when several threads access a shared location concurrently, at least one of the accesses is a write, and the result depends on the interleaving of the operations.
+A **data race** (מרוץ) occurs when several threads access a shared location concurrently, at least one access is a write, and the result depends on the interleaving of the operations.
 
 ```java
 public void increment() { count++; }
 
 ```
 
-The statement `count++` is a read-modify-write of three hardware steps: read the value, add 1, and write the new value. Two threads that both read 0 both write 1, and one increment is lost.
+- **`count++`:** A read-modify-write of three hardware steps—read the value, add 1, and write the new value.
+- **Lost update:** Two threads that both read 0 both write 1, and one increment is lost.
 
 ![Two threads both read 0, both add 1, and both write 1, so one increment is lost](../assets/figures/race-interleaving.svg)
 
 :::definition id=def-critical-section title="Critical section and mutual exclusion" source="materials/lectures/Chapter 8 - Concurrency.pptx"
-A critical section (אזור קריטי) is a stretch of code that at most one thread may execute at a given moment. Mutual exclusion (מניעה הדדית) is enforced by a lock (a mutex).
+A **critical section** (אזור קריטי) is a stretch of code that at most one thread may execute at a given moment.
 
-In Java, the keyword `synchronized` guards a critical section. A `synchronized` method locks the object `this`. A block `synchronized (obj)` locks the object `obj`.
+- **Mutual exclusion (מניעה הדדית):** Enforced by a lock (a mutex).
+- **`synchronized` method:** Locks the object `this`.
+- **`synchronized (obj)` block:** Locks the object `obj`.
 :::
 
-The keyword `volatile` establishes memory visibility for that variable and limits instruction reordering around the access. After one thread writes the variable, a later read by another thread observes that write. The read takes the value from memory and refreshes any older copy held in a register or a private cache. A compound update such as `count++` becomes atomic when the read, the modification, and the write run as one synchronized action, or as one compare-and-swap.
+- **`volatile`:** Establishes memory visibility for that variable and limits instruction reordering around the access.
+- **Visibility:** After one thread writes the variable, a later read by another thread observes that write; the read takes the value from memory and refreshes any older copy held in a register or a private cache.
+- **Atomic compound updates:** A compound update such as `count++` becomes atomic when the read, the modification, and the write run as one synchronized action, or as one compare-and-swap.
 
-An immutable object is safe for concurrent use. Its state is fixed after construction, so no thread can observe it in the middle of a change.
+An **immutable object** is safe for concurrent use because its state is fixed after construction, so no thread can observe it in the middle of a change.
 
 ### Synchronization, locks, and atomic variables
 
@@ -133,12 +155,15 @@ Two threads execute `count++` on a field declared `volatile int`. Is the increme
 - [x] No. `volatile` guarantees memory visibility only, and a read-modify-write needs synchronization
 - [ ] Yes. Writes of an `int` are atomic in hardware
 
-`volatile` leaves the three machine steps as three steps. The increment is one atomic action when those steps run under one lock, or as one compare-and-swap.
+- **`volatile`:** Leaves the three machine steps as three steps.
+- **Atomic increment:** The increment is one atomic action when those steps run under one lock, or as one compare-and-swap.
 :::
 
 ## Client-side locking
 
-A thread-safe class, such as `Vector` in Java, promises that each individual method is atomic. A sequence of methods, such as a check followed by an update, is a separate story. The lock is taken and released inside each method, so the sequence itself is open to interleaving:
+A **thread-safe class** such as `Vector` in Java promises that each individual method is atomic; a sequence of methods is a separate story.
+
+- **Interleaving gap:** The lock is taken and released inside each method, so the sequence itself is open to interleaving:
 
 ```java
 if (!v.contains(5))
@@ -146,7 +171,8 @@ if (!v.contains(5))
 
 ```
 
-Between the call to `contains` and the call to `add`, another thread can insert the element. The repair is client-side locking. The caller holds the same lock the methods use, across both calls:
+- **Race:** Between the call to `contains` and the call to `add`, another thread can insert the element.
+- **Client-side locking:** The caller holds the same lock the methods use, across both calls:
 
 ```java
 synchronized (v) {
@@ -163,7 +189,8 @@ synchronized (v) {
 - [x] Because the lock is released between the two methods
 - [ ] Because `contains` returns a copy of the vector
 
-Each method is safe on its own. The pair becomes one action when the caller locks `v` around both calls, or when the class offers one method that performs both under the same lock.
+- **Per-method safety:** Each method is safe on its own.
+- **Repair:** The pair becomes one action when the caller locks `v` around both calls, or when the class offers one method that performs both under the same lock.
 :::
 
 ## Practice
@@ -187,7 +214,7 @@ Which results can two completed calls to `increment` leave in `count`?
 - [ ] 0, because the two writes cancel
 - [x] 1, when both threads read 0 before either of them writes
 
-Two results are legal. One is 2, from a serial execution. The other is 1, when both threads read 0 before either writes.
+- **Legal results:** Two results are legal—2 from a serial execution, or 1 when both threads read 0 before either writes.
 :::
 
 :::check id=ps6-counter-race-q2
@@ -204,8 +231,10 @@ Which repairs match the two failures?
 - [ ] A lock only around `getValue` repairs the lost update
 - [x] A lock that makes the three steps mutually exclusive repairs the lost update
 
-`getValue` can observe a stale `count` when no happens-before edge orders a write before that read. The lost update is repaired only by making the three steps mutually exclusive.
+- **Stale `getValue`:** `getValue` can observe a stale `count` when no happens-before edge orders a write before that read.
+- **Lost update:** The lost update is repaired only by making the three steps mutually exclusive.
 :::
+
 :::
 
 :::problem id=ps6-average-safe title="A parallel average" source="materials/sessions/PS6-2026-1.pptx" kind=exercise solution_origin=derived
@@ -239,7 +268,8 @@ Which claims hold for this program and for the private-sum repair?
 - [x] The parent can add each worker's private sum with no lock
 - [ ] The private-sum repair still needs a lock in the parent
 
-Each `join` waits until that worker's `run` returns, so visibility after `join` holds. Each private sum stays confined to its worker until that `join` returns, and the shared array is only read.
+- **`join` visibility:** Each `join` waits until that worker's `run` returns, so visibility after `join` holds.
+- **Private sums:** Each private sum stays confined to its worker until that `join` returns, and the shared array is only read.
 :::
 
 :::check id=ps6-average-safe-q3
@@ -247,6 +277,7 @@ Give each worker {{=a private sum|the shared total|a lock on the array}}, call {
 
 Each private sum stays confined to its worker until that worker's `join` returns, so the parent adds the sums with no lock.
 :::
+
 :::
 
 :::problem id=ps7-wait-vs-spin title="Three ways to wait" source="materials/sessions/SPL_PS7.pptx" kind=exercise solution_origin=source
@@ -255,7 +286,8 @@ A thread can wait for a condition in three ways: busy-waiting, sleep-and-check, 
 :::check id=ps7-wait-vs-spin-q1
 The way that blocks, without polling, is {{=wait|busy-waiting|sleep-and-check}}.
 
-`wait` parks the thread until `notify` or `notifyAll`. Busy-waiting keeps testing in a tight loop, and sleep-and-check sleeps between the same tests.
+- **`wait`:** Parks the thread until `notify` or `notifyAll`.
+- **Alternatives:** Busy-waiting keeps testing in a tight loop, and sleep-and-check sleeps between the same tests.
 :::
 
 :::check id=ps7-wait-vs-spin-q2
@@ -266,7 +298,8 @@ Which claims match the three ways?
 - [x] Sleep-and-check notices the condition late, by as much as the sleep interval
 - [ ] `wait` keeps testing the condition in a tight loop while it holds the monitor
 
-Busy-waiting is appropriate only for a wait that is expected to be very short. Sleep-and-check spends less processor time and notices the condition late.
+- **Busy-waiting:** Appropriate only for a wait that is expected to be very short.
+- **Sleep-and-check:** Spends less processor time and notices the condition late.
 :::
 
 :::check id=ps7-wait-vs-spin-q3
@@ -279,15 +312,22 @@ Which fact makes the thread recheck the condition in a `while` loop after `wait`
 
 It rechecks the condition in a `while` loop, because it can wake early and because `notifyAll` wakes every waiter. It holds the monitor when it calls `wait`.
 :::
+
 :::
 
 :::problem id=ps7-liveness-names title="Names for liveness failures" source="materials/sessions/SPL_PS7.pptx" kind=exercise solution_origin=source
-(1) Two threads each hold one lock and wait for the lock the other holds. (2) A low-priority thread never obtains the lock, because a high-priority thread keeps taking it. (3) Two threads lock, notice that the other lock is taken, release, and try again, forever.
+Name each liveness failure:
+
+- **(1):** Two threads each hold one lock and wait for the lock the other holds.
+- **(2):** A low-priority thread never obtains the lock, because a high-priority thread keeps taking it.
+- **(3):** Two threads lock, notice that the other lock is taken, release, and try again, forever.
 
 :::check id=ps7-liveness-names-q1
 (1) is {{=deadlock|livelock|starvation}}. (2) is {{=starvation|deadlock|a data race}}. (3) is {{=livelock|deadlock|mutual exclusion}}.
 
-In (1) both threads are blocked, and each is waiting for a lock the other holds. In (2) the thread is ready to run and the scheduler passes over it indefinitely. In (3) the threads are not blocked.
+- **(1):** Both threads are blocked, and each is waiting for a lock the other holds.
+- **(2):** The thread is ready to run and the scheduler passes over it indefinitely.
+- **(3):** The threads are not blocked.
 :::
 
 :::check id=ps7-liveness-names-q2
@@ -298,7 +338,8 @@ Which repairs are the right ones?
 - [x] Fair locks, and holding the resource only for a short time, repair (2)
 - [ ] Priority scheduling is the repair for (2)
 
-Backing off, or a lock order that holds the first lock until the second is acquired, lets one livelocked thread finish. Priority scheduling can cause starvation.
+- **Livelock (3):** Backing off, or a lock order that holds the first lock until the second is acquired, lets one livelocked thread finish.
+- **Starvation (2):** Priority scheduling can cause starvation.
 :::
 
 :::check id=ps7-liveness-names-q3
@@ -309,8 +350,11 @@ Which description of the three failures is right?
 - [ ] Starvation means the thread is blocked inside `wait`
 - [ ] All three failures are the same cycle of two locks
 
-Deadlock waits for a lock the other thread holds. Livelock spends its time reacting, releasing, and trying again, so no work finishes. Starvation passes over a thread that is ready to run.
+- **Deadlock:** Waits for a lock the other thread holds.
+- **Livelock:** Spends its time reacting, releasing, and trying again, so no work finishes.
+- **Starvation:** Passes over a thread that is ready to run.
 :::
+
 :::
 
 :::problem id=ps8-singleton title="A lazy singleton" source="materials/sessions/SPL_PS8.pptx" kind=exercise solution_origin=source
@@ -331,7 +375,8 @@ Which description of the unsynchronized getter is right?
 - [ ] The field keeps every object the threads construct
 - [ ] The two threads deadlock on the class lock
 
-The field ends as one of those objects. The other object is dropped from the field, and a reader may already have observed it. The race is check-then-act.
+- **Outcome:** The field ends as one of those objects; the other object is dropped from the field, and a reader may already have observed it.
+- **Pattern:** The race is check-then-act.
 :::
 
 :::check id=ps8-singleton-q2
@@ -359,8 +404,10 @@ Which other form is correct?
 - [x] Eager initialization, a static field on the singleton class itself
 - [ ] Dropping the extra object from the field, so a reader cannot have observed it
 
-Eager initialization builds the instance even when no caller asks for it. The holder class waits until the first call.
+- **Eager initialization:** Builds the instance even when no caller asks for it.
+- **Holder class:** Waits until the first call.
 :::
+
 :::
 
 :::problem id=ps8-interrupt title="A stop flag and interrupt" source="materials/sessions/SPL_PS8.pptx" kind=exercise solution_origin=source
@@ -393,6 +440,7 @@ Which claim about `stop` is right?
 
 `stop()` is unsafe. It leaves an application invariant unrestored, because the thread stops at an arbitrary instruction.
 :::
+
 :::
 
 :::examnote
@@ -400,7 +448,10 @@ The question gives a shared structure and asks for a race, a deadlock, or a repa
 :::
 
 :::problem id=exam-15a-q1 title="Gears" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
-`Gear` knows its center, its radius, and its neighbors on the left and on the right. `move` rotates this gear and both neighbors, in the opposite direction. `SimpleGear` stores an angle `_state`. `check` validates constructor arguments. A `Spinner` thread calls `move` on a gear. Correct means the sequence of states is one that a serial history of `move` calls could have produced.
+- **`Gear`:** Knows its center, its radius, and its neighbors on the left and on the right; `move` rotates this gear and both neighbors, in the opposite direction.
+- **`SimpleGear`:** Stores an angle `_state`; `check` validates constructor arguments.
+- **`Spinner`:** A thread calls `move` on a gear.
+- **Correct:** The sequence of states is one that a serial history of `move` calls could have produced.
 
 :::check id=exam-15a-q1-q1
 Which of these belong to the invariant?
@@ -438,8 +489,10 @@ Several `Spinner` threads overlap their `move` calls, so the run matches no seri
 - [ ] Making only `_state` volatile
 - [ ] Synchronizing the constructor and leaving `move` unsynchronized
 
-`acquire` takes the mesh permit before the move, and `release` returns it after, so the mesh has one mutual-exclusion permit and no cycle of locks. A lock per gear deadlocks when each `move` locks this gear and then the neighbor.
+- **Mesh semaphore:** `acquire` takes the mesh permit before the move, and `release` returns it after, so the mesh has one mutual-exclusion permit and no cycle of locks.
+- **Per-gear lock:** A lock per gear deadlocks when each `move` locks this gear and then the neighbor.
 :::
+
 :::
 
 :::problem id=exam-15b-q1 title="Deadlock among gears" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
@@ -464,7 +517,8 @@ Which repairs keep one `move` atomic with respect to other moves?
 - [ ] A lock per gear, taken in whichever order the call reaches the gears
 - [x] A lock per gear in address order, or in left-to-right order
 
-The semaphore gives the mesh a single permit and no cycle. The ordered locks make every thread lock the earlier gear first.
+- **Mesh semaphore:** Gives the mesh a single permit and no cycle.
+- **Ordered locks:** Make every thread lock the earlier gear first.
 :::
 
 :::check id=exam-15b-q1-q3
@@ -477,6 +531,7 @@ Which repair does the official solution adopt?
 
 The lock order and the mesh semaphore are correct, and they are coarser: each holds a resource for the whole call, past the work the critical section needs that resource for.
 :::
+
 :::
 
 :::problem id=exam-16b-q1 title="A synchronized queue" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
@@ -507,7 +562,8 @@ The sum matches no single state of the queue. An `add` and a `remove` landed in 
 :::check id=exam-16b-q1-q3
 `sum` records a {{=volatile version|lock on this|copy of every node}} that grows at the end of every mutator, walks {{=without holding the lock|inside synchronized|under a semaphore}}, and {{=tries again when the version has changed|returns the partial sum|calls notifyAll}}.
 
-A bounded number of attempts can fall back to a locked walk, so the method is wait-free only in the quiet case and still terminates when writers keep arriving. The version tells the walker that the structure moved under it.
+- **Termination:** A bounded number of attempts can fall back to a locked walk, so the method is wait-free only in the quiet case and still terminates when writers keep arriving.
+- **Version field:** Tells the walker that the structure moved under it.
 :::
 
 :::check id=exam-16b-q1-q4
@@ -520,10 +576,13 @@ Which claims match the adapted dining-philosophers protocol?
 
 Looking can use the read side of a `ReadWriteLock`, or a separate counter of lookers. Eating takes the write side, so the eater waits until the lookers leave, and a looker waits while an eater holds the fork.
 :::
+
 :::
 
 :::problem id=exam-17a-q1 title="A board with a cup" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
-A board of `N` by `N` starts with one cup and several players. Each player has a `Strategy` that chooses a `Direction`. A player who reaches the cup ends the game. Locks are required.
+- **Board:** An `N` by `N` board starts with one cup and several players.
+- **Players:** Each player has a `Strategy` that chooses a `Direction`; a player who reaches the cup ends the game.
+- **Requirement:** Locks are required.
 
 :::check id=exam-17a-q1-q1
 Each player's `run` asks the strategy, calls {{=board.move|Thread.stop|board.notify}}, and stops when the result is {{=WIN or LOST|SUCCESS|FAIL only}}. `main` starts each player with {{=Thread.start|run|wait}} and then calls {{=join|notifyAll|sleep}}.
@@ -552,10 +611,13 @@ Which description of the board lock is right?
 
 Two players cannot both write the same cell. A strategy that reads only immutable data needs no lock.
 :::
+
 :::
 
 :::problem id=exam-17b-q1 title="Looking ahead on the board" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-Players on a board of `N` by `N` can `move` one step, or call `lookAhead`, which returns the distance to the nearest object or to the edge. `Segment` can test intersection, and it is already implemented. Several player threads call `move` and `lookAhead`. `Segment` is thread-safe when the caller leaves it unchanged. It is an immutable value.
+- **Board:** Players on a board of `N` by `N` can `move` one step, or call `lookAhead`, which returns the distance to the nearest object or to the edge.
+- **`Segment`:** Can test intersection, and it is already implemented; it is thread-safe when the caller leaves it unchanged and is an immutable value.
+- **Concurrency:** Several player threads call `move` and `lookAhead`.
 
 :::check id=exam-17b-q1-q1
 Which claims belong to the contract of `lookAhead`?
@@ -584,10 +646,13 @@ The lock makes the walk observe one layout. `move` updates a position only while
 
 The walk follows `intersect` to another object's cell or the edge. The same board lock covers that walk and the position update in `move`.
 :::
+
 :::
 
 :::problem id=exam-18b-q2 title="Two stacks in deadlock" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-A bounded `Stack` has the invariant `0 <= size() <= capacity()`. `push` and `pop` can fail their preconditions. The methods lock the `Stack` they belong to, and a `push` that moves a value from one `Stack` into the other locks both. Threads `T1` and `T2` use stacks `S1` and `S2`.
+- **Invariant:** A bounded `Stack` has `0 <= size() <= capacity()`; `push` and `pop` can fail their preconditions.
+- **Locking:** The methods lock the `Stack` they belong to, and a `push` that moves a value from one `Stack` into the other locks both.
+- **Threads:** `T1` and `T2` use stacks `S1` and `S2`.
 
 :::check id=exam-18b-q2-q1
 Which pair enters deadlock?
@@ -616,6 +681,7 @@ The repair is one order. In both threads, lock the `Stack` with the {{=lower ide
 
 That order removes the cycle. The same cycle appears when `Image.mix` locks two images in opposite orders.
 :::
+
 :::
 
 :::problem id=exam-19b-q2 title="A sorted tree" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
@@ -627,7 +693,8 @@ That order removes the cycle. The same cycle appears when `Image.mix` locks two 
 // (getRight() == null || getData().compareTo(getRight().getData()) < 0)
 ```
 
-The implementation inserts by walking the child pointers. Those pointers are `volatile`, and the walk takes no lock. A readers-writer lock is available for the same tree.
+- **Insertion:** Walks the child pointers; those pointers are `volatile`, and the walk takes no lock.
+- **Alternative:** A readers-writer lock is available for the same tree.
 
 :::check id=exam-19b-q2-q1
 Start from a node that holds 5, with null children. Which interleaving breaks the invariant?
@@ -656,6 +723,7 @@ What does a `ReadWriteLock` change?
 
 A `contains` that arrives during a write waits. Readers overlap with one another, and a writer excludes the walk it is modifying.
 :::
+
 :::
 
 :::problem id=exam-20a-q2 title="Output of two threads" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
@@ -713,6 +781,7 @@ The constructor's write happens before {{=start|the assignment a = new A(3)|join
 
 The line `a = new A(3)` stores a different object in `main`'s local variable. The constructor's write of 2 happens before `start`, and `start` happens before `run`.
 :::
+
 :::
 
 :::problem id=exam-20b-q2 title="An atomic update" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
@@ -751,12 +820,17 @@ After both threads finish that loop, which claim holds?
 - [x] `n` is 2, and a thread that loses the compare-and-swap retries without waiting on a lock
 - [ ] A third thread's `get` observes the value only after `notifyAll`
 
-A `get` on a third thread observes 2 once both compare-and-swap operations have completed. The atomic operations already order the writes, so the field needs no separate `volatile` modifier, and no thread waits on a lock.
+- **Final value:** A `get` on a third thread observes 2 once both compare-and-swap operations have completed.
+- **Ordering:** The atomic operations already order the writes, so the field needs no separate `volatile` modifier, and no thread waits on a lock.
 :::
+
 :::
 
 :::problem id=exam-24b-q2 title="A thread barrier" source="materials/exams/24-b.pdf" kind=exam solution_origin=derived
-A `Barrier` lets a fixed group of threads advance in phases. `await` means the caller has finished this phase. The caller blocks until every participant has finished the phase, and then every participant enters the next phase. A generation counter stops a fast thread from entering the next phase and releasing the previous phase early. An `InterruptedException` must leave the barrier usable for the threads that remain.
+- **`Barrier`:** Lets a fixed group of threads advance in phases.
+- **`await`:** Means the caller has finished this phase; the caller blocks until every participant has finished the phase, and then every participant enters the next phase.
+- **Generation counter:** Stops a fast thread from entering the next phase and releasing the previous phase early.
+- **`InterruptedException`:** Must leave the barrier usable for the threads that remain.
 
 :::check id=exam-24b-q2-q1
 `arrived` counts threads that have reached this phase, and `parties` is the size of the group. Which body is correct for the last arrival?
@@ -789,10 +863,13 @@ The caller stored the generation it saw in `g`. A waiter that wakes early, or be
 
 The waiter remembered generation `g`. While `g == generation`, it calls `wait` again.
 :::
+
 :::
 
 :::problem id=exam-24c-q2 title="A thread-safe set" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
-`Set` adds `iterator()` and `clone()` to `contains` and `add`. `SetImpl` is a linked list. An iterator that walks `next` pointers runs at the same time as `add`. A clone publishes a private structure, and every node in that structure is one the clone finished copying.
+- **`Set`:** Adds `iterator()` and `clone()` to `contains` and `add`; `SetImpl` is a linked list.
+- **Iterator:** Walks `next` pointers and can run at the same time as `add`.
+- **`clone`:** Publishes a private structure, and every node in that structure is one the clone finished copying.
 
 :::check id=exam-24c-q2-q1
 Which of these run under the one lock?
@@ -821,8 +898,16 @@ Which description of `clone` is right?
 
 `clone` walks the list and allocates a new list with the same elements. Callers of the copy share no structure with the original, so the copy publishes only state that the clone finished writing.
 :::
+
 :::
 
-A server that blocks inside `accept` stalls every other client for the length of that call, which is why the wait is handed to another thread. [Networking](topic:networking) is the channel between processes, and [the reactor](topic:reactor) is the server that waits on many such channels with one thread.
+A server that blocks inside **`accept`** stalls every other client for the length of that call, which is why the wait is handed to another thread.
 
-Chapter 8 reprints the figure from the [memory model](topic:memory-model) and places a page table under it. A reference can miss when its page is absent from RAM, and the operating system brings the page in. A Java variable shows the value after that load. Threads of one process share the heap and the static variables, and each thread keeps its own stack.
+- **[Networking](topic:networking):** The channel between processes.
+- **[The reactor](topic:reactor):** The server that waits on many such channels with one thread.
+
+Chapter 8 reprints the figure from the [memory model](topic:memory-model) and places a page table under it.
+
+- **Page fault:** A reference can miss when its page is absent from RAM, and the operating system brings the page in.
+- **Java load:** A Java variable shows the value after that load.
+- **Thread layout:** Threads of one process share the heap and the static variables, and each thread keeps its own stack.
