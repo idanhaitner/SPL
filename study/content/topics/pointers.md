@@ -9,9 +9,15 @@ sources:
   - "materials/exams/20-a-solution.pdf"
 ---
 
-A pointer (מצביע) is a variable that stores the address of another object.
+This chapter is how C++ names and follows addresses in memory.
+
+- **Pointers and references** — storing an address, and aliasing an object.
+- **Const and lifetime** — what a pointer may change, and what it may still point at.
+- **Common mistakes** — null, dangling addresses, and what the machine does when you get it wrong.
 
 ## Basic syntax
+
+A **pointer** (מצביע) is a variable that stores the address of another object.
 
 :::definition id=def-pointer title="A pointer and its operators" source="materials/lectures/Chapter 2 - Pointers.pptx"
 

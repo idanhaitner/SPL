@@ -14,13 +14,19 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
+This chapter is how C++ copies and moves owned resources without sharing one buffer by accident.
+
+- **Value categories** — what may be moved from, and what must stay put.
+- **Rule of five** — the special members that make copying and moving correct.
+- **Rule of zero** — when the compiler's defaults are already enough.
+
+## lvalues and rvalues
+
 A copy gives two objects the same data, and it is also the expensive way to return a large object from a function.
 
 - **Move** (העברה), added in C++11, lets a temporary hand its resource to the new owner. The bytes stay where they are.
 - **Rule of five** (חוק החמישה) is the set of special members that make copying and moving correct.
 - **Rule of zero** (חוק האפס) leaves every one of those members to the compiler, because each data member already manages its own resource.
-
-## lvalues and rvalues
 
 :::definition id=def-value-category title="lvalue and rvalue" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 An lvalue names an object that has an address.

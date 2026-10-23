@@ -7,15 +7,17 @@ sources:
   - "materials/sessions/SPL_PS5.pptx"
 ---
 
+This chapter compares Java's run-time picture with the C++ model from earlier chapters.
+
+- **Compile and run** — bytecode, the JVM, and what a `.class` file can do.
+- **Storage** — stack, heap, and how an array is laid out.
+- **Calls and errors** — virtual dispatch and checked exceptions.
+
+## Compilation and execution
+
 Java compiles a program to bytecode and runs that bytecode on the Java Virtual Machine, a run-time environment.
 
 - **`.class` file** can run on any operating system that supplies a JVM.
-- **Stack** holds the values this chapter compares with the C++ object model.
-- **Heap** is where an array is laid out.
-- **Instance method** is selected from the class of the object at run time.
-- **Checked exceptions** are part of the same story, because the compiler treats them as part of a method's type.
-
-## Compilation and execution
 
 1. **Compilation, before the program runs:** the compiler (`javac`) translates the source file (`.java`) into a bytecode file (`.class`). This step checks types, enforces access control, and requires every checked exception to be caught or declared.
 2. **Execution:** the JVM, as the run-time environment, loads the `.class` files. It interprets the bytecode. Its just-in-time (JIT) compiler compiles hot spots, the stretches of code that run often, into native machine code.
@@ -27,8 +29,8 @@ Every instance method in Java is virtual.
 
 ## The Java storage model
 
-- **Stack:** local variables of primitive type (`int`, `boolean`, and the other primitives) live here, together with references to objects.
-- **Heap:** every object and every array lives here, including the fields inside each object.
+- **Stack** holds the values this chapter compares with the C++ object model: local variables of primitive type (`int`, `boolean`, and the other primitives), together with references to objects.
+- **Heap** is where every object and every array lives, including the fields inside each object.
 
 An array in Java is an object on the heap.
 

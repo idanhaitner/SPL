@@ -15,13 +15,18 @@ sources:
   - "materials/exams/20-b-solution.pdf"
 ---
 
-Networking is how two processes exchange data, on one machine or across a network.
+This chapter is how two processes exchange data, on one machine or across a network.
 
-- **Client-server:** In the client-server arrangement used in this course, the server stays available and the client opens the exchange through a socket.
-- **TCP and UDP:** They carry the bytes.
-- **Application layer:** The application above them agrees on a message format, because the transport does not hand the application a finished message by itself.
+- **Layers** — what application, transport, network, and link each own.
+- **Sockets** — how a client and a server open an exchange in this course.
+- **Bytes on the wire** — TCP, UDP, and the message format above them.
 
 ## The layer model
+
+Networking in this course uses a client-server arrangement: the server stays available and the client opens the exchange through a socket.
+
+- **TCP and UDP:** They carry the bytes.
+- **Application layer:** The application above them agrees on a message format, because the transport does not hand the application a finished message by itself.
 
 | Layer | Role | Unit of data |
 | --- | --- | --- |

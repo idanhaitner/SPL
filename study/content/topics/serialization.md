@@ -5,13 +5,19 @@ sources:
   - "materials/lectures/Chapter 12 - Serialization.pptx"
 ---
 
+This chapter is how a program records an object as bytes so a later run, or another process, can rebuild it.
+
+- **What is stored** — type, field shape, and field values.
+- **Java wiring** — `Serializable`, streams, and rebuilding an object.
+- **From the reactor** — moving from an image-file server to an object server.
+
+## Writing and reading an object
+
 Serialization (סיריאליזציה) records an object as bytes so a later run, or another process, can rebuild it.
 
 - **Image server** in the Reactor chapter took a file name in and sent the file's bytes out.
 - **Object server** sends objects instead.
 - **Byte sequence** records the type, the shape of the fields, and the field values.
-
-## Writing and reading an object
 
 :::definition id=def-serialization title="Serialization" source="materials/lectures/Chapter 12 - Serialization.pptx"
 Serialization is a representation of an object as a sequence of bytes.

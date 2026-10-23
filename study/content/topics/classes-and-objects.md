@@ -7,12 +7,11 @@ sources:
   - "materials/sessions/SPL_PS3.pptx"
 ---
 
-A class defines the memory layout of its objects and the member functions that operate on them.
+This chapter follows a C++ program from source files to a running object.
 
-- **Non-static data** is copied once into each object.
-- **Member functions** are shared.
-- **`this`** is the hidden parameter that carries the address of the object into every non-static member function.
-- **This chapter** follows a source file to an executable, then how an object is allocated, initialized, and used.
+- **Build** — headers, translation units, and how a program becomes an executable.
+- **Classes** — the layout of an object and the functions that operate on it.
+- **Use** — how an object is allocated, initialized, and reached through `this`.
 
 ## Building a program
 
@@ -90,6 +89,12 @@ The fundamental types in C++ include `int`, `double`, `bool`, and `char`.
 - **`std::vector<T>`** is a dynamic array.
 
 ## Objects and values
+
+A class defines the memory layout of its objects and the member functions that operate on them.
+
+- **Non-static data** is copied once into each object.
+- **Member functions** are shared.
+- **`this`** is the hidden parameter that carries the address of the object into every non-static member function.
 
 :::definition id=def-class title="Class and struct" source="materials/lectures/Chapter 3 - Classes and Objects.pptx"
 A class is a set of data members and member functions, together with access rules.

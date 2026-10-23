@@ -6,8 +6,18 @@ import { loadCourse } from "@/lib/course";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
-const sans = Heebo({ subsets: ["latin", "hebrew"], variable: "--font-sans", display: "swap" });
-const mono = Source_Code_Pro({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+const sans = Heebo({
+  subsets: ["latin", "hebrew"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+const mono = Source_Code_Pro({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",

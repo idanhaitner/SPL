@@ -10,13 +10,19 @@ sources:
   - "materials/exams/17-b-solution.pdf"
 ---
 
+This chapter is what goes wrong when a class owns a resource and the compiler's memberwise copy is left in charge.
+
+- **The bug** — two objects that think they own one buffer.
+- **The three operations** — destructor, copy constructor, and copy assignment.
+- **Deep copy** — how those three keep ownership correct.
+
+## The three operations
+
 When a class owns a resource, a memberwise copy copies the pointer and leaves both objects believing they own one buffer.
 
 - **`Image`** holds a `char* _bytes` that its constructor (בנאי) allocated.
 - **Copy** of the `Image` copies that pointer.
 - **First destructor** (הורס) then releases the buffer while the other object is still using it.
-
-## The three operations
 
 :::definition id=def-rule-of-three title="The rule of three (חוק השלושה)" source="materials/lectures/Chapter 4 - Rule of Thee.pptx"
 The rule of three: if you write the destructor, the copy constructor (בנאי העתקה), or the copy assignment operator (אופרטור השמה), write all three.

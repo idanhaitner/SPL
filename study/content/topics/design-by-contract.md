@@ -14,14 +14,20 @@ sources:
   - "materials/exams/24-a-solution.pdf"
 ---
 
-Design by contract states the agreement between a method and its caller before any implementation is written.
+This chapter is how a method and its caller agree on valid use before any implementation is written.
+
+- **The three clauses** — precondition, invariant, and postcondition.
+- **Whose bug** — what fails when each clause is broken.
+- **Practice** — reading and writing contracts on the course's examples.
+
+## The three clauses of the contract
+
+Design by contract states that agreement in three clauses.
 
 - **Precondition** (תנאי קדם) is what the caller must establish. The method may assume that it holds.
 - **Postcondition** (תנאי סיום) is what the method establishes when it returns, provided the precondition held.
 - **Invariant** (תנאי פנימי) holds whenever no public method of the object is running.
 - **Failure** of one of these three statements names whose bug it is.
-
-## The three clauses of the contract
 
 :::definition id=def-dbc title="Precondition, invariant, and postcondition" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
 

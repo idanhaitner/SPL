@@ -45,6 +45,8 @@ changelog:
     note: "Lesson prose is short bullets with the key term in bold, so a chapter can be scanned instead of read as a wall of paragraphs."
   - date: 2026-10-23
     note: "Long chapter openings are a short roadmap only; definition lists moved into the first real sections (memory model, inheritance, concurrency, reactor)."
+  - date: 2026-10-23
+    note: "Every chapter opening is a short what-you-will-learn roadmap. Bold terms load Heebo 700; the old Key-terms overview fold is gone."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"

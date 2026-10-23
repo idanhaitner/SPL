@@ -32,13 +32,15 @@ sources:
   - "materials/exams/20-b-solution.pdf"
 ---
 
-This chapter is persistence and the SQL a program sends to the DBMS.
+This chapter is how a program keeps data after the process ends, and the SQL it sends to a DBMS.
 
-- **Process memory:** lasts only as long as the process, and when the process exits those values are gone so another program cannot see them.
-- **Files:** can outlive the process, but the application then owns the byte layout, the search, and the rules for two writers at once.
-- **DBMS (database management system):** adds durable storage, a query language, integrity constraints, and transactions, so a concurrent update is one atomic unit of work.
+- **Why a database** — what process memory and plain files do not give you.
+- **Relational model** — tables, keys, and the SQL you write against them.
+- **In code** — DTO, DAO, and repository shapes used in the course.
 
 ## The relational model
+
+Process memory lasts only as long as the process. Files can outlive it, but the application then owns the byte layout, the search, and the rules for two writers at once. A **DBMS** (database management system) adds durable storage, a query language, integrity constraints, and transactions.
 
 The relational model (מודל רלציוני) stores data as tables.
 
