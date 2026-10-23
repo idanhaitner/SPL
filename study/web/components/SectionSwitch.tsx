@@ -253,7 +253,7 @@ export function SectionSwitch({
   function show(next: number) {
     setIndex(next);
     setGroupIndex(0);
-    scrollToId("chapter-part");
+    scrollToId(parts.length > 1 ? "chapter-sections" : "chapter-part");
   }
 
   const current = parts[index] ?? parts[0];
@@ -261,12 +261,12 @@ export function SectionSwitch({
   const upcoming = parts[index + 1];
   const groups = current.groups;
   const activeGroup = groups.length === 0 ? 0 : Math.min(groupIndex, groups.length - 1);
+  const hasPartsNav = parts.length > 1;
 
   return (
     <>
-      {intro}
-      {parts.length > 1 && (
-        <nav className="parts" aria-label="Sections">
+      {hasPartsNav && (
+        <nav className="parts" id="chapter-sections" aria-label="Sections">
           {parts.map((part, item) => (
             <button
               type="button"
@@ -282,6 +282,18 @@ export function SectionSwitch({
           ))}
         </nav>
       )}
+      {intro &&
+        (hasPartsNav ? (
+          <details className="chapter-overview">
+            <summary className="chapter-overview-toggle">
+              <span className="chapter-overview-label">Chapter overview</span>
+              <span className="chapter-overview-hint">Key terms before the sections</span>
+            </summary>
+            <div className="chapter-overview-body">{intro}</div>
+          </details>
+        ) : (
+          intro
+        ))}
       <section className="part-panel" id="chapter-part">
         <h2><Inline text={current.title} /></h2>
         {current.intro}

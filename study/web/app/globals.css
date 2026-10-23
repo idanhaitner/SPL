@@ -516,13 +516,14 @@ p { margin: 0.75rem 0; text-wrap: pretty; }
   overflow-x: auto;
   max-width: 100%;
   min-width: 0;
-  margin: 0.25rem 0 1.25rem;
+  margin: 0.15rem 0 1rem;
   padding: 0.45rem 0;
   position: sticky;
   top: 0;
   z-index: 4;
   background: color-mix(in oklch, var(--bg) 92%, transparent);
   backdrop-filter: blur(10px);
+  scroll-margin-top: 0.5rem;
 }
 .parts button { flex: none; white-space: nowrap; font-size: 1rem; }
 .parts button[aria-current="true"] {
@@ -530,6 +531,53 @@ p { margin: 0.75rem 0; text-wrap: pretty; }
   border-color: var(--accent);
   color: var(--accent-ink);
 }
+.chapter-overview {
+  margin: 0 0 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.chapter-overview-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 560;
+  min-height: 3rem;
+}
+.chapter-overview-toggle::-webkit-details-marker { display: none; }
+.chapter-overview-toggle::marker { content: ""; }
+.chapter-overview-label { flex: 1 1 auto; }
+.chapter-overview-hint {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.chapter-overview-toggle::after {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-inline-start: 0.35rem;
+  border-inline-end: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  flex: none;
+}
+.chapter-overview[open] .chapter-overview-toggle::after { transform: rotate(-135deg); }
+.chapter-overview-toggle:hover { background: var(--accent-soft); border-radius: 14px; }
+.chapter-overview[open] .chapter-overview-toggle {
+  border-bottom: 1px solid var(--line);
+  border-radius: 14px 14px 0 0;
+}
+.chapter-overview-body { padding: 0.35rem 1rem 0.85rem; }
 .part-panel { scroll-margin-top: 4.25rem; }
 
 
@@ -1003,9 +1051,11 @@ blockquote {
     overscroll-behavior-x: contain;
     background: var(--bg);
   }
+  .parts { scroll-margin-top: var(--rail-bar); }
   .part-panel, .fold, .glossary-group, .glossary-card {
     scroll-margin-top: calc(var(--rail-bar) + 3.6rem);
   }
+  .chapter-overview-toggle { min-height: 44px; }
   .chapter-hops:has(.chapter-hop:nth-child(2)) {
     width: 100%;
     max-width: none;

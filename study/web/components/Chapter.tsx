@@ -83,7 +83,7 @@ export function Chapter({
 
   return (
     <SectionSwitch
-      intro={renderBlocks(intro, courseId)}
+      intro={intro.length > 0 ? renderBlocks(intro, courseId) : null}
       parts={parts}
       previousChapter={previousChapter}
       nextChapter={nextChapter}
