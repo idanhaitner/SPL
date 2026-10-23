@@ -18,7 +18,15 @@ sources:
   - "materials/exams/24-b-solution.pdf"
 ---
 
-Inheritance (ירושה) lets a derived class (מחלקה נגזרת) extend a base class (מחלקת בסיס), so a derived object can be used where the base type is expected.
+Inheritance (ירושה) lets a derived class stand in where a base type is expected, and this chapter covers the contract and the call mechanism that make that safe.
+
+- **Substitution** — when a derived object may replace a base object.
+- **Virtual calls** — how C++ selects the override at run time.
+- **Layout** — the vptr and vtable that make that selection possible.
+
+## Derived classes in C++
+
+A derived class (מחלקה נגזרת) extends a base class (מחלקת בסיס).
 
 - **Derived class** adds its own fields and can replace a virtual function (פונקציה וירטואלית) of the base.
 - **Call** has to select that replacement from the object that exists at run time.

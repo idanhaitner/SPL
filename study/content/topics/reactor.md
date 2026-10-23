@@ -31,13 +31,17 @@ sources:
 
 A server cannot stop the world inside `accept`.
 
+- **Problem** — blocking work on the accepting thread stalls every other client.
+- **Choices** — thread-per-client versus one selector thread that dispatches ready channels.
+- **This chapter** — compares those architectures and walks the reactor pattern used in the course.
+
+## Comparing server architectures
+
 - **`accept`:** returns one new connection, and the thread that accepted it must be free for the next client.
 - **Blocking on that thread:** if it then blocks while it reads, frames a message, or runs a query, every other connection waits behind it — no further `accept`, and no read of a client that is already ready.
 - **Thread per client:** moves the blocking work off the accepting thread, at the cost of a stack and a context switch for every connection, including the idle ones.
 - **Reactor pattern:** keeps one thread waiting in `select` — in Java NIO, on a `Selector` — and dispatches the non-blocking channels that are ready.
 - **Byte copies:** stay on that selector thread; a heavy call there stalls every client, so protocol work runs on a fixed pool of workers.
-
-## Comparing server architectures
 
 Two common shapes:
 

@@ -11,28 +11,15 @@ sources:
   - "materials/exams/15-b-solution.pdf"
 ---
 
-Systems programming is the work of writing libraries and services that other programs use.
+This chapter maps how a C++ process sits on the machine: the run-time environment, the five regions of the address space, and why stack and heap are split.
 
-- **Systems programming** keeps the programmer close to the machine: memory, protocols, and the run-time environment (סביבת זמן ריצה) that executes the program.
-- **Run-time environment (RTE)** is the layer between a program and the infrastructure.
-- **RTE roles** preserve the properties of that infrastructure, add an abstraction and a usable interface, and supply services the hardware does not offer on its own.
-- **C++ RTE** is the operating system for a C++ program.
-- **JVM** is an RTE above the operating system: the Java program uses the JVM, and the JVM uses the OS.
-- **Program (תוכנית)** is a passive collection of instructions.
-- **Process (תהליך)** is one execution of a program with its own address space and its own state, so two runs of the same program at the same time are two processes.
-- **Operating system** creates the process and shares CPU time among processes by a **context switch**: the scheduler suspends one process and resumes another.
-- **Multitasking** is that sharing of CPU time among processes.
-- **Virtual address space** is given to each process by the operating system.
-- **System call (קריאת מערכת)** is how a process reaches the disk or the network by asking the kernel for a service.
-- **Ordinary function call** transfers control to another function inside the same process, unlike a system call.
-- **Memory regions** in a C++ process divide code, static variables, call frames, and blocks obtained with `new` into different parts of the virtual address space.
-- **Course pictures** are drawings of those regions: a pointer (מצביע) on the stack (מחסנית), a buffer on the heap (ערימה), and an argument passed by value into the frame of the called function.
-- **Garbage collection (איסוף אשפה)** in Java, C#, and Python hides these regions and releases storage the program can no longer reach.
-- **C++ ownership** means the programmer owns the lifetime of each dynamic block: `new` obtains a block, and a matching `delete` releases it.
-- **Memory leak (זליגת זיכרון)** is a block that is never released.
-- **`new` / `delete` analogy** is like obtaining and returning the key to an apartment: a forgotten key leaves the apartment occupied for the rest of the process.
+- **Run-time environment** — how the operating system turns a program into a process.
+- **Five regions** — stack, heap, static data, and code inside one virtual address space.
+- **Design and machine picture** — why those regions exist, and a von Neumann view of a running process.
 
 ## The run-time environment
+
+Systems programming keeps the programmer close to the machine: memory, protocols, and the run-time environment (סביבת זמן ריצה) that executes the program.
 
 Consider a system that searches for a film on the network, downloads it, and plays it.
 
@@ -85,6 +72,7 @@ A process has five main states:
 
 The virtual address space runs from low addresses up to high addresses.
 
+- **Course pictures** draw those regions: a pointer (מצביע) on the stack (מחסנית), a buffer on the heap (ערימה), and an argument passed by value into the frame of the called function.
 - **Growing regions** sit separate and grow toward each other, so the free range between them can be used by whichever side needs it.
 
 :::definition id=def-address-space title="The address space of a process" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -283,8 +271,10 @@ Student* ps = new Student("Avi");  // ps on the stack, the Student on the heap
 - **First line** puts `pi` as a local on the stack holding an address, with the ten integers as one contiguous block on the heap.
 - **Second line** puts `ps` on the stack and the `Student` object on the heap.
 - **Stack allocation** ends with the call that created it because a stack frame is popped on every return.
-- **Memory leak** is a heap block that stays marked occupied after no live pointer in the program still holds its address.
-- **Java garbage collection** releases an object that has no reachable reference.
+- **C++ ownership** means the programmer owns each dynamic block: `new` obtains it, and a matching `delete` releases it.
+- **`new` / `delete` analogy** is like obtaining and returning the key to an apartment: a forgotten key leaves the apartment occupied for the rest of the process.
+- **Memory leak (זליגת זיכרון)** is a heap block that stays marked occupied after no live pointer in the program still holds its address.
+- **Garbage collection (איסוף אשפה)** in Java, C#, and Python releases storage the program can no longer reach, so those languages hide much of this region bookkeeping.
 - **Java memory leak** is a reference that stays reachable by accident, for example because it was left in a static collection, after the program no longer needs the object.
 
 ```cpp

@@ -33,17 +33,16 @@ sources:
 
 In this course, **concurrency** (מקביליות) is about shared mutable state inside one process.
 
-- **Shared state:** Several threads execute in that process and read and write the same objects on the heap.
-- **Safety (היסטוריה טורית):** A concurrent execution is a serial history—equivalent to some sequential order of the same calls.
-- **Liveness:** A thread that is ready to run eventually makes progress.
-- **Liveness failures:** Deadlock, livelock, and starvation are failures of that condition.
-
-- **Process (תהליך):** Owns an isolated address space.
-- **Thread (חוט):** A sequential flow of execution inside that process, with its own stack.
-- **Sharing:** Threads share the process heap and the static variables with the other threads.
+- **Goals** — safety (a serial history) and liveness (ready threads make progress).
+- **Failures** — races, deadlock, livelock, and starvation.
+- **Tools** — threads, locks, and the memory picture that makes sharing possible.
 
 ## The memory model under concurrency
 
+- **Shared state:** Several threads execute in that process and read and write the same objects on the heap.
+- **Process (תהליך):** Owns an isolated address space.
+- **Thread (חוט):** A sequential flow of execution inside that process, with its own stack.
+- **Sharing:** Threads share the process heap and the static variables with the other threads.
 - **Physical memory (RAM):** A sequence of cells with physical addresses.
 - **Virtual memory:** Gives each process a private, contiguous address space; the operating system maps virtual pages to physical frames.
 - **Cross-process sharing:** Two processes that use the same virtual address share physical memory only when an explicit shared-memory mapping has been set up.
@@ -82,6 +81,10 @@ public class Task implements Runnable {
 - **Thread confinement:** A local variable that lives on one thread's stack is confined to that thread; only that thread can reach it, so the variable needs no lock.
 
 ## Race conditions
+
+- **Safety (היסטוריה טורית):** A concurrent execution is a serial history—equivalent to some sequential order of the same calls.
+- **Liveness:** A thread that is ready to run eventually makes progress.
+- **Liveness failures:** Deadlock, livelock, and starvation are failures of that condition.
 
 A **data race** (מרוץ) occurs when several threads access a shared location concurrently, at least one access is a write, and the result depends on the interleaving of the operations.
 

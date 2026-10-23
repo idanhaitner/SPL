@@ -43,6 +43,8 @@ changelog:
     note: "The guide is in English again. Chapter prose, glossary, and the course introduction use the syllabus names for the run-time environment, ownership, concurrency, protocols, and persistence."
   - date: 2026-10-23
     note: "Lesson prose is short bullets with the key term in bold, so a chapter can be scanned instead of read as a wall of paragraphs."
+  - date: 2026-10-23
+    note: "Long chapter openings are a short roadmap only; definition lists moved into the first real sections (memory model, inheritance, concurrency, reactor)."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
