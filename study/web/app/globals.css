@@ -536,7 +536,14 @@ p { margin: 0.75rem 0; text-wrap: pretty; }
 .chapter-lead {
   margin: 0 0 1rem;
 }
-.chapter-lead > :first-child { margin-top: 0; }
+.chapter-lead-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.chapter-lead > :not(.chapter-lead-kicker):first-of-type { margin-top: 0; }
 .chapter-lead > :last-child { margin-bottom: 0; }
 .chapter-lead ul { margin: 0.55rem 0 0; }
 .part-panel { scroll-margin-top: 4.25rem; }

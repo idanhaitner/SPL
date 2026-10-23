@@ -265,7 +265,12 @@ export function SectionSwitch({
 
   return (
     <>
-      {intro && <div className="chapter-lead">{intro}</div>}
+      {intro && (
+        <div className="chapter-lead">
+          <p className="chapter-lead-kicker">Chapter overview</p>
+          {intro}
+        </div>
+      )}
       {hasPartsNav && (
         <nav className="parts" id="chapter-sections" aria-label="Sections">
           {parts.map((part, item) => (
