@@ -29,12 +29,20 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
-A server cannot stop the world inside `accept`. The call returns one new connection, and the thread that accepted it has to be free for the next client. If that same thread then blocks while it reads, frames a message, or runs a query, every other connection waits behind it: no further `accept`, and no read of a client that is already ready. A thread per client moves the blocking work off the accepting thread, at the cost of a stack and a context switch for every connection, including the idle ones. The reactor design pattern keeps one thread waiting in `select` — in Java NIO, on a `Selector` — and dispatches the non-blocking channels that are ready. Copying bytes stays on that selector thread. A heavy call there stalls every client, so protocol work runs on a fixed pool of workers.
+A server cannot stop the world inside `accept`.
+
+- **`accept`:** returns one new connection, and the thread that accepted it must be free for the next client.
+- **Blocking on that thread:** if it then blocks while it reads, frames a message, or runs a query, every other connection waits behind it — no further `accept`, and no read of a client that is already ready.
+- **Thread per client:** moves the blocking work off the accepting thread, at the cost of a stack and a context switch for every connection, including the idle ones.
+- **Reactor pattern:** keeps one thread waiting in `select` — in Java NIO, on a `Selector` — and dispatches the non-blocking channels that are ready.
+- **Byte copies:** stay on that selector thread; a heavy call there stalls every client, so protocol work runs on a fixed pool of workers.
 
 ## Comparing server architectures
 
-1. **Thread-per-client.** The server runs a separate thread for each connection. The model does not scale to thousands of connections: each thread owns a stack, and the processor spends time switching among them.
-2. **Reactor.** One selector thread waits for many network events (`OP_ACCEPT`, `OP_READ`, `OP_WRITE`) on non-blocking channels. It copies bytes and returns to `select`. Heavy protocol processing goes to a fixed pool of worker threads, shared across connections.
+Two common shapes:
+
+- **Thread-per-client:** the server runs a separate thread for each connection; the model does not scale to thousands of connections because each thread owns a stack, and the processor spends time switching among them.
+- **Reactor:** one selector thread waits for many network events (`OP_ACCEPT`, `OP_READ`, `OP_WRITE`) on non-blocking channels, copies bytes and returns to `select`, and sends heavy protocol processing to a fixed pool of worker threads shared across connections.
 
 :::definition id=def-reactor title="Java NIO pieces of the reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
 
@@ -48,7 +56,11 @@ A server cannot stop the world inside `accept`. The call returns one new connect
 
 ## ByteBuffer indexes
 
-The class `ByteBuffer` keeps three indexes: `position`, `limit`, and `capacity`. `channel.read` and `put` write into the buffer and advance `position`. `flip` switches the buffer from writing into it to reading out of it: it sets `limit` to the current `position` and `position` to 0, so the next `get` or `channel.write` walks the bytes just stored. `clear` sets `position` to 0 and `limit` to `capacity`, which prepares the same buffer for another fill.
+The class `ByteBuffer` keeps three indexes: `position`, `limit`, and `capacity`.
+
+- **`channel.read` and `put`:** write into the buffer and advance `position`.
+- **`flip`:** switches the buffer from writing into it to reading out of it — it sets `limit` to the current `position` and `position` to 0, so the next `get` or `channel.write` walks the bytes just stored.
+- **`clear`:** sets `position` to 0 and `limit` to `capacity`, which prepares the same buffer for another fill.
 
 ```java
 ByteBuffer buf = ByteBuffer.allocate(1024);
@@ -62,7 +74,10 @@ buf.clear();         // Reset buffer for writing: position = 0, limit = capacity
 ![Before flip the readable window is empty because position is already at the end of the data. flip sets limit to that end and position to 0](../assets/figures/buffer-flip.svg)
 
 :::trap
-Leaving `OP_WRITE` set in the interest set of a `SelectionKey`, while the write queue has nothing to send, makes `select` spin. The channel is already ready for writing, so `select` returns at once and the loop runs again. Set `OP_WRITE` only while the write queue holds bytes, and clear it once the last of those bytes has been written.
+Leaving `OP_WRITE` set while the write queue has nothing to send makes `select` spin.
+
+- **Ready channel:** the channel is already ready for writing, so `select` returns at once and the loop runs again.
+- **Fix:** set `OP_WRITE` only while the write queue holds bytes, and clear it once the last of those bytes has been written.
 :::
 
 :::problem id=worked-flip title="Flipping a buffer" source="materials/sessions/SPL_PS10.pptx" kind=worked solution_origin=source
@@ -76,7 +91,10 @@ channel.write(buf);
 ```
 
 :::solution
-`flip` sets `limit` to 5 and `position` to 0. It switches the buffer from writing into it to reading out of it. The `channel.write(buf)` that follows writes those five bytes. The capacity is still 16. Skipping `flip` starts the write at position 5 and stops at limit 16, which is the empty tail, so nothing useful is sent. A second call to `flip` sets `limit` to 0, because `position` is already 0.
+- **`flip`:** sets `limit` to 5 and `position` to 0, and switches the buffer from writing into it to reading out of it.
+- **`channel.write(buf)`:** writes those five bytes; capacity is still 16.
+- **Skipping `flip`:** starts the write at position 5 and stops at limit 16, which is the empty tail, so nothing useful is sent.
+- **Second `flip`:** sets `limit` to 0, because `position` is already 0.
 :::
 :::
 
@@ -87,7 +105,8 @@ A channel's write queue is empty, and `OP_WRITE` is still set. What does the sel
 - [x] It spins, because the channel is already ready for writing
 - [ ] It closes the channel
 
-A channel with free space in its send buffer is ready for writing. `select` returns at once. That loop is a spin. Clear `OP_WRITE` from the interest set until a later step has placed a reply on the write queue.
+- **Write readiness:** a channel with free space in its send buffer is ready for writing, so `select` returns at once.
+- **Spin:** that loop is a spin; clear `OP_WRITE` from the interest set until a later step has placed a reply on the write queue.
 :::
 
 ## Practice
@@ -103,7 +122,8 @@ Which of these hold before `flip`?
 - [ ] After three `put` calls, capacity is 3
 - [x] After three `put` calls, position is 3 and limit is 8
 
-After `clear`: position 0, limit 8, capacity 8. After three `put` calls: position 3, limit 8, capacity 8.
+- **After `clear`:** position 0, limit 8, capacity 8.
+- **After three `put` calls:** position 3, limit 8, capacity 8.
 :::
 
 :::check id=ps10-flip-q2
@@ -120,7 +140,8 @@ What does `channel.write` send?
 - [ ] All eight bytes of capacity
 - [ ] Nothing, because `position` is 0
 
-`channel.write` sends the bytes in `[position, limit)`, which is those three bytes. The other five lie past `limit` and are not sent.
+- **`channel.write`:** sends the bytes in `[position, limit)`, which is those three bytes.
+- **Past `limit`:** the other five lie past `limit` and are not sent.
 :::
 :::
 
@@ -135,7 +156,8 @@ Why can an ordinary pool start R2 before R1?
 - [ ] The pool records that both tasks belong to one channel and still prefers R2
 - [ ] R1 and R2 share one worker, so the later submit runs first
 
-A pool with two free workers can start R2 first. An ordinary pool keeps no record that the two tasks belong to one channel.
+- **Ordinary pool:** with two free workers can start R2 first.
+- **Per-channel record:** an ordinary pool keeps no record that the two tasks belong to one channel.
 :::
 
 :::check id=ps11-actor-order-q2
@@ -152,17 +174,19 @@ Which of these hold?
 - [x] The selector thread only enqueues
 - [x] An ordinary pool is the wrong tool for a protocol that assumes messages stay in order
 
-Different clients still run concurrently, on the pool's threads. The selector thread only enqueues, and an ordinary pool is the wrong tool for a protocol that assumes messages stay in order.
+- **Concurrency across clients:** different clients still run concurrently, on the pool's threads.
+- **Selector role:** the selector thread only enqueues.
+- **Ordered protocol:** an ordinary pool is the wrong tool for a protocol that assumes messages stay in order.
 :::
 :::
 
 :::problem id=ps11-write-interest title="Write interest" source="materials/sessions/SPL_PS11.pptx" kind=exercise solution_origin=source
 Four reactor mistakes:
 
-1. `OP_WRITE` stays set while the write queue is empty.
-2. A read with no size bound, so the buffers grow without limit.
-3. Heavy or blocking work on the selector thread.
-4. A call to `interestOps` from a thread other than the selector thread.
+- **`OP_WRITE` left set:** stays set while the write queue is empty.
+- **Unbounded read:** a read with no size bound, so the buffers grow without limit.
+- **Selector blocking:** heavy or blocking work on the selector thread.
+- **`interestOps` off-thread:** a call to `interestOps` from a thread other than the selector thread.
 
 :::check id=ps11-write-interest-q1
 Which mistake burns a core while no client is sending?
@@ -200,7 +224,8 @@ Which of these hold?
 - [ ] Clearing `OP_WRITE` is what makes `select` spin
 - [x] Calling `interestOps` from another thread is a separate bug
 
-Make that `interestOps` call on the selector thread. Calling it from another thread is a separate bug.
+- **Clearing `OP_WRITE`:** make that `interestOps` call on the selector thread.
+- **Other thread:** calling `interestOps` from another thread is a separate bug.
 :::
 :::
 
@@ -225,7 +250,9 @@ Remove `ServerSocketChannel` and `SocketChannel`, create one non-blocking `Datag
 :::check id=exam-15a-q3-q2
 `receive` learns the sender's {{=SocketAddress|SocketChannel|SelectionKey}}. The output queue holds pairs of {{=address and buffer|channel and selector|port and key}}.
 
-One `ConnectionHandler` calls non-blocking `receive` into a `ByteBuffer` and learns the `SocketAddress`. Protocol tasks carry that address, `write` sends through the datagram channel to the stored address, and the output queue holds pairs `(address, buffer)`.
+- **One `ConnectionHandler`:** calls non-blocking `receive` into a `ByteBuffer` and learns the `SocketAddress`.
+- **Protocol tasks:** carry that address; `write` sends through the datagram channel to the stored address.
+- **Output queue:** holds pairs `(address, buffer)`.
 :::
 
 :::check id=exam-15a-q3-q3
@@ -247,7 +274,9 @@ Which of these hold?
 - [x] One channel is what this design uses, because UDP has no connection for `accept` to split off
 - [x] The remote address is the key that separates clients
 
-UDP can drop datagrams or change their order. One channel is what this design uses, because UDP has no connection for `accept` to split off, the remote address separates clients, and a channel per client adds state the protocol does not use while delivery stays unreliable.
+- **UDP reliability:** UDP can drop datagrams or change their order.
+- **One channel:** one channel is what this design uses, because UDP has no connection for `accept` to split off.
+- **Client key:** the remote address separates clients; a channel per client adds state the protocol does not use while delivery stays unreliable.
 :::
 :::
 
@@ -273,7 +302,8 @@ Which scenario is unfairness by requests already served?
 - [x] A FIFO queue among ready tasks keeps A ahead because A arrives more often, while B's request count stays the smaller one
 - [ ] The worker takes the client with the most requests so far
 
-Client A had a thousand requests and client B had one. If the queue is FIFO among ready tasks, A stays ahead simply because A arrives more often, and B's request count stays the smaller one while A is served again.
+- **Setup:** client A had a thousand requests and client B had one.
+- **FIFO queue:** if the queue is FIFO among ready tasks, A stays ahead simply because A arrives more often, and B's request count stays the smaller one while A is served again.
 :::
 
 :::check id=exam-16b-q3-q3
@@ -290,7 +320,8 @@ A `PriorityBlockingQueue` freezes `compareTo` at insertion. What follows?
 - [x] A task does not move when the counter changes later, so reinsert it or keep the count from insertion time
 - [ ] A brand-new heavy client jumps ahead of a client who has been waiting with a low count
 
-A `PriorityBlockingQueue` that freezes `compareTo` at insertion will not move a task when the counter changes later, so either reinsert the task or record that the key is the count at insertion time. That still keeps a brand-new heavy client from jumping ahead of a client who has been waiting with a low count.
+- **Frozen priority:** a `PriorityBlockingQueue` that freezes `compareTo` at insertion will not move a task when the counter changes later, so either reinsert the task or record that the key is the count at insertion time.
+- **Waiting clients:** that still keeps a brand-new heavy client from jumping ahead of a client who has been waiting with a low count.
 :::
 :::
 
@@ -311,7 +342,8 @@ Where does this change do harm?
 - [ ] A slow protocol lowers `ioThroughput` while `compThroughput` stays high
 - [ ] The pool is given the channel before any bytes are copied
 
-One client sends a large buffer that frames into many messages, or a framer scans a megabyte, and the selector thread does that scan before it returns to `select`. `accept` and the reads of other clients wait, because a heavy call on the selector thread stalls every client.
+- **Large buffer on selector:** one client sends a large buffer that frames into many messages, or a framer scans a megabyte, and the selector thread does that scan before it returns to `select`.
+- **Stall:** `accept` and the reads of other clients wait, because a heavy call on the selector thread stalls every client.
 :::
 
 :::check id=exam-17a-q3-q3
@@ -322,7 +354,8 @@ Which pairing of the two counters is right?
 - [ ] Both counters increase beside `read` and `write`
 - [ ] Both counters increase in the pool task
 
-`ioThroughput` is bytes read plus bytes written on the selector thread, divided by the elapsed time, with counters beside `read` and `write`. `compThroughput` is the number of messages whose protocol `process` has returned, divided by the elapsed time, and that counter increases in the pool task.
+- **`ioThroughput`:** bytes read plus bytes written on the selector thread, divided by the elapsed time, with counters beside `read` and `write`.
+- **`compThroughput`:** the number of messages whose protocol `process` has returned, divided by the elapsed time, and that counter increases in the pool task.
 :::
 
 :::check id=exam-17a-q3-q4
@@ -334,7 +367,6 @@ What does a slow protocol do to the two numbers?
 - [ ] It stops `select`, so both counters freeze
 
 The two numbers measure different stages, so a slow protocol lowers `compThroughput` while `ioThroughput` stays high.
-:::
 :::
 
 :::problem id=exam-18a-q3 title="A saturated selector" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
@@ -348,7 +380,8 @@ Does Shraga's change take load off this selector?
 - [ ] Yes. A larger machine splits that one thread across the new processors
 - [ ] No. Extra workers hurt even when the pool is the saturated part
 
-`select`, `accept`, `read`, and `write` run on the one selector thread, so extra actor threads stay idle when the CPU time sits inside `select` and the byte copies. A larger machine does not split one thread by itself.
+- **Selector thread:** `select`, `accept`, `read`, and `write` run on the one selector thread, so extra actor threads stay idle when the CPU time sits inside `select` and the byte copies.
+- **More processors:** a larger machine does not split one thread by itself.
 :::
 
 :::check id=exam-18a-q3-q2
@@ -365,7 +398,9 @@ Shraga's change helps when the pool is the saturated part. The question says the
 :::check id=exam-18a-q3-q3
 Leave the selector loop for {{=readiness and byte copies|framing and log writes|protocol tasks}}. Move {{=framing and every log write|select and accept|the pool lock}} out of that loop. If one thread still cannot copy bytes fast enough, split the channels across {{=several reactors|a larger actor pool|more logger threads}}.
 
-Leave the selector loop for readiness and for byte copies, and move framing and every log write out of that loop. If one thread still cannot copy bytes fast enough, split the channels across several reactors, each with its own selector and its own port or its own subset of channels, and keep the selector's lock off the pool threads.
+- **Selector loop:** leave it for readiness and for byte copies, and move framing and every log write out of that loop.
+- **Several reactors:** if one thread still cannot copy bytes fast enough, split the channels across several reactors, each with its own selector and its own port or its own subset of channels.
+- **Pool threads:** keep the selector's lock off the pool threads.
 :::
 :::
 
@@ -380,7 +415,9 @@ Which of these explain Shraga's faster thread-per-client result?
 - [x] The protocol runs on the connection's thread, with no handoff to a pool
 - [ ] The reactor skips `select`, the buffers, and the queue for a few requests
 
-Shraga's client count is too small to pay for a thread per connection, and his requests never hold a thousand stacks parked in `read`. One thread per client can be faster there, because the protocol runs on the connection's thread with no handoff to a pool, while the reactor pays for `select`, for buffers, and for the queue.
+- **Small client count:** Shraga's client count is too small to pay for a thread per connection, and his requests never hold a thousand stacks parked in `read`.
+- **Thread-per-client path:** one thread per client can be faster there, because the protocol runs on the connection's thread with no handoff to a pool.
+- **Reactor overhead:** the reactor pays for `select`, for buffers, and for the queue.
 :::
 
 :::check id=exam-18b-q3-q2
@@ -418,7 +455,8 @@ Which of these hold?
 - [x] They run in arrival order, so the replies are queued in that order
 - [x] The selector writes those replies in queue order
 
-The task runs the protocol for the request at the head, queues the reply bytes for the selector to write, and then starts the next request of the same client when the queue still holds one. Two requests of one client never run together, and the selector writes the replies in queue order.
+- **Per request:** the task runs the protocol for the request at the head, queues the reply bytes for the selector to write, and then starts the next request of the same client when the queue still holds one.
+- **Promises:** two requests of one client never run together, and the selector writes the replies in queue order.
 :::
 
 :::check id=exam-19a-q3-q3
@@ -489,7 +527,9 @@ Which of these hold?
 - [x] After the running flag is cleared, a new message makes the selector submit one new task
 - [x] When the queue is empty, the loop clears the running flag
 
-`execute` still submits one task when the client was idle, the loop clears the running flag when the queue is empty, and a new message after that makes the selector submit one new task. A second `Runnable` is not allocated for a message that was already queued while the worker was alive.
+- **`execute`:** still submits one task when the client was idle.
+- **Running flag:** the loop clears it when the queue is empty, and a new message after that makes the selector submit one new task.
+- **No extra `Runnable`:** a second `Runnable` is not allocated for a message that was already queued while the worker was alive.
 :::
 :::
 
@@ -521,7 +561,9 @@ Which of these hold when the queue is bounded?
 - [x] The selector only offers a line when the queue has room
 - [ ] Logger methods that workers call write the stream before they return
 
-When the queue is bounded, a full queue drops log lines or counts them. A `put` from the selector thread would stop `select`, so the selector only offers a line when the queue has room, and logger methods that workers call only enqueue.
+- **Bounded queue:** when the queue is bounded, a full queue drops log lines or counts them.
+- **Selector:** a `put` from the selector thread would stop `select`, so the selector only offers a line when the queue has room.
+- **Worker logger methods:** logger methods that workers call only enqueue.
 :::
 
 :::check id=exam-20a-q3-q4
@@ -547,7 +589,8 @@ Which of these make two communication threads on one selector unsafe?
 - [x] They can change the interest set while `select` is using it
 - [x] A read and a write on the same channel from two threads tear the handler's `ByteBuffer`
 
-Two pool threads that pull keys race on the key set and can change the interest set while `select` is using it, so the selector can throw or miss an event. A read and a write on the same channel from two threads also tear the `ByteBuffer` the handler holds.
+- **Key set race:** two pool threads that pull keys race on the key set and can change the interest set while `select` is using it, so the selector can throw or miss an event.
+- **Shared buffer:** a read and a write on the same channel from two threads also tear the `ByteBuffer` the handler holds.
 :::
 
 :::check id=exam-24a-q3-q2
@@ -564,7 +607,9 @@ If the pool of two is kept, what may it run?
 - [x] A message that has already been copied: run the protocol, then queue the reply bytes
 - [ ] `interestOps`, so `select` does not see the key set
 
-The pool of two, if you keep it, receives a message that has already been copied, runs the protocol, and then queues the reply bytes. That pool is the actor pool the reactor already has, and pointing `handleReadWrite` itself at a pool of two is the change to reject.
+- **Allowed work:** the pool of two, if you keep it, receives a message that has already been copied, runs the protocol, and then queues the reply bytes.
+- **Actor pool:** that pool is the actor pool the reactor already has.
+- **Reject:** pointing `handleReadWrite` itself at a pool of two is the change to reject.
 :::
 
 :::check id=exam-24a-q3-q4
@@ -696,8 +741,12 @@ interface Command {
 :::check id=exam-24c-q3-q4
 `main` builds one `DB` and one `BaseServer`. The pool size is {{=11|10|1}}. The protocol factory is {{=() -> new RemoteCommandInvocationProtocol(db)|() -> new RemoteCommandInvocationProtocol(new DB())|ObjectEncoderDecoder::new}}. The encoder factory is {{=ObjectEncoderDecoder::new|LineTokenizer::new|() -> new DB()}}.
 
-`main` builds one `DB` and one `BaseServer` with pool size 11, a protocol factory `() -> new RemoteCommandInvocationProtocol(db)`, and an encoder factory `ObjectEncoderDecoder::new`. The query command's `execute` calls `db.executeQuery`, the list that comes back is the reply object, the encoder writes it, and `executeQuery` runs inside the pool task.
+- **`main`:** builds one `DB` and one `BaseServer` with pool size 11, a protocol factory `() -> new RemoteCommandInvocationProtocol(db)`, and an encoder factory `ObjectEncoderDecoder::new`.
+- **Query path:** the query command's `execute` calls `db.executeQuery`, the list that comes back is the reply object, the encoder writes it, and `executeQuery` runs inside the pool task.
 :::
 :::
 
-The reactor moves bytes. [Serialization](topic:serialization) is how those bytes become an object, and [persistence](topic:persistence) is the database these protocol tasks query.
+The reactor moves bytes.
+
+- **[Serialization](topic:serialization):** how those bytes become an object.
+- **[Persistence](topic:persistence):** the database these protocol tasks query.
