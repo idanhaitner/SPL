@@ -19,8 +19,8 @@ Java compiles a program to bytecode and runs that bytecode on the Java Virtual M
 
 - **`.class` file** can run on any operating system that supplies a JVM.
 
-1. **Compilation, before the program runs:** the compiler (`javac`) translates the source file (`.java`) into a bytecode file (`.class`). This step checks types, enforces access control, and requires every checked exception to be caught or declared.
-2. **Execution:** the JVM, as the run-time environment, loads the `.class` files. It interprets the bytecode. Its just-in-time (JIT) compiler compiles hot spots, the stretches of code that run often, into native machine code.
+1. **Compilation** happens before the program runs. `javac` translates `.java` into `.class`, checks types, enforces access control, and requires every checked exception to be caught or declared.
+2. **Execution** loads those `.class` files in the JVM. The JVM interprets the bytecode, and its just-in-time (JIT) compiler turns hot spots into native machine code.
 
 Every instance method in Java is virtual.
 
@@ -38,13 +38,15 @@ An array in Java is an object on the heap.
 - **Primitive elements** live inside the array object.
 - **Reference elements** are stored as references. Each referent is a separate object on the heap.
 
-![An int array is one block of ints on the heap. A String array is a block of references on the heap, and each string is a further object](../assets/figures/java-array.svg)
+![An int array is one block of ints on the heap. A String array is a block of references on the heap, and each string is a further object](../../web/public/figures/java-array.svg)
 
 ## Exceptions
 
 :::definition id=def-exception title="How Java classifies exceptions" source="materials/lectures/Chapter 7 - Back to Java.pptx"
 
-- **Checked exceptions:** these inherit from `java.lang.Exception`, excluding `RuntimeException`. They stand for failures the program is expected to anticipate, such as a missing file. The compiler requires the method to catch the exception with `try-catch`, or to declare it on the method with `throws`.
+- **Checked exceptions** inherit from `java.lang.Exception`, excluding `RuntimeException`.
+- **A checked failure** is one the program is expected to anticipate, such as a missing file.
+- **The compiler** requires the method to catch that exception with `try-catch`, or to declare it with `throws`.
 - **Unchecked exceptions:** these inherit from `RuntimeException`. They stand for bugs in the program, such as `NullPointerException` and `IndexOutOfBoundsException`. A method may leave them undeclared.
 - **Errors:** these inherit from `java.lang.Error`. They stand for severe failures of the JVM, such as `OutOfMemoryError`. Ordinary application code leaves them uncaught.
 :::

@@ -35,7 +35,7 @@ Networking in this course uses a client-server arrangement: the server stays ava
 | **Network** | Routing packets across the network (IP) | Packet |
 | **Link** | Carrying bits over the physical medium | Frame |
 
-![Four layers, application on top, then transport, network, and link](../assets/figures/network-layers.svg)
+![Four layers, application on top, then transport, network, and link](../../web/public/figures/network-layers.svg)
 
 :::definition id=def-host-port title="IP address and port" source="materials/lectures/Chapter 10 - Networking.pptx"
 

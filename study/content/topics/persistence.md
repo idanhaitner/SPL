@@ -40,7 +40,11 @@ This chapter is how a program keeps data after the process ends, and the SQL it 
 
 ## The relational model
 
-Process memory lasts only as long as the process. Files can outlive it, but the application then owns the byte layout, the search, and the rules for two writers at once. A **DBMS** (database management system) adds durable storage, a query language, integrity constraints, and transactions.
+Process memory lasts only as long as the process.
+
+- **Files** can outlive the process.
+- **The application** then owns the byte layout, the search, and the rules for two writers at once.
+- **A DBMS** (database management system) adds durable storage, a query language, integrity constraints, and transactions.
 
 The relational model (מודל רלציוני) stores data as tables.
 
@@ -51,7 +55,9 @@ The relational model (מודל רלציוני) stores data as tables.
 
 - **Table:** an entity or a relationship. A row is one record. A column is one attribute.
 - **Primary key (מפתח ראשי):** a column, or a set of columns, that identifies each row of the table uniquely.
-- **Foreign key (מפתח זר):** the relational form of a pointer. Its values must equal a key of another table. The DBMS rejects a value that matches no row there. That rule is the referential integrity constraint.
+- **Foreign key (מפתח זר)** is the relational form of a pointer.
+- **Its values** must equal a key of another table.
+- **Referential integrity** is the rule that rejects a value matching no row there.
 :::
 
 Mapping classes to tables:
@@ -105,7 +111,7 @@ LEFT JOIN Courses C ON E.CourseId = C.Id;
 
 ```
 
-![INNER JOIN of Alice to prog. Bob and systems are marked because they have no junction row, so they are absent from the result](../assets/figures/sql-join.svg)
+![INNER JOIN of Alice to prog. Bob and systems are marked because they have no junction row, so they are absent from the result](../../web/public/figures/sql-join.svg)
 
 ## DTO, DAO, and repository
 

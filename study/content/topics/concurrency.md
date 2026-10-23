@@ -96,7 +96,7 @@ public void increment() { count++; }
 - **`count++`:** A read-modify-write of three hardware steps—read the value, add 1, and write the new value.
 - **Lost update:** Two threads that both read 0 both write 1, and one increment is lost.
 
-![Two threads both read 0, both add 1, and both write 1, so one increment is lost](../assets/figures/race-interleaving.svg)
+![Two threads both read 0, both add 1, and both write 1, so one increment is lost](../../web/public/figures/race-interleaving.svg)
 
 :::definition id=def-critical-section title="Critical section and mutual exclusion" source="materials/lectures/Chapter 8 - Concurrency.pptx"
 A **critical section** (אזור קריטי) is a stretch of code that at most one thread may execute at a given moment.
@@ -107,17 +107,25 @@ A **critical section** (אזור קריטי) is a stretch of code that at most o
 :::
 
 - **`volatile`:** Establishes memory visibility for that variable and limits instruction reordering around the access.
-- **Visibility:** After one thread writes the variable, a later read by another thread observes that write; the read takes the value from memory and refreshes any older copy held in a register or a private cache.
-- **Atomic compound updates:** A compound update such as `count++` becomes atomic when the read, the modification, and the write run as one synchronized action, or as one compare-and-swap.
+- **Visibility** means a later read by another thread observes the write.
+- **That read** takes the value from memory and refreshes any older copy held in a register or a private cache.
+- **Atomic compound update** such as `count++` is one synchronized action, or one compare-and-swap, covering the read, the modification, and the write.
 
 An **immutable object** is safe for concurrent use because its state is fixed after construction, so no thread can observe it in the middle of a change.
 
 ### Synchronization, locks, and atomic variables
 
-- **`wait()`, `notify()`, and `notifyAll()`:** These are the basic operations of a Java monitor. The thread that calls `wait()` releases the monitor and waits until another thread calls `notify()` or `notifyAll()`. The condition is rechecked in a `while` loop. A thread can wake early (a spurious wakeup), and `notifyAll` wakes every waiter, so the condition may still be false when the thread runs again.
-- **`ReentrantLock` and `ReadWriteLock`:** These are explicit locks. A `ReentrantLock` can be fair, so the lock is granted in the order threads asked for it. A `ReadWriteLock` admits several readers at once, or a single writer.
-- **`Semaphore`:** A semaphore (סמפור) counts permits for a bounded resource. `acquire` waits until a permit is available and takes it. `release` returns a permit. A semaphore of 5 admits five threads. In the dining philosophers, the two forks are semaphores: a philosopher calls `acquire` on each fork and `release` on each fork when the meal is over.
-- **Atomic classes (`AtomicInteger`, `AtomicReference`):** These classes perform a read-modify-write as one hardware step. Compare-and-swap (CAS) stores a new value only when the value still equals the one the thread observed, and that update is lock-free.
+- **`wait()`** releases the monitor and waits until another thread calls `notify()` or `notifyAll()`.
+- **`notify()`** wakes one waiter. **`notifyAll()`** wakes every waiter.
+- **`while` loop** rechecks the condition. A thread can wake early (a spurious wakeup), and the condition may still be false.
+- **`ReentrantLock`** is an explicit lock. A fair one grants the lock in the order threads asked for it.
+- **`ReadWriteLock`** admits several readers at once, or a single writer.
+- **Semaphore (סמפור)** counts permits for a bounded resource.
+- **`acquire`** waits until a permit is available and takes it. **`release`** returns a permit.
+- **Five permits** admit five threads.
+- **Dining philosophers** treat the two forks as semaphores. A philosopher calls `acquire` on each fork, and `release` on each fork when the meal is over.
+- **`AtomicInteger` and `AtomicReference`** perform a read-modify-write as one hardware step.
+- **Compare-and-swap (CAS)** stores a new value only when the value still equals the one the thread observed. That update is lock-free.
 
 ### Liveness hazards
 

@@ -46,7 +46,7 @@ A destructor has an empty parameter list and no return type.
 - **Java** makes the byte array unreachable once the last reference to an `Image` is unreachable.
 - **C++** destroys the pointer when the `Image` ends. The bytes remain allocated until the destructor releases them.
 
-![An Image object on the stack: width, height, and a pointer to a separate byte buffer on the heap](../assets/figures/image-object-layout.svg)
+![An Image object on the stack: width, height, and a pointer to a separate byte buffer on the heap](../../web/public/figures/image-object-layout.svg)
 
 ### Shallow copy (העתקה רדודה)
 
@@ -71,7 +71,7 @@ The same constructor can delegate to `Image(int, int, char*)`, so the allocation
 - **`processImage`** then has a buffer of its own.
 - **Its destructor** releases only that buffer. The caller's image is intact.
 
-![A shallow copy shares one buffer, so one destructor releases it while the other object still uses it. A deep copy gives each Image a buffer of its own](../assets/figures/shallow-copy.svg)
+![A shallow copy shares one buffer, so one destructor releases it while the other object still uses it. A deep copy gives each Image a buffer of its own](../../web/public/figures/shallow-copy.svg)
 
 ### Assignment and construction
 
@@ -116,7 +116,7 @@ Assignment returns `Image&` because `=` associates to the right.
 - **Inner call** has to return an object the outer call can bind as a `const Image&`.
 - **`*this`** is that object, which is why the return type is `Image&` and the calls can be chained.
 
-![Copy-and-swap: temp receives a new buffer B2, the swap gives B2 to avi, and temp's destructor releases the old buffer A](../assets/figures/copy-swap.svg)
+![Copy-and-swap: temp receives a new buffer B2, the swap gives B2 to avi, and temp's destructor releases the old buffer A](../../web/public/figures/copy-swap.svg)
 
 If assignment throws after it has already released the old buffer, the object is left broken.
 

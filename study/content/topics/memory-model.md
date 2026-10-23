@@ -32,7 +32,11 @@ Consider a system that searches for a film on the network, downloads it, and pla
 - **Process** is one execution of a program, with its own address space and its own state.
 - **Run-time environment** is the layer between a program and the infrastructure.
 - **C++ layer** is the operating system, and the infrastructure under it is the hardware.
-- **Four main roles** preserve properties of the infrastructure, supply an abstraction over that infrastructure, offer a more convenient interface to the infrastructure, and provide services that the infrastructure does not provide on its own.
+- **Four roles** belong to that layer.
+- **Properties** of the infrastructure are preserved.
+- **Abstraction** sits over that infrastructure.
+- **Interface** is more convenient than the infrastructure itself.
+- **Extra services** are ones the infrastructure does not provide on its own.
 :::
 
 The operating system is the run-time environment of a C++ process.
@@ -52,7 +56,7 @@ A process has five main states:
 | Blocked | The process cannot run at the moment, and it is not in the scheduler's ready queue | Runnable (once the cause of the block is gone) |
 | Terminated | The resources have been released and the process has ended | none |
 
-![Five process states: Created enters Runnable, Runnable and Running alternate, Running drops to Blocked and returns, and Running finishes in Terminated](../assets/figures/process-states.svg)
+![Five process states: Created enters Runnable, Runnable and Running alternate, Running drops to Blocked and returns, and Running finishes in Terminated](../../web/public/figures/process-states.svg)
 
 :::
 
@@ -86,13 +90,13 @@ A running process has an address range of its own. Five main regions sit inside 
 | Initialized static data | Data / Initialized Data | Fixed at compile time | For the life of the process | Read and write |
 | Code | Text / Code | Fixed at compile time | For the life of the process | Read only |
 
-![The process address space, high addresses at the top: stack, heap, uninitialized variables, initialized variables, and code](../assets/figures/address-space.svg)
+![The process address space, high addresses at the top: stack, heap, uninitialized variables, initialized variables, and code](../../web/public/figures/address-space.svg)
 
 High addresses sit at the end of the stack region, which grows downward. Low addresses sit in the code region.
 :::
 
 - **Stack** holds local variables and the data a return needs: the return address, and saved registers.
-- **Stack frame pop** when the function ends removes its local variables from that memory.
+- **Stack frame** is popped when the function ends, and its local variables leave that memory.
 - **Heap** is where a program allocates blocks dynamically, for example with `new`.
 - **Heap lifetime** is separate from the stack frame of the function that allocated it, so the block can remain after that function has returned.
 - **Data and BSS** are the two static regions that hold variables whose lifetime is the lifetime of the process.
@@ -118,9 +122,9 @@ void function() {
 
 ```
 
-- **`a` visibility** allows any file that declares `a`, for example with `extern`, to use `a`.
-- **`b` visibility** limits use to the file that defines `b`; that limit is file scope.
-- **`c` persistence** keeps its value from one call of `function` to the next, and only the code inside `function` may name `c`.
+- **`a`** is visible from any file that declares it, for example with `extern`.
+- **`b`** is visible only in the file that defines it. That limit is file scope.
+- **`c`** keeps its value from one call of `function` to the next, and only the code inside `function` may name `c`.
 - **Compiler and linker (מקשר)** give these variables a fixed address before `main` begins, and every later call finds those same variables.
 
 In the next example, `c` and `x` have different lifetimes, although both names appear inside `tick`.
@@ -142,7 +146,7 @@ int main() {
 
 ```
 
-![c stays in the static region after the return. The second call receives a new x that reads the c that remained](../assets/figures/static-calls.svg)
+![c stays in the static region after the return. The second call receives a new x that reads the c that remained](../../web/public/figures/static-calls.svg)
 
 | Moment | `c` | `x` |
 | --- | --- | --- |
@@ -160,7 +164,7 @@ int main() {
 :::
 
 - **Local variable** is allocated inside the frame of the current call.
-- **Frame release** when the call ends moves the stack pointer with no search for a free block, which is why the allocation is fast.
+- **Frame release** moves the stack pointer when the call ends, with no search for a free block, so the allocation is fast.
 - **Name lifetime** ends when the function returns, because the whole frame is then available for a later call to reuse.
 - **Stack overflow** means the stack has no room left for another frame.
 - **Common causes** of stack overflow are infinite recursion and a very large local array.
@@ -186,7 +190,7 @@ While `foo` is running, the stack holds two frames.
 - **`foo`'s frame** holds the return address, the parameter `n`, and the local variable `x`.
 - **Return from `foo`** pops its frame.
 
-![While foo is running, n and x sit in foo's frame below main. After the return only main's frame remains, and a](../assets/figures/stack-frames.svg)
+![While foo is running, n and x sit in foo's frame below main. After the return only main's frame remains, and a is still in that frame.](../../web/public/figures/stack-frames.svg)
 
 | Name | While `foo` is running | After `foo` returns |
 | --- | --- | --- |
@@ -258,7 +262,9 @@ delete[] arr;            // the array form, not delete
 
 - **Heap block** can outlive the function that allocated it.
 - **Stack local** cannot outlive its frame: the local is released when its frame is popped.
-- **`new` cost** is time and a record of what is free, because it asks the operating system's memory manager to find a free range and is much slower than moving the stack pointer.
+- **`new` cost** is the time to find a free range, plus a record of what is free.
+- **Memory manager** is the operating-system service that does that search.
+- **Stack allocation** is faster because it only moves the stack pointer.
 - **Heap bookkeeping** records which blocks are occupied and which are free.
 - **Pointer vs block** may occupy different regions.
 
@@ -284,7 +290,7 @@ void leaky() {
 
 ```
 
-![Inside leaky, the pointer on the stack points at the int on the heap. After the return the int is still there, and nothing points to it](../assets/figures/heap-leak.svg)
+![Inside leaky, the pointer on the stack points at the int on the heap. After the return the int is still there, and nothing points to it](../../web/public/figures/heap-leak.svg)
 
 ### All five regions in one run
 
@@ -319,7 +325,7 @@ int main() {
 | the `int` from `new` | Heap | Released explicitly before the return (`delete box`) |
 | the program's code | Code region (Text) | Yes, read only |
 
-![The second call of note: x and box on the stack, the new int on the heap, calls and ready in static storage, the instructions in the code](../assets/figures/five-homes.svg)
+![The second call of note: x and box on the stack, the new int on the heap, calls and ready in static storage, the instructions in the code](../../web/public/figures/five-homes.svg)
 
 ### Recursion and the stack
 
@@ -341,12 +347,13 @@ int main() {
 
 ```
 
-![forever keeps pushing a frame for n and pad. The stack grows downward until the region is full](../assets/figures/recursion-frames.svg)
+![forever keeps pushing a frame for n and pad. The stack grows downward until the region is full](../../web/public/figures/recursion-frames.svg)
 
 This example never executes `new`, so the heap stays empty.
 
 - **Failure mode** is a stack overflow.
-- **Heap exhaustion** can happen with a single stack frame when one function loops on `new` and never releases the blocks: one frame remains while the free heap shrinks until allocation fails with `std::bad_alloc`.
+- **Heap exhaustion** can happen with a single stack frame.
+- **A loop of `new`** that never releases its blocks shrinks the free heap until allocation fails with `std::bad_alloc`.
 
 ## Design considerations
 
@@ -376,16 +383,18 @@ In the von Neumann architecture, the RAM that holds a program's data also holds 
 - **Fetch-decode-execute cycle** repeats: the processor fetches an instruction from memory, decodes it, and executes it.
 :::
 
-![A von Neumann machine: a CPU, a bus, and one RAM that holds both the program and the data](../assets/figures/von-neumann-architecture.svg)
+![A von Neumann machine: a CPU, a bus, and one RAM that holds both the program and the data](../../web/public/figures/von-neumann-architecture.svg)
 
 The main parts of the processor:
 
 - **Control unit (CU).** It runs the fetch-decode-execute cycle, stays in step with the clock, and handles input and output through interrupts.
 - **Arithmetic-logic unit (ALU).** It performs arithmetic, logical operations, comparisons, bitwise operations, and checks for arithmetic overflow.
-- **Registers.** These are the fastest storage in the processor. General-purpose registers hold values for the operation in progress (`load`, `store`). Dedicated registers hold execution state, including `ip`, the instruction pointer, and `rsp`, the stack pointer.
+- **Registers** are the fastest storage in the processor.
+- **General-purpose registers** hold values for the operation in progress (`load`, `store`).
+- **Dedicated registers** hold execution state, including `ip` (the instruction pointer) and `rsp` (the stack pointer).
 - **Cache.** This is fast memory between the registers and physical RAM, divided into levels. L1 is the smallest and the fastest, then L2, then L3.
 
-![The processor components in a table, then the cache, the bus, and RAM, with the fast end of the memory hierarchy at the top](../assets/figures/memory-hierarchy.svg)
+![The processor components in a table, then the cache, the bus, and RAM, with the fast end of the memory hierarchy at the top](../../web/public/figures/memory-hierarchy.svg)
 
 - **Stack region** is where the address lies when the processor loads a local variable.
 - **Heap region** is where the address lies when it reads through the pointer `pi`.
@@ -454,7 +463,8 @@ The stack and the heap correspond to a small set of operations:
 
 - `new`: allocate a free run of cells on the heap and mark them occupied for this process.
 - `delete`: release an allocated range and mark it free.
-- `read` / `write`: access a cell that is currently allocated on the heap. A read or a write of a cell that has already been released is a run-time fault, a segmentation fault.
+- `read` / `write`: access a cell that is currently allocated on the heap.
+- **Released cell:** a read or a write after `delete` is a run-time fault, a segmentation fault.
 
 A procedure call does the following.
 

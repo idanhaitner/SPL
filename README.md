@@ -58,7 +58,7 @@ npm run audit   # optional content/UI checks
 
 1. Update or add a topic in `study/content/topics/*.md`.
 2. Register it in `study/content/course.yml` if it is new.
-3. Put new diagrams in `study/web/public/figures/` and reference them from markdown as `../assets/figures/name.svg` (the app remaps that path).
+3. Put new diagrams in `study/web/public/figures/` and reference them from a topic as `../../web/public/figures/name.svg`. That path is a real file, so GitHub can show it. The app remaps it to `/figures/name.svg` on the site.
 4. Refresh the local dev server to see changes.
 
 Topic markdown uses the study dialect: definitions, traps, practice problems with hints/solutions, and `topic:` links between chapters.

@@ -38,15 +38,19 @@ A server cannot stop the world inside `accept`.
 ## Comparing server architectures
 
 - **`accept`:** returns one new connection, and the thread that accepted it must be free for the next client.
-- **Blocking on that thread:** if it then blocks while it reads, frames a message, or runs a query, every other connection waits behind it — no further `accept`, and no read of a client that is already ready.
+- **Blocking on that thread** stalls every other connection.
+- **A blocked read, frame, or query** means no further `accept`, and no read of a client that is already ready.
 - **Thread per client:** moves the blocking work off the accepting thread, at the cost of a stack and a context switch for every connection, including the idle ones.
 - **Reactor pattern:** keeps one thread waiting in `select` — in Java NIO, on a `Selector` — and dispatches the non-blocking channels that are ready.
 - **Byte copies:** stay on that selector thread; a heavy call there stalls every client, so protocol work runs on a fixed pool of workers.
 
 Two common shapes:
 
-- **Thread-per-client:** the server runs a separate thread for each connection; the model does not scale to thousands of connections because each thread owns a stack, and the processor spends time switching among them.
-- **Reactor:** one selector thread waits for many network events (`OP_ACCEPT`, `OP_READ`, `OP_WRITE`) on non-blocking channels, copies bytes and returns to `select`, and sends heavy protocol processing to a fixed pool of worker threads shared across connections.
+- **Thread-per-client** runs a separate thread for each connection.
+- **That model** does not scale to thousands of connections. Each thread owns a stack, and the processor spends time switching among them.
+- **Reactor** uses one selector thread for many network events (`OP_ACCEPT`, `OP_READ`, `OP_WRITE`) on non-blocking channels.
+- **That thread** copies bytes and returns to `select`.
+- **Heavy protocol work** goes to a fixed pool of worker threads shared across connections.
 
 :::definition id=def-reactor title="Java NIO pieces of the reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
 
@@ -56,14 +60,15 @@ Two common shapes:
 - **`ByteBuffer`:** a memory buffer used for reading and writing.
 :::
 
-![The reactor loop: one selector thread, ready keys, and a pool only for protocol work](../assets/figures/reactor-loop.svg)
+![The reactor loop: one selector thread, ready keys, and a pool only for protocol work](../../web/public/figures/reactor-loop.svg)
 
 ## ByteBuffer indexes
 
 The class `ByteBuffer` keeps three indexes: `position`, `limit`, and `capacity`.
 
 - **`channel.read` and `put`:** write into the buffer and advance `position`.
-- **`flip`:** switches the buffer from writing into it to reading out of it — it sets `limit` to the current `position` and `position` to 0, so the next `get` or `channel.write` walks the bytes just stored.
+- **`flip`** switches the buffer from writing into it to reading out of it.
+- **`limit`** becomes the current `position`, and `position` becomes 0, so the next `get` or `channel.write` walks the bytes just stored.
 - **`clear`:** sets `position` to 0 and `limit` to `capacity`, which prepares the same buffer for another fill.
 
 ```java
@@ -75,7 +80,7 @@ buf.clear();         // Reset buffer for writing: position = 0, limit = capacity
 
 ```
 
-![Before flip the readable window is empty because position is already at the end of the data. flip sets limit to that end and position to 0](../assets/figures/buffer-flip.svg)
+![Before flip the readable window is empty because position is already at the end of the data. flip sets limit to that end and position to 0](../../web/public/figures/buffer-flip.svg)
 
 :::trap
 Leaving `OP_WRITE` set while the write queue has nothing to send makes `select` spin.

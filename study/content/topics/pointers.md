@@ -36,7 +36,7 @@ int* p = &x;   // p holds the address of x
 - **`nullptr`** is a null pointer. It holds no address of a live object.
 - **Dereference** of a null pointer causes a segmentation fault.
 
-![A short in two bytes, and a pointer cell that stores the address of the short](../assets/figures/pointer-bytes.svg)
+![A short in two bytes, and a pointer cell that stores the address of the short](../../web/public/figures/pointer-bytes.svg)
 
 ### Using const with pointers
 
@@ -68,7 +68,7 @@ p++;            // Points to arr[1] (4 bytes ahead if sizeof(int) == 4)
 
 ```
 
-![px points at address 16. px + 1 points four bytes later, at address 20](../assets/figures/pointer-step.svg)
+![px points at address 16. px + 1 points four bytes later, at address 20](../../web/public/figures/pointer-step.svg)
 
 The array `arr` in that example lives on the stack (מחסנית).
 
@@ -101,7 +101,9 @@ ref = 20;     // x is now 20
 C++ has three explicit forms of parameter passing. The declaration of the parameter states which form is in use.
 
 - **Pass by value** copies the argument into the called function's frame. A later write to the parameter changes that copy.
-- **Pass by pointer** copies an address into the called function's frame. The called function dereferences the pointer to read or write the caller's object. A pointer may be null, so that function has a null case to consider.
+- **Pass by pointer** copies an address into the called function's frame.
+- **Dereference** lets that function read or write the caller's object.
+- **Null** is allowed for a pointer, so the function has a null case to consider.
 - **Reference** has no null value.
 - **Pass by reference** initializes a reference parameter from the caller's object. A non-const reference can write that object.
 - **`const` reference** reads a large object in place. The parameter type permits that read, and a write through it is rejected at compile time.

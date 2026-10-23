@@ -63,7 +63,7 @@ Each field is written in its own form.
 - **`readObject`** allocates a new `Pet`.
 - **`copy == pet`** is false. `copy.name.equals(pet.name)` is true.
 
-![writeObject saves name and age and skips the hash, which is transient. readObject builds another Pet whose hash starts as null](../assets/figures/serialize-object.svg)
+![writeObject saves name and age and skips the hash, which is transient. readObject builds another Pet whose hash starts as null](../../web/public/figures/serialize-object.svg)
 
 ### Omitted fields
 
@@ -91,7 +91,9 @@ Changing a class that is already `Serializable` is a compatibility problem: you 
 
 - **`serialVersionUID`** is the version number you assign so the JVM can tell these classes apart.
 - **Old stream** stays readable by the new class only when the change is on the compatible list.
-- **Compatible** changes: adding a field (it comes back as `null`, `0`, or `false`), changing `public` / `protected` / `private`, adding a `static` or `transient` field, and changing the order of the fields.
+- **Compatible changes** keep the old stream readable.
+- **Adding a field** brings it back as `null`, `0`, or `false`.
+- **Also compatible** are a change of `public` / `protected` / `private`, a new `static` or `transient` field, and a new field order.
 - **Incompatible** changes include removing a field that is not `transient`, changing a field's type, and changing the class hierarchy.
 - **Mismatch** of `serialVersionUID` fails the read even when the fields would otherwise have matched.
 

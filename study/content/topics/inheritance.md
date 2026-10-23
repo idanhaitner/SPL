@@ -119,7 +119,7 @@ filter->apply(img);
 :::
 :::
 
-![A BlurFilter object holds a vptr. The call follows it to the class vtable and finds BlurFilter::apply](../assets/figures/vtable-call.svg)
+![A BlurFilter object holds a vptr. The call follows it to the class vtable and finds BlurFilter::apply](../../web/public/figures/vtable-call.svg)
 
 :::check id=chk-virtual-dtor
 You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true of `~Filter`?

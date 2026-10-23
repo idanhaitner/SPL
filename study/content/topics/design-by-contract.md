@@ -31,12 +31,15 @@ Design by contract states that agreement in three clauses.
 
 :::definition id=def-dbc title="Precondition, invariant, and postcondition" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
 
-- **Precondition:** the condition the caller must establish before the call. The method may assume it. If the precondition does not hold, the method's behavior is undefined. A broken precondition is **the caller's bug**.
-- **Invariant:** a condition that holds whenever no public method of the object is running. A broken invariant is **a bug in the class implementation**.
-- **Postcondition:** what the method establishes about the object's state and the return value when it returns, provided the precondition held. A broken postcondition is **a bug in the method implementation**.
+- **Precondition** is the condition the caller must establish before the call. The method may assume it.
+- **A broken precondition** leaves the method's behavior undefined. That bug belongs to the caller.
+- **Invariant** holds whenever no public method of the object is running.
+- **A broken invariant** is a bug in the class implementation.
+- **Postcondition** is what the method establishes about the object's state and the return value when it returns, provided the precondition held.
+- **A broken postcondition** is a bug in the method implementation.
 :::
 
-![The contract of crop, in the order a call meets it: precondition, invariant, postcondition](../assets/figures/contract-clauses.svg)
+![The contract of crop, in the order a call meets it: precondition, invariant, postcondition](../../web/public/figures/contract-clauses.svg)
 
 Defensive programming and a contract answer different questions.
 

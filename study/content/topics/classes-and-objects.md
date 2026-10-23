@@ -45,7 +45,7 @@ The build has four stages:
 4. **Linker:** combines the object files and the libraries, resolves the addresses of symbols and of external calls, and writes a single executable.
 :::
 
-![The four build stages in order: preprocessor, compiler, assembler, then the linker, which produces one executable](../assets/figures/build-pipeline.svg)
+![The four build stages in order: preprocessor, compiler, assembler, then the linker, which produces one executable](../../web/public/figures/build-pipeline.svg)
 
 Java and C++ finish the link at different times.
 

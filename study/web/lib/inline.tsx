@@ -13,12 +13,18 @@ function mathHtml(tex: string, display: boolean) {
 
 const assetBase = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
+// Topic files live in study/content/topics. The real files live in study/web/public/figures.
+// GitHub renders the relative path; the site rewrites it onto the Pages base path.
+const FIGURE_ROOTS = ["../../web/public/figures/", "../assets/figures/"];
+
 function hrefOf(url: string): string | null {
   if (url.startsWith("topic:")) return `/topics/${url.slice(6)}`;
   if (url === "study:glossary") return "/glossary";
   if (url === "study:index" || url === "study:drill") return "/";
   if (url.startsWith("repo:")) return null;
-  if (url.startsWith("../assets/figures/")) return `${assetBase}/figures/${url.slice("../assets/figures/".length)}?v=ltr2`;
+  for (const root of FIGURE_ROOTS) {
+    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=ltr2`;
+  }
   return url;
 }
 
