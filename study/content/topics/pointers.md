@@ -75,43 +75,6 @@ The array `arr` in that example lives on the stack (מחסנית).
 - **`delete`** releases one object.
 - **`delete[]`** releases an array.
 
-## References
-
-A reference (רפרנס), written `T&`, is another name for an existing object.
-
-- **Initialization** happens at the point of creation.
-- **Binding** stays on that same object.
-
-Every expression is an lvalue or an rvalue.
-
-- **Lvalue** designates an object whose lifetime extends past the current expression. Variables are lvalues, including variables declared `const`.
-- **Rvalue** is a temporary that lasts for the expression that uses it. The sum `3 + 4` is an rvalue, and so is the value a function returns by value.
-- **Plain reference** is initialized from an lvalue.
-- **Reference to const** may also be initialized from an rvalue, and that binding extends the temporary's lifetime to the lifetime of the reference.
-
-```cpp
-int x = 10;
-int& ref = x; // ref is an alias for x
-ref = 20;     // x is now 20
-
-```
-
-C++ has three explicit forms of parameter passing. The declaration of the parameter states which form is in use.
-
-- **Pass by value** copies the argument into the called function's frame. A later write to the parameter changes that copy.
-- **Pass by pointer** copies an address into the called function's frame.
-- **Dereference** lets that function read or write the caller's object.
-- **Null** is allowed for a pointer, so the function has a null case to consider.
-- **Reference** has no null value.
-- **Pass by reference** initializes a reference parameter from the caller's object. A non-const reference can write that object.
-- **`const` reference** reads a large object in place. The parameter type permits that read, and a write through it is rejected at compile time.
-
-A function may return by value, by pointer, or by reference.
-
-- **Return by value** copies the result to the caller.
-- **Returned pointer or reference** has to designate an object that is still alive after the called function returns.
-- **Local** in that function's frame is destroyed when the frame is popped. Returning its address would hand the caller a pointer or a reference to storage the return has already released.
-
 :::problem id=worked-pointer-step title="One step of a pointer" source="materials/lectures/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 `sizeof(int)` is 4, and `x` is at address 16. Which address does `px + 1` designate?
 
@@ -126,19 +89,6 @@ int* next = px + 1;
 - **Step** equals `sizeof(int)`, four bytes.
 - **`*(px + 1)`** loads the `int` that begins at address 20. That `int` is a different object from `x`.
 :::
-:::
-
-:::check id=chk-pass-mode
-A procedure only reads a large object. What should the C++ parameter be?
-
-- [ ] A plain reference, so the procedure can write later if it wants to
-- [x] A `const` reference, or pass by value when the object is cheap to copy
-- [ ] A null pointer, because no object is required
-
-- **Pass by value** copies the argument.
-- **Plain reference** is pass by reference without `const`, so the procedure may modify the caller's object.
-- **`const` reference** reads that object in place.
-- **Null pointer** passes no object.
 :::
 
 :::problem id=worked-pointer-trace title="A pointer to a pointer" source="materials/lectures/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
@@ -185,6 +135,98 @@ const short* ps1 = &s1;
 - **Dereference** may read that `short`.
 - **`*ps1 = 3`** writes it, and that line fails to compile.
 - **`ps1 = &s2`** reseats the pointer, which this declaration allows.
+:::
+
+## References
+
+A reference (רפרנס), written `T&`, is another name for an object that already exists. It is not a second cell you can point somewhere else.
+
+```cpp
+int x = 10;
+int& ref = x;   // ref and x are the same object
+ref = 20;       // writes x, so x is now 20
+
+```
+
+- **Initialization** binds the name once, when the reference is created.
+- **Reseating** is not possible. `ref` names `x` for the rest of its lifetime.
+- **No null.** A reference always names an object. A pointer may be `nullptr`.
+
+### Lvalues and rvalues
+
+Every expression is an lvalue or an rvalue. The practical test is whether the expression names an object that is still there after the line, or only a temporary value.
+
+```cpp
+int x = 10;
+int y = x + 1;   // x is an lvalue; the sum x + 1 is an rvalue
+
+```
+
+- **Lvalue** names an object whose lifetime extends past the current expression. You can take its address. A variable is an lvalue, including a variable declared `const`.
+- **`const` does not make an rvalue.** `const int n = 3` still names an object. You cannot assign to `n`, and `n` is still an lvalue.
+- **Rvalue** is a temporary that lasts for the expression that uses it. The sum `3 + 4` is an rvalue, and so is the object a function returns by value. There is no name left behind after the line.
+
+What a reference is allowed to bind to:
+
+```cpp
+int x = 10;
+int& a = x;            // ok: x is an lvalue
+int& b = x + 1;        // error: a plain reference cannot bind to a temporary
+const int& c = x + 1;  // ok: the temporary lives as long as c does
+
+```
+
+- **Plain reference** (`T&`) is initialized only from an lvalue.
+- **Reference to const** (`const T&`) may also be initialized from an rvalue. That binding keeps the temporary alive until the reference itself ends.
+
+### Passing a parameter
+
+The declaration of the parameter says which of the three forms is in use.
+
+```cpp
+void byValue(int n);           // a copy of the caller's int
+void byPointer(int* p);        // a copy of an address; p may be nullptr
+void byRef(int& n);            // another name for the caller's int
+void byConstRef(const int& n); // read the caller's object, with no copy
+
+```
+
+- **Pass by value** copies the argument into the called function's frame. A later write to the parameter changes that copy, not the caller.
+- **Pass by pointer** copies an address into the called function's frame. Dereference reads or writes the caller's object. Null is allowed, so the function has a null case to consider.
+- **Pass by reference** initializes a reference from the caller's object. A non-const reference can write that object. A reference has no null value.
+- **`const` reference** reads a large object in place. A write through it is rejected at compile time. Use it when the function only reads and a copy would be expensive. Pass by value when the object is cheap to copy.
+
+### Returning a value
+
+A function may return by value, by pointer, or by reference.
+
+- **Return by value** copies the result to the caller. The function's local can be destroyed; the caller holds its own copy.
+- **Returned pointer or reference** has to name an object that is still alive after the called function returns.
+- **Local** in that function's frame is destroyed when the frame is popped. Returning its address hands the caller a pointer or a reference to storage the return has already released.
+
+```cpp
+int& bad() {
+    int local = 3;
+    return local;   // local is gone as soon as bad returns
+}
+
+int& good(int& n) {
+    return n;       // the caller's object is still alive
+}
+
+```
+
+:::check id=chk-pass-mode
+A procedure only reads a large object. What should the C++ parameter be?
+
+- [ ] A plain reference, so the procedure can write later if it wants to
+- [x] A `const` reference, or pass by value when the object is cheap to copy
+- [ ] A null pointer, because no object is required
+
+- **Pass by value** copies the argument.
+- **Plain reference** is pass by reference without `const`, so the procedure may modify the caller's object.
+- **`const` reference** reads that object in place.
+- **Null pointer** passes no object.
 :::
 
 ## Practice

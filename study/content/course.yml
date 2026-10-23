@@ -53,6 +53,8 @@ changelog:
     note: "Memory-model practice stays on regions, frames, and delete. The mvector exam items moved to rule-of-three and inheritance."
   - date: 2026-10-23
     note: "Practice stays inside the chapter that teaches it: image-repository copies, C++ locks, and the store-prices reactor wiring each moved to that chapter."
+  - date: 2026-10-23
+    note: "The pointers chapter explains references with binding examples: lvalue versus rvalue, const references, and what a return may name."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
