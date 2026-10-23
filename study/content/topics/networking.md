@@ -15,7 +15,10 @@ sources:
   - "materials/exams/20-b-solution.pdf"
 ---
 
-Networking is how two processes exchange data, on one machine or across a network. In the client-server arrangement used in this course, the server stays available and the client opens the exchange through a socket. TCP and UDP carry the bytes. The application above them agrees on a message format, because the transport does not hand the application a finished message by itself.
+Networking is how two processes exchange data, on one machine or across a network.
+- **Client-server:** In the client-server arrangement used in this course, the server stays available and the client opens the exchange through a socket.
+- **TCP and UDP:** They carry the bytes.
+- **Application layer:** The application above them agrees on a message format, because the transport does not hand the application a finished message by itself.
 
 ## The layer model
 
@@ -43,7 +46,13 @@ Networking is how two processes exchange data, on one machine or across a networ
 | **Order of arrival** | Guaranteed | Not guaranteed |
 | **What is carried** | A continuous byte stream | Individual datagrams |
 
-TCP is a connection-oriented reliable byte stream. A read returns some bytes that have arrived. Those bytes are not required to be one application message, so the application-level protocol frames each message with a delimiter or a length prefix, under an agreed encoding. UDP is connectionless. There is no `accept`. A datagram arrives whole or not at all.
+TCP and UDP differ in how bytes reach the application.
+- **TCP:** It is a connection-oriented reliable byte stream.
+- **Read:** A read returns some bytes that have arrived.
+- **Framing:** Those bytes are not required to be one application message, so the application-level protocol frames each message with a delimiter or a length prefix, under an agreed encoding.
+- **UDP:** It is connectionless.
+- **`accept`:** There is no `accept`.
+- **Datagram:** A datagram arrives whole or not at all.
 
 ### Sockets in Java
 
@@ -74,7 +83,8 @@ in.read(buf);                         // blocked here
 ```
 
 :::solution
-The second connection waits in the listen backlog until some thread calls `accept`. The thread blocked in the read is not inside `accept`, so the second client is not served.
+- **Second connection:** It waits in the listen backlog until some thread calls `accept`.
+- **Blocked read:** The thread blocked in the read is not inside `accept`, so the second client is not served.
 
 ```java
 while (true) {
@@ -83,7 +93,9 @@ while (true) {
 }
 ```
 
-An accept loop that calls `accept`, handles one client until that client is finished, and then calls `accept` again serves the second client only after the first conversation ends. That is a single-threaded server. Serving both clients at the same time takes another thread, or the non-blocking loop in the Reactor chapter.
+- **Accept loop:** An accept loop that calls `accept`, handles one client until that client is finished, and then calls `accept` again serves the second client only after the first conversation ends.
+- **Single-threaded server:** That pattern is a single-threaded server.
+- **Concurrent clients:** Serving both clients at the same time takes another thread, or the non-blocking loop in the Reactor chapter.
 :::
 :::
 
@@ -94,7 +106,9 @@ Which protocol preserves order and retransmits a lost segment?
 - [x] TCP
 - [ ] IP
 
-IP routes packets and guarantees neither delivery nor order. UDP keeps each datagram whole and still gives no delivery guarantee. TCP is the row marked reliable, ordered, and connection-oriented.
+- **IP:** It routes packets and guarantees neither delivery nor order.
+- **UDP:** It keeps each datagram whole and still gives no delivery guarantee.
+- **TCP:** It is the row marked reliable, ordered, and connection-oriented.
 :::
 
 ## Practice
@@ -125,12 +139,18 @@ The cost is that either datagram can disappear, and the client cannot tell a los
 :::check id=ps9-tcp-udp-q3
 TCP still makes the application decide where the reply {{=ends|begins|retries}}.
 
-TCP opens a connection, retransmits lost segments, and delivers bytes in order. The reply arrives, or the connection fails in a way the client can observe. The cost is the handshake and the framing of the stream. When the user will simply try the request again by hand, TCP is the default. When a measurement can omit a sample, UDP fits: it is best-effort and does not retransmit.
+- **TCP:** It opens a connection, retransmits lost segments, and delivers bytes in order.
+- **Reply:** The reply arrives, or the connection fails in a way the client can observe.
+- **Cost:** The cost is the handshake and the framing of the stream.
+- **Default:** When the user will simply try the request again by hand, TCP is the default.
+- **UDP fit:** When a measurement can omit a sample, UDP fits: it is best-effort and does not retransmit.
 :::
 :::
 
 :::problem id=ps9-encoding title="Encoding at the two ends" source="materials/sessions/PS9 2026.pptx" kind=exercise solution_origin=source
-A Hebrew letter is encoded in UTF-8 as the bytes `D7 90`. The server writes those bytes. The client builds an `InputStreamReader` with the platform charset, which is not UTF-8.
+A Hebrew letter is encoded in UTF-8 as the bytes `D7 90`.
+- **Server:** The server writes those bytes.
+- **Client:** The client builds an `InputStreamReader` with the platform charset, which is not UTF-8.
 
 :::check id=ps9-encoding-q1
 What fails on the client?
@@ -165,7 +185,9 @@ Which of these hold for that pair?
 :::check id=ps9-encoding-q4
 The class that applies the charset to the socket input is {{=InputStreamReader|BufferedReader|PrintWriter}}.
 
-`InputStreamReader` applies the charset on the way in. `OutputStreamWriter` applies it on the way out. `BufferedReader` splits lines.
+- **`InputStreamReader`:** It applies the charset on the way in.
+- **`OutputStreamWriter`:** It applies it on the way out.
+- **`BufferedReader`:** It splits lines.
 :::
 :::
 
@@ -228,7 +250,9 @@ What does the client send first, and what does it send after it has read the rep
 - [ ] `MESSAGE`, then `SUBSCRIBE`
 - [x] `CONNECT` with `accept-version` and `host`, then `SUBSCRIBE` with `id` and `destination`
 
-The client sends `CONNECT` with `accept-version` and `host`, and reads `CONNECTED`. The `version` header is the version the session will use. It then sends `SUBSCRIBE` with an `id` such as `sub-1` and `destination:/topic/a`.
+- **First:** The client sends `CONNECT` with `accept-version` and `host`, and reads `CONNECTED`.
+- **`version` header:** It is the version the session will use.
+- **Then:** It sends `SUBSCRIBE` with an `id` such as `sub-1` and `destination:/topic/a`.
 :::
 
 :::check id=ps10-stomp-q2
@@ -238,7 +262,9 @@ Which of these hold after that `SUBSCRIBE`?
 - [ ] The headers are rejected unless `id` comes before `destination`
 - [x] A subscription that succeeded later delivers `MESSAGE` frames whose `destination` is `/topic/a`
 
-If the server cannot create the subscription, it sends `ERROR`, with a `message` header. A subscription that succeeded later delivers `MESSAGE` frames whose `destination` is `/topic/a`. The order of the headers does not matter.
+- **`ERROR`:** If the server cannot create the subscription, it sends `ERROR`, with a `message` header.
+- **`MESSAGE`:** A subscription that succeeded later delivers `MESSAGE` frames whose `destination` is `/topic/a`.
+- **Header order:** The order of the headers does not matter.
 :::
 
 :::check id=ps10-stomp-q3
@@ -263,7 +289,12 @@ The question replaces a delimiter with a length prefix, caps the number of clien
 :::
 
 :::problem id=exam-15b-q3 title="A spell-check server" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-The message server in the appendix is a thread-per-client server: one thread for each accepted socket. Handlers are capped at 10. `MessageLengthBasedTokenizer` frames a message as a length followed by that many bytes. The other design used a delimiter. `SpellMessageEncoder` turns a `SpellMessage` into bytes and back. The spell-check server uses `SpellMessage`, that framing, and a thread-safe `LexiconBasedSpellChecker` with an empty constructor.
+The message server in the appendix is a thread-per-client server: one thread for each accepted socket.
+- **Handlers:** Handlers are capped at 10.
+- **MessageLengthBasedTokenizer:** It frames a message as a length followed by that many bytes.
+- **Other design:** The other design used a delimiter.
+- **SpellMessageEncoder:** It turns a `SpellMessage` into bytes and back.
+- **Spell-check server:** The spell-check server uses `SpellMessage`, that framing, and a thread-safe `LexiconBasedSpellChecker` with an empty constructor.
 
 :::check id=exam-15b-q3-q1
 Which body caps the running handlers at 10?
@@ -272,7 +303,10 @@ Which body caps the running handlers at 10?
 - [ ] `Executors.newFixedThreadPool(10)` created inside each handler, after `accept` has returned
 - [x] `ExecutorService executor = Executors.newFixedThreadPool(10);` and `executor.execute(connectionHandler)` for each accepted socket
 
-The official solution builds that pool and calls `executor.execute(connectionHandler)` for each accepted socket. The accept loop itself stays on the main thread. At most 10 handlers run. Further connections wait in the pool's queue, or the server can refuse them when that queue is what counts as "more than 10".
+- **Official solution:** It builds that pool and calls `executor.execute(connectionHandler)` for each accepted socket.
+- **Accept loop:** The accept loop itself stays on the main thread.
+- **Cap:** At most 10 handlers run.
+- **Further connections:** They wait in the pool's queue, or the server can refuse them when that queue is what counts as "more than 10".
 :::
 
 :::check id=exam-15b-q3-q2
@@ -298,12 +332,20 @@ Which of these hold for `SpellChecker` and the client?
 - [x] `SpellChecker` stays the interface, and the handlers share one instance because the implementation is already thread-safe
 - [x] The client opens a `Socket` to the host and port, sends one encoded `SpellMessage`, and reads one framed reply
 
-`SpellChecker` stays the interface. The implementation is already thread-safe, so the handlers may share one instance. The client opens a `Socket` to the host and port, sends one encoded `SpellMessage`, and reads one framed reply.
+- **`SpellChecker`:** It stays the interface.
+- **Shared instance:** The implementation is already thread-safe, so the handlers may share one instance.
+- **Client:** It opens a `Socket` to the host and port, sends one encoded `SpellMessage`, and reads one framed reply.
 :::
 :::
 
 :::problem id=exam-16a-q3 title="A printer protocol" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-A printer service was an RMI interface named `Printer.print(String)`. A student replaced the generated stub and skeleton with a protocol server. Handlers are capped at ten threads. Framing is a length prefix that fits in a Java `int`. The earlier design used a delimiter. The same service is also placed on UDP, and on a Reactor. `Math` has a stub and a skeleton in that style.
+A printer service was an RMI interface named `Printer.print(String)`.
+- **Replacement:** A student replaced the generated stub and skeleton with a protocol server.
+- **Handlers:** Handlers are capped at ten threads.
+- **Framing:** Framing is a length prefix that fits in a Java `int`.
+- **Earlier design:** The earlier design used a delimiter.
+- **UDP and Reactor:** The same service is also placed on UDP, and on a Reactor.
+- **`Math`:** It has a stub and a skeleton in that style.
 
 :::check id=exam-16a-q3-q1
 Which body caps the printer handlers at ten?
@@ -318,7 +360,10 @@ Which body caps the printer handlers at ten?
 :::check id=exam-16a-q3-q2
 The length occupies the first {{=four bytes|delimiter|datagram}}. The bytes after that prefix are the body.
 
-The first four bytes are the length. The bytes after them are the body. `Integer.MAX_VALUE` is only the limit of the type. The server still refuses a length that will not fit in the buffer you chose.
+- **Length:** The first four bytes are the length.
+- **Body:** The bytes after them are the body.
+- **`Integer.MAX_VALUE`:** It is only the limit of the type.
+- **Refusal:** The server still refuses a length that will not fit in the buffer you chose.
 :::
 
 :::check id=exam-16a-q3-q3
@@ -328,7 +373,13 @@ Which of these hold when the printer speaks UDP?
 - [x] `ServerSocket` and `Socket` are replaced by `DatagramSocket`, and there is no `accept`
 - [x] One datagram must hold the entire frame, because the stream tokenizer was kept
 
-Replace `ServerSocket` and `Socket` with `DatagramSocket`. There is no connection and no `accept`. `receive` returns the sender. `send` uses that `SocketAddress`. A length prefix is optional in UDP when one datagram is one message. This question still wants the length, because the student kept the stream tokenizer. One datagram must then hold the entire frame.
+- **DatagramSocket:** Replace `ServerSocket` and `Socket` with `DatagramSocket`.
+- **No connection:** There is no connection and no `accept`.
+- **`receive`:** It returns the sender.
+- **`send`:** It uses that `SocketAddress`.
+- **Length prefix in UDP:** It is optional in UDP when one datagram is one message.
+- **This question:** It still wants the length, because the student kept the stream tokenizer.
+- **Entire frame:** One datagram must then hold the entire frame.
 :::
 
 :::check id=exam-16a-q3-q4
@@ -339,12 +390,20 @@ Which of these hold for `Math` and for the Reactor?
 - [x] `Math_Skel` parses the command, calls the real `Math`, and returns the decimal result
 - [x] A `ServerSocketChannel` is registered with the Reactor, the selector thread replaces the accept loop, and the handlers are no longer one thread each
 
-`Math_Stub` implements `Math`. Each method writes a command string such as `add 2 3` through the socket and reads the reply line. `Math_Skel` implements the protocol factory, parses the command, calls the real `Math`, and returns the decimal result. An exception on the server becomes an error line, which the stub turns into a `RemoteException`. Register a `ServerSocketChannel` with the Reactor from class, with the printer protocol as the protocol factory and the length tokenizer as the tokenizer factory. The selector thread replaces the accept loop. The handlers are no longer one thread each.
+- **`Math_Stub`:** It implements `Math`, and each method writes a command string such as `add 2 3` through the socket and reads the reply line.
+- **`Math_Skel`:** It implements the protocol factory, parses the command, calls the real `Math`, and returns the decimal result.
+- **Server exception:** An exception on the server becomes an error line, which the stub turns into a `RemoteException`.
+- **Reactor registration:** Register a `ServerSocketChannel` with the Reactor from class, with the printer protocol as the protocol factory and the length tokenizer as the tokenizer factory.
+- **Selector thread:** It replaces the accept loop.
+- **Handlers:** They are no longer one thread each.
 :::
 :::
 
 :::problem id=exam-17b-q3 title="Bank commands" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-A bank server uses the command-invocation protocol from class. Three commands arrive as lines: `LOGIN name` (the server answers `ack` and remembers the client), `DEPOSIT money` (add the amount to this client's balance and answer `ack`), and a third command that reads the balance.
+A bank server uses the command-invocation protocol from class.
+- **`LOGIN name`:** The server answers `ack` and remembers the client.
+- **`DEPOSIT money`:** It adds the amount to this client's balance and answers `ack`.
+- **Third command:** It reads the balance.
 
 :::check id=exam-17b-q3-q1
 Which of these hold for `execute`?
@@ -353,7 +412,9 @@ Which of these hold for `execute`?
 - [ ] Deposit before login returns `"ack"` and creates the account
 - [x] Deposit parses the amount, adds it to that session's account, and returns `"ack"`
 
-`LoginCommand`, `DepositCommand`, and `BalanceCommand` implement `Command<Bank>`. `execute` on login stores the connection's name in the protocol's session and returns `"ack"`. `execute` on deposit parses the amount, adds it to that session's account, and returns `"ack"`.
+- **Commands:** `LoginCommand`, `DepositCommand`, and `BalanceCommand` implement `Command<Bank>`.
+- **Login `execute`:** It stores the connection's name in the protocol's session and returns `"ack"`.
+- **Deposit `execute`:** It parses the amount, adds it to that session's account, and returns `"ack"`.
 :::
 
 :::check id=exam-17b-q3-q2
@@ -369,7 +430,9 @@ Which of these hold for the bank and the session?
 - [x] `Bank` is a map from name to balance, and its mutators are synchronized
 - [x] Each connection gets its own protocol object, so the session name is not shared between clients
 
-`Bank` is a map from name to balance, and its mutators are synchronized. Each connection gets its own protocol object, so the session name is not shared between clients. The bank is shared, and the lock is what makes two deposits to the same account add both amounts.
+- **`Bank`:** It is a map from name to balance, and its mutators are synchronized.
+- **Protocol object:** Each connection gets its own protocol object, so the session name is not shared between clients.
+- **Shared bank:** The bank is shared, and the lock is what makes two deposits to the same account add both amounts.
 :::
 
 :::check id=exam-17b-q3-q4
@@ -384,7 +447,9 @@ The server `main` builds one `Bank`, a protocol factory that closes over it, and
 :::
 
 :::problem id=exam-20b-q3 title="Store prices" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-`Stores` maps a store name to the prices of its products. Commands arrive through the command-invocation protocol and run on one shared `Stores` object inside a Reactor on port 7777. `GetProductPrices` takes a product name and returns the map from store name to price.
+`Stores` maps a store name to the prices of its products.
+- **Commands:** They arrive through the command-invocation protocol and run on one shared `Stores` object inside a Reactor on port 7777.
+- **`GetProductPrices`:** It takes a product name and returns the map from store name to price.
 
 :::check id=exam-20b-q3-q1
 Which `execute` body is correct?
@@ -393,7 +458,9 @@ Which `execute` body is correct?
 - [x] Walk `stores.getStores()`, and append `store=price` when `getProductsOfStore(store).get(product)` is not null
 - [ ] Open a socket to port 7777 inside `execute` and write the product name
 
-`execute` receives the `Stores` object. It walks `stores.getStores()`, reads `stores.getProductsOfStore(store).get(product)`, and appends `store=price` when that price is not null. The return value is that string.
+- **`execute`:** It receives the `Stores` object.
+- **Walk:** It walks `stores.getStores()`, reads `stores.getProductsOfStore(store).get(product)`, and appends `store=price` when that price is not null.
+- **Return value:** It is that string.
 :::
 
 :::check id=exam-20b-q3-q2
@@ -419,4 +486,6 @@ The methods of `StoresImpl` are synchronized, or the map is a concurrent map, be
 :::
 :::
 
-A blocking read on a socket is where a naive server gets stuck. [Reactor](topic:reactor) is how a server waits on many sockets without a thread for each one.
+A blocking read on a socket is where a naive server gets stuck.
+
+[Reactor](topic:reactor) is how a server waits on many sockets without a thread for each one.
