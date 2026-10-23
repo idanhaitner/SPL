@@ -4,6 +4,8 @@ title: The rule of three
 sources:
   - "materials/lectures/Chapter 4 - Rule of Thee.pptx"
   - "materials/sessions/SPL_PS3.pptx"
+  - "materials/exams/15-a.pdf"
+  - "materials/exams/15-a-solution.pdf"
   - "materials/exams/17-a.pdf"
   - "materials/exams/17-a-solution.pdf"
   - "materials/exams/17-b.pdf"
@@ -220,6 +222,68 @@ That assignment reuses the copy constructor and the destructor.
 
 :::examnote
 The question gives a small class with a raw pointer or a raw array and asks for the destructor and a deep copy constructor, sometimes for both constructors of a two-dimensional board. The trap is the default memberwise copy, or an assignment that releases the buffer before it has a new one.
+:::
+
+:::problem id=exam-15a-q2 title="A vector as a list" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
+A class `mvector<T>` stores its elements as a dynamic linked list, using that list where another design would use a contiguous array. `insertAt` allocates a node when one is needed and inserts it at position `pos`. `removeAt` shrinks the structure. One proposal drops `_len` and uses `sizeof(_head)` as the length. The call `foo(mvector<T> vec)` passes the argument by value.
+
+:::check id=exam-15a-q2-q1
+Which destructor matches this list, and which copy goes with it?
+
+```cpp
+// A
+delete[] _head;
+```
+
+```cpp
+// B
+node<T>* current = _head;
+while (current != nullptr) {
+    node<T>* upcoming = current->_next;
+    delete current;
+    current = upcoming;
+}
+```
+
+```cpp
+// C
+delete _head;
+```
+
+- [ ] A, together with a copy constructor that copies `_head` only.
+- [x] B, together with a copy constructor that makes a deep copy of every node.
+- [ ] C, together with a copy constructor that leaves every vector sharing one chain.
+
+- **Linked list** of `node<T>` nodes and length `_len` require a destructor that walks the nodes and releases each one with `delete`.
+- **Copy constructor** makes a deep copy of every node so each vector owns its own nodes and the destructor of one vector releases only that vector's nodes.
+:::
+
+:::check id=exam-15a-q2-q2
+`_len` is removed and the length is `sizeof(_head)`. Which statement is correct?
+
+- [ ] 1. This works, and it returns the exact length.
+- [ ] 2. The result has to be divided by `sizeof(T)`.
+- [x] 3. On a 32-bit system the expression always returns 4.
+- [ ] 4. A compilation error (`sizeof` cannot be applied to a template).
+- [ ] 5. None of the answers is correct.
+
+- **Statement 3** is correct.
+- **`_head`** is a pointer.
+- **32-bit system** makes the size of a pointer 4 bytes, for any number of elements in the list it addresses.
+:::
+
+:::check id=exam-15a-q2-q3
+Which description of the stack and the heap is right for `foo(mvector<T> vec)`?
+
+- [ ] The parameter is another name for the caller's vector, so both share one `_head` cell on the stack.
+- [ ] The nodes live in `foo`'s frame, and the class has a vtable because it is a template.
+- [x] A new `mvector` is created in `foo`'s stack frame, with its own `_head` and `_len`. A deep copy puts a new chain on the heap. A shallow copy leaves both stack pointers on one heap chain. There is no vtable.
+
+- **Pass by value** creates a new `mvector` object in `foo`'s stack frame with its own `_head` and its own `_len`.
+- **Deep copy** duplicates the nodes on the heap into a new chain.
+- **Shallow copy** leaves the two pointers on the stack addressing one chain of nodes on the heap.
+- **No vtable** applies because this class has no virtual methods.
+:::
 :::
 
 :::problem id=exam-17a-q2 title="Ownership of a description" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived

@@ -49,13 +49,15 @@ changelog:
     note: "Diagrams point at the real files under study/web/public/figures, so the pictures load on GitHub as well as on the site. A few cut-off sentences were completed."
   - date: 2026-10-23
     note: "Every chapter opening is a short what-you-will-learn roadmap. Bold terms load Heebo 700; the old Key-terms overview fold is gone."
+  - date: 2026-10-23
+    note: "Memory-model practice stays on regions, frames, and delete. The mvector exam items moved to rule-of-three and inheritance."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
     type: lecture
     status: incorporated
     note: "The address space, the stack, the heap, static variables, the code region, and the von Neumann cycle."
-    problems: [worked-stack-array, worked-frame-call]
+    problems: [worked-stack-array, worked-frame-call, mm-pass-by-value, mm-regions-quiz, mm-delete-forms]
   - path: "materials/lectures/Chapter 2 - Pointers.pptx"
     type: lecture
     status: incorporated
@@ -475,8 +477,7 @@ topics:
   - id: memory-model
     file: topics/memory-model.md
     title: The memory model
-    exam_weight: core
-    exam_shape: "Draw the stack and the heap after a by-value call. The trap is putting the buffer on the stack, or drawing a by-value parameter as the same object as the caller's."
+    exam_weight: taught
     prerequisites: []
     unlocks: [pointers]
   - id: pointers
@@ -661,7 +662,7 @@ exams:
       - id: exam-15a-q1
         topic: concurrency
       - id: exam-15a-q2
-        topic: memory-model
+        topic: rule-of-three
       - id: exam-15a-q3
         topic: reactor
       - id: exam-15a-q4
@@ -673,7 +674,7 @@ exams:
       - id: exam-15b-q1
         topic: concurrency
       - id: exam-15b-q2
-        topic: memory-model
+        topic: inheritance
       - id: exam-15b-q3
         topic: networking
       - id: exam-15b-q4

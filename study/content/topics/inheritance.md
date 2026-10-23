@@ -4,6 +4,8 @@ title: Inheritance and polymorphism
 sources:
   - "materials/lectures/Chapter 6 - Inheritance.pptx"
   - "materials/sessions/SPL_PS3.pptx"
+  - "materials/exams/15-b.pdf"
+  - "materials/exams/15-b-solution.pdf"
   - "materials/exams/16-a.pdf"
   - "materials/exams/16-a-solution.pdf"
   - "materials/exams/18-a.pdf"
@@ -467,6 +469,84 @@ Which of these hold?
 
 - **Three objects** behind `t1` each have a vptr, because the class is polymorphic through `Traversable`.
 - **Children's fields** belong in their own heap blocks.
+:::
+:::
+
+:::problem id=exam-15b-q2 title="A vector that grows" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
+The class `mvector` is based on a dynamic array. When `insertAt` goes past the current size, it grows the array to the smallest power of 2 that is greater than `pos`. `removeAt` shrinks the array by half when the entire upper half is unused. `node` has a pure virtual method `duplicate()`.
+
+```cpp
+void foo(mvector vec) {
+    mvector my_vec(vec);
+    // ***** here *****
+}
+void main() {
+    mvector vec;
+    node* n = new my_node("test");
+    vec.insertAt(*n, 3);
+    foo(vec);
+}
+
+```
+
+At the end of `main` the code contains the conversion `my_node* m = (my_node*)(vec.getAt(0));`.
+
+:::check id=exam-15b-q2-q1
+Which copy constructor is correct?
+
+```cpp
+// A
+node* buf = new node[n];
+for (int i = 0; i < n; ++i)
+    buf[i] = *src[i];
+```
+
+```cpp
+// B
+node** buf = src;
+```
+
+```cpp
+// C
+node** buf = new node*[n];
+for (int i = 0; i < n; ++i)
+    buf[i] = src[i]->duplicate();
+```
+
+- [ ] A. Copying a `node` by value keeps the derived part.
+- [ ] B. The copy stores the source array pointer and allocates no new array.
+- [x] C. Allocate a new array on the heap and copy every node by calling `duplicate()`.
+
+- **Copy constructor** allocates a new array on the heap of the appropriate size and copies every node into it.
+- **`duplicate()`** is required because `node` is polymorphic, so the new object has the real dynamic type.
+- **Object slicing** is the loss of the derived part when copying a `node` by value.
+:::
+
+:::check id=exam-15b-q2-q2
+Which description of the stack and the heap is right at the marked line?
+
+- [ ] `my_vec` is another name for `vec` in `main`, so one vector object sits on the heap.
+- [x] Three vectors sit on the stack: `vec` in `main`, the parameter `vec` in `foo`, and `my_vec`. After a deep copy, each has its own array on the heap, and `my_node` has a vtable.
+- [ ] The three vectors share one array in `foo`'s frame, and `my_node` has no vtable.
+
+- **Three vector objects** sit on the stack: `vec` in `main`'s frame, the parameter `vec` in `foo`'s frame from pass by value, and the local `my_vec` in `foo`'s frame.
+- **Deep copy** gives each its own dynamic array on the heap.
+- **Vtable of `my_node`** is present because the elements are polymorphic and include virtual functions.
+:::
+
+:::check id=exam-15b-q2-q3
+`getAt` returns `node*`, and the added line is a C-style cast. Which statement is correct?
+
+- [ ] 1. Downcasting is forbidden in C++.
+- [ ] 2. A C-style cast is checked only at compile time.
+- [ ] 3. A downcast is safe only when there are no virtual methods.
+- [x] 4. Virtual methods are bound at run time (dynamic binding).
+- [ ] 5. None of the answers is correct.
+
+- **Statement 4** is correct.
+- **Virtual call** is resolved at run time from the real object on the heap.
+- **C-style cast** converts the pointer with no run-time type check.
+- **`dynamic_cast`** performs that check.
 :::
 :::
 

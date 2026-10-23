@@ -5,10 +5,6 @@ sources:
   - "materials/lectures/Chapter 1 - The Memory Model.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
   - "materials/sessions/SPL_PS2 (1).pptx"
-  - "materials/exams/15-a.pdf"
-  - "materials/exams/15-a-solution.pdf"
-  - "materials/exams/15-b.pdf"
-  - "materials/exams/15-b-solution.pdf"
 ---
 
 This chapter maps how a C++ process sits on the machine: the run-time environment, the five regions of the address space, and why stack and heap are split.
@@ -603,151 +599,118 @@ What is true if `demo` returns while those three blocks are still allocated?
 :::
 :::
 
-:::examnote
-A common exam question passes an object by value into a function and asks for a drawing of the stack and the heap at a given line. Draw each dynamic buffer on the heap. An argument passed by value is a separate object in the called function's frame. An argument passed by reference is another name for an object that already exists. An argument passed by pointer is an address of an object that already exists.
-:::
-
-:::problem id=exam-15a-q2 title="A vector as a list" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
-A class `mvector<T>` stores its elements as a dynamic linked list, using that list where another design would use a contiguous array. `insertAt` allocates a node when one is needed and inserts it at position `pos`. `removeAt` shrinks the structure. One proposal drops `_len` and uses `sizeof(_head)` as the length. The call `foo(mvector<T> vec)` passes the argument by value.
-
-:::check id=exam-15a-q2-q1
-Which destructor matches this list, and which copy goes with it?
+:::problem id=mm-pass-by-value title="Pass by value and a leak" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=exercise solution_origin=derived
+While `foo` runs, and then after it returns:
 
 ```cpp
-// A
-delete[] _head;
-```
-
-```cpp
-// B
-node<T>* current = _head;
-while (current != nullptr) {
-    node<T>* upcoming = current->_next;
-    delete current;
-    current = upcoming;
+void foo(int n) {
+    int x = n * 2;
+    int* box = new int(x);
 }
-```
 
-```cpp
-// C
-delete _head;
-```
-
-- [ ] A, together with a copy constructor that copies `_head` only.
-- [x] B, together with a copy constructor that makes a deep copy of every node.
-- [ ] C, together with a copy constructor that leaves every vector sharing one chain.
-
-- **Linked list** of `node<T>` nodes and length `_len` require a destructor that walks the nodes and releases each one with `delete`.
-- **Copy constructor** makes a deep copy of every node so each vector owns its own nodes and the destructor of one vector releases only that vector's nodes.
-:::
-
-:::check id=exam-15a-q2-q2
-`_len` is removed and the length is `sizeof(_head)`. Which statement is correct?
-
-- [ ] 1. This works, and it returns the exact length.
-- [ ] 2. The result has to be divided by `sizeof(T)`.
-- [x] 3. On a 32-bit system the expression always returns 4.
-- [ ] 4. A compilation error (`sizeof` cannot be applied to a template).
-- [ ] 5. None of the answers is correct.
-
-- **Statement 3** is correct.
-- **`_head`** is a pointer.
-- **32-bit system** makes the size of a pointer 4 bytes, for any number of elements in the list it addresses.
-:::
-
-:::check id=exam-15a-q2-q3
-Which description of the stack and the heap is right for `foo(mvector<T> vec)`?
-
-- [ ] The parameter is another name for the caller's vector, so both share one `_head` cell on the stack.
-- [ ] The nodes live in `foo`'s frame, and the class has a vtable because it is a template.
-- [x] A new `mvector` is created in `foo`'s stack frame, with its own `_head` and `_len`. A deep copy puts a new chain on the heap. A shallow copy leaves both stack pointers on one heap chain. There is no vtable.
-
-- **Pass by value** creates a new `mvector` object in `foo`'s stack frame with its own `_head` and its own `_len`.
-- **Deep copy** duplicates the nodes on the heap into a new chain.
-- **Shallow copy** leaves the two pointers on the stack addressing one chain of nodes on the heap.
-- **No vtable** applies because this class has no virtual methods.
-:::
-
-:::
-:::problem id=exam-15b-q2 title="A vector that grows" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-The class `mvector` is based on a dynamic array. When `insertAt` goes past the current size, it grows the array to the smallest power of 2 that is greater than `pos`. `removeAt` shrinks the array by half when the entire upper half is unused. `node` has a pure virtual method `duplicate()`.
-
-```cpp
-void foo(mvector vec) {
-    mvector my_vec(vec);
-    // ***** here *****
-}
-void main() {
-    mvector vec;
-    node* n = new my_node("test");
-    vec.insertAt(*n, 3);
-    foo(vec);
+int main() {
+    int a = 4;
+    foo(a);
 }
 
 ```
 
-At the end of `main` the code contains the conversion `my_node* m = (my_node*)(vec.getAt(0));`.
+:::check id=mm-pass-by-value-q1
+While `foo` is running, where does each name live?
 
-:::check id=exam-15b-q2-q1
-Which copy constructor is correct?
+- [x] `a` is in `main`'s stack frame
+- [x] `n` and `x` are in `foo`'s stack frame
+- [x] `box` is a pointer cell in `foo`'s frame; the `int` from `new` is on the heap
+- [ ] `n` is another name for `a` on the stack
 
-```cpp
-// A
-node* buf = new node[n];
-for (int i = 0; i < n; ++i)
-    buf[i] = *src[i];
-```
-
-```cpp
-// B
-node** buf = src;
-```
-
-```cpp
-// C
-node** buf = new node*[n];
-for (int i = 0; i < n; ++i)
-    buf[i] = src[i]->duplicate();
-```
-
-- [ ] A. Copying a `node` by value keeps the derived part.
-- [ ] B. The copy stores the source array pointer and allocates no new array.
-- [x] C. Allocate a new array on the heap and copy every node by calling `duplicate()`.
-
-- **Copy constructor** allocates a new array on the heap of the appropriate size and copies every node into it.
-- **`duplicate()`** is required because `node` is polymorphic, so the new object has the real dynamic type.
-- **Object slicing** is the loss of the derived part when copying a `node` by value.
+- **Pass by value** copies `4` into the parameter `n`.
+- **`box`** holds an address; the addressed `int` is a heap block.
 :::
 
-:::check id=exam-15b-q2-q2
-Which description of the stack and the heap is right at the marked line?
+:::check id=mm-pass-by-value-q2
+After `foo` returns with no `delete`, what remains?
 
-- [ ] `my_vec` is another name for `vec` in `main`, so one vector object sits on the heap.
-- [x] Three vectors sit on the stack: `vec` in `main`, the parameter `vec` in `foo`, and `my_vec`. After a deep copy, each has its own array on the heap, and `my_node` has a vtable.
-- [ ] The three vectors share one array in `foo`'s frame, and `my_node` has no vtable.
+- [ ] `n`, `x`, and `box` stay in memory until `main` ends
+- [x] Only `a` is still on the stack. The heap `int` is still allocated, and nothing points to it
+- [ ] The return releases the heap `int` automatically with the frame
 
-- **Three vector objects** sit on the stack: `vec` in `main`'s frame, the parameter `vec` in `foo`'s frame from pass by value, and the local `my_vec` in `foo`'s frame.
-- **Deep copy** gives each its own dynamic array on the heap.
-- **Vtable of `my_node`** is present because the elements are polymorphic and include virtual functions.
+- **Return** pops `foo`'s frame, so `n`, `x`, and `box` are gone.
+- **Heap block** without a matching `delete` is a memory leak.
+:::
 :::
 
-:::check id=exam-15b-q2-q3
-`getAt` returns `node*`, and the added line is a C-style cast. Which statement is correct?
+:::problem id=mm-regions-quiz title="Which region holds the name" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=exercise solution_origin=derived
+Use the five-region layout from the lesson.
 
-- [ ] 1. Downcasting is forbidden in C++.
-- [ ] 2. A C-style cast is checked only at compile time.
-- [ ] 3. A downcast is safe only when there are no virtual methods.
-- [x] 4. Virtual methods are bound at run time (dynamic binding).
-- [ ] 5. None of the answers is correct.
+```cpp
+int ready = 1;
+int scratch;
 
-- **Statement 4** is correct.
-- **Virtual call** is resolved at run time from the real object on the heap.
-- **C-style cast** converts the pointer with no run-time type check.
-- **`dynamic_cast`** performs that check.
+void note() {
+    static int calls = 0;
+    int x = calls;
+    int* box = new int(x);
+    calls = calls + 1;
+    delete box;
+}
+
+```
+
+:::check id=mm-regions-quiz-q1
+Match each name to its region while `note` is running.
+
+`ready` and `calls` live in {{=initialized static data|the stack|the heap}}.
+
+`scratch` lives in {{=uninitialized static data (BSS)|the stack|the code region}}.
+
+`x` and `box` live in {{=note's stack frame|initialized static data|the heap}}.
+
+The `int` from `new` lives on the {{=heap|stack|code region}}.
+
+- **Static names** last for the whole process.
+- **Locals** sit in the current frame.
+- **`new`** obtains a heap block.
+:::
+
+:::check id=mm-regions-quiz-q2
+After `note` returns, which are still present?
+
+- [x] `ready`, `scratch`, and `calls`
+- [ ] `x` and `box`
+- [x] the program's code in the code region
+- [ ] the `int` from `new`, because `delete box` already ran before the return
+
+- **`delete box`** releases the heap `int` before the return.
+- **Locals** `x` and `box` disappear with the frame.
+- **Static storage and code** last for the process.
+:::
+:::
+
+:::problem id=mm-delete-forms title="delete and delete[]" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=exercise solution_origin=derived
+Choose the matching release for each allocation.
+
+:::check id=mm-delete-forms-q1
+`int* p = new int(3);` is released with {{=delete p|delete[] p|no delete}}.
+
+`int* a = new int[10];` is released with {{=delete[] a|delete a|no delete}}.
+
+- **`new T`** pairs with `delete`.
+- **`new T[n]`** pairs with `delete[]`.
+:::
+
+:::check id=mm-delete-forms-q2
+What goes wrong if the forms are swapped?
+
+- [x] `delete` on memory from `new[]` is undefined behavior and can corrupt the heap's bookkeeping
+- [ ] The compiler always rewrites `delete` into `delete[]` for arrays
+- [x] Skipping every `delete` leaves heap blocks allocated after the pointers are gone — a memory leak
+
+- **Wrong form** corrupts bookkeeping.
+- **Missing release** is a leak, a separate failure.
 :::
 :::
 
 The chapter [Pointers and references](topic:pointers) builds on this drawing.
 
 - **Stack cell** holds an address that is useful while the block on the heap is still alive.
-- **[The rule of three](topic:rule-of-three)** copy operations have to reproduce that drawing correctly.
+- **[The rule of three](topic:rule-of-three)** is where copy constructors and owned buffers show up — including past-paper `mvector` questions that need a deep copy.
