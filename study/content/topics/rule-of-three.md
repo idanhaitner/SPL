@@ -377,8 +377,7 @@ Which of these hold?
 :::check id=exam-17b-q2-q4
 If the class allows `a = b`, a complete class also writes copy assignment with copy-and-swap, or removes it with {{== delete|= default|friend}}.
 
-- **Question** asks for the constructors and the destructor.
-- **Complete class** also writes the assignment with copy-and-swap, or removes it with `= delete`.
+The question asks for the constructors and the destructor. A complete class also writes the assignment with copy-and-swap, or removes it with `= delete`.
 :::
 :::
 

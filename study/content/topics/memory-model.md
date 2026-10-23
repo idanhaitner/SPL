@@ -573,8 +573,7 @@ Where does each object live, and which release matches it?
 
 `one` is a pointer on the {{=stack|heap|vtable}}. The `int` from `new int(2)` lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
 
-- **`local`** is an `int` in `demo`'s stack frame; the return releases it and it takes no `delete`.
-- **`one`** is a local pointer on the stack; the `int` it addresses is a block on the heap and is released with `delete one`.
+`local` is an `int` in `demo`'s stack frame; the return releases it and it takes no `delete`. `one` is a local pointer on the stack; the `int` it addresses is a block on the heap and is released with `delete one`.
 :::
 
 :::check id=ps2-stack-vs-heap-q2
@@ -582,8 +581,7 @@ Where does each object live, and which release matches it?
 
 `s` is a pointer on the {{=stack|heap|vtable}}. The `string` object lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
 
-- **`many`** is a local pointer on the stack; the array of ten integers is a block on the heap and is released with `delete[] many`.
-- **`s`** is a local pointer on the stack; the `string` object itself is a block on the heap and is released with `delete s`.
+`many` is a local pointer on the stack; the array of ten integers is a block on the heap and is released with `delete[] many`. `s` is a local pointer on the stack; the `string` object itself is a block on the heap and is released with `delete s`.
 :::
 
 :::check id=ps2-stack-vs-heap-q3
@@ -667,9 +665,7 @@ Match each name to its region while `note` is running.
 
 The `int` from `new` lives on the {{=heap|stack|code region}}.
 
-- **Static names** last for the whole process.
-- **Locals** sit in the current frame.
-- **`new`** obtains a heap block.
+Static names last for the whole process. Locals sit in the current frame. `new` obtains a heap block.
 :::
 
 :::check id=mm-regions-quiz-q2
@@ -694,8 +690,7 @@ Choose the matching release for each allocation.
 
 `int* a = new int[10];` is released with {{=delete[] a|delete a|no delete}}.
 
-- **`new T`** pairs with `delete`.
-- **`new T[n]`** pairs with `delete[]`.
+`new T` pairs with `delete`. `new T[n]` pairs with `delete[]`.
 :::
 
 :::check id=mm-delete-forms-q2
