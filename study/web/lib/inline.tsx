@@ -53,7 +53,8 @@ export function Paragraph({ text }: { text: string }) {
 
 function richText(text: string, keyBase: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const pattern = /!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*\n]+)\*/g;
+  // Bold is handled in withBold so `**`code` text**` is not split by the code pass.
+  const pattern = /!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|\*([^*\n]+)\*/g;
   let last = 0;
   let match: RegExpExecArray | null;
   let index = 0;
@@ -73,9 +74,7 @@ function richText(text: string, keyBase: string): ReactNode[] {
       if (href) nodes.push(<Link key={key} href={href}><Mixed text={match[3]} /></Link>);
       else nodes.push(<span key={key}><Mixed text={match[3]} /></span>);
     } else if (match[5] != null) {
-      nodes.push(<strong key={key}><Mixed text={match[5]} /></strong>);
-    } else if (match[6] != null) {
-      nodes.push(<em key={key}><Mixed text={match[6]} /></em>);
+      nodes.push(<em key={key}><Mixed text={match[5]} /></em>);
     }
     last = match.index + match[0].length;
   }
@@ -83,15 +82,15 @@ function richText(text: string, keyBase: string): ReactNode[] {
   return nodes;
 }
 
-export function Inline({ text }: { text: string }) {
+function withCode(text: string, keyBase: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   const pattern = /(`+)([^`]*)\1|\$\$([^$\n]+)\$\$|\$([^$\n]+)\$/g;
   let last = 0;
   let match: RegExpExecArray | null;
   let index = 0;
   while ((match = pattern.exec(text))) {
-    if (match.index > last) nodes.push(...richText(text.slice(last, match.index), `t${index}`));
-    const key = `k${index++}`;
+    if (match.index > last) nodes.push(...richText(text.slice(last, match.index), `${keyBase}-t${index}`));
+    const key = `${keyBase}-k${index++}`;
     if (match[1]) {
       nodes.push(<code key={key}>{match[2]}</code>);
     } else if (match[3] != null) {
@@ -105,8 +104,33 @@ export function Inline({ text }: { text: string }) {
     }
     last = match.index + match[0].length;
   }
-  if (last < text.length) nodes.push(...richText(text.slice(last), `t${index}`));
-  return <>{nodes}</>;
+  if (last < text.length) nodes.push(...richText(text.slice(last), `${keyBase}-t${index}`));
+  return nodes;
+}
+
+function withBold(text: string, keyBase: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  // Allow inline code inside bold: **`a` visibility**
+  const pattern = /\*\*((?:`[^`]*`|[^*])+)\*\*/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let index = 0;
+  while ((match = pattern.exec(text))) {
+    if (match.index > last) nodes.push(...withCode(text.slice(last, match.index), `${keyBase}-a${index}`));
+    nodes.push(
+      <strong key={`${keyBase}-s${index}`}>
+        {withCode(match[1], `${keyBase}-si${index}`)}
+      </strong>,
+    );
+    index += 1;
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) nodes.push(...withCode(text.slice(last), `${keyBase}-z`));
+  return nodes;
+}
+
+export function Inline({ text }: { text: string }) {
+  return <>{withBold(text, "i")}</>;
 }
 
 export function DisplayMath({ tex }: { tex: string }) {
