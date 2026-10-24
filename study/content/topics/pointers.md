@@ -202,68 +202,82 @@ The table shows what each kind of reference can be bound to.
 | `next(x)` | rvalue | error | allowed |
 | `slot(x)` | lvalue | allowed | allowed |
 
+Both examples below use `int x = 10;` and `const int n = 3;`.
+
+**A plain reference** (`T&`) can bind only to a non-const lvalue, because it might be used to write the object.
+
 ```cpp
-int x = 10;
-const int n = 3;
-
-int& a = x;            // ok
-int& b = n;            // error: a plain reference could write a const object
-int& c = x + 1;        // error: a plain reference cannot bind to a temporary
-int& d = 3;            // error: 3 is an rvalue
-const int& e = x;      // ok: a const reference may also name an lvalue
-const int& f = n;      // ok
-const int& g = x + 1;  // ok: the temporary lives as long as g does
-const int& h = 3;      // ok: same rule, the literal is kept alive for h
-const int& i = next(x); // ok: the returned temporary lives as long as i does
-
+int& a = x;        // ok
+int& b = n;        // error: a plain reference could write a const object
+int& c = x + 1;    // error: a plain reference cannot bind to a temporary
+int& d = 3;        // error: 3 is an rvalue
 ```
 
-- **A plain reference** (`T&`) can bind only to a non-const lvalue, because it might be used to write the object.
-- **A reference to const** (`const T&`) can bind to anything: an lvalue, a const lvalue, or an rvalue. When it binds to a temporary, the temporary is kept alive for as long as the reference exists.
+**A reference to const** (`const T&`) can bind to anything: an lvalue, a const lvalue, or an rvalue. When it binds to a temporary, the temporary is kept alive for as long as the reference exists.
+
+```cpp
+const int& e = x;        // ok: a const reference may also name an lvalue
+const int& f = n;        // ok
+const int& g = x + 1;    // ok: the temporary lives as long as g does
+const int& h = 3;        // ok: the literal is kept alive for h
+const int& i = next(x);  // ok: the returned temporary lives as long as i does
+```
+
 - **In practice, for parameters:** `void show(const int& v)` accepts `show(x)`, `show(n)`, `show(x + 1)`, and `show(3)`. The temporary in `show(x + 1)` lasts until the call ends.
 - **By contrast:** `void edit(int& v)` accepts only real, writable objects such as `edit(x)` or `edit(slot(x))`. `edit(x + 1)` and `edit(3)` do not compile.
 
 ### Passing a parameter
 
-The parameter's declaration decides how the argument is passed, and the call has to match it. The example shows all four forms side by side.
+The parameter's declaration decides how the argument is passed, and the call has to match it. Each of the four forms below starts from `int x = 10;`.
+
+**Pass by value.** The argument is copied into the called function's frame, so `n = n + 1` changes only the copy and `x` is unchanged.
 
 ```cpp
 void byValue(int n) {
-    n = n + 1;             // writes the copy only
+    n = n + 1;        // writes the copy only
 }
 
-void byPointer(int* p) {
-    if (p == nullptr) return;
-    *p = *p + 1;           // writes the caller's int
-}
-
-void byRef(int& n) {
-    n = n + 1;             // writes the caller's int
-}
-
-void byConstRef(const int& n) {
-    // int seen = n;      // a read is allowed
-    // n = n + 1;         // error: a const reference cannot write
-}
-
-int x = 10;
-byValue(x);                // x is still 10
-byPointer(&x);             // x is 11; the call passes the address of x
-byPointer(nullptr);        // legal; byPointer has to handle the null case
-byRef(x);                  // x is 12
-byConstRef(x);             // reads x; x stays 12
-byConstRef(x + 1);         // legal: the temporary lasts for this call
-byConstRef(3);             // legal: a literal is an rvalue
-byRef(x + 1);              // error: a plain reference needs a real object
-byRef(3);                  // error: 3 is an rvalue
-
+byValue(x);           // x is still 10
 ```
 
-- **Pass by value:** the argument is copied into the called function's frame. `byValue(x)` leaves `x` unchanged, because `n = n + 1` changes only the copy.
-- **Pass by pointer:** the address is copied, so `byPointer(&x)` can read and write `x` through `*p`. Because `nullptr` is a legal argument, the function must handle the null case.
-- **Pass by reference:** the parameter becomes another name for the caller's object, so `byRef(x)` changes `x` itself. It cannot be null, and it cannot be bound to `x + 1` or to `3`.
-- **Pass by `const` reference:** the function reads the caller's object in place, without copying it, and the compiler rejects any write. It also accepts temporaries, so `byConstRef(x + 1)` and `byConstRef(3)` compile.
-- **Which to choose:** use a `const` reference when the function only reads a large object. For a small type such as `int`, passing by value is simpler and just as fast.
+**Pass by pointer.** The address is copied, so the function can read and write `x` through `*p`. Because `nullptr` is a legal argument, the function must handle the null case.
+
+```cpp
+void byPointer(int* p) {
+    if (p == nullptr) return;
+    *p = *p + 1;      // writes the caller's int
+}
+
+byPointer(&x);        // x is 11: the call passes the address of x
+byPointer(nullptr);   // legal, so byPointer checks for null
+```
+
+**Pass by reference.** The parameter becomes another name for the caller's object, so `byRef(x)` changes `x` itself. A reference cannot be null, and it cannot be bound to a temporary such as `x + 1` or a literal such as `3`.
+
+```cpp
+void byRef(int& n) {
+    n = n + 1;        // writes the caller's int
+}
+
+byRef(x);             // x is 11
+byRef(x + 1);         // error: a plain reference needs a real object
+byRef(3);             // error: 3 is an rvalue
+```
+
+**Pass by `const` reference.** The function reads the caller's object in place, without copying it, and the compiler rejects any write. It also accepts temporaries and literals.
+
+```cpp
+void byConstRef(const int& n) {
+    int seen = n;     // reading is allowed
+    // n = n + 1;     // error: a const reference cannot write
+}
+
+byConstRef(x);        // reads x, and x stays 10
+byConstRef(x + 1);    // legal: the temporary lasts for this call
+byConstRef(3);        // legal: the literal is kept alive for this call
+```
+
+**Which to choose:** use a `const` reference when the function only reads a large object. For a small type such as `int`, passing by value is simpler and just as fast.
 
 ### Returning a value
 

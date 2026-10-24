@@ -118,6 +118,8 @@ A constructor (בנאי) gives the members their first values in an initializer 
 - **The constructor body** runs after every member already exists, so assigning to a `const` member there is a compile error.
 - **Other members** are also best initialized in the list. An assignment in the body would first default-construct the member and then assign it again, which does the work twice.
 
+The header file only declares the constructor.
+
 ```cpp
 // student.h
 class Student {
@@ -127,7 +129,11 @@ public:
     Student(const std::string& name, int year);
     void print() const;
 };
+```
 
+The source file defines it, and the initializer list comes after the colon.
+
+```cpp
 // student.cpp
 Student::Student(const std::string& name, int year)
     : _name(name), _year(year) {

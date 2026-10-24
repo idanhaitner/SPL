@@ -62,19 +62,25 @@ TCP and UDP differ in how the bytes reach the application.
 
 ### Sockets in Java
 
-```java
-// TCP Server
-ServerSocket server = new ServerSocket(8080);
-Socket client = server.accept(); // blocking wait
-BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream(), "UTF-8"));
-PrintWriter out = new PrintWriter(new OutputStreamWriter(client.getOutputStream(), "UTF-8"), true);
+**A TCP server** waits in `accept` for a client to connect. It then wraps the connection's byte streams in a reader and a writer that agree on an encoding (UTF-8).
 
-// UDP Server
+```java
+ServerSocket server = new ServerSocket(8080);
+Socket client = server.accept();  // blocks until a client connects
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(client.getInputStream(), "UTF-8"));
+PrintWriter out = new PrintWriter(
+    new OutputStreamWriter(client.getOutputStream(), "UTF-8"), true);
+```
+
+**A UDP server** has no connection to accept. It prepares a buffer and waits for the next datagram from anyone.
+
+```java
 DatagramSocket socket = new DatagramSocket(5000);
 byte[] buf = new byte[1024];
 DatagramPacket packet = new DatagramPacket(buf, buf.length);
-socket.receive(packet); // blocking wait
-
+socket.receive(packet);  // blocks until a datagram arrives
 ```
 
 :::problem id=worked-tcp-accept title="One accept" source="materials/lectures/Chapter 10 - Networking.pptx" kind=worked solution_origin=source
