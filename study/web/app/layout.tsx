@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Heebo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Heebo, Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Ambient } from "@/components/Ambient";
 import { Rail } from "@/components/Rail";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { loadCourse } from "@/lib/course";
@@ -12,13 +13,18 @@ const sans = Heebo({
   variable: "--font-sans",
   display: "swap",
 });
-const plex = IBM_Plex_Sans({
+const body = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex",
+  variable: "--font-body",
   display: "swap",
 });
-const mono = IBM_Plex_Mono({
+const display = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-display",
+  display: "swap",
+});
+const mono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-mono",
@@ -39,8 +45,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const course = loadCourse();
   return (
-    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${plex.variable} ${mono.variable}`}>
+    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${body.variable} ${display.variable} ${mono.variable}`}>
       <body>
+        <Ambient />
         <ReadingProgress />
         <a className="skip" href="#content">Skip to content</a>
         <div className="shell">
