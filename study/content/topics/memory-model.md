@@ -7,42 +7,42 @@ sources:
   - "materials/sessions/SPL_PS2 (1).pptx"
 ---
 
-This chapter maps how a C++ process sits on the machine: the run-time environment, the five regions of the address space, and why stack and heap are split.
+This chapter shows how a running C++ program sits on the machine: what runs it, how its memory is divided into five regions, and why the stack and the heap are kept separate.
 
-- **Run-time environment** — how the operating system turns a program into a process.
-- **Five regions** — stack, heap, static data, and code inside one virtual address space.
-- **Design and machine picture** — why those regions exist, and a von Neumann view of a running process.
+- **The run-time environment:** how the operating system turns a program into a running process.
+- **The five regions:** the stack, the heap, two static-data regions, and the code, all inside one virtual address space.
+- **The design and the machine:** why those regions exist, and what a running process looks like on a von Neumann machine.
 
 ## The run-time environment
 
-Systems programming keeps the programmer close to the machine: memory, protocols, and the run-time environment (סביבת זמן ריצה) that executes the program.
+Systems programming keeps the programmer close to the machine. You deal directly with memory, with communication protocols, and with the run-time environment (סביבת זמן ריצה) that executes your program.
 
-Consider a system that searches for a film on the network, downloads it, and plays it.
+Consider a program that searches for a film on the network, downloads it, and plays it.
 
-- **Separate services** for searching the network, reading and writing the file system, and decoding video are provided by the layer between the program and the hardware, above the processor's instruction set.
+- **It needs many services:** searching the network, reading and writing files, and decoding video.
+- **The program does not talk to the hardware for these.** A layer between the program and the hardware provides them, on top of the processor's raw instruction set. That layer is the run-time environment.
 
 :::definition id=def-runtime title="Computer, program, process, and run-time environment" source="materials/notes/lecture-notes.docx.pdf"
 
-- **Computer** is a logical unit that carries out tasks on its own, through its instruction set.
-- **Program** is a passive collection of instructions: a formal description of a task.
-- **Process** is one execution of a program, with its own address space and its own state.
-- **Run-time environment** is the layer between a program and the infrastructure.
-- **C++ layer** is the operating system, and the infrastructure under it is the hardware.
-- **Four roles** belong to that layer.
-- **Properties** of the infrastructure are preserved.
-- **Abstraction** sits over that infrastructure.
-- **Interface** is more convenient than the infrastructure itself.
-- **Extra services** are ones the infrastructure does not provide on its own.
+- **Computer:** a machine that carries out tasks on its own, through its instruction set.
+- **Program:** a passive collection of instructions, which formally describes a task.
+- **Process:** one execution of a program, with its own address space and its own state.
+- **Run-time environment:** the layer between a program and the infrastructure it runs on. For a C++ program, that layer is the operating system, and the infrastructure under it is the hardware.
+- **The four jobs of a run-time environment:**
+  - **It preserves** the useful properties of the infrastructure.
+  - **It abstracts** the infrastructure, hiding its details.
+  - **It offers an interface** that is more convenient than the infrastructure itself.
+  - **It adds services** that the infrastructure does not provide on its own.
 :::
 
 The operating system is the run-time environment of a C++ process.
 
-- **Operating system** stands between the process and the hardware.
-- **Process creation** happens when a program is started: the operating system builds the process and moves it from state to state.
-- **Program counter (PC)** holds the address of the next instruction the processor will execute.
+- **Its position:** it stands between the process and the hardware.
+- **Starting a program:** the operating system creates a process for it, and then moves the process from state to state as it runs.
+- **The program counter (PC):** a processor register that holds the address of the next instruction to execute.
 
 :::definition id=def-process-states title="Process states" source="materials/notes/lecture-notes.docx.pdf"
-A process has five main states:
+A process is always in one of five main states.
 
 | State | Description | Next state |
 | --- | --- | --- |
@@ -56,27 +56,23 @@ A process has five main states:
 
 :::
 
-- **Runnable** is the state of waiting for the scheduler.
-- **Blocked** is the state of waiting for I/O or for an event.
-- **System call** is how a process asks the kernel for a service.
-- **Ordinary function call** transfers control to code inside the same process.
-- **Kernel** performs the operation on the disk or the network card.
-- **External hardware event** is delivered back to the process as a message from the operating system.
-- **Multitasking** lets the operating system run more processes than the machine has physical cores, by a context switch from one process to another.
-- **Virtual address space** is independent for each process and is usually larger than the physical RAM.
-- **Permissions** on files and on memory are enforced by the operating system.
-- **JVM** is a further run-time environment, running above the operating system.
-- **Bytecode portability** is described in the chapter [Back to Java](topic:java-runtime): the same bytecode runs, with only small changes, on different operating systems.
+- **Runnable versus Blocked:** a runnable process is ready and only waiting for the scheduler to give it the CPU. A blocked process cannot run at all until some I/O or event completes.
+- **System calls:** a process asks the operating system's kernel for a service, such as reading a file, through a system call. An ordinary function call, by contrast, stays inside the process.
+- **Who touches the hardware:** the kernel performs the actual operation on the disk or network card, and reports the result back to the process.
+- **Multitasking:** the operating system can run more processes than there are CPU cores, by quickly switching the CPU from one process to another. That switch is called a context switch.
+- **Virtual memory:** each process gets its own virtual address space, which is usually larger than the physical RAM.
+- **Protection:** the operating system enforces permissions on files and on memory, so one process cannot touch another's memory.
+- **The JVM** is another run-time environment, which runs on top of the operating system. As the chapter [Back to Java](topic:java-runtime) explains, this is what lets the same bytecode run on different operating systems.
 
 ## The five regions
 
-The virtual address space runs from low addresses up to high addresses.
+A process's virtual address space runs from low addresses to high addresses, and it is divided into regions.
 
-- **Course pictures** draw those regions: a pointer (מצביע) on the stack (מחסנית), a buffer on the heap (ערימה), and an argument passed by value into the frame of the called function.
-- **Growing regions** sit separate and grow toward each other, so the free range between them can be used by whichever side needs it.
+- **The course's drawings** use these regions all the time: a pointer (מצביע) on the stack (מחסנית), a buffer on the heap (ערימה), and an argument copied into the frame of a called function.
+- **The two growing regions,** the stack and the heap, start at opposite ends and grow toward each other, so the free space between them can be used by whichever one needs it.
 
 :::definition id=def-address-space title="The address space of a process" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
-A running process has an address range of its own. Five main regions sit inside that range:
+Every running process has its own range of addresses, divided into five main regions.
 
 | Region | Also called | Size | Release | Access |
 | --- | --- | --- | --- | --- |
@@ -88,26 +84,24 @@ A running process has an address range of its own. Five main regions sit inside 
 
 ![The process address space, high addresses at the top: stack, heap, uninitialized variables, initialized variables, and code](../../web/public/figures/address-space.svg)
 
-High addresses sit at the end of the stack region, which grows downward. Low addresses sit in the code region.
+The stack sits at the high addresses and grows downward. The code sits at the low addresses.
 :::
 
-- **Stack** holds local variables and the data a return needs: the return address, and saved registers.
-- **Stack frame** is popped when the function ends, and its local variables leave that memory.
-- **Heap** is where a program allocates blocks dynamically, for example with `new`.
-- **Heap lifetime** is separate from the stack frame of the function that allocated it, so the block can remain after that function has returned.
-- **Data and BSS** are the two static regions that hold variables whose lifetime is the lifetime of the process.
-- **Data** holds initialized static data.
-- **BSS** holds uninitialized static data.
-- **Code region (Text)** holds the machine instructions the processor fetches and executes through a read-only mapping.
+- **The stack** holds each function's local variables, plus what is needed to return: the return address and saved registers.
+- **When a function ends,** its stack frame is popped, and its local variables cease to exist.
+- **The heap** is where the program allocates blocks at run time, for example with `new`.
+- **A heap block's lifetime** does not depend on the function that allocated it, so the block can outlive that function.
+- **Data and BSS** are the two static regions. Their variables live for the whole run of the process.
+- **Data** holds static variables that were given an initial value, and **BSS** holds those that were not (they start as zero).
+- **The code region (Text)** holds the machine instructions. It is read-only, so a program cannot overwrite its own code by accident.
 
 ### Static variables
 
-A static variable is initialized with a value the compiler (מהדר) can compute at compile time.
+A static variable lives for the whole run of the program. In these examples, each one starts from a constant that the compiler (מהדר) knows before the program runs.
 
-- **Constant expression** is fixed before the program runs as the initializer.
-- **Global** (`int a = 1`) lasts the whole run and is visible from every file.
-- **File-scope static** (`static int b = 2`) lasts the whole run and is visible in this file only.
-- **Function static** (`static int c = 3` inside a function) lasts the whole run for this function only and is initialized once, not on every call.
+- **A global variable** (`int a = 1`) lives for the whole run and can be used from every file.
+- **A file-scope static** (`static int b = 2`) lives for the whole run, but can be used only in its own file.
+- **A function static** (`static int c = 3` inside a function) lives for the whole run, can be used only inside that function, and is initialized once, not on every call.
 
 ```cpp
 int a = 1;                 // global: whole run, visible from every file
@@ -118,15 +112,15 @@ void function() {
 
 ```
 
-- **`a`** is visible from any file that declares it, for example with `extern`.
-- **`b`** is visible only in the file that defines it. That limit is file scope.
-- **`c`** keeps its value from one call of `function` to the next, and only the code inside `function` may name `c`.
-- **Compiler and linker (מקשר)** give these variables a fixed address before `main` begins, and every later call finds those same variables.
+- **`a`** can be used from any other file that declares it with `extern int a;`.
+- **`b`** can be used only in the file that defines it, which is called file scope.
+- **`c`** keeps its value from one call of `function` to the next, but only code inside `function` can refer to it.
+- **Where they live:** the compiler and linker (מקשר) give all three a fixed address before `main` begins, so every call finds the same variables.
 
-In the next example, `c` and `x` have different lifetimes, although both names appear inside `tick`.
+In the next example, `c` and `x` are both declared inside `tick`, but they have very different lifetimes.
 
-- **`c`** lives in the static region, and its initialization runs once.
-- **`x`** lives in the stack frame, and each call gets a new `x`.
+- **`c` is static,** so it lives in the static region and is initialized only once.
+- **`x` is an ordinary local,** so it lives in the stack frame, and each call gets a brand-new `x`.
 
 ```cpp
 void tick() {
@@ -154,18 +148,17 @@ int main() {
 
 :::definition id=def-stack-frame title="Stack frame" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
 
-- **Stack frame** (activation record) is pushed on every function call.
-- **Frame contents** hold the return address, the parameters that were passed, and the function's local variables.
-- **LIFO pop** removes frames last in first out when the function returns.
+- **A stack frame** (also called an activation record) is pushed onto the stack on every function call.
+- **It contains** the return address, the parameters that were passed, and the function's local variables.
+- **Frames are removed in LIFO order** (last in, first out): when a function returns, its frame, the most recent one, is popped.
 :::
 
-- **Local variable** is allocated inside the frame of the current call.
-- **Frame release** moves the stack pointer when the call ends, with no search for a free block, so the allocation is fast.
-- **Name lifetime** ends when the function returns, because the whole frame is then available for a later call to reuse.
-- **Stack overflow** means the stack has no room left for another frame.
-- **Common causes** of stack overflow are infinite recursion and a very large local array.
-- **Pass by value** in the call `foo(a)` copies the value of `a` into a new parameter `n`.
-- **Reference (רפרנס) parameter** would be another name for the caller's `a`.
+- **Local variables** are allocated inside the frame of the current call.
+- **Why the stack is fast:** allocating and releasing a frame only moves the stack pointer. There is no search for a free block.
+- **When locals die:** a local stops existing when its function returns, because the frame's memory is then reused by later calls.
+- **Stack overflow** happens when there is no room left on the stack for another frame. The usual causes are infinite recursion and very large local arrays.
+- **Pass by value:** in the call `foo(a)` below, the value of `a` is copied into a new parameter `n`.
+- **Pass by reference:** if `n` were a reference (רפרנס) parameter instead, `n` would be another name for the caller's `a`, not a copy.
 
 ```cpp
 void foo(int n) {
@@ -183,8 +176,8 @@ int main() {
 While `foo` is running, the stack holds two frames.
 
 - **`main`'s frame** holds `a`.
-- **`foo`'s frame** holds the return address, the parameter `n`, and the local variable `x`.
-- **Return from `foo`** pops its frame.
+- **`foo`'s frame,** on top of it, holds the return address, the parameter `n`, and the local variable `x`.
+- **When `foo` returns,** its frame is popped, and only `main`'s frame remains.
 
 ![While foo is running, n and x sit in foo's frame below main. After the return only main's frame remains, and a is still in that frame.](../../web/public/figures/stack-frames.svg)
 
@@ -213,13 +206,11 @@ int main() {
 
 :::solution
 
-- **`n` and `x`** are stored in `foo`'s stack frame.
-- **`n`** is the parameter, a copy of the value 4 passed from `main`.
-- **`x`** is a local whose value is 8.
-- **Frame position** sits at the top of the stack, above `main`'s frame, which still holds `a`.
-- **Return from `foo`** pops `foo`'s frame, so the names `n` and `x` can no longer be used.
-- **`a`** is still 4 because the call passed `a` by value, so `n` received a copy; a reference parameter would have named `a` itself.
-- **Heap block from `new`** would stay allocated if `foo` had executed `new`, even though the pointer that addressed it lived in the frame and would disappear with the frame.
+- **Where they are:** `n` and `x` are both in `foo`'s stack frame, which sits on top of `main`'s frame.
+- **Their values:** `n` is the parameter, a copy of the value 4 from `main`, and `x` is a local holding 8.
+- **After the return:** `foo`'s frame is popped, so `n` and `x` no longer exist.
+- **What is left:** `a` is still in `main`'s frame, with the value 4. It never changed, because `n` was only a copy.
+- **A related case:** if `foo` had allocated a block with `new`, that block would stay on the heap after the return, even though the pointer to it disappeared with the frame.
 :::
 :::
 
@@ -241,8 +232,8 @@ int main() {
 - [ ] `x`, because it was initialized
 - [x] only `a`
 
-- **`n` and `x`** belonged to `foo`'s frame, and that frame has been popped.
-- **`a`** lives in `main`'s frame, which is still on the stack.
+- **`n` and `x`** belonged to `foo`'s frame, and that frame was popped when `foo` returned.
+- **`a`** lives in `main`'s frame, which is still on the stack, because `main` has not returned.
 :::
 
 ### The heap
@@ -256,13 +247,11 @@ delete[] arr;            // the array form, not delete
 
 ```
 
-- **Heap block** can outlive the function that allocated it.
-- **Stack local** cannot outlive its frame: the local is released when its frame is popped.
-- **`new` cost** is the time to find a free range, plus a record of what is free.
-- **Memory manager** is the operating-system service that does that search.
-- **Stack allocation** is faster because it only moves the stack pointer.
-- **Heap bookkeeping** records which blocks are occupied and which are free.
-- **Pointer vs block** may occupy different regions.
+- **Heap versus stack lifetime:** a heap block can outlive the function that allocated it, but a stack local is released as soon as its frame is popped.
+- **Why `new` is slower:** it must search for a free range of the right size, and keep a record of which blocks are occupied and which are free.
+- **Who does that work:** the memory manager, a part of the C++ run-time library, which asks the operating system for more memory when it runs out.
+- **Why the stack is faster:** allocating on the stack only moves the stack pointer.
+- **A pointer and its block can be in different regions,** as the next example shows.
 
 ```cpp
 int* pi = new int[10];             // pi on the stack, the ten ints on the heap
@@ -270,14 +259,14 @@ Student* ps = new Student("Avi");  // ps on the stack, the Student on the heap
 
 ```
 
-- **First line** puts `pi` as a local on the stack holding an address, with the ten integers as one contiguous block on the heap.
-- **Second line** puts `ps` on the stack and the `Student` object on the heap.
-- **Stack allocation** ends with the call that created it because a stack frame is popped on every return.
-- **C++ ownership** means the programmer owns each dynamic block: `new` obtains it, and a matching `delete` releases it.
-- **`new` / `delete` analogy** is like obtaining and returning the key to an apartment: a forgotten key leaves the apartment occupied for the rest of the process.
-- **Memory leak (זליגת זיכרון)** is a heap block that stays marked occupied after no live pointer in the program still holds its address.
-- **Garbage collection (איסוף אשפה)** in Java, C#, and Python releases storage the program can no longer reach, so those languages hide much of this region bookkeeping.
-- **Java memory leak** is a reference that stays reachable by accident, for example because it was left in a static collection, after the program no longer needs the object.
+- **The first line** puts the pointer `pi` on the stack, holding an address, and the ten integers on the heap, as one contiguous block.
+- **The second line** puts the pointer `ps` on the stack, and the `Student` object on the heap.
+- **When the function returns,** the pointers disappear with its frame, but the heap blocks do not.
+- **In C++, you own every heap block:** `new` obtains it, and only a matching `delete` releases it.
+- **An analogy:** `new` is like taking the key to an apartment, and `delete` is returning it. If you never return the key, the apartment stays occupied until the process ends.
+- **A memory leak (זליגת זיכרון)** is a heap block that is still marked as occupied, although no pointer in the program holds its address anymore.
+- **Garbage collection (איסוף אשפה):** in Java, C#, and Python, the run-time environment frees memory the program can no longer reach, so the programmer does much less of this bookkeeping.
+- **Java can still leak,** when a reference stays reachable by accident, for example an object left in a static collection that the program no longer needs.
 
 ```cpp
 void leaky() {
@@ -290,7 +279,7 @@ void leaky() {
 
 ### All five regions in one run
 
-One run of a program can use all five regions at the same time:
+A single run of a program can use all five regions at the same time, as this example shows.
 
 ```cpp
 int ready = 1;              // initialized static, whole run
@@ -325,11 +314,11 @@ int main() {
 
 ### Recursion and the stack
 
-Each recursive call pushes a new frame.
+Each recursive call pushes a new frame onto the stack.
 
-- **Previous frame** stays in place because the call that created it is still in progress.
-- **`forever`** calls itself again with `n + 1`, so no call reaches its end and no frame is popped.
-- **`pad` array** of 256 integers takes space in every frame, and the stack grows until its region is full.
+- **The earlier frames stay,** because each of those calls is still in progress, waiting for the one it made.
+- **`forever` never stops:** it always calls itself again with `n + 1`, so no call ever finishes and no frame is ever popped.
+- **The `pad` array** of 256 integers takes space in every frame, so the stack grows quickly until it runs out of room.
 
 ```cpp
 void forever(int n) {
@@ -345,59 +334,57 @@ int main() {
 
 ![forever keeps pushing a frame for n and pad. The stack grows downward until the region is full](../../web/public/figures/recursion-frames.svg)
 
-This example never executes `new`, so the heap stays empty.
+This example never calls `new`, so the heap stays empty the whole time.
 
-- **Failure mode** is a stack overflow.
-- **Heap exhaustion** can happen with a single stack frame.
-- **A loop of `new`** that never releases its blocks shrinks the free heap until allocation fails with `std::bad_alloc`.
+- **How it fails:** with a stack overflow, which usually crashes the program.
+- **The opposite failure** is running out of heap, which can happen even with a single stack frame.
+- **For example,** a loop that keeps calling `new` without ever releasing the blocks eventually makes `new` fail, which throws `std::bad_alloc`.
 
 ## Design considerations
 
-The frame of a called function lives entirely inside the lifetime of the function that called it.
+Why are local variables kept on a stack? Because a called function always finishes before the function that called it.
 
-- **Stack match** fits that nesting because frames leave in LIFO order: the frame pushed last is the frame popped first.
-- **Frame creation** moves the stack pointer by a size the compiler already knows.
-- **Frame leave** moves the pointer back by that same amount.
-- **Contiguous live frames** occupy one range because frames are released in the reverse of the order in which they were created, so the stack stays free of fragmentation.
+- **The lifetimes are nested,** and a stack, which releases items in LIFO order, matches that nesting exactly: the frame pushed last is always the first one popped.
+- **Creating a frame** just moves the stack pointer by a size the compiler already knows.
+- **Leaving a frame** moves it back by the same amount.
+- **No fragmentation:** because frames are always released in the reverse of the order they were created, the live frames always form one contiguous block, with no gaps.
 
-Two kinds of storage need the heap:
+Two kinds of data cannot live on the stack, and need the heap instead.
 
-1. An object whose lifetime must continue after the function that created it has returned.
-2. Data whose size is unknown at compile time, such as `new int[n]` when `n` is obtained at run time.
+1. An object that must keep living after the function that created it has returned.
+2. Data whose size is not known at compile time, such as `new int[n]` when `n` is only known at run time.
 
-- **Local slot size** is fixed by the compiler in the frame before the program runs.
-- **Dynamic-size data** is allocated on the heap.
-- **Pointer in the frame** stores only the address, and the pointer's size is fixed and known.
+- **Why the second case needs the heap:** the compiler must know the size of every local in a frame before the program runs.
+- **The solution:** the data goes on the heap, and the frame stores only a pointer to it, whose size is fixed and known.
 
 ## The von Neumann machine
 
-In the von Neumann architecture, the RAM that holds a program's data also holds its code, the instructions.
+In the von Neumann architecture, the same RAM holds both a program's data and its code, the instructions.
 
 :::definition id=def-von-neumann title="The von Neumann machine" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
 
-- **Von Neumann architecture** is a processor (CPU), a bus, and a main memory (RAM) shared by code and data.
-- **Fetch-decode-execute cycle** repeats: the processor fetches an instruction from memory, decodes it, and executes it.
+- **The parts:** a von Neumann machine has a processor (CPU), a bus, and one main memory (RAM) shared by code and data.
+- **The fetch-decode-execute cycle:** the processor repeatedly fetches the next instruction from memory, decodes it, and executes it.
 :::
 
 ![A von Neumann machine: a CPU, a bus, and one RAM that holds both the program and the data](../../web/public/figures/von-neumann-architecture.svg)
 
-The main parts of the processor:
+These are the main parts of the processor.
 
-- **Control unit (CU).** It runs the fetch-decode-execute cycle, stays in step with the clock, and handles input and output through interrupts.
-- **Arithmetic-logic unit (ALU).** It performs arithmetic, logical operations, comparisons, bitwise operations, and checks for arithmetic overflow.
-- **Registers** are the fastest storage in the processor.
-- **General-purpose registers** hold values for the operation in progress (`load`, `store`).
-- **Dedicated registers** hold execution state, including `ip` (the instruction pointer) and `rsp` (the stack pointer).
-- **Cache.** This is fast memory between the registers and physical RAM, divided into levels. L1 is the smallest and the fastest, then L2, then L3.
+- **The control unit (CU)** runs the fetch-decode-execute cycle in step with the clock, and handles input and output through interrupts.
+- **The arithmetic-logic unit (ALU)** performs arithmetic, logical operations, comparisons, and bitwise operations, and detects arithmetic overflow.
+- **Registers** are the fastest storage in the machine, inside the processor itself.
+- **General-purpose registers** hold the values for the operation in progress, which are moved in and out of memory with `load` and `store`.
+- **Special registers** hold the execution state, such as `ip` (the instruction pointer) and `rsp` (the stack pointer).
+- **The cache** is fast memory between the registers and the RAM. It has several levels: L1 is the smallest and fastest, then L2, then L3.
 
 ![The processor components in a table, then the cache, the bus, and RAM, with the fast end of the memory hierarchy at the top](../../web/public/figures/memory-hierarchy.svg)
 
-- **Stack region** is where the address lies when the processor loads a local variable.
-- **Heap region** is where the address lies when it reads through the pointer `pi`.
-- **Bus** carries every access.
-- **Software division** of stack, heap, and code region maps onto the same physical RAM.
+- **The regions are only a software convention.** The stack, the heap, and the code are all ordinary parts of the same physical RAM.
+- **For example,** when the processor loads a local variable, the address is in the stack region, and when it reads through the pointer `pi`, the address is in the heap region.
+- **Either way,** the access travels over the same bus.
 
-The memory hierarchy, from the fast and small end to the slow and large end:
+The memory hierarchy, listed from the fastest and smallest level to the slowest and largest:
 
 | Component | Role | Retains data with the power off? |
 | --- | --- | --- |
@@ -407,10 +394,10 @@ The memory hierarchy, from the fast and small end to the slow and large end:
 | Disk (SSD/HDD) | Permanent storage for files | Yes |
 | Magnetic tape | Long-term backup and retrieval | Yes |
 
-- **Data bus width** is how many bits move in one memory transfer, and that width is the word size.
-- **Address bus width** is the largest range of memory the processor can address.
+- **The data bus width** is how many bits move in one memory transfer. It usually matches the machine's word size.
+- **The address bus width** determines how much memory the processor can address. For example, 32 address bits can address 2³² bytes, which is 4 GB.
 
-The raw instruction set includes operations such as these:
+The processor's raw instruction set includes simple operations like these.
 
 - `READ 100 R1`: copy the contents of cell 100 into register R1.
 - `ADD R1 R2 R3`: add the contents of R1 and R2, and store the result in R3.
@@ -427,7 +414,7 @@ i = i + j;
 ```
 
 :::solution
-The values are written into memory first. They are then loaded into registers, the ALU adds them, and the result is written back into the cell of `i`:
+First the initial values are written into memory. Then both are loaded into registers, the ALU adds them, and the result is written back into the cell of `i`.
 
 ```text
 WRITE 3000 10
@@ -439,13 +426,12 @@ WRITE 3000 R3
 
 ```
 
-- **Cell 3000** holds 30 at the end.
-- **Addition** is performed in the processor's registers.
-- **RAM** holds the cells that were read and the cell that was written.
+- **The final result:** cell 3000, which is `i`, holds 30.
+- **The ALU cannot add memory cells directly.** The values must first be loaded into registers, and the result must be written back to memory.
 :::
 :::
 
-The stack and the heap correspond to a small set of operations:
+In the course's simplified model, the stack and the heap each support a small set of operations.
 
 **Stack operations:**
 
@@ -460,15 +446,16 @@ The stack and the heap correspond to a small set of operations:
 - `new`: allocate a free run of cells on the heap and mark them occupied for this process.
 - `delete`: release an allocated range and mark it free.
 - `read` / `write`: access a cell that is currently allocated on the heap.
-- **Released cell:** a read or a write after `delete` is a run-time fault, a segmentation fault.
+- **After `delete`:** reading or writing a released cell is undefined behavior. It may crash with a segmentation fault, or it may silently corrupt data.
 
-A procedure call does the following.
+A procedure call goes through these steps, in order.
 
-- **`createAF`** creates the frame.
-- **Return address** is pushed.
-- **`this` pointer** is pushed when the call is a method of an object.
-- **Arguments** are pushed, the body runs, and the return value is written to a temporary location.
-- **Argument pop and `removeAF`** pop the arguments and remove the frame to return to the caller's frame.
+1. `createAF` creates a new frame.
+2. The return address is pushed.
+3. If the call is a method of an object, the `this` pointer is pushed.
+4. The arguments are pushed.
+5. The body runs, and the return value is written to a temporary location.
+6. The arguments are popped, and `removeAF` removes the frame, returning control to the caller's frame.
 
 :::check id=chk-where-array
 The following line runs inside a function. Where do `pi` and the ten integers live?
@@ -483,13 +470,13 @@ int* pi = new int[10];
 - [ ] Both are on the heap
 - [ ] `pi` is stored in the code region
 
-- **`pi`** is a local variable that holds an address, so it is allocated in the stack frame.
-- **Ten integers** are allocated on the heap by `new[]`.
+- **`pi`** is a local variable that holds an address, so it lives in the function's stack frame.
+- **The ten integers** are created by `new[]`, so they live on the heap.
 :::
 
 ## An example layout
 
-Consider this code:
+Consider this code, running inside a function.
 
 ```cpp
 int* pi = new int[10];
@@ -503,10 +490,10 @@ pi[0] = 1;
 | The ten `int`s | Heap | The array values (index 0 has been set to 1) |
 | The instructions | Code region (Text) | Machine instructions, read only |
 
-When the function returns, the local `pi` disappears with the frame.
+When the function returns, the local `pi` disappears with its frame.
 
-- **Ten integers** stay allocated on the heap until the program executes `delete[] pi`.
-- **Memory leak** happens once the only copy of that address has disappeared with the frame, because the integers are then unreachable and the block stays occupied.
+- **The ten integers stay** allocated on the heap until the program runs `delete[] pi`.
+- **If `pi` was the only copy of the address,** the integers can no longer be reached once it is gone, yet their block stays occupied. That is a memory leak.
 
 :::problem id=worked-stack-array title="A pointer on the stack" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
 Explain where `ps` is stored, where the `Student` object is stored, and what happens in memory if nobody calls `delete`.
@@ -522,7 +509,7 @@ int main() {
 :::solution
 
 - **`ps`** is a local pointer, so it occupies a cell in `main`'s stack frame.
-- **`Student` object** is allocated on the heap:
+- **The `Student` object** is created by `new`, so it lives on the heap.
 
 ```text
 stack (main):  ps  ----------+
@@ -532,29 +519,29 @@ heap:                        v
 
 ```
 
-- **`main` ends** pops the stack frame and `ps` disappears.
-- **Heap block** stays allocated with no pointer that can reach it, so the block is a memory leak.
+- **When `main` returns,** its frame is popped and `ps` disappears.
+- **The `Student` block** stays allocated, but nothing points to it anymore, so it is a memory leak. In practice the operating system reclaims all of the process's memory when it exits, but inside a long-running program, a leak like this keeps growing.
 :::
 :::
 
 :::trap
-- **`delete`** releases one object.
-- **`delete[]`** releases an array.
-- **`delete` on `new[]`** is undefined behavior, and it corrupts the heap's bookkeeping.
-- **Memory leak** is a separate failure: the block is never released.
+- **`delete`** releases a single object made with `new`.
+- **`delete[]`** releases an array made with `new[]`.
+- **Using `delete` on memory from `new[]`** is undefined behavior, and can corrupt the heap's bookkeeping.
+- **A memory leak** is a different mistake: the block is never released at all.
 :::
 
 :::trap
-Global variables, and local variables declared `static`, occupy the static region for the whole run of the program.
+Global variables, and local variables declared `static`, live in the static region for the whole run of the program.
 
-- **Storage** is that static region for the entire lifetime.
-- **Outside frames** means they sit outside every stack frame, and outside the heap.
+- **They are not on the stack,** even when they are declared inside a function, so they survive when the function returns.
+- **They are not on the heap** either, so they are never released with `delete`.
 :::
 
 ## Practice
 
 :::problem id=ps2-stack-vs-heap title="Stack versus heap" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-Four names are declared in `demo`.
+`demo` declares four local variables.
 
 ```cpp
 void demo() {
@@ -573,7 +560,7 @@ Where does each object live, and which release matches it?
 
 `one` is a pointer on the {{=stack|heap|code region}}. The `int` from `new int(2)` lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
 
-`local` is an `int` in `demo`'s stack frame; the return releases it and it takes no `delete`. `one` is a local pointer on the stack; the `int` it addresses is a block on the heap and is released with `delete one`.
+`local` is an ordinary `int` in `demo`'s stack frame, so it disappears automatically on return and must not be deleted. `one` is a local pointer on the stack, but the `int` it points at is a heap block, which must be released with `delete one`.
 :::
 
 :::check id=ps2-stack-vs-heap-q2
@@ -581,7 +568,7 @@ Where does each object live, and which release matches it?
 
 `s` is a pointer on the {{=stack|heap|code region}}. The `string` object lives on the {{=heap|stack|frame of demo}} and is released with {{=delete|delete[]|no delete}}.
 
-`many` is a local pointer on the stack; the array of ten integers is a block on the heap and is released with `delete[] many`. `s` is a local pointer on the stack; the `string` object itself is a block on the heap and is released with `delete s`.
+`many` is a local pointer on the stack, and the array of ten integers is a heap block, which must be released with `delete[] many` because it is an array. `s` is also a local pointer on the stack, and the `string` object is a single heap object, so it is released with `delete s`.
 :::
 
 :::check id=ps2-stack-vs-heap-q3
@@ -591,14 +578,14 @@ What is true if `demo` returns while those three blocks are still allocated?
 - [ ] The three pointers move onto the heap, so the blocks stay reachable.
 - [x] The return pops the frame and the pointers disappear with it. A block left behind is a memory leak on the heap.
 
-- **Heap blocks** have to be released before the function returns.
-- **Return** pops the frame and the pointers disappear with it.
-- **Leftover block** on the heap is a memory leak.
+- **On return,** the frame is popped, and the three pointers disappear with it.
+- **The heap blocks do not move or disappear.** They stay allocated, and with no pointer left to them, each one is a memory leak.
+- **The fix:** release each heap block before the function returns.
 :::
 :::
 
 :::problem id=mm-pass-by-value title="Pass by value and a leak" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=exercise solution_origin=derived
-While `foo` runs, and then after it returns:
+Look at memory twice: while `foo` is running, and again after it returns.
 
 ```cpp
 void foo(int n) {
@@ -621,8 +608,8 @@ While `foo` is running, where does each name live?
 - [x] `box` is a pointer cell in `foo`'s frame; the `int` from `new` is on the heap
 - [ ] `n` is another name for `a` on the stack
 
-- **Pass by value** copies `4` into the parameter `n`.
-- **`box`** holds an address; the addressed `int` is a heap block.
+- **`n` is not another name for `a`:** passing by value copies the value 4 into the separate parameter `n`.
+- **`box`** is a pointer in `foo`'s frame that holds an address, and the `int` at that address is a block on the heap.
 :::
 
 :::check id=mm-pass-by-value-q2
@@ -632,13 +619,13 @@ After `foo` returns with no `delete`, what remains?
 - [x] Only `a` is still on the stack. The heap `int` is still allocated, and nothing points to it
 - [ ] The return releases the heap `int` automatically with the frame
 
-- **Return** pops `foo`'s frame, so `n`, `x`, and `box` are gone.
-- **Heap block** without a matching `delete` is a memory leak.
+- **On return,** `foo`'s frame is popped, so `n`, `x`, and `box` are all gone.
+- **The heap `int` is not released** with the frame. It stays allocated with no pointer to it, which is a memory leak.
 :::
 :::
 
 :::problem id=mm-regions-quiz title="Which region holds the name" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=exercise solution_origin=derived
-Use the five-region layout from the lesson.
+Use the five-region layout from this chapter.
 
 ```cpp
 int ready = 1;
@@ -665,7 +652,7 @@ Match each name to its region while `note` is running.
 
 The `int` from `new` lives on the {{=heap|stack|code region}}.
 
-Static names last for the whole process. Locals sit in the current frame. `new` obtains a heap block.
+Global and static variables live in static data for the whole process. `ready` and `calls` have an initial value, so they are in initialized data, while `scratch` has none, so it is in BSS. Ordinary locals live in the current frame, and `new` creates a block on the heap.
 :::
 
 :::check id=mm-regions-quiz-q2
@@ -676,9 +663,9 @@ After `note` returns, which are still present?
 - [x] the program's code in the code region
 - [ ] the `int` from `new`, because `delete box` already ran before the return
 
-- **`delete box`** releases the heap `int` before the return.
-- **Locals** `x` and `box` disappear with the frame.
-- **Static storage and code** last for the process.
+- **Still present:** the static variables `ready`, `scratch`, and `calls`, and the program's code, all last for the whole process.
+- **Gone:** the locals `x` and `box` disappear with the frame.
+- **Also gone:** the heap `int`, because `delete box` released it before the return.
 :::
 :::
 
@@ -690,7 +677,7 @@ Choose the matching release for each allocation.
 
 `int* a = new int[10];` is released with {{=delete[] a|delete a|no delete}}.
 
-`new T` pairs with `delete`. `new T[n]` pairs with `delete[]`.
+The rule is simple: memory from `new T` is released with `delete`, and memory from `new T[n]` is released with `delete[]`.
 :::
 
 :::check id=mm-delete-forms-q2
@@ -700,12 +687,12 @@ What goes wrong if the forms are swapped?
 - [ ] The compiler always rewrites `delete` into `delete[]` for arrays
 - [x] Skipping every `delete` leaves heap blocks allocated after the pointers are gone — a memory leak
 
-- **Wrong form** corrupts bookkeeping.
-- **Missing release** is a leak, a separate failure.
+- **Using the wrong form** is undefined behavior, which can corrupt the heap's bookkeeping. The compiler does not fix it for you.
+- **Never releasing at all** is a different failure: a memory leak.
 :::
 :::
 
-The chapter [Pointers and references](topic:pointers) builds on this drawing.
+This picture of memory is the base for the rest of the course.
 
-- **Stack cell** holds an address that is useful while the block on the heap is still alive.
-- **[The rule of three](topic:rule-of-three)** is where copy constructors and owned buffers show up — including past-paper `mvector` questions that need a deep copy.
+- **Next:** [Pointers and references](topic:pointers) looks closely at a stack cell that holds an address, which is only useful while the heap block it points at is alive.
+- **Later:** [The rule of three](topic:rule-of-three) shows what happens when objects that own heap buffers are copied, including the past-exam `mvector` questions that need a deep copy.

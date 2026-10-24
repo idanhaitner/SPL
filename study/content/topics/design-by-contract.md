@@ -14,44 +14,45 @@ sources:
   - "materials/exams/24-a-solution.pdf"
 ---
 
-This chapter is how a method and its caller agree on valid use before any implementation is written.
+This chapter shows how a method and its caller agree, before any code is written, on what counts as correct use.
 
-- **The three clauses** — precondition, invariant, and postcondition.
-- **Whose bug** — what fails when each clause is broken.
-- **Practice** — reading and writing contracts on the course's examples.
+- **The three clauses:** a contract is made of a precondition, an invariant, and a postcondition.
+- **Whose bug it is:** when a clause is broken, the contract tells you whether the caller or the implementation is at fault.
+- **Practice:** you will read and write contracts for the course's examples and past exam questions.
 
 ## The three clauses of the contract
 
-Design by contract states that agreement in three clauses.
+Design by contract writes that agreement down as three clauses.
 
-- **Precondition** (תנאי קדם) is what the caller must establish. The method may assume that it holds.
-- **Postcondition** (תנאי סיום) is what the method establishes when it returns, provided the precondition held.
-- **Invariant** (תנאי פנימי) holds whenever no public method of the object is running.
-- **Failure** of one of these three statements names whose bug it is.
+- **The precondition** (תנאי קדם) is what the caller must make true before the call. The method may simply assume it holds.
+- **The postcondition** (תנאי סיום) is what the method promises is true when it returns, as long as the precondition held.
+- **The invariant** (תנאי פנימי) is a fact about the object that is true whenever none of its public methods is running.
+- **The payoff:** when one of these statements turns out false, the contract tells you exactly whose bug it is.
 
 :::definition id=def-dbc title="Precondition, invariant, and postcondition" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
 
-- **Precondition** is the condition the caller must establish before the call. The method may assume it.
-- **A broken precondition** leaves the method's behavior undefined. That bug belongs to the caller.
-- **Invariant** holds whenever no public method of the object is running.
-- **A broken invariant** is a bug in the class implementation.
-- **Postcondition** is what the method establishes about the object's state and the return value when it returns, provided the precondition held.
-- **A broken postcondition** is a bug in the method implementation.
+- **Precondition:** the condition the caller must establish before the call. The method may assume it.
+- **A broken precondition:** the method's behavior is undefined, and the bug belongs to the caller.
+- **Invariant:** a condition on the object that holds whenever none of its public methods is running.
+- **A broken invariant:** the bug belongs to the class implementation.
+- **Postcondition:** what the method guarantees about the object's state and its return value when it returns, provided the precondition held.
+- **A broken postcondition:** the bug belongs to the method's implementation.
 :::
 
 ![The contract of crop, in the order a call meets it: precondition, invariant, postcondition](../../web/public/figures/contract-clauses.svg)
 
 Defensive programming and a contract answer different questions.
 
-- **Defensive programming** checks inputs at run time and throws when an input is invalid.
-- **Contract** assigns who is responsible for the validity of the data, at the level of the design.
+- **Defensive programming** checks the inputs at run time and throws an exception when an input is invalid.
+- **A contract** decides, at design time, who is responsible for making sure the data is valid. The method does not have to re-check what the caller already promised.
 
 ### Command-query separation (CQS)
 
 Contracts are easier to state and to test when commands and queries are separate.
 
-- **Query:** returns information and leaves the object's state unchanged.
-- **Command:** changes the object's state and returns no value.
+- **Query:** a method that returns information and leaves the object's state unchanged, such as `size()`.
+- **Command:** a method that changes the object's state and returns no value, such as `push`.
+- **Why it helps:** a postcondition can then use queries to describe what a command did, without the queries changing anything themselves.
 
 ```java
 /**
@@ -80,10 +81,10 @@ public interface Stack<T> {
 
 ```
 
-The notation `size()@pre` is the value of `size()` on entry to the method.
+The notation `size()@pre` means the value that `size()` had when the method was entered, before it changed anything.
 
 :::problem id=worked-crop-contract title="The contract for crop" source="materials/lectures/Chapter 9 - Design by Contract.pptx" kind=worked solution_origin=source
-State the precondition, the invariant, and the postcondition of `crop`:
+State the precondition, the invariant, and the postcondition of `crop`, an image method that keeps only the rectangle starting at (`x`, `y`) with width `w` and height `h`.
 
 ```java
 /**
@@ -109,8 +110,8 @@ void crop(int x, int y, int w, int h);
 - [x] The caller, because a precondition failed
 - [ ] The garbage collector, because the buffer leaked
 
-- **Caller** must establish the precondition.
-- **Method** is not required to establish a postcondition for this call when the precondition does not hold.
+- **The caller is at fault:** a negative width breaks the precondition, and establishing the precondition is the caller's job.
+- **The method owes nothing:** when the precondition does not hold, the method is not required to establish its postcondition.
 :::
 
 ## Practice
@@ -121,7 +122,7 @@ void crop(int x, int y, int w, int h);
 :::check id=ps5-stack-contract-q1
 The postcondition of `push` writes the old size as {{=size()@pre|size()|capacity()}}.
 
-After `push(obj)`, `size()` is `size()@pre + 1`, and `top()` equals `obj`.
+The postcondition says that after `push(obj)`, `size()` equals `size()@pre + 1`, and `top()` equals `obj`.
 :::
 
 :::check id=ps5-stack-contract-q2
@@ -132,7 +133,7 @@ Which of these belong to the contract?
 - [x] Precondition of `push`: `obj != null`. Precondition of `top`: `!isEmpty()`
 - [x] Postcondition of `top`: the result is the last element that was pushed and has not yet been removed, and `size()` is unchanged
 
-The postcondition of `top` leaves `size()` unchanged.
+`top` is a query, so its postcondition says `size()` is unchanged. Only `push` makes the size grow by one.
 :::
 
 :::check id=ps5-stack-contract-q3
@@ -142,13 +143,15 @@ Which test checks the precondition of `push`?
 - [x] Call `push(null)` and expect rejection
 - [ ] Check `size` before and after, with no null argument
 
-- **Postcondition test** pushes `"a"` and checks the new size and `top`.
-- **Invariant test** checks `size` before and after.
+- **Testing the precondition:** call `push(null)`, which breaks the precondition, and expect it to be rejected.
+- **Testing the postcondition:** push `"a"`, then check that the size grew by one and that `top` is `"a"`. That is the first option.
+- **Testing the invariant:** check that `size` is valid before and after the call. That is the third option.
 :::
 :::
 
 :::examnote
-The question pastes an interface and says to define the invariant, and the precondition and the postcondition of the given method. The trap is an invariant that forgets the empty case, or a postcondition that is written so it holds only when no other code changes the object.
+- **What the question looks like:** it shows an interface and asks you to define the invariant, plus the precondition and postcondition of one method.
+- **The usual traps:** an invariant that forgets the empty case, or a postcondition that holds only if no other code touches the object at the same time.
 :::
 
 :::problem id=exam-16a-q1 title="The contract for a queue" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
@@ -157,7 +160,7 @@ The question pastes an interface and says to define the invariant, and the preco
 :::check id=exam-16a-q1-q1
 The contract adds the queries {{=size|lock|thread}} and `isEmpty`.
 
-The invariant is `size() >= 0`, and `isEmpty()` if and only if `size() == 0`.
+With those two queries, the invariant can say that `size() >= 0`, and that `isEmpty()` is true exactly when `size() == 0`.
 :::
 
 :::check id=exam-16a-q1-q2
@@ -168,8 +171,8 @@ Which of these belong to the contract?
 - [x] `remove` has precondition `!isEmpty()`. Its postcondition is that `size()` is smaller by one and the removed element was the oldest
 - [x] The postcondition of `add` is that `size()` is larger by one, and later `remove` calls still yield the old elements and then the new item
 
-- **Insertion order** is how elements stay.
-- **Empty `remove`** is ruled out by the precondition.
+- **A queue keeps insertion order:** `remove` always returns the oldest element that is still in the queue.
+- **Removing from an empty queue** is ruled out by the precondition `!isEmpty()`, so the size can never become negative.
 :::
 
 :::check id=exam-16a-q1-q3
@@ -179,7 +182,7 @@ What does `testAdd` check?
 - [ ] It calls `add` and never inspects the queue
 - [x] It adds one element, then checks `size() == 1` and that `remove` returns that element
 
-`testAdd` records nothing beforehand. It adds one element and then checks the size and the removed value.
+`setUp` gives `testAdd` an empty queue, so there is nothing to record beforehand. The test adds one element, then checks that the size is 1 and that `remove` returns that same element.
 :::
 
 :::check id=exam-16a-q1-q4
@@ -190,8 +193,9 @@ Which of these match the tests?
 - [x] `testRemove` after one `add` checks that `size` returns to 0 and that the value matches
 - [x] `setUp` gives every test a fresh queue, so leftovers do not look like failures of the invariant
 
-- **Empty `testRemove`** is a precondition failure.
-- **After one `add`**, removal returns the size to 0.
+- **`testRemove` on an empty queue** deliberately breaks the precondition and expects that to be reported.
+- **`testRemove` after one `add`** expects the size to return to 0 and the removed value to match.
+- **`setUp`** must create a fresh queue for every test, so that one test's leftovers cannot make another test fail.
 :::
 :::
 
@@ -201,7 +205,7 @@ Which of these match the tests?
 :::check id=exam-18a-q2-q1
 The precondition of `push` is {{=size() < capacity()|data != null|size() == 0}}.
 
-Null is allowed. The postcondition is that `size()` is `size()@pre + 1`, and `pop()` yields `data`.
+Since `push` may store null, the only precondition is that the stack has room. The postcondition is that `size()` equals `size()@pre + 1`, and that the next `pop()` returns `data`.
 :::
 
 :::check id=exam-18a-q2-q2
@@ -212,8 +216,8 @@ Which of these belong to the contract?
 - [x] `pop` has precondition `size() > 0`
 - [x] The postcondition of `pop` is that `size()` is `size()@pre - 1`, and the result is the last element that was pushed and is still on the stack
 
-- **Bound** is `size` against `capacity`.
-- **Null** is explicitly allowed.
+- **The invariant** bounds the size: it is never negative and never exceeds the fixed capacity.
+- **Pushing null** does not break anything, because the question explicitly allows it.
 :::
 
 :::check id=exam-18a-q2-q3
@@ -223,13 +227,13 @@ Which implementation breaks the postcondition even when a lock was held?
 - [ ] `capacity()` stays constant across calls
 - [ ] `pop` returns the last element that is still on the stack
 
-- **Invariant** is still the bound on `size` and `capacity`.
-- **Held lock** is a separate fact about the implementation.
+- **A lock does not make code correct:** holding a lock only stops other threads from interfering. If the code itself lets `size` pass `capacity`, or forgets to store `data`, the contract is still broken.
+- **The other two options** describe correct behavior, so they break nothing.
 :::
 :::
 
 :::problem id=exam-19a-q2 title="The invariant of a tree" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
-`SortedBinaryTree<T extends Comparable<T>>` has `getData`, `getLeft`, `getRight`, and `insert`. The implementation stores `data`, `left`, and `right` in `volatile` fields. The invariant is a fact about a quiet tree.
+`SortedBinaryTree<T extends Comparable<T>>` has `getData`, `getLeft`, `getRight`, and `insert`. The implementation stores `data`, `left`, and `right` in `volatile` fields. The invariant describes the tree when no method is running on it.
 
 :::check id=exam-19a-q2-q1
 Which claims belong to the invariant?
@@ -239,14 +243,14 @@ Which claims belong to the invariant?
 - [x] If `getLeft()` is not null, `getData().compareTo(getLeft().getData()) > 0`, and the left child satisfies the same invariant
 - [x] If `getRight()` is not null, `getData().compareTo(getRight().getData()) < 0`, and the right child satisfies the same invariant
 
-- **Duplicates** are not inserted, so no child holds a datum equal to its parent.
-- **Same invariant** holds for every child.
+- **No duplicates:** `insert` does not add a value that is already present, so no child holds a value equal to its parent's.
+- **Recursive invariant:** every subtree must satisfy the same invariant, not just the root.
 :::
 
 :::check id=exam-19a-q2-q2
 The precondition of `insert` is a {{=non-null|duplicate|volatile}} argument.
 
-The precondition of `insert` is a non-null argument.
+`insert` compares the new value with `compareTo`, which fails on null, and the invariant forbids null data. So the caller must pass a non-null value.
 :::
 
 :::check id=exam-19a-q2-q3
@@ -256,9 +260,9 @@ What does `volatile` guarantee for this tree?
 - [x] A write of a single reference is visible to other threads
 - [ ] Two threads can no longer break the invariant
 
-- **`volatile`** does not make the three field updates inside `insert` atomic.
-- **Two threads** can break the invariant. That is a concurrency failure of the implementation.
-- **Invariant** remains the right fact about a quiet tree.
+- **What `volatile` gives:** each single write to a `volatile` field is immediately visible to other threads.
+- **What it does not give:** it does not make the several field updates inside `insert` one atomic step, so two threads inserting at once can still break the invariant.
+- **Whose problem that is:** that is a concurrency bug in the implementation. The invariant itself is still correctly stated.
 :::
 
 :::check id=exam-19a-q2-q4
@@ -268,8 +272,8 @@ Which postcondition does `insert` establish?
 - [ ] An equal key is stored under both children
 - [x] The value is in the tree, the tree is still sorted, and a value that was already present is still present once
 
-- **Already present** value stays present once.
-- **Sorted** is how the tree remains.
+- **After `insert(v)`**, `v` is in the tree, and the tree is still sorted.
+- **If `v` was already present**, it still appears exactly once, because duplicates are never added.
 :::
 :::
 
@@ -279,7 +283,7 @@ Which postcondition does `insert` establish?
 :::check id=exam-24a-q2-q1
 The precondition of `add` is {{=obj != null|head == null|already present}}.
 
-The implementation calls `equals` on elements. A null element makes that call unsafe unless the contract names null.
+The implementation calls `equals` on the elements. Calling a method on null throws an exception, so unless the contract handles null, the caller must not pass it.
 :::
 
 :::check id=exam-24a-q2-q2
@@ -290,7 +294,9 @@ Which of these belong to the invariant?
 - [x] `contains(x)` is true exactly when some node reachable from `head` holds an element equal to `x`
 - [x] The list has no cycle
 
-If `contains(obj)` was already true, the number of nodes is unchanged.
+- **No duplicates:** `add` returns early when an equal element exists, so no two nodes are ever `equals`, and adding an existing element leaves the number of nodes unchanged.
+- **`contains` agrees with the list:** it is true exactly for the elements stored in the list.
+- **No cycle:** otherwise walking the list would never end.
 :::
 
 :::check id=exam-24a-q2-q3
@@ -300,7 +306,7 @@ Which postcondition does `add` establish?
 - [ ] The contract requires `add` to be safe for two threads at once
 - [x] `contains(obj)` holds, every previous member is still present, and the node count grows only when `obj` was not already a member
 
-For every `y` that was a member before the call, `contains(y)` still holds.
+After `add(obj)`, `contains(obj)` is true. Every `y` that was a member before the call is still a member, and the list grows by one node only if `obj` was new.
 :::
 
 :::check id=exam-24a-q2-q4
@@ -310,13 +316,15 @@ What is true of the published `add` when two threads run it?
 - [x] The contract says nothing about threads. Two threads can both link a node, or both assign `head`, and an element is lost
 - [ ] `volatile` head makes the `equals` walk and the link atomic
 
-- **Published `add`** meets the postcondition only when one thread runs it.
-- **Implementation** is what has to protect the contract.
+- **The contract is silent about threads**, so the published `add` meets its postcondition only when one thread runs it at a time.
+- **What goes wrong:** two threads can both walk to the end and link a node in the same place, so one element is lost.
+- **Who must fix it:** keeping the contract under concurrency is the implementation's job, for example by synchronizing `add`. `volatile` alone is not enough.
 :::
 :::
 
-A contract is the set of statements a concurrent method must still establish. [Networking](topic:networking) is the channel between processes, taken up later.
+A contract still applies when several threads call the object, and the implementation must keep it true.
 
-- **Invariant** under concurrency is a fact about the data that holds whenever no public method of the object is running.
-- **Interleaving** is what you have already seen in [Concurrency](topic:concurrency).
-- **Write the invariant** as that fact about the data. A sentence that only says the method is `synchronized` leaves the fact unstated.
+- **The invariant under concurrency** is still a fact about the data that holds whenever no public method is running.
+- **Interleaving** of threads, which you saw in [Concurrency](topic:concurrency), is what can break it.
+- **How to write an invariant:** state it as a fact about the data. A sentence that only says "the method is `synchronized`" describes the implementation and leaves the actual fact unstated.
+- **Next:** [Networking](topic:networking) moves from threads inside one process to communication between processes.

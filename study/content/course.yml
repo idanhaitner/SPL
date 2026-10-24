@@ -122,7 +122,7 @@ sources:
   - path: "materials/lectures/Chapter 13 - Persistance.pptx"
     type: lecture
     status: incorporated
-    note: "Relational tables, SQL, and join."
+    note: "Relational tables, SQL, and joins."
     problems: [worked-inner-join]
   - path: "materials/notes/lecture-notes.docx.pdf"
     type: lecture
@@ -578,10 +578,10 @@ glossary:
     definition: "The region of dynamic storage. A block is obtained with new and released only by a matching delete."
   - term: pointer
     topic: pointers
-    definition: "An object whose value is the address of another object, or null."
+    definition: "A variable whose value is the address of another object, or null when it points at nothing."
   - term: reference
     topic: pointers
-    definition: "A name bound to an existing object. It cannot be null, and it cannot be reseated."
+    definition: "A second name for an existing object. It must be bound when it is created, it cannot be null, and it cannot be rebound to another object."
   - term: destructor
     topic: rule-of-three
     definition: "The special member function that runs when an object's lifetime ends and releases what the object owns."
@@ -590,16 +590,16 @@ glossary:
     definition: "The constructor that builds a new object as a deep copy of another object of the same type."
   - term: assignment operator
     topic: rule-of-three
-    definition: "The copy assignment operator. It replaces an existing object's resources with a copy of another's, and it stays safe when both names refer to the same object."
+    definition: "The copy assignment operator runs when one existing object is assigned to another. It replaces the target's resources with a copy of the source's, and it must stay safe when both are the same object."
   - term: move constructor
     topic: rule-of-five
     definition: "The constructor that takes the source object's buffer and leaves the source empty, so the source destructor releases nothing."
   - term: RAII
     topic: rule-of-five
-    definition: "Resource Acquisition Is Initialization. A resource's lifetime is the owning object's lifetime, so the destructor is the release."
+    definition: "Resource Acquisition Is Initialization. An object acquires a resource when it is created and releases it in its destructor, so the resource lives exactly as long as the object."
   - term: unique_ptr
     topic: rule-of-five
-    definition: "A smart pointer that owns one object. It cannot be copied, and it can be moved."
+    definition: "A smart pointer that is the sole owner of one object. It cannot be copied, but it can be moved, and it deletes the object when it is destroyed."
   - term: shared_ptr
     topic: rule-of-five
     definition: "A smart pointer that shares ownership through a reference count and deletes the object when the count reaches zero."
@@ -623,13 +623,13 @@ glossary:
     definition: "A sequential flow of execution inside a process. It has its own stack and shares the process heap with the other threads."
   - term: deadlock
     topic: concurrency
-    definition: "A wait cycle in which each thread holds a lock the next thread needs, so all of them stay blocked."
+    definition: "A cycle of waiting in which each thread holds a lock that the next thread needs, so all of them stay blocked forever."
   - term: livelock
     topic: concurrency
-    definition: "Threads that are not blocked. Each spends its time reacting to the others, so no work finishes."
+    definition: "A failure in which the threads are not blocked, but each spends its time reacting to the others, so no work ever finishes."
   - term: starvation
     topic: concurrency
-    definition: "A thread that is ready to run is passed over indefinitely by the scheduler or by the lock."
+    definition: "A failure in which a thread that is ready to run is passed over indefinitely, because other threads keep getting the CPU or the lock first."
   - term: TCP
     topic: networking
     definition: "A connection-oriented, reliable byte stream. A read returns some of the bytes, not necessarily one application message."
@@ -638,7 +638,7 @@ glossary:
     definition: "A connectionless datagram protocol. There is no accept, and a datagram arrives whole or not at all."
   - term: reactor
     topic: reactor
-    definition: "One thread that waits in select and dispatches the non-blocking channels that are ready."
+    definition: "A server design in which one thread waits in select and handles only the non-blocking channels that are ready, while a pool of workers runs the protocol."
   - term: selector
     topic: reactor
     definition: "The Java NIO object that reports which registered channels are ready to read or to write."
@@ -647,19 +647,19 @@ glossary:
     definition: "A representation of an object as a byte sequence that records its type, the shape of its fields, and the field values."
   - term: primary key
     topic: persistence
-    definition: "The column or columns that identify one row of a table."
+    definition: "The column, or set of columns, whose value is unique in every row, so it identifies each row of the table."
   - term: foreign key
     topic: persistence
     definition: "A column whose values must equal a key of another table. It is the relational form of a pointer."
   - term: process
     topic: memory-model
-    definition: "One execution of a program. It has its own address space and its own execution state. The program itself is only the passive instructions."
+    definition: "One running execution of a program, with its own address space and its own execution state. The program itself is only the passive list of instructions."
   - term: runtime environment
     topic: memory-model
-    definition: "The layer between a program and the infrastructure. It preserves the infrastructure's properties, adds an abstraction and a usable interface, and supplies services the hardware does not provide."
+    definition: "The layer between a program and the infrastructure it runs on. It preserves the infrastructure's properties, hides its details behind a more convenient interface, and adds services the hardware does not provide."
   - term: system call
     topic: memory-model
-    definition: "The means by which a process asks the kernel for a service. It is not an ordinary function call: the kernel performs the operation."
+    definition: "The way a process asks the operating system's kernel for a service, such as reading a file. Unlike an ordinary function call, the kernel performs the operation."
 
 exams:
   - year: 2015
