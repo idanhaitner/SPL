@@ -4,37 +4,40 @@
 #include "check.hpp"
 
 int quotient(int a, int b) {
-    throw NotImplemented("quotient");
+    return a / b;
 }
 
 int remainder(int a, int b) {
-    throw NotImplemented("remainder");
+    return a % b;
 }
 
 int precedence() {
     // Return the value of 2 + 3 * 4, with no extra parentheses.
-    throw NotImplemented("precedence");
+    return 2 + 3 * 4;
 }
 
 int value_after_prefix() {
     // Start from x = 5, apply prefix ++ once, and return x.
-    throw NotImplemented("value_after_prefix");
+    int x = 5;
+    ++x;
+    return x;
 }
 
 int value_returned_by_postfix() {
     // Return the value of the expression y++, starting from y = 5.
-    throw NotImplemented("value_returned_by_postfix");
+    int y = 5;
+    return y++;
 }
 
 bool in_range(int x, int lo, int hi) {
     // True when lo <= x <= hi. Write it with &&.
-    throw NotImplemented("in_range");
+    return lo <= x && x <= hi;
 }
 
 bool value_of_chained_compare() {
     // `1 < 100 < 0` is parsed as (1 < 100) < 0. This compiler rejects the
     // chained spelling, so write that parse yourself and return its value.
-    throw NotImplemented("value_of_chained_compare");
+    return (1 < 100) < 0;
 }
 
 int main() {

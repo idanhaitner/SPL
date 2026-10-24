@@ -6,19 +6,19 @@
 #include "check.hpp"
 
 int add(int a, int b) {
-    throw NotImplemented("add");
+    return a+b;
 }
 
 int double_of(int n) {
-    throw NotImplemented("double_of");
+    return n*2;
 }
 
 int subtract(int a, int b) {
-    throw NotImplemented("subtract");
+    return a-b;
 }
 
 int volume(int w, int h, int d) {
-    throw NotImplemented("volume");
+    return w*h*d;
 }
 
 int main() {

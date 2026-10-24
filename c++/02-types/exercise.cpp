@@ -4,26 +4,29 @@
 #include "check.hpp"
 
 int bytes_of_char() {
-    throw NotImplemented("bytes_of_char");
+    return sizeof(char);
 }
 
 int chars_per_int() {
-    throw NotImplemented("chars_per_int");
+    return sizeof(int) / sizeof(char);
 }
 
 int truncated() {
     // Return the int you get by converting the double 3.9.
-    throw NotImplemented("truncated");
+    return static_cast<int>(3.9);
 }
 
 int wrapped_byte() {
     // unsigned char starts at 255. Add 1. Return the result as an int.
-    throw NotImplemented("wrapped_byte");
+    unsigned char x = 255;
+    x++;
+    return x;
 }
 
 int zero() {
     // Return an int that was value-initialized with {}.
-    throw NotImplemented("zero");
+    int x{};
+    return x;
 }
 
 int main() {
