@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Heebo, Source_Code_Pro } from "next/font/google";
+import { Heebo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { Rail } from "@/components/Rail";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { loadCourse } from "@/lib/course";
@@ -12,9 +12,15 @@ const sans = Heebo({
   variable: "--font-sans",
   display: "swap",
 });
-const mono = Source_Code_Pro({
+const plex = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex",
+  display: "swap",
+});
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   variable: "--font-mono",
   display: "swap",
 });
@@ -33,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const course = loadCourse();
   return (
-    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${mono.variable}`}>
+    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${plex.variable} ${mono.variable}`}>
       <body>
         <ReadingProgress />
         <a className="skip" href="#content">Skip to content</a>
