@@ -7,11 +7,11 @@ sources:
   - "materials/sessions/SPL_PS2 (1).pptx"
 ---
 
-This chapter is how C++ names and follows addresses in memory.
+This chapter shows how C++ stores memory addresses in variables and follows them to reach objects.
 
-- **Pointers and references** — storing an address, and aliasing an object.
-- **Const and lifetime** — what a pointer may change, and what it may still point at.
-- **Common mistakes** — null, dangling addresses, and what the machine does when you get it wrong.
+- **Pointers and references:** a pointer stores an address, and a reference is a second name for an existing object.
+- **`const` and lifetime:** what a pointer is allowed to change, and how long the object it points at stays alive.
+- **Common mistakes:** null pointers, dangling pointers, and what actually happens when you use them.
 
 ## Basic syntax
 
@@ -19,8 +19,8 @@ A **pointer** (מצביע) is a variable that stores the address of another obje
 
 :::definition id=def-pointer title="A pointer and its operators" source="materials/lectures/Chapter 2 - Pointers.pptx"
 
-- **`&`**, the address-of operator, yields the address of its operand.
-- **`*`**, dereference, accesses the object at the address the pointer holds.
+- **`&` (address-of):** `&x` gives the address of `x`.
+- **`*` (dereference):** `*p` is the object stored at the address that `p` holds, so you can read it or write it.
 
 ```cpp
 int x = 10;
@@ -31,8 +31,8 @@ int* p = &x;   // p holds the address of x
 
 :::
 
-- **`nullptr`** is a null pointer. It holds no address of a live object.
-- **Dereference** of a null pointer causes a segmentation fault.
+- **`nullptr`** is the null pointer value. A pointer set to `nullptr` points at no object.
+- **Dereferencing a null pointer** is undefined behavior. In practice the program usually crashes with a segmentation fault.
 
 ![A short in two bytes, and a pointer cell that stores the address of the short](../../web/public/figures/pointer-bytes.svg)
 
@@ -47,17 +47,17 @@ const int* const p3 = &x;  // Const pointer to const int: cannot change *p3 or p
 
 ```
 
-The position of `const` relative to `*` selects what is constant.
+Whether `const` appears before or after the `*` decides what is constant. A simple way to read it: `const` applies to whatever is just to its left, or to the type on its right if nothing is to its left.
 
-- **`const int*`** is a pointer to a const `int`. Dereference may read the `int`, and the pointer may be reseated.
-- **`int* const`** is a const pointer to an `int`. Dereference may write the `int`, and the pointer stays bound to the same address.
-- **`const int* const`** fixes both the pointer and the `int`.
+- **`const int*`** is a pointer to a constant `int`. You can read the `int` through the pointer but not write it, and you can point the pointer somewhere else.
+- **`int* const`** is a constant pointer to an `int`. You can write the `int` through it, but the pointer always holds the same address.
+- **`const int* const`** makes both constant: you can neither write the `int` through it nor move the pointer.
 
 ### Pointer arithmetic
 
-Advancing a pointer with `p++` adds `sizeof(T)` to the stored address.
+Advancing a pointer with `p++` moves it to the next element, not the next byte.
 
-- **Step** is the size of the type the pointer addresses, in bytes.
+- **The size of one step** is `sizeof(T)` bytes, where `T` is the type the pointer points at. For an `int*`, that is usually 4 bytes.
 
 ```cpp
 int arr[5] = {10, 20, 30, 40, 50};
@@ -70,10 +70,9 @@ p++;            // Points to arr[1] (4 bytes ahead if sizeof(int) == 4)
 
 The array `arr` in that example lives on the stack (מחסנית).
 
-- **Five integers** occupy the current frame, and they end when the frame is popped.
-- **`new int[n]`** puts an array on the heap (ערימה). It remains allocated until `delete[]` releases it.
-- **`delete`** releases one object.
-- **`delete[]`** releases an array.
+- **A stack array:** its five integers sit in the current function's frame, and they disappear when the function returns.
+- **A heap array:** `new int[n]` puts an array on the heap (ערימה), where it stays until `delete[]` releases it.
+- **`delete` versus `delete[]`:** use `delete` for one object made with `new`, and `delete[]` for an array made with `new[]`. Mixing them up is undefined behavior.
 
 :::problem id=worked-pointer-step title="One step of a pointer" source="materials/lectures/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 `sizeof(int)` is 4, and `x` is at address 16. Which address does `px + 1` designate?
@@ -85,9 +84,9 @@ int* next = px + 1;
 ```
 
 :::solution
-- **`px + 1`** designates address 20.
-- **Step** equals `sizeof(int)`, four bytes.
-- **`*(px + 1)`** loads the `int` that begins at address 20. That `int` is a different object from `x`.
+- **The answer:** `px + 1` designates address 20.
+- **Why:** one step of an `int*` is `sizeof(int)`, which is four bytes, and 16 + 4 = 20.
+- **A warning:** `*(px + 1)` would read whatever lies at address 20. That is not `x`, and since `x` is not part of an array, reading it is undefined behavior.
 :::
 :::
 
@@ -102,10 +101,10 @@ int** ppi = &pi;
 
 :::solution
 - **`i`** is 2.
-- **`*pi`** loads the `int` at the address stored in `pi`, which is `i`, so the value is 2.
-- **`*ppi`** loads the pointer stored in `ppi`, which is `pi`, so it yields the address of `i`.
-- **`**ppi`** loads that address as an `int`, so the value is 2.
-- **`&i`** produces the same address that `pi` holds and the same address that `*ppi` yields.
+- **`*pi`** follows the address in `pi`, which is the address of `i`, so its value is 2.
+- **`*ppi`** follows the address in `ppi`, which leads to `pi`. Its value is therefore the value of `pi`, which is the address of `i`.
+- **`**ppi`** follows two addresses, from `ppi` to `pi` and from `pi` to `i`, so its value is 2.
+- **`&i`** is the same address that `pi` holds and that `*ppi` yields.
 
 ```text
 i    = 2
@@ -131,10 +130,10 @@ const short* ps1 = &s1;
 - [x] `*ps1 = 3;`
 - [ ] `ps1 = &s2;`
 
-- **`const`** stands to the left of `*`, so `ps1` is a pointer to a const `short`.
-- **Dereference** may read that `short`.
-- **`*ps1 = 3`** writes it, and that line fails to compile.
-- **`ps1 = &s2`** reseats the pointer, which this declaration allows.
+- **What `ps1` is:** `const` is to the left of `*`, so `ps1` is a pointer to a constant `short`.
+- **Reading is fine:** `std::cout << *ps1;` only reads the `short`.
+- **Writing fails:** `*ps1 = 3` tries to write the `short` through the pointer, so it does not compile.
+- **Moving the pointer is fine:** `ps1 = &s2` changes where the pointer points, which this declaration allows.
 :::
 
 ## References
@@ -148,13 +147,16 @@ ref = 20;       // writes x, so x is now 20
 
 ```
 
-- **Initialization** binds the name once, when the reference is created.
-- **Reseating** is not possible. `ref` names `x` for the rest of its lifetime.
-- **No null.** A reference always names an object. A pointer may be `nullptr`.
+- **A reference must be initialized:** it is bound to its object once, when it is created.
+- **A reference cannot be reseated:** `ref` names `x` for its whole lifetime. Assigning to `ref` writes `x`; it does not rebind `ref`.
+- **A reference is never null:** it always names an object, whereas a pointer may be `nullptr`.
 
 ### Lvalues and rvalues
 
-Every expression is an lvalue or an rvalue. An lvalue names an object that is still there after the line. An rvalue is a temporary value that the line uses and then drops.
+Every expression is either an lvalue or an rvalue.
+
+- **An lvalue** names an object that still exists after the current line, so it has an address you can take.
+- **An rvalue** is a temporary value that the line uses and then throws away.
 
 ```cpp
 int x = 10;
@@ -163,11 +165,11 @@ int y = x + 1;
 ```
 
 - **`x`** is an lvalue. It is a variable, it has an address, and it is still there on the next line.
-- **`x + 1`** is an rvalue. The sum is computed for this line and is not stored under a name.
-- **`3` and `3 + 4`** are rvalues. A literal and an arithmetic result have no address you can keep.
-- **Address** can be taken of an lvalue: `&x` is legal. `&(x + 1)` is an error, because a temporary has no lasting address.
+- **`x + 1`** is an rvalue. The sum is computed for this line only and is never stored under a name.
+- **`3` and `3 + 4`** are rvalues. A literal or an arithmetic result has no address you can keep.
+- **The address test:** you can take the address of an lvalue, so `&x` is legal. `&(x + 1)` is an error, because a temporary has no lasting address.
 
-A variable declared `const` is still an lvalue. `const` forbids assignment. It does not turn the variable into a temporary.
+A variable declared `const` is still an lvalue. `const` only forbids assigning to it; it does not turn the variable into a temporary.
 
 ```cpp
 const int n = 3;
@@ -176,7 +178,7 @@ n = 4;                // error: n is const, so assignment is forbidden
 
 ```
 
-A function call has the category of what it returns.
+A function call is an lvalue or an rvalue depending on its return type. A function that returns a plain value gives an rvalue, and a function that returns a reference gives an lvalue.
 
 ```cpp
 int next(int v) { return v + 1; }  // returns a temporary int
@@ -189,7 +191,7 @@ next(x) = 5;       // error: cannot assign to the temporary
 
 ```
 
-What each kind of reference may be initialized from:
+The table shows what each kind of reference can be bound to.
 
 | Expression | Kind | `int&` | `const int&` |
 | --- | --- | --- | --- |
@@ -216,14 +218,14 @@ const int& i = next(x); // ok: the returned temporary lives as long as i does
 
 ```
 
-- **Plain reference** (`T&`) is initialized only from a non-const lvalue.
-- **Reference to const** (`const T&`) is initialized from an lvalue or from an rvalue. Binding an rvalue keeps that temporary alive until the reference itself ends.
-- **Parameter** `void show(const int& v)` may be called as `show(x)`, `show(n)`, `show(x + 1)`, or `show(3)`. The temporary for `show(x + 1)` lasts for that call.
-- **Parameter** `void edit(int& v)` may be called only as `edit(x)` or `edit(slot(x))`. `edit(x + 1)` and `edit(3)` are errors.
+- **A plain reference** (`T&`) can bind only to a non-const lvalue, because it might be used to write the object.
+- **A reference to const** (`const T&`) can bind to anything: an lvalue, a const lvalue, or an rvalue. When it binds to a temporary, the temporary is kept alive for as long as the reference exists.
+- **In practice, for parameters:** `void show(const int& v)` accepts `show(x)`, `show(n)`, `show(x + 1)`, and `show(3)`. The temporary in `show(x + 1)` lasts until the call ends.
+- **By contrast:** `void edit(int& v)` accepts only real, writable objects such as `edit(x)` or `edit(slot(x))`. `edit(x + 1)` and `edit(3)` do not compile.
 
 ### Passing a parameter
 
-The declaration of the parameter says which form is in use. The call site then has to match that form.
+The parameter's declaration decides how the argument is passed, and the call has to match it. The example shows all four forms side by side.
 
 ```cpp
 void byValue(int n) {
@@ -257,18 +259,19 @@ byRef(3);                  // error: 3 is an rvalue
 
 ```
 
-- **Pass by value** copies the argument into the called function's frame. `byValue(x)` leaves `x` unchanged, because `n = n + 1` writes that copy.
-- **Pass by pointer** copies an address. `byPointer(&x)` lets `*p` read or write `x`. `nullptr` is a legal argument, so the function has a null case to consider.
-- **Pass by reference** initializes a reference from the caller's object. `byRef(x)` writes `x` itself. A reference has no null value, and it cannot be initialized from `x + 1` or from `3`.
-- **`const` reference** reads an object in place, including a temporary. `byConstRef(x)`, `byConstRef(x + 1)`, and `byConstRef(3)` all compile. A write through `n` is rejected at compile time. Use it when the function only reads and a copy would be expensive. Pass by value when the object is cheap to copy, as with an `int`.
+- **Pass by value:** the argument is copied into the called function's frame. `byValue(x)` leaves `x` unchanged, because `n = n + 1` changes only the copy.
+- **Pass by pointer:** the address is copied, so `byPointer(&x)` can read and write `x` through `*p`. Because `nullptr` is a legal argument, the function must handle the null case.
+- **Pass by reference:** the parameter becomes another name for the caller's object, so `byRef(x)` changes `x` itself. It cannot be null, and it cannot be bound to `x + 1` or to `3`.
+- **Pass by `const` reference:** the function reads the caller's object in place, without copying it, and the compiler rejects any write. It also accepts temporaries, so `byConstRef(x + 1)` and `byConstRef(3)` compile.
+- **Which to choose:** use a `const` reference when the function only reads a large object. For a small type such as `int`, passing by value is simpler and just as fast.
 
 ### Returning a value
 
 A function may return by value, by pointer, or by reference.
 
-- **Return by value** copies the result to the caller. The function's local can be destroyed; the caller holds its own copy.
-- **Returned pointer or reference** has to name an object that is still alive after the called function returns.
-- **Local** in that function's frame is destroyed when the frame is popped. Returning its address hands the caller a pointer or a reference to storage the return has already released.
+- **Returning by value** gives the caller its own copy, so it does not matter that the function's local variables are destroyed.
+- **Returning a pointer or a reference** is safe only if the object it names is still alive after the function returns.
+- **Never return the address of a local:** a local variable is destroyed when its function returns, so the caller would get a pointer or reference to an object that no longer exists.
 
 ```cpp
 int& bad() {
@@ -289,16 +292,16 @@ A procedure only reads a large object. What should the C++ parameter be?
 - [x] A `const` reference, or pass by value when the object is cheap to copy
 - [ ] A null pointer, because no object is required
 
-- **Pass by value** copies the argument.
-- **Plain reference** is pass by reference without `const`, so the procedure may modify the caller's object.
-- **`const` reference** reads that object in place.
-- **Null pointer** passes no object.
+- **A `const` reference** reads the object in place, without the cost of a copy, and promises not to change it.
+- **Passing by value** is also fine when the object is cheap to copy.
+- **A plain reference** would allow the procedure to modify the caller's object, which a read-only procedure should not be able to do.
+- **A null pointer** passes no object at all, so the procedure would have nothing to read.
 :::
 
 ## Practice
 
 :::problem id=ps2-pointer-dangers title="Four pointer faults" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-Four fragments use a pointer.
+Each of these four fragments uses a pointer.
 
 ```cpp
 int* p = nullptr;
@@ -326,10 +329,11 @@ Which of these are faults?
 - [x] `*r = 5` after `delete r` is a use after `delete`.
 - [x] `*a = 3` after `delete b` uses an address that `delete` already released.
 
-- **Null dereference** is the first fault. Address 0 is the null sentinel, and the load or the store is a segmentation fault.
-- **Uninitialized pointer** is the second fault. `int* q;` leaves an indeterminate value, so `*q = 3` is undefined behavior. Those bits were never set to an object this program allocated.
-- **Use after `delete`** is the third fault.
-- **Dangling second pointer** is the fourth fault. `a` and `b` held one address. `delete b` releases the `int`. `*a` uses that same address after the release.
+- **First fault, null dereference:** `p` points at no object, so writing through it is undefined behavior, and usually a segmentation fault.
+- **Second fault, uninitialized pointer:** `int* q;` holds garbage, an address that was never set to any object, so `*q = 3` is undefined behavior.
+- **Third fault, use after `delete`:** after `delete r`, the `int` is gone, but `r` still holds its old address.
+- **Fourth fault, dangling copy:** `a` and `b` hold the same address. `delete b` releases that `int`, so `*a` writes to memory that was already released.
+- **Not a fault:** `int* r = new int` stores a valid address of a new `int`.
 :::
 
 :::check id=ps2-pointer-dangers-q2
@@ -339,8 +343,8 @@ What is true of `*r = 5` after `delete r`?
 - [x] The line still compiles. `r` holds the old address, and that address no longer designates an object.
 - [ ] `delete r` clears `r`, so the assignment stores into a new `int`.
 
-- **`r`** still holds the old address, and that address no longer designates an object.
-- **Assignment** still compiles.
+- **It compiles:** the compiler does not track whether memory was released, so it accepts the line.
+- **It is still wrong:** `delete` does not change `r`, which still holds the old address, but no object lives there anymore. Writing to it is undefined behavior.
 :::
 
 :::check id=ps2-pointer-dangers-q3
@@ -351,14 +355,14 @@ Which repair matches the safe pattern after `delete b`?
 - [ ] Leave both pointers unchanged. `delete` already stored null in every copy.
 - [x] Apply `delete p; p = nullptr;` to every copy, while the program still knows about those copies.
 
-- **`a` and `b`** held one address. `delete b` releases the `int`.
-- **Safe pattern** is `delete p; p = nullptr;`, applied to every copy.
-- **That assignment** is possible only while the program still knows about those copies.
+- **The situation:** `a` and `b` held the same address, and `delete b` released the one `int` they shared.
+- **The safe pattern:** after `delete p;`, write `p = nullptr;`, and do the same for every other pointer that held that address.
+- **The catch:** you can only do that while the program still knows where all those copies are, which is why shared raw pointers are risky.
 :::
 :::
 
 :::problem id=ps2-delete-2d title="Releasing a two-dimensional array" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
-A two-dimensional array is allocated as an array of pointers and one array of `int` per row.
+This two-dimensional array is built from an array of row pointers, plus one separate `int` array for each row.
 
 ```cpp
 int** arry = new int*[rowCount];
@@ -395,16 +399,16 @@ delete arry;
 - [x] B. `delete[]` each row, then `delete[]` the pointer array, then set `arry` to null.
 - [ ] C. `delete` matches both `new int[colCount]` and `new int*[rowCount]`.
 
-- **Each `arry[i]`** came from `new int[colCount]`, an array on the heap, so `delete[]` matches it.
-- **Pointer array** came from `new int*[rowCount]`, so it too is released with `delete[]`.
-- **`delete`** releases one object.
-- **`arry = nullptr`** matches the exercise's habit after a delete.
+- **The rows go first:** each `arry[i]` came from `new int[colCount]`, so each must be released with `delete[]`, while their addresses are still readable.
+- **The pointer array goes last:** it came from `new int*[rowCount]`, so it is also released with `delete[]`.
+- **Why A and C are wrong:** A releases the pointer array first and then reads the row addresses from released memory. C uses `delete`, which is only for single objects.
+- **`arry = nullptr`** is the safe habit after a delete, so `arry` cannot be used by mistake later.
 :::
 
 :::check id=ps2-delete-2d-q2
 Each `arry[i]` is an array on the {{=heap|stack|code region}} and is released with {{=delete[]|delete|no delete}}. The array of pointers is released with {{=delete[]|delete|no delete}}. `delete` releases {{=one object|an array|the stack frame}}.
 
-Each `arry[i]` came from `new int[colCount]`, an array on the heap, so `delete[]` matches it. The pointer array came from `new int*[rowCount]`, so it too is released with `delete[]`. `delete` releases one object.
+Each `arry[i]` came from `new int[colCount]`, which is an array on the heap, so it is released with `delete[]`. The pointer array came from `new int*[rowCount]`, so it is also released with `delete[]`. Plain `delete` is only for a single object.
 :::
 
 :::check id=ps2-delete-2d-q3
@@ -414,9 +418,10 @@ What follows from releasing the pointer array first?
 - [ ] `delete[] arry` releases every row as well as the pointer array.
 - [x] The only copies of the row addresses are dropped, and every row is a memory leak.
 
-Releasing the pointer array first drops the only copies of the row addresses, and every row is a memory leak.
+The pointer array held the only copies of the row addresses. Once it is released, those addresses can no longer be read safely, so the rows can never be released, and every row becomes a memory leak.
 :::
 :::
 
 
-Pointers are how [Classes and objects](topic:classes-and-objects) name a `Student` on the heap, and how [The rule of three](topic:rule-of-three) decides whether a copy shares a buffer or allocates a new one.
+- **Next:** [Classes and objects](topic:classes-and-objects) uses pointers to reach a `Student` on the heap.
+- **Later:** [The rule of three](topic:rule-of-three) uses them to decide whether a copy of an object shares a buffer with the original or allocates its own.

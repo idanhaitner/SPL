@@ -5,34 +5,34 @@ sources:
   - "materials/lectures/Chapter 12 - Serialization.pptx"
 ---
 
-This chapter is how a program records an object as bytes so a later run, or another process, can rebuild it.
+This chapter shows how a program turns an object into bytes, so that a later run, or a different process, can rebuild the same object.
 
-- **What is stored** — type, field shape, and field values.
-- **Java wiring** — `Serializable`, streams, and rebuilding an object.
-- **From the reactor** — moving from an image-file server to an object server.
+- **What is stored:** the bytes record the object's type, the names and types of its fields, and the values of those fields.
+- **How Java does it:** a class opts in with `Serializable`, and two streams write and read the object.
+- **Where it connects:** the reactor's file server becomes a server that sends whole objects.
 
 ## Writing and reading an object
 
-Serialization (סיריאליזציה) records an object as bytes so a later run, or another process, can rebuild it.
+Serialization (סיריאליזציה) records an object as a sequence of bytes, so that a later run, or another process, can rebuild it.
 
-- **Image server** in the Reactor chapter took a file name in and sent the file's bytes out.
-- **Object server** sends objects instead.
-- **Byte sequence** records the type, the shape of the fields, and the field values.
+- **The image server** in the Reactor chapter received a file name and sent back the file's bytes.
+- **An object server** sends whole objects instead of raw files.
+- **The byte sequence** it sends records the object's type, the shape of its fields, and the field values.
 
 :::definition id=def-serialization title="Serialization" source="materials/lectures/Chapter 12 - Serialization.pptx"
-Serialization is a representation of an object as a sequence of bytes.
+Serialization is the representation of an object as a sequence of bytes.
 
-- **Type**, the shape of the fields, and the field values are what the sequence records.
-- **Deserialization** builds an object back from that sequence.
-- **Primitive fields** and object fields are both preserved.
-- **Travel** can be a file or a socket, between machines and between JVMs.
-- **Identity** of the original heap object is not in the sequence. Reading produces a new object with the same field values.
+- **What the bytes record:** the object's type, the shape of its fields, and the values of those fields.
+- **Deserialization:** this is the reverse step, which builds an object back from the bytes.
+- **Which fields survive:** both primitive fields and fields that refer to other objects are preserved.
+- **Where the bytes go:** they can be written to a file or sent through a socket, so they can move between machines and between JVMs.
+- **What is not preserved:** the identity of the original heap object. Reading creates a new object with the same field values.
 :::
 
-`Serializable` is a marker interface with no methods.
+`Serializable` is a marker interface, which means it declares no methods at all.
 
-- **Flag** is what the JVM checks.
-- **Refusal:** `ObjectOutputStream` and `ObjectInputStream` refuse an object whose class does not implement it.
+- **Its only job:** it is a flag that says the class agrees to be serialized.
+- **What happens without it:** `ObjectOutputStream` refuses to write an object whose class does not implement `Serializable`, and throws `NotSerializableException`.
 
 ```java
 public final class Pet implements Serializable {
@@ -55,22 +55,22 @@ try (var in = new ObjectInputStream(Files.newInputStream(path))) {
 }
 ```
 
-Each field is written in its own form.
+Each field is written in the form that suits its type.
 
-- **Enum** constant is written by its name.
-- **`String`** is written by its characters.
-- **`int`** is written by its bits.
-- **`readObject`** allocates a new `Pet`.
-- **`copy == pet`** is false. `copy.name.equals(pet.name)` is true.
+- **The enum field:** an enum constant is written by its name, such as `DOG`.
+- **The `String` field:** a `String` is written as its characters.
+- **The `int` field:** an `int` is written as its raw bits.
+- **Reading back:** `readObject` allocates a brand-new `Pet` and fills its fields from the bytes.
+- **Same values, different object:** `copy == pet` is false, but `copy.name.equals(pet.name)` is true.
 
 ![writeObject saves name and age and skips the hash, which is transient. readObject builds another Pet whose hash starts as null](../../web/public/figures/serialize-object.svg)
 
 ### Omitted fields
 
-Some fields never enter the stream.
+Some fields are never written to the stream.
 
-- **Static** fields belong to the class, and every instance shares them, so the stream omits them.
-- **`transient`** fields are omitted as well. A cached hash is the usual case.
+- **Static fields:** they belong to the class rather than to any one object, so the stream leaves them out.
+- **`transient` fields:** the keyword `transient` tells the stream to skip the field. A cached hash code is the usual example.
 
 ```java
 private transient Integer hash;
@@ -80,25 +80,24 @@ private transient Integer hash;
 }
 ```
 
-After deserialization, `hash` is null, and the next `hashCode` computes it again.
+After deserialization, `hash` is `null`, so the next call to `hashCode` computes it again.
 
-- **`transient`** marks a cache, a thread, or a socket: something with no meaning in another JVM.
-- **Missing `transient`** on a `Thread` or an `OutputStream` makes `writeObject` throw, because those objects are not `Serializable`.
+- **When to use `transient`:** mark a field `transient` when its value has no meaning in another JVM, such as a cache, a thread, or a socket.
+- **What happens if you forget:** a field that holds a `Thread` or an `OutputStream` makes `writeObject` throw, because those classes are not `Serializable`.
 
 ### serialVersionUID
 
-Changing a class that is already `Serializable` is a compatibility problem: you wrote a file, changed the class, then tried to read the file.
+Changing a class that is already `Serializable` creates a compatibility problem: you wrote a file, then changed the class, and now you try to read the old file.
 
-- **`serialVersionUID`** is the version number you assign so the JVM can tell these classes apart.
-- **Old stream** stays readable by the new class only when the change is on the compatible list.
-- **Compatible changes** keep the old stream readable.
-- **Adding a field** brings it back as `null`, `0`, or `false`.
-- **Also compatible** are a change of `public` / `protected` / `private`, a new `static` or `transient` field, and a new field order.
-- **Incompatible** changes include removing a field that is not `transient`, changing a field's type, and changing the class hierarchy.
-- **Mismatch** of `serialVersionUID` fails the read even when the fields would otherwise have matched.
+- **`serialVersionUID`:** this is a version number you assign to the class, so the JVM can tell whether the stream and the class match.
+- **The basic rule:** the new class can read an old stream only when every change since then is on the compatible list.
+- **Adding a field is compatible:** the new field is filled with its default value, which is `null`, `0`, or `false`.
+- **Other compatible changes:** changing a field between `public`, `protected`, and `private`, adding a `static` or `transient` field, and reordering fields.
+- **Incompatible changes:** removing a field that is not `transient`, changing a field's type, and changing the class hierarchy.
+- **A mismatched `serialVersionUID`:** the read fails, even if the fields themselves would have matched.
 
 :::problem id=worked-transient-hash title="A transient field" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
-`pet` was serialized after `hashCode` had already filled the cache. What does `hash` contain in the object that `readObject` returns, and what does `name` contain?
+`pet` was serialized after `hashCode` had already filled the cache. In the object that `readObject` returns, what does `hash` contain, and what does `name` contain?
 
 ```java
 public final class Pet implements Serializable {
@@ -108,10 +107,10 @@ public final class Pet implements Serializable {
 ```
 
 :::solution
-- **`name`** is `"A"`, because an ordinary object field is part of the stream.
-- **`hash`** is null, because `transient` fields are not written and the new object starts from the default.
-- **First `hashCode`** on the copy computes the cache again.
-- **Identity** differs: the two `Pet` objects are different objects.
+- **`name`:** it is `"A"`, because an ordinary field is part of the stream.
+- **`hash`:** it is `null`, because a `transient` field is not written, so the new object gets the default value.
+- **The first `hashCode` call on the copy:** it finds `null` and computes the cache again.
+- **Identity:** the copy and the original are two different objects.
 :::
 :::
 
@@ -122,23 +121,23 @@ Why does `class Pet` without `implements Serializable` fail in `writeObject`?
 - [x] Because `Serializable` is the marker interface the stream checks, and it declares no methods
 - [ ] Because `final` classes cannot be serialized
 
-`Serializable` is a marker interface. It has no methods, and the streams refuse an object that does not implement it.
+`Serializable` is a marker interface. It has no methods, and the stream refuses any object whose class does not implement it.
 :::
 
 :::trap
-A field that points at an object that cannot be serialized makes the whole `writeObject` fail, even when you did not mean to send that field.
+If a field refers to an object that cannot be serialized, the whole `writeObject` call fails, even if you never meant to send that field.
 
-- **`transient`** keeps that field out of the stream. Restore it after the read.
-- **Graph** of a serializable object should not hold a non-serializable object.
+- **The fix:** mark that field `transient` so it stays out of the stream, and set it again yourself after the read.
+- **The rule of thumb:** everything reachable from a serializable object should itself be serializable, or be marked `transient`.
 :::
 
 :::trap
-- **Computed `serialVersionUID`** changes when an edit looks harmless, and old files stop loading.
-- **Explicit identifier** belongs on a class that is part of a protocol.
+- **The risk of leaving it out:** if you do not declare `serialVersionUID`, Java computes one from the class. Even a harmless-looking edit changes that number, and old files stop loading.
+- **The fix:** declare an explicit `serialVersionUID` on every class that is part of a file format or a protocol.
 :::
 
 A Reactor protocol can carry these bytes inside a `MessageEncoderDecoder<Serializable>`.
 
-- **Encoder** is an `ObjectOutputStream` on the way out and an `ObjectInputStream` on the way in, framed so the decoder knows when a chunk of the stream has ended.
-- **[Persistence](topic:persistence)** is the other way to keep an object.
-- **Serialized files** are a poor database. A search for one field has to read every object, an update rewrites the whole graph, and transactions are left to the application.
+- **The encoder and decoder:** the encoder writes with an `ObjectOutputStream`, and the decoder reads with an `ObjectInputStream`. Each message is framed, so the decoder knows where one object ends and the next begins.
+- **The alternative:** [Persistence](topic:persistence) shows the other way to keep objects, in a database.
+- **Why files of objects are a poor database:** searching on one field means reading every object, an update rewrites the whole object graph, and transactions are left to the application.

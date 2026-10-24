@@ -14,45 +14,45 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
-This chapter is how C++ copies and moves owned resources without sharing one buffer by accident.
+This chapter shows how C++ copies and moves objects that own resources, without two objects ever sharing one buffer by accident.
 
-- **Value categories** — what may be moved from, and what must stay put.
-- **Rule of five** — the special members that make copying and moving correct.
-- **Rule of zero** — when the compiler's defaults are already enough.
+- **Value categories:** which objects are safe to move from, and which must be left alone.
+- **The rule of five:** the five special members that make copying and moving correct.
+- **The rule of zero:** when you should write none of them, because the compiler's versions are already correct.
 
 ## lvalues and rvalues
 
-A copy gives two objects the same data, and it is also the expensive way to return a large object from a function.
+Copying gives two objects the same data, but it is expensive, for example when a function returns a large object.
 
-- **Move** (העברה), added in C++11, lets a temporary hand its resource to the new owner. The bytes stay where they are.
-- **Rule of five** (חוק החמישה) is the set of special members that make copying and moving correct.
-- **Rule of zero** (חוק האפס) leaves every one of those members to the compiler, because each data member already manages its own resource.
+- **A move** (העברה), added in C++11, lets a temporary object hand its resource to a new owner. Only the pointer changes hands; the bytes themselves are not copied.
+- **The rule of five** (חוק החמישה) names the five special members that make both copying and moving correct.
+- **The rule of zero** (חוק האפס) says to write none of them when every data member already manages its own resource.
 
 :::definition id=def-value-category title="lvalue and rvalue" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 An lvalue names an object that has an address.
 
-- **Address** can be formed, and you can assign to the object and bind a reference to it.
-- **Name** records an older rule: an lvalue may stand on the left of an assignment.
-- **Rvalue** is a value that may be consumed. It stands on the right of an assignment.
-- **Temporary** is an rvalue: the result of a computation, or an object returned by value from a function.
-- **Lifetime** of that temporary ends with the full expression that created it, unless a reference extends it.
-- **`const T&`** binds to an lvalue and also to an rvalue. Binding a temporary extends that temporary's lifetime to the end of the reference's scope.
-- **Const** means code cannot modify the object through that reference.
+- **What you can do with an lvalue:** take its address, assign to it (unless it is `const`), and bind a reference to it.
+- **Where the name comes from:** historically, an lvalue was something that could stand on the left side of an assignment.
+- **An rvalue** is a value that is about to be used up. It can stand only on the right side of an assignment.
+- **A temporary** is an rvalue, such as the result of a computation, or an object returned by value from a function.
+- **A temporary's lifetime** ends at the end of the full expression that created it, unless a reference extends it.
+- **`const T&`** can bind to an lvalue or to an rvalue. Binding it to a temporary keeps that temporary alive for as long as the reference exists.
+- **The `const`** means that code cannot modify the object through that reference.
 :::
 
-`std::move(x)` is a cast.
+`std::move(x)` does not move anything by itself. It is only a cast.
 
-- **Cast** tells the compiler to treat the lvalue `x` as an rvalue, so overload resolution can select the function that takes an rvalue reference and steals the resource.
-- **Transfer** is not done by the cast itself.
-- **After the move**, `x` is in a valid but unspecified state.
-- **Moved-from `Image`** holds a null pointer, and destroying it is safe.
+- **What the cast does:** it tells the compiler to treat the lvalue `x` as an rvalue. The compiler can then choose the overload that takes an rvalue reference, which is the one that steals the resource.
+- **Who actually moves:** the move constructor or move-assignment operator that the compiler chose.
+- **After the move:** `x` is in a valid but unspecified state. You may destroy it or assign it a new value, but you should not rely on its contents.
+- **For `Image`:** a moved-from `Image` holds a null pointer, so destroying it is safe.
 
 An rvalue reference is written `&&`, as in `Image&&`.
 
-- **Binding** is only to an rvalue.
-- **Parameter type** of a move constructor and of a move-assignment operator is that reference.
+- **What it binds to:** an rvalue reference can bind only to an rvalue, such as a temporary or the result of `std::move`.
+- **Where it is used:** it is the parameter type of the move constructor and of the move-assignment operator.
 
-The two overloads below are how a function chooses between reading an image and taking its buffer:
+With these two overloads, the compiler picks the right version automatically: the first one only reads the image, and the second may take its buffer.
 
 ```cpp
 void convert(const Image& img);   // binds a named image or a temporary, does not steal
@@ -65,15 +65,15 @@ void convert(Image&& img);        // binds only a temporary, may steal
 :::definition id=def-rule-of-five title="The rule of five" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 The rule of five extends the rule of three (חוק השלושה).
 
-- **Any of the five** means write all five: the destructor (הורס), the copy constructor (בנאי העתקה), the copy assignment operator (אופרטור השמה), the move constructor, and the move-assignment operator.
-- **Ownership** stays correct through the destructor, the copy constructor, and the copy assignment operator. They are how the class avoids a double free and a leak.
-- **Move** is what the move constructor and the move-assignment operator carry out. A temporary transfers its resource, and the only thing copied is the pointer.
+- **The rule:** if you write any one of the five, write all five. They are the destructor (הורס), the copy constructor (בנאי העתקה), the copy assignment operator (אופרטור השמה), the move constructor, and the move-assignment operator.
+- **The first three** keep ownership correct, so the class never frees a buffer twice and never leaks one.
+- **The last two** perform moves: a temporary hands over its resource, and the only thing copied is the pointer.
 :::
 
 The move constructor copies the pointer and leaves the bytes where they are.
 
-- **Source** pointer is then set to `nullptr`, and the dimensions to 0.
-- **Source destructor** later runs `delete[]` on a null pointer. That call is safe, and it releases nothing.
+- **Resetting the source:** it then sets the source's pointer to `nullptr` and its dimensions to 0, so the source no longer owns the buffer.
+- **Why that matters:** when the source is destroyed later, its destructor runs `delete[]` on a null pointer, which is safe and releases nothing.
 
 ```cpp
 Image::Image(Image&& other)
@@ -85,7 +85,7 @@ Image::Image(Image&& other)
 
 ```
 
-The move-assignment operator already holds a buffer, and it has to give that buffer up before it takes the new one. `swap` does the exchange:
+The move-assignment operator is different, because `*this` already holds a buffer that must be released. A `swap` handles both jobs at once.
 
 ```cpp
 Image& Image::operator=(Image&& other) {
@@ -95,38 +95,37 @@ Image& Image::operator=(Image&& other) {
 
 ```
 
-When the operator returns, `other` holds the resource that used to belong to `*this`, and the destructor of `other` releases it.
+After the swap, `other` holds the buffer that used to belong to `*this`. Since `other` is a temporary, its destructor soon releases that old buffer.
 
-Two further mistakes belong with this material.
+Two common mistakes belong with this material.
 
-- **`Image avi = new Image(...)`** initializes an `Image` from an `Image*`, which is the type `new` returns.
-- **Automatic `Image`** is created by calling a constructor, as in `Image avi(...)`.
-- **After `std::move(avi)`**, `avi` is in a valid but unspecified state, and any later use reads that moved-from object.
+- **Mixing up `new` and a stack object:** `Image avi = new Image(...)` does not compile, because `new` returns an `Image*`, not an `Image`. Write `Image avi(...)` for an object on the stack, or `Image* avi = new Image(...)` for one on the heap.
+- **Using an object after moving from it:** after `std::move(avi)`, `avi` is in a valid but unspecified state, so any later use of its contents is a bug.
 
 ### The rule of zero
 
 :::definition id=def-raii title="RAII and the rule of zero" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 RAII means Resource Acquisition Is Initialization.
 
-- **Lifetime** of a resource is the object's lifetime, so the destructor is the release.
-- **Rule of zero:** give the resource to a member that already manages it, such as `std::vector` or a smart pointer (מצביע חכם).
-- **Compiler** then generates the right five operations, and the class leaves all five to the compiler.
+- **The idea of RAII:** a resource is acquired when an object is created and released in that object's destructor, so the resource lives exactly as long as the object.
+- **The rule of zero:** hand each resource to a member that already manages it, such as a `std::vector` or a smart pointer (מצביע חכם).
+- **The payoff:** the compiler then generates all five operations correctly, and the class does not need to write any of them.
 :::
 
-`std::vector<char>` already owns its buffer.
+For example, `std::vector<char>` already owns its buffer.
 
-- **Deep copy** (העתקה עמוקה) is what the vector makes when it is copied, and it moves when it is moved.
-- **`Image`** that stores `std::vector<char> _bytes` receives those five operations from the compiler.
+- **Copying a vector** makes a deep copy (העתקה עמוקה), and moving a vector moves its buffer.
+- **So an `Image` that stores `std::vector<char> _bytes`** gets five correct operations from the compiler, without writing any of them.
 
-When the class does allocate with `new`, put that pointer in a smart pointer:
+If the class really must allocate with `new`, store the result in a smart pointer instead of a raw pointer.
 
 :::definition id=def-smart-pointers title="unique_ptr and shared_ptr" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 
-- **`std::unique_ptr<T>`** is exclusive ownership. Its copy constructor and copy assignment operator are deleted, and it can be moved. After inlining, it costs the same as a raw pointer.
-- **`std::shared_ptr<T>`** is shared ownership. Copying it increments a reference count. The destructor that brings the count to zero releases the object.
-- **`std::make_unique` and `std::make_shared`** are preferred to a hand-written `unique_ptr<T>(new T(...))`.
-- **Each `make` function** allocates the object and builds the smart pointer as one step, so an exception in a later argument still releases the object.
-- **`make_shared`** places the object and the reference count in a single allocation.
+- **`std::unique_ptr<T>`** means exclusive ownership: exactly one pointer owns the object. It cannot be copied, because its copy operations are deleted, but it can be moved. It is as cheap as a raw pointer.
+- **`std::shared_ptr<T>`** means shared ownership. Each copy increments a reference count, and the object is released when the last owner is destroyed and the count drops to zero.
+- **Prefer `std::make_unique` and `std::make_shared`** to writing `unique_ptr<T>(new T(...))` by hand.
+- **Why:** each `make` function allocates the object and wraps it in a smart pointer in one step, so nothing can leak if an exception is thrown in between.
+- **A bonus of `make_shared`:** it puts the object and its reference count in a single allocation.
 :::
 
 ```cpp
@@ -135,11 +134,12 @@ std::shared_ptr<Filter> filter = std::make_shared<Filter>(args...);
 
 ```
 
-Declaring any constructor suppresses the implicit default constructor.
+Declaring some members stops the compiler from generating others.
 
-- **Copy constructor** declaration also suppresses the implicit move operations.
-- **`= default`** asks the compiler for its version of an operation.
-- **`= delete`** removes the operation.
+- **Any constructor you declare** stops the compiler from generating the default constructor.
+- **Declaring a copy constructor** (or copy assignment, or a destructor) also stops it from generating the move operations, so moves fall back to copies.
+- **`= default`** asks the compiler to generate its own version of an operation anyway.
+- **`= delete`** forbids an operation completely, as in the `NoCopy` class below, which cannot be copied.
 
 ```cpp
 class NoCopy {
@@ -152,13 +152,13 @@ public:
 
 ### Copy elision
 
-Copy elision is an optimization the compiler may apply when a function returns an object by value.
+Copy elision is an optimization that lets the compiler skip the copy when a function returns an object by value.
 
-- **Return slot** is where the returned object is constructed directly, in the caller's frame.
-- **RVO (Return Value Optimization):** the function returns an unnamed temporary, as in `return Image(...);`.
-- **NRVO (Named Return Value Optimization):** the function returns a named local, as in `return pic;`.
+- **How it works:** the compiler builds the returned object directly in the caller's return slot, the place in the caller's frame where the result will live, so nothing needs to be copied.
+- **RVO (Return Value Optimization)** applies when the function returns an unnamed temporary, as in `return Image(...);`.
+- **NRVO (Named Return Value Optimization)** applies when the function returns a named local variable, as in `return pic;`.
 
-This return is the one to avoid:
+This `return` looks like an improvement, but it is a mistake.
 
 ```cpp
 Image myPicture() {
@@ -168,10 +168,10 @@ Image myPicture() {
 
 ```
 
-`std::move(pic)` casts the local to an rvalue.
+`std::move(pic)` casts the local variable to an rvalue.
 
-- **NRVO** needs the plain name `pic`. The cast hides that name, so the return calls the move constructor.
-- **`return pic;`** keeps the name, and NRVO can construct `pic` directly in the caller's slot.
+- **Why it hurts:** NRVO only applies when you return the plain name `pic`. The cast turns it into a different expression, so NRVO is lost and the move constructor runs instead.
+- **What to write:** `return pic;`. The compiler can then build `pic` directly in the caller's return slot, which costs nothing at all.
 
 :::problem id=worked-move-image title="Moving an image" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
 The object `avi` owns a pixel buffer. What do `benny._bytes` and `avi._bytes` hold after the move, and what does `avi`'s destructor `~Image` release?
@@ -183,7 +183,7 @@ Image benny(std::move(avi));
 ```
 
 :::solution
-The move constructor copies the pointer into `benny` and sets `avi._bytes` to `nullptr`:
+The move constructor copies the pointer into `benny` and then sets `avi._bytes` to `nullptr`.
 
 ```cpp
 Image::Image(Image&& other)
@@ -195,9 +195,9 @@ Image::Image(Image&& other)
 
 ```
 
-- **`benny`** now owns the pixels.
-- **`avi`'s destructor** runs `delete[]` on a null pointer, so it releases nothing.
-- **End of the function** destroys both objects, and the buffer is released once.
+- **`benny._bytes`** now holds the address of the pixel buffer, so `benny` owns the pixels.
+- **`avi._bytes`** is `nullptr`, so `avi`'s destructor runs `delete[]` on a null pointer and releases nothing.
+- **At the end of the scope**, both objects are destroyed, and the buffer is released exactly once, by `benny`.
 :::
 :::
 
@@ -208,22 +208,22 @@ What does `std::move` do?
 - [x] Casts an lvalue to an rvalue so overload resolution can select the move overload
 - [ ] Destroys the original object
 
-- **`std::move`** is a cast.
-- **Move constructor** is the function that steals the resource.
+- **`std::move` is only a cast.** It neither allocates, copies, nor destroys anything.
+- **The move constructor** is the function that actually steals the resource.
 :::
 
 :::trap
-An object that was moved from is still in memory, in a valid but unspecified state.
+An object that was moved from still exists, in a valid but unspecified state.
 
-- **`Image`** in that state is empty.
-- **`processImage(avi)`** after `std::move(avi)` runs on that empty image.
+- **For `Image`**, that state is an empty image with a null buffer.
+- **So `processImage(avi)` after `std::move(avi)`** runs on an empty image, which is almost certainly a bug.
 :::
 
 :::trap
-A cycle of `shared_ptr` keeps every reference count above zero.
+A cycle of `shared_ptr`s keeps every reference count above zero forever.
 
-- **Two objects** that each hold a `shared_ptr` to the other never run a destructor that releases the memory, and the allocation leaks.
-- **`std::weak_ptr`** observes an object without owning it, and that is how the cycle is broken.
+- **The leak:** if two objects each hold a `shared_ptr` to the other, neither count ever reaches zero, so neither object is ever destroyed.
+- **The fix:** make one of the two links a `std::weak_ptr`, which observes an object without owning it, so it does not count toward the reference count.
 :::
 
 ## Practice
@@ -250,7 +250,7 @@ With no NRVO and no elision, how many times does the copy constructor run in `pa
 - [x] Twice: one copy initializes `value`, and a second copy returns it
 - [ ] Three times: the argument, a local, and the return
 
-One copy initializes the parameter `value`. A second copy returns it.
+The first copy initializes the parameter `value` from the argument. The second copy builds the return value from `value`. (NRVO never applies to a parameter, and if `MyClass` had a move constructor, the return would use it instead.)
 :::
 
 :::check id=ps4-copy-count-q2
@@ -260,19 +260,20 @@ Which of these hold for `passRef`?
 - [ ] `MyClass local(value)` is skipped when NRVO is off
 - [x] With no NRVO, `local(value)` is one copy and returning `local` is a second copy
 
-- **Parameter** is a const reference, so entry copies nothing.
-- **`local(value)`** is one explicit copy, and returning `local` is a second copy.
+- **On entry:** the parameter is a `const` reference, so nothing is copied.
+- **Inside:** `local(value)` is one explicit copy, and it always runs, with or without NRVO.
+- **On return:** without NRVO, returning `local` makes a second copy.
 :::
 
 :::check id=ps4-copy-count-q3
 Under NRVO, `local` is constructed directly in the caller's {{=return slot|parameter|heap}}.
 
-That return uses the same object.
+With NRVO, `local` is built directly where the caller expects the result, so the return makes no copy at all.
 :::
 :::
 
 :::problem id=ps4-unique-vs-shared title="shared versus unique" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=source
-Two fragments.
+Compare these two fragments.
 
 ```cpp
 auto sp1 = std::make_shared<int>(1);
@@ -295,7 +296,7 @@ After `sp2 = sp1`, and before the inner block ends, what is the reference count?
 - [ ] 1
 - [x] 2
 
-Copying the shared pointer raises the reference count to 2.
+`sp1` and `sp2` now both own the same `int`, so the reference count is 2.
 :::
 
 :::check id=ps4-unique-vs-shared-q2
@@ -305,22 +306,23 @@ Which of these hold when the inner block ends?
 - [ ] The `int` on the heap is deleted
 - [x] `sp1` can still reach the `int`
 
-Destroying `sp2` drops the count to 1. The `int` stays alive, and `sp1` can still reach it.
+Destroying `sp2` drops the count from 2 to 1. Since the count is not zero, the `int` stays alive, and `sp1` can still reach it.
 :::
 
 :::check id=ps4-unique-vs-shared-q3
 `auto up2 = up1` tries to copy a {{=unique_ptr|shared_ptr|weak_ptr}}. That copy constructor is deleted, so the program fails to compile.
 
-Ownership moves with an explicit `auto up2 = std::move(up1)`.
+A `unique_ptr` cannot be copied, but its ownership can be transferred with `auto up2 = std::move(up1);`, after which `up1` is null.
 :::
 :::
 
 :::examnote
-Exam questions on the rule of five, or on smart pointers, often ask for a transfer of a resource that copies only a pointer, or for copy-on-write. After a move, the source has to be reset. Copying a `unique_ptr` fails to compile.
+- **What the question looks like:** it often asks for a move that transfers a resource by copying only a pointer, or for a copy-on-write class.
+- **Points to remember:** after a move, the source must be reset, and copying a `unique_ptr` does not compile.
 :::
 
 :::problem id=exam-16b-q2 title="A collection by value" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-`ITEM_COLLECTION<T>` manages a collection of items. `byVal` takes the collection by value.
+`ITEM_COLLECTION<T>` manages a collection of items in a heap array, and the function `byVal` takes a collection by value.
 
 :::check id=exam-16b-q2-q1
 Which copy-constructor body is required for a deep copy?
@@ -329,7 +331,7 @@ Which copy-constructor body is required for a deep copy?
 - [ ] Copy the pointer `_items` and share the other collection's array
 - [ ] Allocate `new T[other._capacity]` and leave the new elements unassigned
 
-The deep copy constructor copies the capacity and the size, allocates `new T[other._capacity]`, and assigns each live element.
+A deep copy constructor copies the capacity and the size, allocates its own array with `new T[other._capacity]`, and then copies each live element into it. Sharing the pointer is a shallow copy, and leaving the elements unassigned copies nothing.
 :::
 
 :::check id=exam-16b-q2-q2
@@ -339,8 +341,8 @@ Which holdings share one object instead of copying the `T` value?
 - [x] `ITEM_COLLECTION<T*>`
 - [x] `ITEM_COLLECTION<std::shared_ptr<T>>`
 
-- **By value** copies each `T`.
-- **`T*` or `std::shared_ptr<T>`** shares the object the pointer already owns.
+- **Storing `T` by value:** copying the collection copies every `T`.
+- **Storing `T*` or `std::shared_ptr<T>`:** copying the collection copies only the pointers, so both collections share the same `T` objects.
 :::
 
 :::check id=exam-16b-q2-q3
@@ -350,20 +352,25 @@ What does `byVal(myShapeCollection)` do when the class uses the default copy con
 - [ ] The call fails to compile
 - [x] It shallow-copies the array pointer. The parameter's destructor `delete[]`s that array, the original is left dangling, and destroying the original is a double free
 
-- **Default copy constructor** makes a shallow copy (העתקה רדודה) of the pointer to the array.
-- **`byVal` return** runs the parameter's destructor, which releases the array with `delete[]`.
+- **The default copy constructor** makes a shallow copy (העתקה רדודה): it copies only the pointer to the array.
+- **When `byVal` returns**, the parameter's destructor releases that shared array with `delete[]`.
+- **The result:** the original collection is left with a dangling pointer, and destroying it later frees the same array a second time.
 :::
 
 :::check id=exam-16b-q2-q4
 A copied collection of {{=shared_ptr|unique_ptr|raw pointer}} elements copies smart pointers, and each copy increments a reference count.
 
-- **Destroying the temporary** drops those counts.
-- **Shapes** stay alive until the last owner is gone.
+- **When the copy is destroyed**, each reference count drops by one again.
+- **The shapes themselves** stay alive until their last owner is gone, so no copy can leave another with a dangling pointer.
 :::
 :::
 
 :::problem id=exam-20b-q1 title="A smart pointer" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-`SmartPointer<T>` uses shared ownership: a pointer to a `T`, a reference count on the heap, a copy that shares the object, and a release of the memory only when the count reaches zero.
+`SmartPointer<T>` implements shared ownership by hand.
+
+- **It holds** a pointer to a `T` and a pointer to a reference count, which lives on the heap so that all copies can share it.
+- **Copying it** shares the same object and the same count.
+- **It releases the memory** only when the count reaches zero.
 
 ```cpp
 template <typename T>
@@ -380,7 +387,7 @@ Which constructor is required?
 - [ ] `explicit SmartPointer(T* p = nullptr) : ptr_(p), count_(new int(0)) {}`
 - [x] `explicit SmartPointer(T* p = nullptr) : ptr_(p), count_(p ? new int(1) : new int(0)) {}`
 
-A non-null pointer starts the count at 1. A null pointer starts it at 0.
+If `p` points at an object, this smart pointer is its first owner, so the count starts at 1. If `p` is null, there is nothing to own, so the count starts at 0. `explicit` prevents a raw pointer from being converted into a `SmartPointer` by accident.
 :::
 
 :::check id=exam-20b-q1-q2
@@ -391,8 +398,9 @@ Which of these match the copy constructor and `release`?
 - [x] `release` deletes both blocks only when `ptr_` is non-null and the decremented count is 0
 - [ ] The destructor deletes `ptr_` and leaves `count_` allocated
 
-- **Copy** shares both pointers and increments when there is an object.
-- **`release`** deletes `ptr_` and `count_` only when the count reaches zero, then nulls both pointers.
+- **The copy constructor** copies both pointers, so it shares the object and the count, and increments the count if there is an object.
+- **`release`** decrements the count, and deletes `ptr_` and `count_` only when the count reaches zero. Then it sets both pointers to null.
+- **The wrong options** delete on every call, which breaks the other owners, or leak the count.
 :::
 
 :::check id=exam-20b-q1-q3
@@ -402,19 +410,19 @@ Which copy-assignment body is required?
 - [x] When `this != &other`, call `release()`, copy both pointers, and increment the count when `ptr_` is non-null. Return `*this`
 - [ ] Swap the pointers and leave the count unchanged
 
-- **Self-assignment** leaves the count as it is.
-- **Different object** is released first, then adopted.
+- **Self-assignment:** when `this == &other`, the body does nothing, so the count is unchanged. Without the check, `release()` could delete the object that is about to be copied.
+- **Assigning from a different object:** first `release()` the current object, then copy both pointers from `other` and increment the shared count.
 :::
 
 :::check id=exam-20b-q1-q4
 `operator*` returns {{=*ptr_|ptr_|count_}}.
 
-`operator->` returns `ptr_`.
+`operator*` returns the object itself, `*ptr_`, usually as a `T&`. By contrast, `operator->` returns the raw pointer `ptr_`.
 :::
 :::
 
 :::problem id=exam-24a-q1 title="A tree under the rule of five" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-`BinaryTree<T>` stores `T data` and owning children `BinaryTree* left` and `BinaryTree* right`. Nodes are allocated on the heap. The call is `f(BinaryTree<int>(...))`, and the class implements move.
+`BinaryTree<T>` stores a value `T data` and two child pointers, `BinaryTree* left` and `BinaryTree* right`, which own their subtrees. All nodes are allocated on the heap. The class implements move, and the question asks about the call `f(BinaryTree<int>(...))`.
 
 :::check id=exam-24a-q1-q1
 Which destructor body is required?
@@ -423,7 +431,7 @@ Which destructor body is required?
 - [x] `delete left; delete right;`
 - [ ] `delete this;`
 
-The destructor is `delete left; delete right;`.
+The tree owns its children, so the destructor runs `delete left; delete right;`. Each `delete` runs that child's destructor, which deletes its children in turn, so the whole subtree is released. Deleting a null pointer is safe.
 :::
 
 :::check id=exam-24a-q1-q2
@@ -435,17 +443,17 @@ Which of these bodies are required?
 - [x] Move assignment: delete the old children, take the source pointers, and null the source
 - [x] `insert` sends a smaller value to the left and a larger value to the right, and it does not insert an equal key
 
-- **Copy constructor** allocates a new node for each child.
-- **Copy assignment** builds a temporary and swaps.
-- **Move operations** take the pointers and then null the source.
-- **Move assignment** deletes the old children first.
-- **`insert`** places a smaller value on the left and a larger value on the right.
+- **The copy constructor** allocates a new node for each non-null child, which copies the whole subtree recursively.
+- **Copy assignment** builds a temporary copy and swaps with it. Deleting the children first without a temporary would break `t = t`.
+- **The move constructor** takes the child pointers and then sets the source's pointers to null.
+- **Move assignment** first deletes its own old children, then takes the source's pointers and nulls them in the source.
+- **`insert`** keeps the tree sorted: smaller values go left, larger values go right, and an equal value is not inserted again.
 :::
 
 :::check id=exam-24a-q1-q3
 Copy assignment, when `this` is not the other object, builds a {{=temporary|shared node|raw alias}} and swaps `data`, `left`, and `right`.
 
-The body builds `BinaryTree temp(other)`, swaps `data`, `left`, and `right`, and returns `*this`.
+The body builds `BinaryTree temp(other)`, swaps `data`, `left`, and `right` with it, and returns `*this`. When `temp` is destroyed, it releases the old children.
 :::
 
 :::check id=exam-24a-q1-q4
@@ -455,12 +463,12 @@ Which description of `f(BinaryTree<int>(...))` is right?
 - [ ] The nodes leave the heap and are stored inside the stack frame of `f`
 - [ ] The argument is an lvalue, so every node is deep-copied before `f` starts
 
-The argument is an unnamed rvalue, so the parameter is initialized by the move constructor. The nodes remain on the heap.
+`BinaryTree<int>(...)` is an unnamed temporary, which is an rvalue, so the parameter is initialized with the move constructor. Only the root object is in `f`'s frame; the child nodes stay on the heap and now belong to the parameter.
 :::
 :::
 
 :::problem id=exam-24c-q1 title="Copy on write" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
-`copy_on_write<T>` shares one heap `T` across copies until the first write. `on_write()` makes a private clone.
+`copy_on_write<T>` lets several copies share one heap `T` until one of them wants to write. At that point, `on_write()` gives the writer its own private clone.
 
 ```cpp
 template <typename T>
@@ -477,7 +485,7 @@ Which copy-constructor body is required?
 - [ ] Clone the `T` in the copy constructor and set `users` to `new int(1)`
 - [ ] Copy `ptr` and set `users` to null
 
-The copy constructor copies `ptr` and `users`, then increments the count.
+Copying is cheap, which is the point of the class: the copy constructor shares `ptr` and `users`, then increments the user count. Cloning happens later, only on a write.
 :::
 
 :::check id=exam-24c-q1-q2
@@ -487,14 +495,15 @@ Which of these hold?
 - [x] `on_write` clones only when `*users` is greater than 1: it decrements the shared count, clones the `T`, and allocates a fresh count of 1
 - [x] The destructor deletes `ptr` and `users` only when the decremented count is 0
 
-- **Single owner** does not clone.
-- **Destructor** deletes both blocks only when the count reaches zero.
+- **Only clone when sharing:** if `*users` is 1, this object is the only user, so it can write in place without cloning.
+- **When shared:** `on_write` decrements the shared count, clones the `T`, and gives the clone a fresh count of 1.
+- **The destructor** decrements the count and deletes both blocks only when it reaches zero.
 :::
 
 :::check id=exam-24c-q1-q3
 The non-const `operator->` calls {{=on_write|clone|release}} and then returns `ptr`.
 
-The const `operator->` returns `ptr` and does not copy.
+The non-const `operator->` may be used to write, so it must call `on_write` first. The const `operator->` can only read, so it returns `ptr` without cloning.
 :::
 
 :::check id=exam-24c-q1-q4
@@ -504,6 +513,10 @@ Which constructor body is required?
 - [ ] `: ptr(nullptr), users(new int(0))`
 - [x] `explicit copy_on_write(T* p) : ptr(p), users(new int(1))`
 
-The first owner starts the count at 1.
+The object that receives the new pointer is its first and only user, so the count starts at 1.
 :::
 :::
+
+To sum up, a class that owns a resource either writes all five special members, or, better, hands the resource to a member that manages it and writes none.
+
+- **Next:** [Inheritance and polymorphism](topic:inheritance) shows what changes when objects are used through a pointer to their base class.

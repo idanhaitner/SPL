@@ -32,40 +32,38 @@ sources:
   - "materials/exams/20-b-solution.pdf"
 ---
 
-This chapter is how a program keeps data after the process ends, and the SQL it sends to a DBMS.
+This chapter shows how a program keeps its data after the process ends, and how it talks to a database in SQL.
 
-- **Why a database** — what process memory and plain files do not give you.
-- **Relational model** — tables, keys, and the SQL you write against them.
-- **In code** — DTO, DAO, and repository shapes used in the course.
+- **Why a database:** what a database gives you that process memory and plain files do not.
+- **The relational model:** tables, keys, and the SQL queries you write against them.
+- **In code:** the DTO, DAO, and repository classes the course uses to connect a program to its database.
 
 ## The relational model
 
-Process memory lasts only as long as the process.
+Process memory lasts only as long as the process does, so data that must survive needs to be stored somewhere else.
 
-- **Files** can outlive the process.
-- **The application** then owns the byte layout, the search, and the rules for two writers at once.
-- **A DBMS** (database management system) adds durable storage, a query language, integrity constraints, and transactions.
+- **Plain files** outlive the process, but the application must then handle everything itself: the byte layout, searching, and what happens when two writers update the file at once.
+- **A DBMS** (database management system) handles all of that for you. It provides durable storage, a query language, integrity constraints, and transactions.
 
 The relational model (מודל רלציוני) stores data as tables.
 
-- **Table:** a set of rows that share the same columns, and each column holds a single value.
-- **SQL:** the language that defines those tables and asks questions of them.
+- **A table** is a set of rows that all have the same columns. Each cell holds a single value, never a list.
+- **SQL** is the language used both to define tables and to query them.
 
 :::definition id=def-relational title="Principles of the relational model" source="materials/lectures/Chapter 13 - Persistance.pptx"
 
-- **Table:** an entity or a relationship. A row is one record. A column is one attribute.
-- **Primary key (מפתח ראשי):** a column, or a set of columns, that identifies each row of the table uniquely.
-- **Foreign key (מפתח זר)** is the relational form of a pointer.
-- **Its values** must equal a key of another table.
-- **Referential integrity** is the rule that rejects a value matching no row there.
+- **Table:** a table represents either a kind of entity or a relationship between entities. Each row is one record, and each column is one attribute.
+- **Primary key (מפתח ראשי):** a column, or a set of columns, whose value is different in every row, so it identifies each row uniquely.
+- **Foreign key (מפתח זר):** a column whose values must match a key in another table. It is the relational version of a pointer.
+- **Referential integrity:** the database rejects any foreign-key value that does not match a row in the other table.
 :::
 
-Mapping classes to tables:
+When you turn classes into tables, follow these rules.
 
-- **Class:** becomes a table.
-- **One-to-many (1:N):** a foreign key on the N side.
-- **Many-to-many (N:M):** a **junction table** that holds foreign keys to both tables.
-- **Repeated columns:** such as `course1`, `course2`, and `course3` freeze the length of the list, and a query cannot treat those columns as rows.
+- **Each class** becomes a table.
+- **A one-to-many (1:N) relationship** becomes a foreign key on the "many" side. For example, each enrollment row points at one student.
+- **A many-to-many (N:M) relationship** becomes a separate **junction table**, which holds a foreign key to each of the two tables.
+- **Never use repeated columns** such as `course1`, `course2`, and `course3`. They fix the maximum length of the list, and queries cannot treat them as rows.
 
 ```sql
 CREATE TABLE Students (
@@ -88,13 +86,13 @@ CREATE TABLE Enrollment (
 
 ### JOIN operations in SQL
 
-SQL joins combine rows from two or more tables.
+A join combines rows from two or more tables.
 
-- **Inner join:** keeps the rows that satisfy the condition in both tables.
-- **Left join:** keeps every row of the left table and fills the right side with null when nothing matches.
-- **Join with no condition:** is the Cartesian product—every row of the left table paired with every row of the right table.
-- **Relational algebra:** a join is that product followed by a selection.
-- **`SELECT`:** the SQL statement that projects the columns you ask for.
+- **An inner join** keeps only the pairs of rows that satisfy the join condition.
+- **A left join** keeps every row of the left table. When a row has no match on the right, the right side's columns are filled with null.
+- **A join with no condition** is the Cartesian product: every row of the left table paired with every row of the right table.
+- **In relational-algebra terms,** a join is that product followed by a selection of the rows that meet the condition.
+- **`SELECT`** then picks (projects) only the columns you ask for.
 
 ```sql
 -- Inner Join: returns only rows that match in both tables
@@ -115,9 +113,11 @@ LEFT JOIN Courses C ON E.CourseId = C.Id;
 
 ## DTO, DAO, and repository
 
-- **DTO (data transfer object):** an object that stands for one row of a table.
-- **DAO (data access object):** a class that runs CRUD (`Create`, `Read`, `Update`, `Delete`) against a single table.
-- **Repository:** a higher layer that holds business logic and queries spanning several tables or several DAOs.
+The course organizes database code into three kinds of classes.
+
+- **DTO (data transfer object):** a simple object that represents one row of a table.
+- **DAO (data access object):** a class that performs CRUD operations (`Create`, `Read`, `Update`, `Delete`) on a single table.
+- **Repository:** a higher layer that holds the business logic, and the queries that span several tables or several DAOs.
 
 :::problem id=worked-inner-join title="What an inner join returns" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=worked solution_origin=source
 Alice is enrolled in `prog`. Bob is enrolled in nothing. Both `prog` and `systems` exist. What does this query return, and what does a left join add?
@@ -131,12 +131,12 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 
 :::solution
 
-- **Inner join:** returns one row—Alice with `prog`.
-- **Bob:** has no junction row, so he is absent.
-- **Unused course:** a course that nobody takes is absent as well.
-- **Left join from students:** still returns Alice with `prog`, and returns Bob with a course name that is null, because the left table is kept.
-- **`systems`:** is still absent, because the join started from students.
-- **Right join from students toward courses:** would show `systems` with a null student and would leave Bob out.
+- **The inner join returns one row:** Alice with `prog`.
+- **Bob is missing,** because he has no row in the junction table, so there is nothing to match.
+- **`systems` is missing too,** because no student takes it.
+- **With left joins starting from `Students`:** the result still has Alice with `prog`, and now also Bob, with null as his course name, because every row of the left table is kept.
+- **`systems` is still missing** with a left join, because the join keeps every student, not every course.
+- **To keep every course instead,** you would join in the other direction (a right join toward `Courses`). That would show `systems` with a null student, and leave Bob out.
 :::
 :::
 
@@ -147,20 +147,24 @@ The value 9 in `Students.DeptId`, when `Departments` contains the ids 1 and 2, b
 - [x] the foreign key from `DeptId` to `Departments.Id`
 - [ ] `NOT NULL` on `Students.Name`
 
-- **Foreign key:** requires every `DeptId` to equal the key of some row in `Departments`.
-- **Primary key:** the uniqueness of `Students.Id` is the primary-key constraint.
+- **The foreign key** requires every `DeptId` to match the key of some row in `Departments`. No department has id 9, so the value is rejected.
+- **The primary key** only requires `Students.Id` to be unique, and `NOT NULL` only requires `Name` to have a value, so neither is affected.
 :::
 
 ## Practice
 
 :::problem id=ps12-foreign-key title="A teaching assistant's foreign key" source="materials/sessions/SPL_PS12.pptx" kind=exercise solution_origin=source
-In session 12, `PRACTICAL_SESSIONS` has the columns `TA_ID`, `GroupNum`, `Location`, and `Time`. `TEACHING_ASSISTANTS` has `ID`, `Name`, and `OfficeHours`. `GroupNum` is the primary key of a practical session. `ID` is the primary key of a teaching assistant. A session's `TA_ID` refers to a teaching assistant.
+Session 12 uses two tables.
+
+- **`PRACTICAL_SESSIONS`** has the columns `TA_ID`, `GroupNum`, `Location`, and `Time`, and its primary key is `GroupNum`.
+- **`TEACHING_ASSISTANTS`** has the columns `ID`, `Name`, and `OfficeHours`, and its primary key is `ID`.
+- **The link:** each session's `TA_ID` refers to the teaching assistant who runs it.
 
 :::check id=ps12-foreign-key-q1
 `TA_ID` is an integer column declared {{=REFERENCES TEACHING_ASSISTANTS(ID)|PRIMARY KEY|REFERENCES PRACTICAL_SESSIONS(GroupNum)}}.
 
-- **`TA_ID`:** refers to a teaching assistant.
-- **`GroupNum`:** is the primary key of a practical session, and `ID` is the primary key of a teaching assistant.
+- **`TA_ID` is a foreign key:** its value must be the `ID` of an existing teaching assistant, so it is declared `REFERENCES TEACHING_ASSISTANTS(ID)`.
+- **It is not a primary key:** `GroupNum` already plays that role for practical sessions.
 :::
 
 :::check id=ps12-foreign-key-q2
@@ -171,8 +175,9 @@ Which of these hold?
 - [x] `ID` is `INTEGER PRIMARY KEY` on `TEACHING_ASSISTANTS`
 - [x] `Name` is `TEXT NOT NULL`, and `OfficeHours`, `Location`, and `Time` are text
 
-- **`Name`:** is `TEXT NOT NULL` on `TEACHING_ASSISTANTS`.
-- **`OfficeHours`, `Location`, and `Time`:** are text columns, and `TA_ID` is the foreign key.
+- **The primary keys** are `GroupNum` for sessions and `ID` for teaching assistants. `TA_ID` is a foreign key, not a primary key.
+- **`Name`** is `TEXT NOT NULL`, because every teaching assistant must have a name.
+- **`OfficeHours`, `Location`, and `Time`** are ordinary text columns.
 :::
 
 :::check id=ps12-foreign-key-q3
@@ -182,12 +187,13 @@ Inserting a practical session with `TA_ID = 8` fails when:
 - [ ] `GroupNum` is already 8
 - [x] no teaching assistant has `ID` 8
 
-That is the constraint the insert example in session 12 is about to hit.
+The foreign key on `TA_ID` rejects the row if no teaching assistant has `ID` 8. This is exactly the error the insert example in session 12 runs into.
 :::
 
 :::
+
 :::problem id=ps12-join title="Joining a session and a teaching assistant" source="materials/sessions/SPL_PS12.pptx" kind=exercise solution_origin=source
-Here are the two tables. In the example, Shaked is on two groups and Matan is on none.
+Here are the two tables. In the example data, Shaked teaches two groups, and Matan and Yair teach none.
 
 ```sql
 CREATE TABLE TEACHING_ASSISTANTS (
@@ -210,13 +216,13 @@ Which statement returns `Time`, `Location`, `GroupNum`, and the teaching assista
 - [ ] `SELECT ps.Time, ps.Location, ps.GroupNum, ta.Name FROM PRACTICAL_SESSIONS ps CROSS JOIN TEACHING_ASSISTANTS ta`
 - [x] `SELECT ps.Time, ps.Location, ps.GroupNum, ta.Name FROM PRACTICAL_SESSIONS ps INNER JOIN TEACHING_ASSISTANTS ta ON ps.TA_ID = ta.ID`
 
-The inner join matches `ps.TA_ID` to `ta.ID` and selects those four columns.
+The inner join pairs each session with its teaching assistant by matching `ps.TA_ID` to `ta.ID`, then selects the four columns. A cross join would pair every session with every assistant, and the first option joins on unrelated columns.
 :::
 
 :::check id=ps12-join-q2
 Matan and Yair stay in the result, with `Time`, `Location`, and `GroupNum` all null, under a {{=LEFT JOIN|INNER JOIN|CROSS JOIN}} from `TEACHING_ASSISTANTS` to the practical sessions.
 
-A `LEFT JOIN` from `TEACHING_ASSISTANTS` keeps Matan and Yair with those three columns null.
+A `LEFT JOIN` starting from `TEACHING_ASSISTANTS` keeps every assistant, including those with no session. Matan and Yair therefore appear once each, with the three session columns set to null.
 :::
 
 :::check id=ps12-join-q3
@@ -226,11 +232,12 @@ Which of these hold for the inner join in the example?
 - [x] Shaked appears twice, once for each group
 - [x] Matan is absent
 
-- **Shaked:** is on two groups, so the inner join emits one row per group.
-- **Matan:** is on none, so he is absent.
+- **Shaked appears twice,** because the inner join produces one row for each matching session, and Shaked teaches two groups.
+- **Matan does not appear at all,** because he teaches no group, and an inner join drops rows with no match.
 :::
 
 :::
+
 :::problem id=ps13-dto-dao title="DTO versus DAO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
 The tester in session 13 has tables `students(id, name)`, `assignments(num, expected_output)`, and `grades(student_id, assignment_num, grade)`.
 
@@ -242,7 +249,7 @@ Which of these are DTOs?
 - [x] `Assignment`
 - [x] `Grade`
 
-`Student`, `Assignment`, and `Grade` are the DTOs. `_Students`, `_Assignments`, and `_Grades` are the DAOs.
+A DTO represents one row, so `Student`, `Assignment`, and `Grade` are the DTOs. The classes that run queries on a table, `_Students`, `_Assignments`, and `_Grades`, are the DAOs.
 :::
 
 :::check id=ps13-dto-dao-q2
@@ -252,14 +259,14 @@ Which of these are DTOs?
 - [ ] it holds the connection for one table
 - [x] it joins `grades` to `students` and returns rows with both `assignment_num` and `name`
 
-- **Repository method:** is about more than one table.
-- **Each DAO:** holds the connection and implements `insert` and `find` for a single table.
+- **A repository method** may span several tables, and this one joins `grades` with `students`.
+- **A DAO** works on exactly one table: it implements `insert` and `find` for that table only. So a join does not belong in any single DAO.
 :::
 
 :::check id=ps13-dto-dao-q3
 Bob's submission `"main"` against `expected_output` `"Main"` is recorded as a mismatch because the comparison is {{=case-sensitive|case-insensitive|skipped}}.
 
-- **Grade row:** records the mismatch, and the comparison reports a failure.
+- **The comparison is case-sensitive,** so `"main"` and `"Main"` are different strings. The grade row therefore records a failure.
 :::
 
 :::check id=ps13-dto-dao-q4
@@ -269,23 +276,24 @@ Bob's submission `"main"` against `expected_output` `"Main"` is recorded as a mi
 - [x] it creates all three tables
 - [ ] it is `_Grades.find`
 
-It belongs on the repository for the same reason as the join: it is about more than one table.
+`create_tables` creates all three tables, so, like the join, it concerns more than one table and belongs on the repository.
 :::
 
 :::
+
 :::problem id=ps13-orm-find title="Mapping columns onto a DTO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
-Session 13 replaces a hand-written `find` with generic row mapping.
+Session 13 replaces a hand-written `find` with a generic function that maps a row onto a DTO.
 
-- **`row_map(row, col_mapping, dto_type)`:** builds constructor arguments by field index and calls the DTO's constructor.
-- **ORM (object-relational mapping):** is what this pattern implements; `row_map` is the row mapper.
-- **`Assignment.find` (before):** used to be `return Assignment(*c.fetchone())`.
-- **Generic `find`:** still builds `Assignment(num, expected_output)`.
+- **`row_map(row, col_mapping, dto_type)`** picks values out of the row by index, in the order the constructor expects, and calls the DTO's constructor with them.
+- **This is a small ORM** (object-relational mapping), and `row_map` is its row mapper.
+- **Before,** `Assignment.find` was written by hand as `return Assignment(*c.fetchone())`.
+- **After,** the generic `find` still builds `Assignment(num, expected_output)`, but it no longer depends on the column order.
 
 :::check id=ps13-orm-find-q1
 When the row is `(num, expected_output)`, `col_mapping` is {{=[0, 1]|[1, 0]|[0]}}.
 
-- **`col_mapping`:** is the list of indexes in constructor order.
-- **`dto_type(*ctor_args)`:** is `Assignment(num, expected_output)`.
+- **What `col_mapping` means:** it lists, in the order of the constructor's parameters, the index of the column that holds each value.
+- **Here** the row is already in constructor order, so the mapping is `[0, 1]`, and `dto_type(*ctor_args)` becomes `Assignment(num, expected_output)`.
 :::
 
 :::check id=ps13-orm-find-q2
@@ -295,7 +303,7 @@ When the query selected `expected_output` before `num`, `col_mapping` is:
 - [x] `[1, 0]`, so the constructor still receives `num` first
 - [ ] `[0]`, because only `num` is passed
 
-The constructor still receives `num` first, and `dto_type(*ctor_args)` is `Assignment(num, expected_output)`.
+Now `num` is at index 1 and `expected_output` is at index 0. The constructor wants `num` first, so the mapping is `[1, 0]`, and the call is still `Assignment(num, expected_output)`.
 :::
 
 :::check id=ps13-orm-find-q3
@@ -305,17 +313,23 @@ Which of these hold?
 - [ ] `row_map` ignores `col_mapping` and always calls `Assignment(*row)`
 - [x] A mapping that follows `SELECT *` blindly breaks when the table's column order changes
 
-- **`SELECT *` mapping:** breaks as soon as the table's column order changes.
-- **`INSERT` without column list:** has the same problem—the statement depends on a column order that can change.
+- **`col_mapping` is in constructor order,** and `row_map` really uses it, unlike the second option.
+- **Relying on `SELECT *`** breaks as soon as someone changes the table's column order.
+- **An `INSERT` without a column list** has the same weakness, because it also depends on a column order that can change.
 :::
 
 :::examnote
-The question describes a small business in a few sentences and asks for tables, keys, and one `SELECT`. The trap is a list crammed into one column, or a join that multiplies rows because the junction table was left out.
+- **What the question looks like:** it describes a small business in a few sentences and asks you to design the tables and keys, then write one `SELECT`.
+- **The usual traps:** squeezing a list into one column, or leaving out the junction table so that a join produces wrong or duplicated rows.
 :::
 
 :::
+
 :::problem id=exam-15a-q4 title="The BigApple schema" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
-BigApple stores a customer (name, phone, join date, and links to other customers who are family) and every action on the account (date and kind: a message sent, an outgoing call, a missed call, a message received, together with the other phone number).
+The phone company BigApple stores two kinds of data.
+
+- **Customers:** each has a name, a phone number, a join date, and links to other customers who are family members.
+- **Account actions:** each action has a date, the other phone number involved, and a kind, which is one of: message sent, outgoing call, missed call, or message received.
 
 :::check id=exam-15a-q4-q1
 Which of these hold?
@@ -325,14 +339,16 @@ Which of these hold?
 - [x] `Family` has primary key `(phone, relative)`, and both columns reference `Customers(phone)`
 - [x] `Actions.kind` is `TEXT NOT NULL`, `other_phone` is text, `at` is `TIMESTAMP NOT NULL`, and `phone` references `Customers(phone)`
 
-- **`relatives` column:** a single text column on `Customers` cannot be joined.
-- **`Actions.id`:** is `INTEGER PRIMARY KEY`.
+- **Customers:** the phone number identifies a customer, so it is the primary key.
+- **Family:** family links are many-to-many between customers, so they need a junction table, `Family`, whose two columns both reference `Customers`.
+- **Why not a `relatives` text column:** a list stored in one text column cannot be joined or queried properly.
+- **Actions:** each action gets its own `id INTEGER PRIMARY KEY`, and its `phone` references the customer it belongs to.
 :::
 
 :::check id=exam-15a-q4-q2
 Messages received by a family member are actions whose `kind` is {{='received'|'sent'|'missed call'}}.
 
-The query joins `Family` on `f.phone = c.phone`, then `Actions` on `a.phone = f.relative` and `a.kind = 'received'`, where `c.name = 'Ringo Starr'`.
+A message received is an action whose `kind` is `'received'`. The query starts from Ringo's customer row, joins `Family` on `f.phone = c.phone` to find his relatives, then joins `Actions` on `a.phone = f.relative AND a.kind = 'received'`.
 :::
 
 :::check id=exam-15a-q4-q3
@@ -342,8 +358,8 @@ Which statement returns the messages received by the family members of Ringo Sta
 - [ ] `SELECT a.* FROM Customers c JOIN Actions a ON a.phone = c.phone AND a.kind = 'received' WHERE c.name = 'Ringo Starr'`
 - [x] `SELECT a.* FROM Customers c JOIN Family f ON f.phone = c.phone JOIN Actions a ON a.phone = f.relative AND a.kind = 'received' WHERE c.name = 'Ringo Starr'`
 
-- **Action row:** is the relative's received message.
-- **Path from Ringo:** goes through `Family`.
+- **The path:** from Ringo's row in `Customers`, through `Family` to each relative's phone, and then to that relative's received messages in `Actions`.
+- **Why the second option is wrong:** it skips `Family`, so it returns Ringo's own messages, not his relatives'.
 :::
 
 :::check id=exam-15a-q4-q4
@@ -353,18 +369,23 @@ When family is symmetric, the rows in `Family` are stored as:
 - [ ] one text column `relatives` on `Customers`
 - [ ] a single `Actions` row whose `kind` is the relative's name
 
-Store both directions in `Family`, or insert the pair in both orders, when family is symmetric.
+If A is family of B, then B is also family of A. So each pair is stored in both directions, for example (A, B) and (B, A), and the query works no matter which side you start from.
 :::
 
 :::
+
 :::problem id=exam-15b-q4 title="Number porting" source="materials/exams/15-b.pdf" kind=exam solution_origin=derived
-Extend BigApple with the kind of family relationship (parent, sibling, child), a table of competing carriers, and a history of number porting: the date the customer left, and the carrier they left for.
+Extend the BigApple schema with three things.
+
+- **The kind of each family relationship,** such as parent, sibling, or child.
+- **A table of competing carriers.**
+- **A history of number porting:** for each time a customer left, the date and the carrier they moved to.
 
 :::check id=exam-15b-q4-q1
 The relationship kind is a {{=kind|left_on|carrier_id}} column added to `Family`.
 
-- **`Family.kind`:** add `kind TEXT` to `Family`.
-- **Carriers and porting:** are their own tables.
+- **The relationship kind** describes a pair of people, so it belongs on the `Family` row as a new column, `kind TEXT`.
+- **Carriers and porting history** are new kinds of data, so each gets its own table.
 :::
 
 :::check id=exam-15b-q4-q2
@@ -374,8 +395,9 @@ Which of these hold?
 - [ ] A porting history is two columns on `Customers`
 - [x] `Portings` has primary key `(phone, left_on)`, `phone` referencing `Customers(phone)`, and `carrier_id` referencing `Carriers(id)`
 
-- **`Portings`:** stores `phone`, `left_on`, and `carrier_id`.
-- **Primary key `(phone, left_on)`:** allows more than one departure for the same phone.
+- **`Portings`** stores `phone`, `left_on`, and `carrier_id`, so each row is one departure.
+- **The primary key `(phone, left_on)`** lets the same phone appear several times, once per departure date.
+- **Why not two columns on `Customers`:** that could record only one departure, not a full history.
 :::
 
 :::check id=exam-15b-q4-q3
@@ -385,12 +407,17 @@ Which statement lists every carrier Ringo Starr moved to, with the date?
 - [x] `SELECT car.name, p.left_on FROM Customers c JOIN Portings p ON p.phone = c.phone JOIN Carriers car ON car.id = p.carrier_id WHERE c.name = 'Ringo Starr' ORDER BY p.left_on`
 - [ ] `SELECT car.name FROM Actions a JOIN Carriers car ON a.kind = car.name WHERE a.phone = 'Ringo Starr'`
 
-The query joins `Customers` to `Portings` to `Carriers` and orders by `p.left_on`.
+The query finds Ringo in `Customers`, joins `Portings` to get his departures, joins `Carriers` to get each carrier's name, and sorts the result by date with `ORDER BY p.left_on`.
 :::
 
 :::
+
 :::problem id=exam-16a-q4 title="Abbey Road sessions" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-Abbey Road stores recording sessions. A session has a date, a song, a band, and many takes. A take has people in roles: players (a person may play several instruments on one take), singers, and technicians. Billy Preston played keyboards during the Beatles' Get Back sessions, from January 1969.
+The Abbey Road studio stores its recording sessions.
+
+- **A session** has a date, a song, a band, and many takes.
+- **A take** involves people in roles: players, singers, and technicians. One person may play several instruments on the same take.
+- **The query:** find the takes on which Billy Preston played keyboards during the Beatles' "Get Back" sessions in January 1969.
 
 :::check id=exam-16a-q4-q1
 Which of these hold?
@@ -400,14 +427,16 @@ Which of these hold?
 - [ ] `Takes.take_no` alone is the primary key of a take
 - [x] The primary key of `Participations` is `(session_id, take_no, person_id, role, instrument)`
 
-- **`Sessions`:** stores `id`, `on_date DATE NOT NULL`, `song TEXT NOT NULL`, and `band TEXT NOT NULL`.
-- **`role` and `instrument`:** `role` is `TEXT NOT NULL` and `instrument` is text, and `instrument` is part of the participation primary key.
+- **`Sessions`** stores `id`, `on_date DATE NOT NULL`, `song TEXT NOT NULL`, and `band TEXT NOT NULL`.
+- **`Takes`** are numbered within each session, so a take is identified by the pair `(session_id, take_no)`. `take_no` alone is not unique.
+- **`Participations`** links a person to a take, with a `role` and an `instrument`.
+- **Why `instrument` is in the primary key:** one person may play several instruments on the same take, and each instrument needs its own row.
 :::
 
 :::check id=exam-16a-q4-q2
 January 1969 is `s.on_date >= '1969-01-01' AND s.on_date` {{=< '1969-02-01'|= '1969-01-01'|> '1969-12-31'}}.
 
-The query also requires `s.band = 'Beatles'`, `s.song = 'Get Back'`, `pe.name = 'Billy Preston'`, and `p.instrument = 'keyboards'`, and it orders by `s.on_date`.
+"Before February 1st" covers every day in January, including the last one. The query also filters on `s.band = 'Beatles'`, `s.song = 'Get Back'`, `pe.name = 'Billy Preston'`, and `p.instrument = 'keyboards'`, and it orders the result by `s.on_date`.
 :::
 
 :::check id=exam-16a-q4-q3
@@ -417,13 +446,15 @@ Which join path returns `t.take_no` and `s.song`?
 - [x] `Sessions` to `Takes` on `t.session_id = s.id`, then `Participations` on `session_id` and `take_no`, then `People` on `pe.id = p.person_id`
 - [ ] `Takes` joined to `Participations` on `t.take_no = p.person_id`
 
-- **Select list:** is `t.take_no, s.song`.
-- **Filters:** band, song, date, person, and instrument are filters on that join.
+- **The join path follows the foreign keys:** `Sessions` to `Takes`, `Takes` to `Participations`, and `Participations` to `People`.
+- **Then** the query selects `t.take_no, s.song`, and the band, song, date, person, and instrument are all `WHERE` filters on that joined result.
+- **The wrong options** join on columns that are not related, such as a band name to a person's name.
 :::
 
 :::
+
 :::problem id=exam-16b-q4 title="A fixed set of roles" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-The Abbey Road schema: a recording session has a date, a song, a band, and many takes. A take has people in roles (player, singer, technician), and the role is stored as text.
+This question uses the same Abbey Road schema: a recording session has a date, a song, a band, and many takes, and each take has people in roles (player, singer, technician). The role is stored as free text.
 
 :::check id=exam-16b-q4-q1
 While `role` is free text, Kim Philby appears as a double agent by:
@@ -432,14 +463,14 @@ While `role` is free text, Kim Philby appears as a double agent by:
 - [ ] refusing every participation insert until a `Roles` table exists
 - [x] inserting Kim into `People` and a `Participations` row with `role = 'double agent'`
 
-The schema allows any role text, so this is data in the existing table.
+Because the role is free text, the schema accepts any value at all. Kim Philby is simply inserted as a person, with a participation whose role is `'double agent'`. Nothing stops it.
 :::
 
 :::check id=exam-16b-q4-q2
 After `CREATE TABLE Roles (name TEXT PRIMARY KEY)`, `Participations.role` {{=REFERENCES Roles(name)|PRIMARY KEY|REFERENCES People(id)}}.
 
-- **Solution roles:** inserts `player`, `singer`, and `engineer`.
-- **Double-agent insert:** then fails until that role is added on purpose.
+- **The fix:** a `Roles` table lists the allowed roles, and `Participations.role` becomes a foreign key to it. The official solution fills it with `player`, `singer`, and `engineer`.
+- **The effect:** inserting a participation with `role = 'double agent'` now fails, unless someone first adds that role to `Roles` on purpose.
 :::
 
 :::check id=exam-16b-q4-q3
@@ -449,19 +480,26 @@ Which of these hold?
 - [ ] Free text already rejects `role = 'double agent'`
 - [x] `CHECK (role IN (...))` is the alternative when the constraint is on a single column
 
-- **`Participations.role`:** references `Roles(name)`.
-- **`CHECK (role IN (...))`:** is the alternative on a single column.
+- **With the foreign key** to `Roles(name)`, the double-agent insert fails until that role is added deliberately.
+- **Free text** rejects nothing, which was the original problem.
+- **An alternative** is `CHECK (role IN ('player', 'singer', 'engineer'))` on the column itself. It also restricts the values, but changing the list then means changing the table definition.
 :::
 
 :::
+
 :::problem id=exam-17a-q4 title="A glasses shop" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
-An online glasses shop. The warehouse stores a model (model number, price). The shop registers a customer (name, id). A purchase records the customer id and the model, and the shop issues a receipt with a unique number and the purchase details. A customer can ask for the price of a model. The owner can list every receipt.
+An online glasses shop needs a database.
+
+- **Models:** the warehouse stores each model's number and price.
+- **Customers:** the shop registers each customer's name and id.
+- **Purchases:** a purchase records the customer id and the model, and the shop issues a receipt with a unique number and the purchase details.
+- **Queries:** a customer can ask for the price of a model, and the owner can list every receipt.
 
 :::check id=exam-17a-q4-q1
 The price column lives only on {{=Models|Receipts|Customers}}.
 
-- **Price query:** is `SELECT price FROM Models WHERE model_no = ?`.
-- **Catalog row:** it reads that row, so a later price change is what the customer is told.
+- **The price belongs to the model,** so it is stored once, in `Models`.
+- **The price query** is `SELECT price FROM Models WHERE model_no = ?`, so a customer always gets the current price.
 :::
 
 :::check id=exam-17a-q4-q2
@@ -471,8 +509,8 @@ Which statement lists every receipt?
 - [x] `SELECT * FROM Receipts`
 - [ ] `SELECT name FROM Customers WHERE id = model_no`
 
-- **Every receipt:** is `SELECT * FROM Receipts`.
-- **Price of a model:** is `SELECT price FROM Models WHERE model_no = ?`.
+- **Listing every receipt** is simply `SELECT * FROM Receipts`.
+- **The first option** is the price query, and the third compares unrelated columns.
 :::
 
 :::check id=exam-17a-q4-q3
@@ -483,18 +521,23 @@ Which of these hold?
 - [ ] `Receipts` stores the price and has no model number
 - [x] `Receipts.customer_id` references `Customers(id)` and `Receipts.model_no` references `Models(model_no)`
 
-- **Receipt and price:** a receipt stores the model number and can be joined back to the current price.
-- **Price at sale:** when a receipt must remember the price charged at the sale, copy `price` onto `Receipts` at insert.
+- **A receipt stores the model number,** and joins back to `Models` for the price. A receipt without a model number would lose what was bought.
+- **One refinement:** if a receipt must remember the price actually charged, even after the price changes, also copy `price` into `Receipts` when the receipt is created.
 :::
 
 :::
+
 :::problem id=exam-17b-q4 title="Garage jobs" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-A garage. A job has a car number, a fault description, and a job id. A worker has a name and an id. Assigning a worker to a job records the worker, the job, and that the job is unfinished. Finishing a job marks it done.
+A garage needs a database.
+
+- **Jobs:** each job has an id, a car number, and a description of the fault.
+- **Workers:** each worker has an id and a name.
+- **Assignments:** assigning a worker to a job records the worker, the job, and that the job is not yet finished. Finishing the job marks it done.
 
 :::check id=exam-17b-q4-q1
 A new assignment records unfinished work with `finished INTEGER NOT NULL DEFAULT` {{=0|1|NULL}}.
 
-Unfinished jobs are the assignment rows with `finished = 0`.
+`DEFAULT 0` means every new assignment starts as unfinished without anyone setting the flag. Unfinished jobs are then the assignment rows where `finished = 0`.
 :::
 
 :::check id=exam-17b-q4-q2
@@ -504,7 +547,7 @@ Which statement returns a worker's unfinished jobs?
 - [ ] `SELECT j.* FROM Assignments a JOIN Jobs j ON j.job_id = a.job_id WHERE a.worker_id = ? AND a.finished = 1`
 - [x] `SELECT j.* FROM Assignments a JOIN Jobs j ON j.job_id = a.job_id WHERE a.worker_id = ? AND a.finished = 0`
 
-The query joins `Assignments` to `Jobs` and keeps rows for that worker whose `finished` flag is 0.
+The worker and the flag are stored in `Assignments`, not in `Jobs`, so the query joins `Assignments` to `Jobs`, and keeps the rows for that worker where `finished` is 0. The second option asks for finished jobs instead.
 :::
 
 :::check id=exam-17b-q4-q3
@@ -515,19 +558,25 @@ Which of these hold?
 - [x] `Assignments` has primary key `(job_id, worker_id)`, with foreign keys to `Jobs(job_id)` and `Workers(id)`
 - [x] Finishing a job is `UPDATE Assignments SET finished = 1 WHERE job_id = ? AND worker_id = ?`
 
-- **`Jobs` and `Workers`:** `Jobs` stores `car_no TEXT NOT NULL` and `fault TEXT NOT NULL`; `Workers` stores `name TEXT NOT NULL`.
-- **Finishing:** setting `finished` to 1 marks that assignment done.
+- **The tables:** `Jobs` also stores `car_no TEXT NOT NULL` and `fault TEXT NOT NULL`, and `Workers` stores `name TEXT NOT NULL`.
+- **`Assignments`** links a job to a worker, so its primary key is the pair `(job_id, worker_id)`, and each column is a foreign key.
+- **Finishing a job** updates the flag to 1. Deleting the row would lose the record that the work was done.
 :::
 
 :::
+
 :::problem id=exam-18a-q4 title="A question bank" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
-A question bank stores the text of each question, and a row for each year in which it was given, in one of the two sittings of that year. A question may return in a later year, and it must not be used twice in the same year.
+A question bank stores exam questions.
+
+- **Each question** has its text.
+- **Each use of a question** records the year and which of that year's two sittings (`moed`) it appeared in.
+- **The rule:** a question may appear again in a later year, but it must never be used twice in the same year.
 
 :::check id=exam-18a-q4-q1
 The key that rejects a second use in the same year is {{=PRIMARY KEY (question_id, year)|PRIMARY KEY (question_id)|PRIMARY KEY (year, moed)}}.
 
-- **Primary key:** rejects a second insert of the same question in the same year, in either of the two sittings.
-- **Later year:** is a new row.
+- **`PRIMARY KEY (question_id, year)`** allows only one row for each question in each year, so a second use in that year is rejected, whichever sitting it is in.
+- **A later year** has a different `year` value, so it is a new row and is allowed.
 :::
 
 :::check id=exam-18a-q4-q2
@@ -538,8 +587,9 @@ Which of these hold?
 - [ ] `year_a` and `year_b` on `questions` store every later year
 - [ ] `question_id_A` and `question_id_B` are the right grain for every question used in a year
 
-- **`year_a` and `year_b`:** remember only two uses.
-- **Year-table foreign keys:** two foreign keys in a year table remember one pair of questions for the year, which is the wrong grain.
+- **The correct design:** one `questions` table, and an `asked` table with one row for each use of a question.
+- **Why not `year_a` and `year_b`:** two columns can remember only two uses, but a question may be used in many years.
+- **Why not `question_id_A` and `question_id_B` in a year table:** that records only two questions per year, which is the wrong level of detail.
 :::
 
 :::check id=exam-18a-q4-q3
@@ -549,12 +599,16 @@ Which statement enforces one use of a question per year?
 - [ ] a year table whose only question links are `question_id_A` and `question_id_B`
 - [x] `asked(question_id, year, moed)` with `PRIMARY KEY (question_id, year)`
 
-The primary key includes the year and not the sitting, so a second sitting in that year collides with the first insert.
+Only the `asked` table with `PRIMARY KEY (question_id, year)` lets the database itself enforce the rule. The key includes the year but not the sitting, so a second use in the same year collides with the first, even in a different sitting.
 :::
 
 :::
+
 :::problem id=exam-18b-q4 title="Police wiretaps" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-Police wiretaps. A recording stores the text, the caller's number, the destination number, and the date. Each phone number has an owner's name and an address.
+The police keep a database of wiretaps.
+
+- **A recording** stores the text of the call, the caller's number, the number called, and the date.
+- **Each phone number** has an owner's name and an address.
 
 Phone numbers are stored in this table:
 
@@ -569,8 +623,8 @@ CREATE TABLE phone (
 :::check id=exam-18b-q4-q1
 The names of both owners come from joining `phone` {{=twice|once|with a cross join}}.
 
-- **`from_num` and `to_num`:** each reference `phone(phone_num)`.
-- **Join aliases:** are `src` and `dst`.
+- **Each recording has two numbers,** `from_num` and `to_num`, and each one references `phone(phone_num)`.
+- **So you join `phone` twice,** under two different aliases, `src` and `dst`: one to find the caller's owner and one to find the receiver's owner.
 :::
 
 :::check id=exam-18b-q4-q2
@@ -580,8 +634,9 @@ Which statement returns the recordings of a given number, with both owners' name
 - [x] `SELECT r.at, r.body, src.name, dst.name FROM recordings r JOIN phone src ON src.phone_num = r.from_num JOIN phone dst ON dst.phone_num = r.to_num WHERE r.from_num = ? OR r.to_num = ?`
 - [ ] `SELECT src.name, dst.name FROM phone src JOIN phone dst ON src.phone_num = dst.phone_num`
 
-- **Filter:** keeps a recording when the given number is `from_num` or `to_num`.
-- **Select list:** is `r.at`, `r.body`, `src.name`, and `dst.name`.
+- **The filter** keeps a recording when the given number is either the caller or the receiver.
+- **The select list** is `r.at`, `r.body`, `src.name`, and `dst.name`, so both owners' names appear.
+- **The first option** joins `phone` only once, so it shows just one name, and the third never looks at recordings.
 :::
 
 :::check id=exam-18b-q4-q3
@@ -592,19 +647,25 @@ Which of these hold for `recordings`?
 - [x] `at` is `TIMESTAMP NOT NULL` and `body` is `TEXT NOT NULL`
 - [x] `from_num` and `to_num` both reference `phone(phone_num)`
 
-- **`id`:** is the primary key.
-- **Number columns:** both are foreign keys to `phone(phone_num)`.
+- **`id`** is the primary key. The text `body` is not unique, so it cannot be one.
+- **Both number columns** are foreign keys to `phone(phone_num)`.
 :::
 
 :::
+
 :::problem id=exam-19a-q4 title="An Airbnb schema" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
-Airbnb. A user has an id and may be a guest, a host, or both. A property has an id, one host, a price per night, and a description. A rental has a guest, a property (and therefore the host of that property), a check-in, and a check-out. After check-out the host writes a recommendation of the guest and the guest writes one of the host.
+Design a database for Airbnb.
+
+- **Users:** each user has an id, and may be a guest, a host, or both.
+- **Properties:** each property has an id, one host, a price per night, and a description.
+- **Rentals:** each rental has a guest, a property (which also determines the host), a check-in date, and a check-out date.
+- **Recommendations:** after check-out, the host writes a recommendation about the guest, and the guest writes one about the host.
 
 :::check id=exam-19a-q4-q1
 The foreign key to the host is {{=properties.host_id|users.host_id|rentals.host_id}}, referencing `users(id)`.
 
-- **`properties.host_id`:** references `users(id)`.
-- **People table:** there is no second table of people.
+- **Each property has one host,** so `properties.host_id` references `users(id)`.
+- **There is only one table of people,** because the same user can be both a guest and a host.
 :::
 
 :::check id=exam-19a-q4-q2
@@ -615,8 +676,9 @@ Which of these hold?
 - [x] `recommendations` has primary key `(rental_id, author_id)`
 - [x] `author_id` and `about_id` both reference `users(id)`, and `rental_id` references `rentals(id)`
 
-- **Dual-role user:** appears as `host_id` on some property and as `guest_id` on some rental.
-- **Recommendation row:** stores `rental_id`, `author_id`, `about_id`, and `text TEXT NOT NULL`.
+- **A user with both roles** simply appears as `host_id` on some property and as `guest_id` on some rental. Two separate tables would store the same person twice.
+- **A recommendation row** stores `rental_id`, `author_id`, `about_id`, and `text TEXT NOT NULL`.
+- **Its key `(rental_id, author_id)`** allows exactly one recommendation per author per rental: one by the guest and one by the host.
 :::
 
 :::check id=exam-19a-q4-q3
@@ -626,19 +688,21 @@ Which column list matches `rentals`?
 - [ ] `property_id INTEGER PRIMARY KEY` and `price INTEGER NOT NULL`
 - [x] `guest_id` referencing `users(id)`, `property_id` referencing `properties(property_id)`, `check_in DATE NOT NULL`, and `check_out DATE`
 
-- **`rentals` columns:** `guest_id`, `property_id`, `check_in DATE NOT NULL`, and `check_out DATE`.
-- **`price` and `host_id`:** are columns of `properties`.
+- **`rentals` stores** `guest_id`, `property_id`, `check_in DATE NOT NULL`, and `check_out DATE`.
+- **No `host_id` in `rentals`:** the host is already known from the property, and storing it again could contradict `properties`.
+- **`price` and `host_id`** are columns of `properties`.
 :::
 
 :::
+
 :::problem id=exam-19b-q4 title="One night per property" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
-A user has an id and may be a guest, a host, or both. A property has an id, one host, a price per night, and a description. A rental has a guest, a property, a check-in, and a check-out. Two guests cannot share a property on the same night.
+This question uses the same Airbnb schema, with users, properties, and rentals. It adds one rule: two guests must never rent the same property on the same night.
 
 :::check id=exam-19b-q4-q1
 The `nights` primary key is {{=(property_id, night)|(rental_id)|(night)}}.
 
-- **Booking:** writes one `nights` row for each night of the stay.
-- **Occupied night:** a second guest on an occupied night hits the primary key and the insert fails.
+- **The idea:** each booking writes one `nights` row for every night of the stay.
+- **The key `(property_id, night)`** allows only one row per property per night, so a second booking for an occupied night breaks the primary key and the insert fails.
 :::
 
 :::check id=exam-19b-q4-q2
@@ -648,7 +712,7 @@ A `CHECK` constraint:
 - [ ] compares two rental rows and rejects overlapping dates by itself
 - [ ] is the primary key of `rentals`
 
-The extra `nights` table is what makes the collision visible to the DBMS.
+A `CHECK` constraint can only look at the single row being written. It cannot compare that row with other rentals, so it cannot detect overlapping dates. That is why the extra `nights` table is needed: it turns an overlap into a duplicate key, which the database can detect.
 :::
 
 :::check id=exam-19b-q4-q3
@@ -659,19 +723,26 @@ Which of these hold?
 - [x] `nights.rental_id` references `rentals(id)`
 - [x] Who is staying at property P on night D is a join from `nights` to `rentals` to `users`
 
-- **Base tables:** users, properties, and rentals stay as in the question.
-- **`nights`:** adds `property_id`, `night`, and `rental_id`.
+- **The base tables** `users`, `properties`, and `rentals` stay as before.
+- **`nights`** adds `property_id`, `night`, and `rental_id`, with foreign keys to `properties` and `rentals`.
+- **To find who stays at property P on night D,** look up `nights`, follow `rental_id` to `rentals`, and then `guest_id` to `users`.
+- **The key cannot be `(rental_id)` alone,** because one rental covers many nights.
 :::
 
 :::
+
 :::problem id=exam-20a-q4 title="A DVD schema" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
-A DVD service. Users have an id and a name. Movies have an id, a name, a description, any number of categories from {Action, Drama, Romance, kids}, an average `score`, and `num_scorers`. A viewing records the user, the movie, and the date.
+A DVD service needs a database.
+
+- **Users** have an id and a name.
+- **Movies** have an id, a name, a description, an average `score`, and `num_scorers`, the number of users who scored it. Each movie may belong to any number of categories from {Action, Drama, Romance, kids}.
+- **Viewings** record which user watched which movie, and on which date.
 
 :::check id=exam-20a-q4-q1
 A movie with no category row is kept by a {{=LEFT JOIN|INNER JOIN|CROSS JOIN}} from `movies` to `categories`.
 
-- **Query shape:** joins `watches` to `movies`, then left-joins `categories` on `c.movie_id = m.id`, for `w.user_id = ?`.
-- **`LEFT JOIN`:** keeps a movie that has no category row.
+- **The query** joins `watches` to `movies` for `w.user_id = ?`, then left-joins `categories` on `c.movie_id = m.id`.
+- **Why a `LEFT JOIN`:** an inner join would drop a movie that has no category row, but a left join keeps it, with a null category.
 :::
 
 :::check id=exam-20a-q4-q2
@@ -682,8 +753,9 @@ Which of these hold?
 - [x] `watches` has primary key `(user_id, movie_id, on_date)`
 - [x] `movies.score` is `REAL` and `movies.num_scorers` is `INTEGER NOT NULL DEFAULT 0`
 
-- **`watches`:** `watches.user_id` references `users(id)`, `watches.movie_id` references `movies(id)`, and `on_date` is `DATE NOT NULL`.
-- **`categories.category`:** is `TEXT NOT NULL`.
+- **Categories need a separate table,** because a movie can have many. Its key `(movie_id, category)` stops the same category being listed twice for one movie.
+- **`watches`** references both `users(id)` and `movies(id)`, and `on_date` is `DATE NOT NULL`. Including the date in the key lets a user watch the same movie again on another day.
+- **`categories.category`** is `TEXT NOT NULL`.
 :::
 
 :::check id=exam-20a-q4-q3
@@ -693,12 +765,13 @@ A movie with two categories in this query:
 - [x] appears twice, once per category
 - [ ] is dropped, because the category join is a left join
 
-A movie with two categories appears twice, once per category, which is the junction table doing its work.
+The join produces one row for each matching category row, so a movie with two categories appears twice, once with each category. That is how a one-to-many table always behaves in a join.
 :::
 
 :::
+
 :::problem id=exam-20b-q4 title="An average score" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-Users have an id and a name. Movies have an id, a name, a description, any number of categories from {Action, Drama, Romance, kids}, an average `score`, and `num_scorers`. A viewing records the user, the movie, and the date. A user submits a new score `s`.
+This question uses the same DVD schema. A movie stores its average `score` and its `num_scorers`. Now a user submits a new score `s` for a movie, and the stored average must be updated.
 
 :::check id=exam-20b-q4-q1
 The new average stored on the movie is this expression.
@@ -707,7 +780,8 @@ The new average stored on the movie is this expression.
 (score * num_scorers + :s) / ({{=num_scorers + 1|num_scorers|score + 1}})
 ```
 
-Both columns change in one `UPDATE`: `score` becomes that value and `num_scorers` becomes `num_scorers + 1`, for `WHERE id = :movie`.
+- **Why the formula works:** `score * num_scorers` is the total of all the old scores. Adding `s` gives the new total, and dividing by `num_scorers + 1` gives the new average.
+- **How to store it:** one `UPDATE ... WHERE id = :movie` sets `score` to that value and `num_scorers` to `num_scorers + 1` together. In SQL, every expression on the right reads the old values, so the order does not matter.
 :::
 
 :::check id=exam-20b-q4-q2
@@ -717,8 +791,9 @@ Which statement lists movies in a category sorted by score?
 - [x] `SELECT m.name, m.score FROM movies m JOIN categories c ON c.movie_id = m.id WHERE c.category = 'Drama' ORDER BY m.score DESC`
 - [ ] `SELECT m.name, m.score FROM movies m LEFT JOIN categories c ON c.movie_id = m.id WHERE m.score IS NOT NULL`
 
-- **Join:** is an inner join, so a movie with no Drama row is absent.
-- **Filter and order:** `c.category = 'Drama'` and `m.score DESC`.
+- **The join** is an inner join to `categories`, filtered by `c.category = 'Drama'`, so only Drama movies remain.
+- **The order** is `ORDER BY m.score DESC`, which puts the highest score first.
+- **The other options** sort by the wrong column, or never filter by category.
 :::
 
 :::check id=exam-20b-q4-q3
@@ -729,13 +804,16 @@ Which of these hold?
 - [ ] Object serialization makes those two column writes atomic by itself
 - [ ] The category query keeps a movie that has no Drama row
 
-- **Object serialization:** writes bytes and leaves the two statements independent.
-- **DBMS:** supplies the transaction.
+- **One `UPDATE` is atomic,** so changing both columns in a single statement is safe.
+- **Two separate statements** need a transaction, or another user's update could run between them.
+- **Object serialization** only writes bytes; it provides no atomicity. Only the database provides transactions.
+- **The Drama query** uses an inner join, so a movie with no Drama row is not in its result.
 :::
 
-The persistence layer in session 13 connects a Java or Python server to the database.
-
-- **[Reactor](topic:reactor):** the server from this topic runs these SQL statements.
-- **DAO layer:** the SQL stays in the data-access objects.
-- **Repository:** the protocol calls the repository.
 :::
+
+The persistence layer from session 13 is what connects a Java or Python server to the database.
+
+- **The server:** the [Reactor](topic:reactor) server from earlier in the course is the program that runs these SQL statements.
+- **Where the SQL lives:** all SQL stays inside the DAO classes.
+- **Who calls whom:** the server's protocol calls the repository, and the repository calls the DAOs.
