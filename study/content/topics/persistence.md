@@ -65,6 +65,8 @@ When you turn classes into tables, follow these rules.
 - **A many-to-many (N:M) relationship** becomes a separate **junction table**, which holds a foreign key to each of the two tables.
 - **Never use repeated columns** such as `course1`, `course2`, and `course3`. They fix the maximum length of the list, and queries cannot treat them as rows.
 
+For example, students and courses are two classes, so each gets its own table.
+
 ```sql
 CREATE TABLE Students (
   Id INTEGER PRIMARY KEY,
@@ -75,7 +77,11 @@ CREATE TABLE Courses (
   Id INTEGER PRIMARY KEY,
   Title TEXT NOT NULL
 );
+```
 
+A student takes many courses, and a course has many students, so the relationship is N:M. It gets a junction table with a foreign key to each side.
+
+```sql
 CREATE TABLE Enrollment (
   StudentId INTEGER REFERENCES Students(Id),
   CourseId INTEGER REFERENCES Courses(Id),
@@ -94,19 +100,22 @@ A join combines rows from two or more tables.
 - **In relational-algebra terms,** a join is that product followed by a selection of the rows that meet the condition.
 - **`SELECT`** then picks (projects) only the columns you ask for.
 
+**An inner join** lists each student with each course they take. A student with no enrollment does not appear.
+
 ```sql
--- Inner Join: returns only rows that match in both tables
 SELECT S.Name, C.Title
 FROM Students S
 INNER JOIN Enrollment E ON S.Id = E.StudentId
 INNER JOIN Courses C ON E.CourseId = C.Id;
+```
 
--- Left Join: returns every row from the left table, even with no match on the right
+**A left join** lists every student. A student with no enrollment appears once, with `Title` set to null.
+
+```sql
 SELECT S.Name, C.Title
 FROM Students S
 LEFT JOIN Enrollment E ON S.Id = E.StudentId
 LEFT JOIN Courses C ON E.CourseId = C.Id;
-
 ```
 
 ![INNER JOIN of Alice to prog. Bob and systems are marked because they have no junction row, so they are absent from the result](../../web/public/figures/sql-join.svg)

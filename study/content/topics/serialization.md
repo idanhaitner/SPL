@@ -34,22 +34,35 @@ Serialization is the representation of an object as a sequence of bytes.
 - **Its only job:** it is a flag that says the class agrees to be serialized.
 - **What happens without it:** `ObjectOutputStream` refuses to write an object whose class does not implement `Serializable`, and throws `NotSerializableException`.
 
+The class only has to declare `implements Serializable`.
+
 ```java
 public final class Pet implements Serializable {
     public enum Type { DOG, CAT }
     public final String name;
     public final Type type;
     public final int age;
+
     public Pet(String name, Type type, int age) {
-        this.name = name; this.type = type; this.age = age;
+        this.name = name;
+        this.type = type;
+        this.age = age;
     }
 }
+```
 
+**Writing:** `writeObject` turns the object into bytes and writes them to the file.
+
+```java
 Pet pet = new Pet(name, type, age);
-try (var fileOut = Files.newOutputStream(path);
-     var out = new ObjectOutputStream(fileOut)) {
+try (var out = new ObjectOutputStream(Files.newOutputStream(path))) {
     out.writeObject(pet);
 }
+```
+
+**Reading:** `readObject` builds a new `Pet` from those bytes. It returns `Object`, so the result is cast back to `Pet`.
+
+```java
 try (var in = new ObjectInputStream(Files.newInputStream(path))) {
     Pet copy = (Pet) in.readObject();
 }
