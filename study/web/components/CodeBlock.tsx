@@ -7,7 +7,7 @@ export async function CodeBlock({ lang, text }: { lang: string; text: string }) 
   const grammar = SUPPORTED.has(label) ? label : "text";
   const html = await codeToHtml(text.replace(/\n$/, ""), {
     lang: grammar,
-    theme: "tokyo-night",
+    themes: { light: "github-light", dark: "github-dark" },
   });
   return (
     <div className="code-panel" data-lang={grammar}>
