@@ -31,8 +31,12 @@
   --danger: #c2415b;
   --ok: #2f9e7d;
   --ok-grad: linear-gradient(90deg, #2f9e7d, #3fae8c);
-  --code: #1a1b26;
-  --code-head: #16161e;
+  --code: #f6f8fa;
+  --code-head: #eef1f4;
+  --code-ink: #1f2328;
+  --code-muted: #6e7781;
+  --code-gutter: #8c959f;
+  --code-border: #d0d7de;
   --orb-a: rgb(91 98 201 / 0.07);
   --orb-b: rgb(122 115 209 / 0.05);
   --orb-c: rgb(91 159 184 / 0.04);
@@ -71,8 +75,12 @@
     --on-accent: #0b0d20;
     --danger: #e58a9c;
     --ok: #6cc4a6;
-    --code: #13141f;
-    --code-head: #0f1019;
+    --code: #0d1117;
+    --code-head: #161b22;
+    --code-ink: #e6edf3;
+    --code-muted: #8b949e;
+    --code-gutter: #6e7681;
+    --code-border: #30363d;
     --orb-a: rgb(139 145 217 / 0.08);
     --orb-b: rgb(157 151 220 / 0.05);
     --orb-c: rgb(127 179 198 / 0.04);
@@ -934,10 +942,10 @@ button:disabled { opacity: 0.45; cursor: default; }
   max-width: 100%;
   background: var(--code);
   border-radius: 16px;
-  border: 1px solid rgb(255 255 255 / 0.06);
+  border: 1px solid var(--code-border);
   overflow: hidden;
   direction: ltr;
-  box-shadow: 0 24px 50px -24px rgb(15 17 40 / 0.6), 0 0 0 1px rgb(0 0 0 / 0.04);
+  box-shadow: var(--shadow-sm);
 }
 .code-panel .lang {
   display: flex;
@@ -947,12 +955,12 @@ button:disabled { opacity: 0.45; cursor: default; }
   margin: 0;
   padding: 0 1rem;
   background: var(--code-head);
-  border-bottom: 1px solid rgb(255 255 255 / 0.05);
+  border-bottom: 1px solid var(--code-border);
   font-family: var(--mono);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #7a82b0;
+  color: var(--code-muted);
 }
 .code-panel .lang::before {
   content: "";
@@ -974,7 +982,15 @@ button:disabled { opacity: 0.45; cursor: default; }
   background: transparent !important;
   border-radius: 0;
   overflow: visible;
-  color: #c0caf5;
+  color: var(--code-ink);
+}
+@media (prefers-color-scheme: dark) {
+  .code-panel pre,
+  .code-panel pre span {
+    color: var(--shiki-dark) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+  }
 }
 .code-panel pre code {
   display: block;
@@ -1006,7 +1022,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   width: 2.4rem;
   margin: 0;
   text-align: end;
-  color: #3b4261;
+  color: var(--code-gutter);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
