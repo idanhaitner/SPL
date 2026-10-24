@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChapterProgress } from "@/components/ChapterProgress";
 import { Continue } from "@/components/Continue";
 import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
@@ -6,7 +7,7 @@ import { loadCourse } from "@/lib/course";
 export default function HomePage() {
   const course = loadCourse();
   return (
-    <article className="page">
+    <article className="page page-home">
       <p className="kicker">Course</p>
       <h1><Mixed text={course.title} /></h1>
       <p className="lead"><Mixed text={course.summary} /></p>
@@ -22,6 +23,7 @@ export default function HomePage() {
               <span>
                 <strong><Mixed text={topic.title} /></strong>
                 {topic.blurb && <em><Mixed text={topic.blurb} /></em>}
+                <ChapterProgress courseId={course.id} practiceIds={topic.practiceIds} />
               </span>
             </Link>
           </li>
