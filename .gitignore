@@ -24,9 +24,6 @@ study/web/tsconfig.tsbuildinfo
 npm-debug.log*
 yarn-error.log*
 
-# C++ lesson binaries
-c++/build/
-
 # Python
 __pycache__/
 *.pyc
