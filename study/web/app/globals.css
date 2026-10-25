@@ -86,6 +86,7 @@
 
 * { box-sizing: border-box; }
 html {
+  font-size: 106.25%;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -1199,7 +1200,7 @@ blockquote {
 }
 
 @media (max-width: 800px) {
-  html { font-size: 150%; }
+  html { font-size: 159%; }
   body { line-height: 1.7; }
   :root { --rail-bar: calc(3.4rem + env(safe-area-inset-top, 0px)); }
   .rail { -webkit-backdrop-filter: none; backdrop-filter: none; background: transparent; }
