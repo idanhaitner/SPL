@@ -24,3 +24,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Editor / AI assistant config
+.claude/
+.cursor/
+CLAUDE.md
