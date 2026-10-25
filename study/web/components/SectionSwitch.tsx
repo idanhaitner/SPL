@@ -256,6 +256,12 @@ export function SectionSwitch({
     scrollToId(parts.length > 1 ? "chapter-sections" : "chapter-part");
   }
 
+  function step(next: number) {
+    setIndex(next);
+    setGroupIndex(0);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  }
+
   const current = parts[index] ?? parts[0];
   const previous = parts[index - 1];
   const upcoming = parts[index + 1];
@@ -299,8 +305,8 @@ export function SectionSwitch({
           sectionCount={parts.length}
           previousSection={previous?.title}
           nextSection={upcoming?.title}
-          onPreviousSection={() => show(index - 1)}
-          onNextSection={() => show(index + 1)}
+          onPreviousSection={() => step(index - 1)}
+          onNextSection={() => step(index + 1)}
           previousChapter={previousChapter}
           nextChapter={nextChapter}
         />
