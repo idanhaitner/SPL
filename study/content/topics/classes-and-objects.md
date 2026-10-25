@@ -54,49 +54,76 @@ struct Point {
 
 ## The structure of an object in memory
 
-When an object is defined, on the stack or on the heap, it is given memory according to its size. When the structure of the object is fixed, its inner layout is set in advance by a fixed rule, so the compiler can translate every access to a field into the exact place of that field in memory, relative to the object's address.
+When an object is defined, on the stack or on the heap, it gets memory according to its size. Its inner layout follows a fixed rule, so the compiler always knows where each field is, relative to the start of the object.
 
-The usual layout is that the fields are placed one after another, each one starting in a new cell, in the order they are declared in the class. The first field starts at the object's address, the lowest one. When a field is itself an object, its inner structure is laid out recursively in the same way.
+**The rule:** the fields are placed one after another, in the order they are declared. The first field starts at the object's address.
 
-This `Student` class is the example for the rest of the memory chapters.
+Start small.
+
+```cpp
+class Point {
+    int x;
+    int y;
+};
+
+Point p;
+```
+
+| Cell | Field |
+| --- | --- |
+| the address of `p` | `x` |
+| the next cell | `y` |
+
+So `p.y` is translated to "the cell one after the address of `p`". The compiler never searches for a field.
+
+**When a field is itself an object,** its own fields are laid out in its place, by the same rule. A `string` is an object with two fields, a pointer to its characters and a length, so a `string` field takes two cells.
+
+```cpp
+class Named {
+    int id;
+    string name;
+};
+```
+
+| Cell | Field |
+| --- | --- |
+| 1 | `id` |
+| 2 | `name.chars` (the address of the characters, on the heap) |
+| 3 | `name.length` |
+
+The rest of the memory chapters use a richer class, `Student`. Each field is a different kind of variable, so it is worth going through them one by one.
 
 ```cpp
 class Student {
-private:
-    const int id;
-    string name;
-    Bag* bag;
-    vector<Book*> books;
-    const University& univ;
-
-public:
-    int getId() const { return id; }
-    const string& getName() const { return name; }
-    const Bag& getBag() const { return *bag; }
-    const vector<Book*>& getBooks() const { return books; }
-    const University& getUniv() const { return univ; }
+    const int _id;             // content, a simple type
+    string _name;              // content, an object (two cells)
+    Bag* _bag;                 // an address of a Bag on the heap
+    vector<Book*> _books;      // an object holding addresses of Books
+    const University& _univ;   // an alias for a University that lives elsewhere
 };
-
-{
-    Student s(...);
-    Student* ps = new Student(...);
-}
-
 ```
 
-- **The getters follow the rule** from [Variables, pointers, and references](topic:pointers): the simple type `id` is returned by value, and every object is returned by `const` reference.
-- **`s` is defined on the stack,** so all of its fields are on the stack.
-- **`ps` is a pointer on the stack,** and the `Student` it points at, with all of its fields, is on the heap.
+- **`_id`** is a plain number, stored in the object. `const` means it can never change after construction.
+- **`_name`** is stored in the object, as its two cells. The characters themselves are on the heap, owned by the `string`.
+- **`_bag`** is one cell holding an address. The `Bag` it points at is a separate object on the heap, and the student is responsible for it.
+- **`_books`** is a `vector`, an object of two cells (the address of its array, and its size). The array holds addresses of `Book` objects, which are also on the heap.
+- **`_univ`** is an alias. The `University` is not part of the student, and the student is not responsible for it.
 
-| Field of `s` | Takes the cells | What they hold |
-| --- | --- | --- |
-| `id` | one cell | the number |
-| `name` | two cells: `chars`, `length` | the address of the characters on the heap, and their count |
-| `bag` | one cell | the address of a `Bag` on the heap |
-| `books` | two cells: `lst`, `size` | the address of the vector's array on the heap, and its size |
-| `univ` | one cell | the address of the `University` it is an alias for |
+**Where the whole object goes** depends only on how you define it.
 
-The `Student` on the heap that `ps` points at has exactly the same inner layout, starting at the address that `ps` holds.
+```cpp
+Student s(...);                  // all of s's cells are on the stack
+Student* ps = new Student(...);  // ps is one cell on the stack;
+                                 // the Student's cells are on the heap
+```
+
+The getters follow the rule from [Variables, pointers, and references](topic:pointers): a simple type is returned by value, and an object by `const` reference.
+
+```cpp
+int getId() const { return _id; }
+const string& getName() const { return _name; }
+const Bag& getBag() const { return *_bag; }
+```
 
 ## Initializing an object
 
@@ -107,26 +134,29 @@ As we have said several times, the compiler translates the definition of an obje
   - First, the initialization mechanism runs on every field of the object that is itself an object (not on simple types, and not on addresses of objects).
   - Then the object's constructor runs.
 
-A first attempt at the constructor of `Student` assigns every field in the body.
+A first attempt at a constructor assigns the fields in its body. Look at just two fields of `Student`.
 
 ```cpp
-Student(int id, const string& name, Bag* bag, const University& univ) {
-    _id = id;
-    _name = name;
-    _bag = bag;
-    _univ = univ;
-    _books.push_back(new DigitalBook());
-    _books.push_back(new HardCopyBook());
+Student(int id, const string& name) {
+    _id = id;        // error: _id is const, it cannot be assigned
+    _name = name;    // works, but wastefully
 }
-
 ```
 
 That attempt has two problems.
 
-- **Inefficiency:** a field of object type is first initialized (empty), and only then assigned. It is better to initialize it once, with the assignment you need.
-- **Fields that are `const`, and fields that are references,** cannot be assigned after they are defined at all.
+- **`const` fields, and reference fields,** cannot be assigned after they exist. By the time the body runs, they already exist.
+- **Object fields are built twice.** The initialization mechanism already built `_name` as an empty string before the body ran, and the body then assigns it again.
 
-So you state in advance how each field is initialized.
+The fix is to say how each field is initialized, before the body, in an **initializer list** after a colon.
+
+```cpp
+Student(int id, const string& name)
+    : _id(id), _name(name)    // each field is built once, with its value
+{ }
+```
+
+The full constructor of `Student` does the same for every field, and uses its body only for the work that is not a plain initialization: creating the student's books.
 
 ```cpp
 Student(int id, const string& name, Bag* bag, const University& univ)
@@ -135,7 +165,6 @@ Student(int id, const string& name, Bag* bag, const University& univ)
     _books.push_back(new DigitalBook());
     _books.push_back(new HardCopyBook());
 }
-
 ```
 
 A constructor (בנאי) gives the members their first values in an initializer list, which is written after a colon and before the constructor body.
@@ -173,42 +202,6 @@ The constructor takes `name` as `const std::string&`, a reference to const. This
 
 - **The reference** names the caller's object itself, so the call skips the copy.
 - **`const`** promises that the function will not change that object.
-
-### A picture of two students
-
-```cpp
-{
-    University univ(...);
-    ...
-    Student s(7, "ringo", new Bag7(), univ);
-    Student* ps = new Student(8, "jango", new Bag5(), univ);
-}
-
-```
-
-| Stack address | Content | Field of `s` |
-| --- | --- | --- |
-| 9952 | 7 | `id` |
-| 9960 | 200 | `name.chars` |
-| 9968 | 5 | `name.length` |
-| 9976 | 300 | `bag` |
-| 9984 | 350 | `books.lst` |
-| 9992 | 2 | `books.size` |
-| 10000 | the address of `univ` | `univ` |
-
-And `ps`, at stack address 9944, holds 100.
-
-| Heap address | What is there |
-| --- | --- |
-| 100 | The `Student` of `ps`: `id` 8, `name` (400, 5), `bag` 500, `books` (550, 2), `univ` |
-| 200 | The characters `ringo` |
-| 240, 260 | The `DigitalBook` and `HardCopyBook` of `s` |
-| 300 | The `Bag7` of `s` |
-| 350 | The array of `s.books`: the addresses 240 and 260 |
-| 400 | The characters `jango` |
-| 440, 460 | The two books of the `Student` at 100 |
-| 500 | The `Bag5` of the `Student` at 100 |
-| 550 | The array of its `books`: the addresses 440 and 460 |
 
 ### The factory pattern
 

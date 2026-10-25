@@ -39,130 +39,77 @@ Broadly, there are three strategies for safety and correctness, which you will m
 
 ## Immutable objects
 
-In programming languages you can, of course, assign to variables.
+The first strategy removes the problem at its root: if no thread can change an object, there is nothing to protect.
 
-```java
-int i = 5;
-...
-i++;
+It turns out that assignment is not essential to programming. Every algorithm can be written without it, in a functional language. So you can design classes with no assignment at all.
 
-Student s = new Student(...);
-...
-s.setNickName("jango");
-
-```
-
-It turns out that assignment is not essential to a programming language: every algorithm can be written in a language without assignment. These are called functional languages (you will meet them in the course on programming-language principles).
-
-So you can design classes with no assignment operations. In such classes there are no safety problems, as long as the invariant is checked in the constructor, so you can expose such an object to several threads with no special protection.
-
-**The design:**
-
-- **Commands:** instead of assigning, return a new, updated copy.
-- **Queries:** all the fields are final and private, so they can be reached only through queries. A query does not expose its internal fields when they are of object type, unless those are designed as immutable objects too (otherwise a user who got access to a field could change it).
-- **The class cannot be inherited** (it is declared `final`).
+- **Every field is `private final`,** so it is set once, in the constructor, and the constructor checks the invariant.
+- **A command does not change the object.** It returns a new object with the new value.
+- **The class is `final`,** so no subclass can add a field that changes.
+- **A getter never exposes a field that could be changed,** so object fields must be immutable too.
 
 ```java
 final class Even {
     private final int val;
 
     Even(int val) throws Exception {
-        if (val % 2 != 0)
-            throw new Exception("Odd number!");
+        if (val % 2 != 0) throw new Exception("Odd number!");
         this.val = val;
     }
 
     public int get() { return val; }
-
-    public Even next() {
-        return new Even(val + 2);
-    }
+    public Even next() { return new Even(val + 2); }   // a new object
 }
-
 ```
 
-**Using it.** Usually, when you use objects like this, you must make sure of correctness (safety holds in every case).
+Such an object can be shared by any number of threads with no locking, because nobody can catch it in the middle of a change.
 
-- **Assign the new copy to the variable on every call to a command** (relevant for a serial run too), as in the `String` class, for example for the `replaceAll` command:
+**The catch: you must use the returned copy.** Java's `String` works this way, and forgetting it is a classic bug.
 
 ```java
 String s = "abc";
-s.replaceAll("b", "d");
-System.out.print(s);   // abc
+s.replaceAll("b", "d");       // returns "adc", which is thrown away
+System.out.print(s);          // abc
 s = s.replaceAll("b", "d");
-System.out.print(s);   // adc
-
+System.out.print(s);          // adc
 ```
 
-- **Merge the results at the end,** for a concurrent run:
+**With threads, each thread gets its own new copy,** and the results are merged at the end. Two threads that each advance the same `Even` by 2:
 
 ```java
 class Adder implements Runnable {
     Even e;
     Adder(Even e) { this.e = e; }
-    public Even getE() { return e; }
-    public void run() { e = e.next(); }
+    public void run() { e = e.next(); }     // its own new Even
 }
-
-class Test {
-    public static void main(String[] args) {
-        Even e = new Even(0);
-        Adder adder1 = new Adder(e);
-        Adder adder2 = new Adder(e);
-        Thread t1 = new Thread(adder1);
-        Thread t2 = new Thread(adder2);
-        t1.start();
-        t2.start();
-        // merge the copies:
-        // 1. wait for completion
-        t1.join();
-        t2.join();
-        // 2. merge
-        e = new Even(adder1.getE().get() + adder2.getE().get() - e.get());
-    }
-}
-
 ```
-
-Each adder starts from the `Even` at 0 and makes its own new `Even` at 2, so the merge computes 2 + 2 − 0 = 4.
-
-**When is it worth using objects like this?** Objects that are cheap to copy and cheap to create, such as numbers, strings, and colors. In a philosophical sense, this is a kind of type called a **value object**: an object whose identity is defined by its value, and not by its place in memory.
 
 ```java
-Integer i1 = new Integer(6);
-Integer i2 = new Integer(6);
-if (i1.equals(i2)) ...   // true: equal by value
-
+Even e = new Even(0);
+Adder a1 = new Adder(e), a2 = new Adder(e);
+// run a1 and a2 on two threads, then join both
+e = new Even(a1.e.get() + a2.e.get() - e.get());   // 2 + 2 - 0 = 4
 ```
 
-Java has quite a few classes like this: `String`, `Integer`, `Long`, `Double`, `Boolean`, ...
+Each adder ended with its own `Even` holding 2. The merge adds what each one contributed.
+
+**When is this worth it?** For objects that are cheap to copy and cheap to create, such as numbers, strings, dates, and colors. These are **value objects**: what matters is their value, not their place in memory. Java's `String`, `Integer`, `Long`, `Double`, and `Boolean` are all immutable.
 
 ## Synchronizing access with a lock
 
-The second strategy makes sure that two threads do not perform "critical" operations on the same object at the same time.
+The second strategy makes sure that two threads never run a "critical" piece of code on the same object at the same time. The first thread to arrive gets in; the others move to the Blocked state and wait.
 
-In this approach, the first thread that reaches the object gets access to it, while the threads that arrive after it move to the Blocked state.
+The run-time environment provides two operations for this.
 
-For that, you need a service of the run-time environment: lock and unlock operations, and moving threads to the Blocked and Runnable states accordingly.
+- **`lock(O)`:** if nobody holds `O`, the current thread takes it. Otherwise the thread is blocked until `O` is released.
+- **`unlock(O)`:** the current thread releases `O`, and the threads waiting for it become Runnable again.
 
-- **`lock(O)`:** the current thread tries to lock the object `O`. If the object is not yet locked, it is taken by the thread. Otherwise, the thread moves to the Blocked state, until the thread holding it releases it.
-- **`unlock(O)`:** the current thread releases its lock on the object `O`, and as a result the environment returns every thread that moved to Blocked because it tried to take `O` to the Runnable state.
-
-To carry out these operations, every object gets a data structure that includes a field (of type `Thread`) that says which thread holds it now, and a list of the threads that tried to lock it and moved to the Blocked state because it was taken.
-
-Java has a convenient syntax, which comes from Java's own code, for these two operations.
+To support this, every object carries a record of which thread holds it, and a list of the threads waiting for it. Java writes the pair as a block:
 
 ```java
-synchronized (o) {
+synchronized (o) {     // lock(o)
     ...
-}
-
-// is
-
-lock(o);
-...
-unlock(o);
-
+}                      // unlock(o)
 ```
 
 :::definition id=def-critical-section title="Critical section and mutual exclusion" source="materials/lectures/Chapter 8 - Concurrency.pptx"
@@ -173,170 +120,91 @@ A **critical section** (אזור קריטי) is a stretch of code that at most o
 - **A `synchronized (obj)` block** locks the object `obj` for the length of the block.
 :::
 
-How do you use this mechanism for a given class, so that it guarantees the safety and correctness of the class, even when its instances are exposed to several threads (in other words, how do you make it "thread safe")?
+How do you use locks to make a whole class safe for many threads ("thread-safe")? The notes give three protocols.
 
 ### Protocol A: full synchronization
 
-Every access to a field of the class, for reading or for writing, is done under a lock on the object.
-
-```java
-class Even {
-    private int val;
-
-    Even(int val) throws Exception {
-        if (val % 2 != 0)
-            throw new Exception("Odd number!");
-        this.val = val;
-    }
-
-    public int get() {
-        synchronized (this) {
-            return val;
-        }
-    }
-
-    public void next() {
-        synchronized (this) {
-            val++;
-            val++;
-        }
-    }
-
-    public void f() { System.out.println("abc"); }
-}
-
-```
-
-- **Three threads call `e.next()`.** T1 takes the lock on `e`. T2 and T3 arrive while it holds it, so they move to Blocked and wait in `e`'s list. When T1 leaves the block, it releases the lock, and one of them takes it. Every `next` runs whole, and `e` goes from 0 to 2 to 4 to 6.
-- **T1 calls `e.next()` and T2 calls `e.get()`.** `get` also needs the lock, so T2 waits until `next` has finished both increments, and never reads an odd value.
-- **`f` reads no field,** so it is not synchronized, and any thread can run it at any time.
-
-Since this is a standard and common protocol, Java has a convenient syntax (syntactic sugar) for it:
+**Every** access to a field, reading or writing, happens while holding the lock on the object.
 
 ```java
 public int get() {
-    synchronized (this) {
-        return val;
-    }
+    synchronized (this) { return val; }
 }
 
-// is the same as
-
-public synchronized int get() {
-    return val;
+public void next() {
+    synchronized (this) { val++; val++; }
 }
-
 ```
 
-- **`synchronized` is not part of the method's signature,** but part of its code. For example, you cannot declare a method in an interface as "synchronized". You must declare the method as synchronized in a derived class, if you override it there.
-- **A note:** in different cases you may be able to avoid locking the whole method, so that only a few lines of it run under the synchronization block. You will see examples later in the course. Either way, be careful, and know what you are doing.
+- **Three threads call `e.next()`:** one gets in, the other two wait. Each `next` runs whole, so `e` goes 0, 2, 4, 6.
+- **One thread calls `next` while another calls `get`:** `get` also needs the lock, so it can never see the odd value in the middle of `next`.
+
+Locking the whole method is so common that Java has a shortcut. These two are the same:
+
+```java
+public int get() { synchronized (this) { return val; } }
+public synchronized int get() { return val; }
+```
+
+`synchronized` belongs to the method's code, not its signature. An interface cannot declare a method synchronized, and a subclass that overrides a synchronized method must write `synchronized` again.
 
 ### Protocol B: partial synchronization
 
-If you can split the interface's methods into separate groups, so that a method in one group never touches the fields of the methods in another group, you can synchronize each group of methods on an object that represents that group.
+If the methods split into groups that touch **different fields**, each group can have its own lock. Then threads working on different groups do not wait for each other.
+
+A `Point` has `x` and `y`. The methods that use `x` never touch `y`, and the other way around.
 
 ```java
 class Point {
     int x, y;
+    Object lockX = new Object(), lockY = new Object();
 
-    Point(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+    public void up()    { synchronized (lockY) { y++; } }
+    public int getY()   { synchronized (lockY) { return y; } }
 
-    public int getY() { synchronized (this) { return y; } }
-    public void up() { synchronized (this) { y++; } }
-    public void down() { synchronized (this) { y--; } }
-    public int getX() { synchronized (this) { return x; } }
-    public void right() { synchronized (this) { x++; } }
-    public void left() { synchronized (this) { x--; } }
-}
-
-// becomes
-
-class Point {
-    int x, y;
-    Object lockX, lockY;
-
-    Point(int x, int y) {
-        this.x = x;
-        this.y = y;
-        lockX = new Object();
-        lockY = new Object();
-    }
-
-    public int getY() { synchronized (lockY) { return y; } }
-    public void up() { synchronized (lockY) { y++; } }
-    public void down() { synchronized (lockY) { y--; } }
-    public int getX() { synchronized (lockX) { return x; } }
     public void right() { synchronized (lockX) { x++; } }
-    public void left() { synchronized (lockX) { x--; } }
+    public int getX()   { synchronized (lockX) { return x; } }
 }
-
 ```
 
-- **T1 calls `p.up()`, T2 calls `p.left()`, and T3 calls `p.right()`.** T1 locks `lockY`, and T2 locks `lockX`, so they run at the same time. Only T3 waits, for `lockX`.
+If T1 calls `p.up()` and T2 calls `p.right()`, they run at the same time. With one lock on `this`, one of them would wait for no reason.
 
-### Protocol C: locking several objects in one operation
+### Protocol C: one lock for several objects
 
-Suppose you are interested in locking two objects (this may come up in an exercise), for example removing a member from one list only if you can add it to another list in its place. You can lock both lists as one, by locking an object that represents both of them (so that every access to the lists goes through synchronization on that object).
+Sometimes one operation must touch two objects together, for example moving an item from list `l1` to list `l2`. Create one lock object that stands for both, and use it for every access to either list.
 
 ```java
-List<Integer> l1, l2;
-Object lockL1L2;
-...
-synchronized (lockL1L2) {
-    ... // do something with both L1 and L2
-}
+Object lockL1L2 = new Object();
 
+synchronized (lockL1L2) {
+    l2.add(l1.remove(0));
+}
 ```
 
 ## More consequences of the lock
 
-We saw that `synchronized` lets a piece of code run without other threads reaching the object at the same time. It turns out it has more consequences.
+`synchronized` does more than keep threads apart.
 
 ### Visibility
 
-Remember that each processor keeps a cache memory, so that access to "popular" memory cells does not actually go to the RAM.
-
-- **When threads run on different processors,** they may read different contents of the same cell in memory, each from its own processor's cache, even though by the concurrency model the heap is shared by all the threads.
+Each processor has its own cache. Two threads on different processors can each read an old copy of the same field from their own cache, even though the heap is "shared".
 
 ```java
-class Test {
-    public static void main(String[] args) {
-        Even e = new Even(0);
-        Thread t1 = new Thread(() -> e.next());
-        Thread t2 = new Thread(() -> e.next());
-        t1.start();
-        t2.start();
-        t1.join();
-        t2.join();
-        System.out.println(e.get());
-    }
-}
-
+Even e = new Even(0);
+// two threads each call e.next(), and main joins them
+System.out.println(e.get());    // can print 0!
 ```
 
-- **Assume the program runs correctly,** so each thread advances the number by 2 in turn, one after the other, with no interference.
-- **The program may still print 0!** That happens when the processor of the main thread reads the value of `e` from its own cache memory, while the other threads run on another processor. So the number on the heap is 4, but the main thread's processor did not reach it.
-- **Running `synchronized` code** causes the caches of all the processors to be updated with the contents of RAM.
+Even if the two threads ran perfectly in turn and left 4 in memory, the main thread's processor might still be reading 0 from its cache.
 
-What if you chose to keep safety and correctness without the `synchronized` mechanism? Declaring a variable `volatile` forces the processor always to read or write its value from RAM, and not from the cache.
+- **Entering or leaving a `synchronized` block** brings the processor's cache up to date with RAM, so a synchronized `get` always sees 4.
+- **Without `synchronized`,** declare the field `volatile`. That forces every read and write of it to go to RAM, not the cache.
 
 ```java
-class Test {
-    public static void main(String[] args) {
-        volatile Even e = new Even(0);
-        ...
-    }
-}
-
+volatile Even e;    // a field: every access goes to RAM
 ```
 
-- **A note:** declaring a variable `volatile` also makes reading and writing it atomic. If it spreads over more than one cell in memory, other threads cannot reach it while another thread is reading or writing it.
-- **Strictly,** Java accepts `volatile` only on fields, so in real code `e` would be a field of the class.
-
-"Atomic" here means one read or one write. A read-modify-write is still several steps.
+`volatile` also makes a single read or write of the field atomic, even when the value takes more than one cell, such as a `long`. It does **not** make a read-modify-write atomic.
 
 - **`volatile`** guarantees visibility for a variable, and limits how the compiler and processor may reorder instructions around it.
 - **Visibility** means that once one thread writes the variable, a later read by another thread sees the new value, rather than an old copy kept in a register or cache.
@@ -353,85 +221,41 @@ Two threads execute `count++` on a field declared `volatile int`. Is the increme
 - **To make the increment atomic,** run the three steps under one lock, or use a compare-and-swap, for example with `AtomicInteger`.
 :::
 
+
 ### Code reordering
 
-It turns out the compiler sometimes changes the order of the lines in a program, for the sake of optimization.
+The compiler may also change the order of lines, when the result looks the same to one thread.
 
 ```java
-int i = 10;
-int j = 20;
-i++;
-j++;
-
-// may become
-
-int i = 10;
-int j = 20;
-j++;
-i++;
-
+i++;            // may run as:   j++;
+j++;            //               i++;
 ```
 
-In machine operations, the original order is:
+In machine terms, after `j = 20` the value 20 may still be in a register, so incrementing `j` first saves one read from memory. In a serial program nobody can tell. Between threads, another thread might see `j` change before `i`.
 
-```text
-write [i],10
-write [j],20
-read R1,[i]
-inc R1
-write [i], R1
-read R1,[j]
-inc R1
-write [j], R1
-
-```
-
-and the reordered one is:
-
-```text
-write [i],10
-write [j],20
-inc R1          // R1 still holds 20, so "read R1,[j]" is dropped
-write [j], R1
-read R1,[i]
-inc R1
-write [i], R1
-
-```
-
-The reordered version skips one read, because `R1` already holds `j`. In a serial program this changes nothing. When there are operations between the lines whose result could be affected by the change of order, the compiler does not touch the order. Such operations include `if`, a call to a procedure, `synchronized`, and so on.
+The compiler does not move code across operations whose result could change, such as an `if`, a call to a procedure, or a `synchronized` block.
 
 ## Design patterns for thread-safe classes
 
 ### 1. Adding a method to a thread-safe class
 
-Java's `Vector` class is declared thread-safe. In other words, instances of the class can be exposed to several threads without worry.
-
-It turns out that a class being thread-safe does not allow every use of it under several threads. For example:
+Java's `Vector` is thread-safe: every method is safe by itself. That is not enough for two calls in a row.
 
 ```java
-Vector<Integer> v;
-... // some code, including thread creation over v
 if (!v.contains(5))
     v.add(5);
-
 ```
 
-The safety and correctness of the class guarantee that running each of its methods is correct, but there is no guarantee between the check whether 5 is in the vector and the add operation that another thread will not add 5 to the vector after it.
-
-So make sure another thread cannot reach the vector between the two lines of code:
+Between `contains` and `add`, another thread can add 5, so 5 ends up in the vector twice. The two calls must run as one, under the same lock the vector uses:
 
 ```java
-Vector<Integer> v;
-... // some code, including thread creation over v
 synchronized (v) {
     if (!v.contains(5))
         v.add(5);
 }
-
 ```
 
-This fix is called **client-side locking**: the users of the class take the same lock that its methods use.
+This is called **client-side locking**: the users of the class take the same lock that its methods use.
 
 :::check id=chk-client-lock
 `Vector.contains` and `Vector.add` each lock `this`. Why is `if (!v.contains(5)) v.add(5);` still a race?
@@ -444,365 +268,190 @@ This fix is called **client-side locking**: the users of the class take the same
 - **The fix:** make the pair one action, either by having the caller lock `v` around both calls, or by giving the class a single method that does both under its lock.
 :::
 
-In the case of a common operation, as always, it is better to extend the class with another method that handles this common use.
+
+If this operation is common, it belongs inside the class. A first try extends `Vector`:
 
 ```java
 class MyVector<T> extends Vector<T> {
     public synchronized void addIfAbsent(T obj) {
-        if (!contains(obj))
-            add(obj);
+        if (!contains(obj)) add(obj);
     }
 }
-
-MyVector<Integer> v;
-... // some code, including thread creation over v
-v.addIfAbsent(5);
-
 ```
 
-**The problem:** who guarantees that the safety and correctness of the class are carried out in general by synchronizing threads (there are other methods), and even if so, who said they are carried out by synchronization on locks (there is another way besides `synchronized`, as you will see)? And even if the class is synchronized with `synchronized`, who said the lock is on the object `this`?
+**The problem:** `addIfAbsent` locks `this`. Who promised that `Vector`'s own methods lock `this` too? They might use another lock, or another mechanism altogether. If so, `add` from another thread can still slip into the middle.
 
-- **So make sure yourself** that all the methods are synchronized by a lock on `this`:
+A second try overrides every method of `Vector`, each `synchronized` and calling `super`. That fixes the lock, but if one method is forgotten, or a new one is added to `Vector` in a future JDK, it still compiles and silently uses the old lock.
+
+**The solution: delegation.** Do not inherit. Keep a `Vector` inside, and implement its interfaces yourself, every method synchronized on `this`.
 
 ```java
-class MyVector<T> extends Vector<T> {
+class MyVector<T> implements List<T> {
+    private Vector<T> v = new Vector<>();
+
+    public synchronized boolean contains(T obj) { return v.contains(obj); }
+    public synchronized void add(T obj)         { v.add(obj); }
     public synchronized void addIfAbsent(T obj) {
-        if (!contains(obj))
-            add(obj);
+        if (!v.contains(obj)) v.add(obj);
     }
-
-    public synchronized boolean contains(T obj) {
-        return super.contains(obj);
-    }
-
-    public synchronized void add(T obj) {
-        super.add(obj);
-    }
-
-    ... // same for all methods of Vector
+    ...   // the same for every method of List
 }
-
 ```
 
-**The problem:** if you forget to override one of the methods, or if one is added in the future (in later versions of the JDK) to the methods of the `Vector` class, the code still compiles. In other words, one of the methods stays synchronized on another object, not `this`.
+Nobody outside can reach the inner vector, so every access goes through your lock.
 
-- **So instead of inheriting,** implement `Vector`'s interfaces with an inner vector (delegation, or composition):
+**What the pattern teaches:**
 
-```java
-class MyVector<T> implements List<T>, Iterable<T> ... {
-    Vector<T> v;
-
-    public MyVector() { v = new Vector(); }
-
-    public synchronized void addIfAbsent(T obj) {
-        if (!v.contains(obj))
-            v.add(obj);
-    }
-
-    public synchronized boolean contains(T obj) {
-        return v.contains(obj);
-    }
-
-    public synchronized void add(T obj) {
-        v.add(obj);
-    }
-
-    ... // same for all methods of Vector
-}
-
-```
-
-**What this pattern teaches:**
-
-- **Even when there is a thread-safe class,** you cannot write "ordinary" code with it (as in serial design). In particular, you must synchronize operations on the object that depend on each other (such as `if-else`).
-- **If the safety and correctness mechanism of the class is not known exactly,** make sure that your extension of the class, or your use of it, works with one mechanism.
+- **A thread-safe class still cannot be used like serial code.** Operations that depend on each other, such as a check and an action, must be locked together.
+- **If you do not know exactly how a class protects itself,** make sure your code and the class use one and the same mechanism.
 
 ### 2. Walking over a data structure
 
-Given a method that performs some operation on every member of a class that implements a data structure, other threads' interference with the instance during the run can break the method's correctness (whether its postcondition holds). For example, for simplicity, assume a `Vector` whose methods are synchronized on `this`:
+A walk over all the items takes a long time, and other threads may change the structure in the middle.
 
 ```java
-class MyVector<T> extends Vector<T> {
-    public void printAll() {
-        Iterator<T> it = iterator();
-        while (it.hasNext())
-            System.out.println(it.next());
-    }
+public void printAll() {
+    Iterator<T> it = iterator();
+    while (it.hasNext())
+        System.out.println(it.next());
 }
-
 ```
 
-Between the check `hasNext` and the call to `next`, another thread may remove the member from the vector.
+Between `hasNext` and `next`, another thread may remove the last item. A bank has the same problem: summing all the accounts at night while a transfer moves money from one account to another can count the money twice.
 
-Another example is a bank algorithm that computes the bank's closing rates in the evening, from all the customers' account data, while a thread performs a transfer of money from one account to another (so the amount may be counted twice).
+There are three solutions, each with its own cost.
 
-**Solution A:** synchronize the operation, which means locking the object for the whole run of the operation.
+**Solution A: lock the whole walk.**
 
 ```java
-class MyVector<T> extends Vector<T> {
-    public synchronized void printAll() {
-        Iterator<T> it = iterator();
-        while (it.hasNext())
-            System.out.println(it.next());
-    }
-}
-
+public synchronized void printAll() { ... }
 ```
 
-- **The drawback:** locking for a long time, meaning preventing access to all the objects in the structure (as in the bank's no-access hours at night for its customers).
+Correct, but nobody else can touch the structure for the whole walk, like a bank that closes its accounts to customers every night.
 
-**Solution B:** perform the operation on a copy of the structure (a snapshot). Copy the structure under synchronization, then perform the operation on the copy with no synchronization (since no other thread knows it). The assumption is that copying the object takes little time, compared with the long time the operation takes.
+**Solution B: walk over a copy (a snapshot).** Lock only to copy, then walk the copy with no lock, because no other thread knows the copy.
 
 ```java
-class MyVector<T> extends Vector<T> {
-    public void printAll() {
-        MyVector<T> copy = clone();
-        Iterator<T> it = copy.iterator();
-        while (it.hasNext())
-            System.out.println(it.next());
-    }
-
-    public synchronized MyVector<T> clone() {
-        MyVector<T> copy = new MyVector<>();
-        Iterator<T> it = iterator();
-        while (it.hasNext())
-            copy.add(it.next().clone());
-        return copy;
-    }
+public void printAll() {
+    MyVector<T> copy;
+    synchronized (this) { copy = clone(); }   // short: just the copy
+    for (T item : copy)
+        System.out.println(item);             // long: no lock needed
 }
-
 ```
 
-- **The drawback:** there is still a cost in memory (storing the copy) and in time (the copy under synchronization). And if the operation changes the object, you must merge at the end, which can be complicated.
+This costs memory and time for the copy. And if the walk changes the items, the copy has to be merged back at the end, which can get complicated.
 
-**Solution C: optimistic try and fail.** Walk over the structure's members without synchronizing it, but turn on a mechanism that detects changes made by other threads during the walk, so it throws an exception that the operation can catch, and try again. This approach fits cases in which most of the threads only read information and do not change it.
+**Solution C: optimistic try and fail.** Walk with no lock at all, but **detect** when someone changed the structure during the walk, and start again. This fits structures that are read far more often than they are changed.
 
-For `MyVector`:
-
-- **A mechanism that detects changes in the object, and throws an exception:**
-  - add a field to the class that says the vector's "version", so that every method that changes the vector increases its version,
-  - implement the iterator so that when the version differs from the version at the time the iterator was created, `next` throws an exception.
-- **A pattern of catching the exception and trying again:** when the exception is caught, perform the change again.
+The detection uses a **version number**: every command that changes the vector increases it.
 
 ```java
-class MyVector<T> extends Vector<T> {
-    int version;
+int version = 0;
 
-    MyVector() { ... version = 0; }
-
-    public synchronized int getVersion() { return version; }
-
-    public void printAll() {
-        try {
-            Iterator<T> it = iterator();
-            while (it.hasNext())
-                System.out.println(it.next());
-        } catch (ConcurrentModificationException e) {
-            printAll();
-        }
-    }
-
-    public synchronized void add(T obj) {
-        super.add(obj);
-        version++;
-    }
-
-    public synchronized void remove(T obj) {
-        super.remove(obj);
-        version++;
-    }
-
-    // same for all commands (excluding queries)
-
-    public Iterator<T> iterator() {
-        return new Iterator<T>() {
-            final int origVersion = getVersion();
-            int index = 0;
-
-            public T next() throws Exception {
-                synchronized (MyVector.this) {
-                    if (getVersion() != origVersion)
-                        throw new ConcurrentModificationException();
-                    return get(index++);
-                }
-            }
-
-            // implementation of hasNext, remove
-        };
-    }
+public synchronized void add(T obj) {
+    super.add(obj);
+    version++;
 }
-
+// the same for remove, and every other command
 ```
 
-**A note:** you can generalize the method `printAll` into a general method that performs a given operation on the members of the array (not necessarily printing).
+The iterator remembers the version it started with, and every `next` checks it.
 
 ```java
-interface Procedure<T> {
-    void apply(T obj);
-}
-
-class MyVector<T> extends Vector<T> {
-    ...
-    public void applyAll(Procedure<T> action) {
-        try {
-            Iterator<T> it = iterator();
-            while (it.hasNext())
-                action.apply(it.next());
-        } catch (ConcurrentModificationException e) {
-            applyAll(action);
-        }
+public T next() {
+    synchronized (MyVector.this) {
+        if (version != origVersion)
+            throw new ConcurrentModificationException();
+        return get(index++);
     }
 }
-
-MyVector<Integer> v;
-...
-v.applyAll((Integer i) -> System.out.println(i));
-
 ```
+
+The walk catches the exception and tries again.
+
+```java
+public void printAll() {
+    try {
+        for (T item : this)
+            System.out.println(item);
+    } catch (ConcurrentModificationException e) {
+        printAll();      // someone changed it: start over
+    }
+}
+```
+
+The same idea works for any action, not only printing: pass the action as a parameter, for example `v.applyAll(i -> System.out.println(i))`, and retry the whole walk on the exception.
 
 ## Lock-free synchronization
 
-It turns out that synchronization carried out with a lock (with `synchronized`) can have a drawback. When the synchronized block of code is short (which is usually the case), the time it takes to move to Blocked and back to Runnable is longer than the time spent waiting for the object to be released.
+A lock has a cost: moving a thread to Blocked and back takes time, often more than the short critical section it waits for. The third approach never blocks a thread. A waiting thread simply keeps trying.
 
-- **So instead of moving to Blocked,** the waiting thread keeps running until the second thread finishes its short operation.
-
-For that, use a compound memory operation of the processor called **compare-and-set** (until now the course used only two memory operations: `READ` and `WRITE`). This operation does three things, atomically: it reads the value of a cell in memory, compares it with another value, and if they are equal, writes a new value to the cell. For a value of type `int`, it is something like this (carried out as one operation in hardware):
+It relies on a processor operation called **compare-and-set** (CAS). In one atomic step, it reads a cell, compares it with an expected value, and writes a new value only if they match.
 
 ```cpp
-boolean cas(int* address, int oldVal, int newVal) {
-    if ((*address) == oldVal) {
-        (*address) = newVal;
-        return true;
-    } else
-        return false;
+boolean cas(int* address, int oldVal, int newVal) {   // done by the hardware, atomically
+    if (*address == oldVal) { *address = newVal; return true; }
+    return false;
 }
-
 ```
 
-The newer Java libraries have a number of classes that let you call this processor operation, for values of different types:
+Java exposes it through `AtomicInteger`, `AtomicBoolean`, `AtomicReference<T>`, and so on. The pattern for every command is a retry loop:
+
+1. Read the current value.
+2. Compute the new value from it.
+3. `compareAndSet(old, new)`. If someone changed the value in between, it fails, so go back to step 1.
+
+The `Even` class with CAS:
 
 ```java
-AtomicInteger, AtomicBoolean, ..., AtomicReference<T>
+private AtomicInteger val = new AtomicInteger(0);
 
+public int get() { return val.get(); }
+
+public void next() {
+    int oldVal, newVal;
+    do {
+        oldVal = val.get();
+        newVal = oldVal + 2;
+    } while (!val.compareAndSet(oldVal, newVal));
+}
 ```
 
-You can use this operation to carry out an alternative synchronization mechanism, which does not move waiting threads to the Blocked state, for reaching information of different types.
+- **T1 and T2 both read 0** and both compute 2.
+- **Only one `compareAndSet(0, 2)` succeeds.** The other finds 2 instead of 0, so it fails.
+- **The loser loops:** it reads 2, computes 4, and succeeds. The result is 4, and no thread was ever blocked.
 
-The general pattern for changing a shared value `val`, of a type wrapped as `Atomic` (of the matching type `T`):
-
-- **Given a shared variable (or field) of type `T`,**
-- **wrap it with an `Atomic` interface,** meaning its type becomes `AtomicT` (that way it is also declared `volatile`),
-- **the queries for the variable or field** use the `get` method of the `Atomic` class,
-- **the pattern for every command** in the class that changes the variable or field is:
+**The same pattern on a linked list.** Adding at the head is "read the head, build a link pointing at it, make it the new head". Two threads can both read the same head, and one link is lost. With CAS, the loser simply retries.
 
 ```java
-T oldVal;
-T newVal;
-do {
-    oldVal = val.get();
-    newVal = ____ oldVal ____;
-} while (!val.compareAndSet(oldVal, newVal));
+AtomicReference<Link<T>> head = new AtomicReference<>(null);
 
+public void add(T obj) {
+    Link<T> oldHead, newHead;
+    do {
+        oldHead = head.get();
+        newHead = new Link<>(obj, oldHead);
+    } while (!head.compareAndSet(oldHead, newHead));
+}
 ```
 
-Applying this pattern to the lock-free synchronization of the `Even` class:
+This is not always easy to apply to a whole class. Java has ready-made lock-free structures, such as `ConcurrentHashMap` and `ConcurrentLinkedQueue`.
 
-```java
-class Even {
-    int val;
-    Even(int val) throws Exception { ... }
-    public int get() { return val; }
-    public void next() { val += 2; }
-}
-
-// becomes
-
-class Even {
-    AtomicInteger val;
-
-    Even(int val) throws Exception {
-        if (val % 2 != 0)
-            throw new Exception(...);
-        this.val = new AtomicInteger(val);
-    }
-
-    public int get() { return val.get(); }
-
-    public void next() {
-        int oldVal;
-        int newVal;
-        do {
-            oldVal = val.get();
-            newVal = oldVal + 2;
-        } while (!val.compareAndSet(oldVal, newVal));
-    }
-}
-
-```
-
-- **T1 and T2 both call `e.next()`,** and both read `oldVal = 0` and compute `newVal = 2`. Only one `compareAndSet(0, 2)` succeeds. The other finds 2 instead of 0, fails, and goes around the loop again: it reads 2, computes 4, and succeeds. `e.val` ends at 4.
-
-**Another example: the `LinkedList` class.**
-
-```java
-class LinkedList<T> implements List<T> {
-    Link<T> head = null;
-    ...
-    public void add(T obj) {
-        Link<T> newLink = new Link<T>(obj, head);
-        head = newLink;
-    }
-}
-
-```
-
-- **`lst.head` is `2 -> null`.** T1 calls `lst.add(1)` and builds `newLink = 1->2->null`, and T2 calls `lst.add(2)` and builds `newLink = 2->2->null`. Whichever assignment to `head` comes second wins, and the other link is lost.
-- **The correct results** are `{1->2->2->null, 2->1->2->null}`.
-
-```java
-class LinkedList<T> implements List<T> {
-    AtomicReference<Link<T>> head = new AtomicReference<Link<T>>(null);
-    ...
-    public void add(T obj) {
-        Link<T> oldVal;
-        Link<T> newVal;
-        do {
-            oldVal = head.get();
-            newVal = new Link<T>(obj, oldVal);
-        } while (!head.compareAndSet(oldVal, newVal));
-    }
-}
-
-```
-
-It is not always easy to apply this synchronization mechanism to the different methods of a given class. Java has implementations like this for classic data structures, such as `ConcurrentHashMap` and `ConcurrentLinkedQueue`.
-
-**A discussion:** you could design a general lock-free synchronization pattern that fits any piece of code, like this. Define a field of type `AtomicBoolean`:
+**What "lock-free" really means.** You could also write a lock out of CAS:
 
 ```java
 AtomicBoolean lock = new AtomicBoolean(false);
 
+while (!lock.compareAndSet(false, true));   // spin until you get the lock
+... // critical code
+lock.set(false);                            // release it
 ```
 
-and synchronize the code of every method like this:
+No thread is ever Blocked here, but it is **not** lock-free in the full sense. If the thread holding the lock loses the processor in the middle, every other thread spins uselessly until it comes back. In the retry pattern above, by contrast, some thread always succeeds and moves on. Lock-free means both:
 
-```java
-while (!lock.compareAndSet(false, true));   // instead of 'synchronized(this) {' / lock
-... // code
-lock.set(false);                            // instead of '}' / unlock
-
-```
-
-What is the difference between this pattern and the one suggested above?
-
-- **In this pattern,** when one of the threads has "passed the barrier" (the `while` line), no other thread can pass it until that thread runs the code and does `set`. In particular, if its processor time runs out before it reaches its own code, while the other threads are Runnable or Running, none of them can make progress.
-- **In the earlier pattern,** the threads are not stuck in busy-wait on a particular line, but run again and again until the first of them manages to perform the `cas`. When one of them succeeds in reaching its processor time and passing the loop, the others can continue to try, and one of them will succeed.
-- **The term "lock-free synchronization" means:**
-  - no thread waiting to move moves to the Blocked state,
-  - other threads are not blocked on a particular line until the first thread finishes the synchronized piece of code.
-
-- **`AtomicInteger` and `AtomicReference`** perform a whole read-modify-write as one atomic step.
-- **Compare-and-swap (CAS)** writes a new value only if the variable still holds the value the thread read earlier. Otherwise it fails, and the thread can retry. No lock is involved, so it is lock-free.
+- **no waiting thread is moved to Blocked,**
+- **no thread is stuck behind another thread that has not finished its critical code.**
 
 ## The same lock in C++
 

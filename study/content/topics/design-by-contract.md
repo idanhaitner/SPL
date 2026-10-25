@@ -71,47 +71,37 @@ write R1, 100
 
 So `next` has six atomic operations, and between any two atomic operations, the run may move from one thread to the other.
 
-**The first schedule:** T1 runs all six operations, then T2 runs all six.
+Here are three possible schedules. In each table, `R1` is the register of the thread that runs the step, and `val` is the value in memory after the step.
 
-```text
-T1:  1. read 100,R1   // 0      T2:  7. read 100,R1   // 2
-     2. inc R1        // 1           8. inc R1        // 3
-     3. write R1, 100 // 1           9. write R1, 100 // 3
-     4. read 100,R1   // 1          10. read 100,R1   // 3
-     5. inc R1        // 2          11. inc R1        // 4
-     6. write R1, 100 // 2          12. write R1, 100 // 4
+**Schedule 1: T1 runs all six operations, then T2 runs all six.** No interleaving at all: T1 takes `val` from 0 to 2, and T2 from 2 to 4. **Result: 4.**
 
-```
+**Schedule 2: the threads swap in the middle of `next`.**
 
-In this schedule the even number went 0 → 2 → 4.
+| Step | Thread | Operation | R1 | `val` |
+| --- | --- | --- | --- | --- |
+| 1–3 | T1 | first `val++` | 1 | 1 |
+| 4–6 | T2 | first `val++` | 2 | 2 |
+| 7 | T1 | `read 100,R1` | 2 | 2 |
+| 8 | T2 | `read 100,R1` | 2 | 2 |
+| 9–10 | T1 | `inc`, `write` | 3 | 3 |
+| 11–12 | T2 | `inc`, `write` | 3 | 3 |
 
-**The second schedule:** T1 runs 1–3, T2 runs 4–6, T1 runs 7, T2 runs 8, then T1 runs 9–10 and T2 runs 11–12.
+Both threads read 2 in steps 7 and 8, so both write 3. **Result: 3**, an odd number.
 
-```text
-T1:  1. read 100,R1   // 0      T2:  4. read 100,R1   // 1
-     2. inc R1        // 1           5. inc R1        // 2
-     3. write R1, 100 // 1           6. write R1, 100 // 2
-     7. read 100,R1   // 2           8. read 100,R1   // 2
-     9. inc R1        // 3          11. inc R1        // 3
-    10. write R1, 100 // 3          12. write R1, 100 // 3
+**Schedule 3: the threads alternate one operation at a time.**
 
-```
+| Step | Thread | Operation | R1 | `val` |
+| --- | --- | --- | --- | --- |
+| 1 | T1 | `read 100,R1` | 0 | 0 |
+| 2 | T2 | `read 100,R1` | 0 | 0 |
+| 3–4 | T1 | `inc`, `write` | 1 | 1 |
+| 5–6 | T2 | `inc`, `write` | 1 | 1 |
+| 7 | T1 | `read 100,R1` | 1 | 1 |
+| 8 | T2 | `read 100,R1` | 1 | 1 |
+| 9–10 | T1 | `inc`, `write` | 2 | 2 |
+| 11–12 | T2 | `inc`, `write` | 2 | 2 |
 
-In this schedule the even number went 0 → 3.
-
-**The third schedule:** the two threads alternate one operation at a time.
-
-```text
-T1:  1. read 100,R1   // 0      T2:  2. read 100,R1   // 0
-     3. inc R1        // 1           5. inc R1        // 1
-     4. write R1, 100 // 1           6. write R1, 100 // 1
-     7. read 100,R1   // 1           8. read 100,R1   // 1
-     9. inc R1        // 2          11. inc R1        // 2
-    10. write R1, 100 // 2          12. write R1, 100 // 2
-
-```
-
-In this schedule the even number went 0 → 2.
+Each thread overwrote the other's work twice. **Result: 2.**
 
 So there are three different results: 2, 3, and 4. Which of them are correct? It looks like only 4, but why? That has to be defined. And can different levels of error be told apart in the results 2 and 3? Why, and how is that defined?
 
@@ -297,34 +287,41 @@ isFull()  ≡  size() == capacity()
 
 ```
 
-**The bottom line:** define the invariant, and the preconditions and postconditions of the **basic commands**, in terms of the **basic queries**.
+**The bottom line:** write the invariant, and the conditions of the **basic commands**, using only the **basic queries**. Take them one at a time.
+
+**The invariant,** on the three basic queries:
 
 ```java
-interface Stack<T> {
-    // @INV: 0 <= size() <= capacity() &&
-    //       ∀i < size() - 1, itemAt(i) != null
-
-    T itemAt(int i);
-    int size();
-    int capacity();
-
-    // @PRE: size() > 0
-    // @POST: size() == @PRE(size()) - 1 &&
-    //        ∀i < size() - 1, itemAt(i) == @PRE(itemAt(i))
-    void remove() throws Exception;
-
-    // @PRE: @param obj != null && size() < capacity()
-    // @POST: size() == @PRE(size()) + 1 && itemAt(size() - 1) == @param obj &&
-    //        ∀i < size(), itemAt(i) == @PRE(itemAt(i))
-    void push(T obj) throws Exception;
-
-    T top();
-    boolean isEmpty();
-    boolean isFull();
-    T pop();
-}
-
+// @INV: 0 <= size() <= capacity() &&
+//       for every i < size(): itemAt(i) != null
 ```
+
+The size is never negative and never above the capacity, and no slot in use holds `null`.
+
+**`remove`,** which takes off the top item:
+
+```java
+// @PRE:  size() > 0
+// @POST: size() == @PRE(size()) - 1 &&
+//        for every i < size(): itemAt(i) == @PRE(itemAt(i))
+void remove();
+```
+
+You may call it only on a non-empty stack. Afterwards there is one item fewer, and every item that is left is the same as before.
+
+**`push`,** which adds an item:
+
+```java
+// @PRE:  obj != null && size() < capacity()
+// @POST: size() == @PRE(size()) + 1 &&
+//        itemAt(size() - 1) == obj &&
+//        for every i < size() - 1: itemAt(i) == @PRE(itemAt(i))
+void push(T obj);
+```
+
+You may not push `null`, or push onto a full stack. Afterwards there is one item more, the new top is `obj`, and every item below it is unchanged.
+
+The derived methods, `top`, `pop`, `isEmpty`, and `isFull`, need no separate contract: they are defined by the basic ones.
 
 ### Defining safety
 

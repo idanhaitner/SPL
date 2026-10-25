@@ -183,77 +183,63 @@ The compiler translates the program's code into operations on the stack and the 
 
 - **Whenever information is defined whose size is known only at run time,** both its size and its lifetime are left to the programmer: allocation and release are written in by the programmer, with a call to `new` on the heap when it is created, and to `delete` when it is no longer needed.
 
-:::problem id=worked-java-trace title="A Java program as stack and heap operations" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
-`main` calls the static method `sum`, then creates a `Pair` on the heap and calls its `sum` method. How does the compiler translate the first call, and the body of `Test.sum`?
+### Following one call
+
+Put the four rules together on a tiny program.
 
 ```java
-class Pair {
-    int first, second;
-    Pair(int first, int second) { this.first = first; this.second = second; }
-    int sum() {
-        int ret = this.first + this.second;   // code address 7000
-        return ret;
-    }
+static int add(int i, int j) {
+    int r = i + j;
+    return r;
 }
 
-class Test {
-    static int sum(int i, int j) {
-        int ret = i + j;                      // code address 6000
-        return ret;
-    }
-    public static void main(String[] args) {
-        int k = sum(1, 2);                    // code address 5000
-        Pair p = new Pair(3, 4);
-        k = p.sum();
-    }
-}
-
+int k = add(1, 2);
 ```
 
-:::solution
-The call in `main`, starting at code address 0:
+**In the caller, the line `int k = add(1, 2);` becomes:**
 
-```text
-0   stack.push            // the definition of k
-8   stack.createAF        // calling sum
-16  stack.push
-24  write [sp], 72        // the address of the code after the procedure
-32  stack.push            // a place for the first argument i
-40  stack.write [sp], 1   // the value of the first argument i
-48  stack.push            // a place for the second argument j
-56  stack.write [sp], 2   // the value of the second argument j
-64  pc = 6000             // move to the code of sum(int i, int j)
-72  stack.write [sp], R17 // copy the returned value into k
-80  stack.push            // for the variable p
-88  heap.new 2            // two cells on the heap for the Pair object
+1. `push` a cell for `k`.
+2. `createAF`: open a new frame for `add`.
+3. `push` the return address, the line to come back to.
+4. `push` a cell for `i` and write 1 into it, then `push` a cell for `j` and write 2.
+5. Set the `pc` to the first line of `add`.
 
-```
+**Inside `add`:**
 
-The body of `Test.sum`, starting at code address 6000:
+1. `push` a cell for `r`.
+2. Read `i` and `j` into registers, add them, and write 3 into `r`.
+3. Copy `r` into a temporary place, such as a register, so it survives what comes next.
+4. `pop` `r`, `j`, `i`, and the return address, then `removeAF`.
+5. Set the `pc` to the return address.
 
-```text
-6000 stack.push              // a place for the local variable ret
-6008 stack.read [sp]+16, R1  // read the parameter i into a register
-6016 stack.read [sp]+8, R2   // read the parameter j into a register
-6024 add R1, R2, R3          // add the registers R1 and R2 into R3
-6032 stack.write R3, [sp]    // write the sum into ret, at the top of the stack
-6040 stack.write [sp], R17   // save the return value in a temporary place (R17)
-6048 stack.write [sp+24], R16 // save the return code address in a temporary place (R16)
-6056 stack.pop               // remove ret
-6064 stack.pop               // remove j
-6072 stack.pop               // remove i
-6080 stack.pop               // remove the return address
-6088 stack.removeAF          // close the AF of sum()
-6096 pc = [R16]              // return to the caller's code
+**Back in the caller,** the value in the temporary place is written into `k`.
 
-```
+While `add` runs, just before it returns, the stack looks like this:
 
-- **After `heap.new 2`,** the code writes the pair's address into `p` (at `[sp]`), and initializes the pair on the heap to 3 and 4.
-- **The call `p.sum()`** follows the same steps, and also sends `this`, the address of the pair, as an additional parameter.
-:::
+| Frame | Cell | Value |
+| --- | --- | --- |
+| caller | `k` | not set yet |
+| `add` | return address | the line after the call |
+| `add` | `i` | 1 |
+| `add` | `j` | 2 |
+| `add` | `r` | 3 |
+
+**What changes for a method of an object?** For `p.sum()` on an object `p`, one more cell is pushed in step 4 of the caller: `this`, the address of `p`, so the method can reach the object's fields, which are not in its own frame.
+
+**And for `new`?** `Pair p = new Pair(3, 4);` pushes one cell for `p` on the stack, calls `heap.new` for the two cells of the pair, and writes the pair's address into `p`.
+
+:::check id=chk-trace-temp
+Why is the returned value copied to a temporary place before the frame is removed?
+
+- [ ] Because registers are faster than the stack
+- [x] Because `r` is popped with the frame, and the caller still needs its value
+- [ ] Because the caller cannot read the stack
+
+- **`r` lives in `add`'s frame,** and `removeAF` throws that frame away.
+- **The temporary place survives the return,** so the caller can copy the value into `k`.
 :::
 
-To summarize what the example shows:
+To summarize:
 
 - **The different usage patterns** become operations on the stack and on the heap.
 - **A procedure needs extra information:** the parameters, the return address, and the address of the object the method runs on (`this`).

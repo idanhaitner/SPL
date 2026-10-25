@@ -29,121 +29,54 @@ Programming languages let you define different relations between the types in a 
 
 ## Relations between types
 
+Programming languages let you state how types relate to each other. The notes distinguish three relations.
+
 ### A is-a B
 
-`Student` is-a `Person`. In Java:
+A `Student` **is a** `Person`: everything true of a person is true of a student, and a student adds more.
 
 ```java
-class Person {
-    protected final int _id;
-    protected String _name;
-    ...
-}
-
-class Student extends Person {
-    protected Bag _bag;
-    protected List<Book> _books;
-    protected final University _univ;
-    ...
-}
-
+class Person { protected String _name; }                 // Java
+class Student extends Person { protected Bag _bag; }
 ```
 
-In C++:
-
 ```cpp
-class Person {
-protected:
-    const int _id;
-    string _name;
-    ...
-};
-
-class Student : public Person {
-protected:
-    Bag* _bag;
-    vector<Book*> _books;
-    const University& _univ;
-};
-
+class Person { protected: string _name; };               // C++
+class Student : public Person { protected: Bag* _bag; };
 ```
 
 ### A is-implemented-in-terms-of B
 
-`Living` is implemented in terms of `Person`, and so is `Loving`. `Learning` is implemented in terms of `Student`. In Java this relation is an interface.
+`Learning` is a capability, not a kind of thing. A student **can learn**, so `Student` implements the `Learning` interface. In Java that is an interface.
 
 ```java
-interface Living {
-    void live();
-}
-
-interface Loving {
-    void love();
-}
-
-interface Learning {
-    void learn();
-}
-
-class Person implements Living, Loving {
-    final int _id;
-    String _name;
-    ...
-    void live() { ... }
-    void love() { ... }
-}
+interface Learning { void learn(); }
 
 class Student extends Person implements Learning {
-    Bag _bag;
-    List<Book> _books;
-    final University _univ;
-    ...
-    void learn() { ... }
-    void live() { ... }
+    public void learn() { ... }
 }
-
 ```
 
-C++ has no syntactic distinction between implementing an interface (is-implemented-in-terms-of) and inheritance (is-a). Instead, a class may inherit from several classes. Even so, you should keep the design distinction between the two relations.
-
-- **The class of the is-a relation** is declared as the first base class.
-- **The other base classes** are declared as **abstract** classes: classes that contain only method declarations, with no implementation and no fields.
+C++ has no separate syntax for interfaces. Instead, a class can inherit from several classes, and an interface is written as an **abstract class**: only method declarations, each `= 0`, with no bodies and no fields.
 
 ```cpp
-class Living {
-    virtual void live() = 0;
-};
-
-class Loving {
-    virtual void love() = 0;
-};
-
 class Learning {
     virtual void learn() = 0;
 };
 
-class Person : public Living, public Loving {
-    const int _id;
-    string _name;
-    ...
-    void live() { ... }
-    void love() { ... }
-};
-
 class Student : public Person, public Learning {
-    Bag* _bag;
-    vector<Book*> _books;
-    const University& _univ;
-    ...
     void learn() { ... }
-    void live() { ... }
 };
-
 ```
+
+C++ does not stop you from mixing the two relations, so keep a convention:
+
+- **the first base class** is the is-a relation (`Person`),
+- **every other base class** is an abstract class that plays the role of an interface (`Learning`).
 
 ### A has-a B
 
-`Student` has-a `Bag`. In Java and in C++ this is carried out by **composition**: a field of type `B` in class `A`.
+A `Student` **has a** `Bag`. That is not inheritance at all, but **composition**: a field of type `Bag` (or `Bag*`) inside `Student`, in both languages.
 
 ## Derived classes in C++
 
@@ -196,123 +129,72 @@ The classic example that breaks the principle is deriving `Square` from `Rectang
 
 ## A derived object in memory
 
-What is the structure of a class like `Student`, which inherits from other classes, and in what order does each mechanism run?
-
-**Structure.** The structures of the base classes come first, in order, and then the derived class's own fields. All of it is recursive: each base class is laid out the same way.
-
-1. The structure of the first base class.
-2. The structure of the second base class.
-3. ...
-4. The structure of the last base class.
-5. The structure of the derived class.
-
-**Initialization.**
-
-1. The automatic initialization of the first base class.
-2. The automatic initialization of the second base class.
-3. ...
-4. The automatic initialization of the last base class.
-5. The automatic initialization of the derived class.
-
-To call a specific constructor of a base class, name it in the initializer list.
-
-**Destruction** runs in the reverse order.
-
-1. The automatic destruction of the derived class.
-2. The automatic destruction of the last base class.
-3. ...
-4. The automatic destruction of the first base class.
-
-**Copying.**
-
-1. An automatic call to the constructor of the first base class. If the derived class's initializer list does not call the base's copy constructor with `other`, the base's empty constructor is called.
-2. An automatic call to the constructor of the second base class, in the same way.
-3. ...
-4. An automatic call to the constructor of the last base class.
-5. The copy constructor of the derived class runs (it copies the fields).
-
-For the rule of five: to pass `other` to the base's move constructor, as an rvalue reference, use `std::move(other)`.
-
-**Assignment.** By default, only the body of the derived class's assignment operator runs. Usually you must run the assignment operators of the base classes too, and that does not happen automatically. So inside the body of the assignment operator, call them explicitly.
-
-1. A call to the assignment operator of the first base class (with `other`).
-2. A call to the assignment operator of the second base class (with `other`).
-3. ...
-4. A call to the assignment operator of the last base class (with `other`).
-5. The body of the derived class's assignment operator (it assigns the fields).
-
-For the rule of five: to pass `other` to the base's move assignment as an rvalue reference, use `std::move(other)`.
+**Structure.** A derived object is laid out as its base classes, in the order they are listed, followed by its own fields. Each base is laid out the same way, recursively.
 
 ```cpp
-class Person : public Living, public Loving {
-    const int _id;
-    string _name;
-    ...
-    void live() { ... }
-    void love() { ... }
-
-    Person(int id, const string& name) : _id(id), _name(name) { }
-};
-
-class Student : public Person, public Learning {
-    Bag* _bag;
-    vector<Book*> _books;
-    const University& _univ;
-    ...
-    void learn() { ... }
-    void live() { ... }
-
-    Student(int id, const string& name, Bag* bag, const University& univ)
-        : Person(id, name), _bag(bag), _univ(univ) {
-        _books.push_back(new DigitalBook());
-        _books.push_back(new HardCopyBook());
-    }
-
-    Student(const Student& other)
-        : Person(other), _bag(other._bag->clone()), _univ(other._univ) {
-        ...
-    }
-
-    Student& operator=(const Student& other) {
-        if (this != &other) {
-            Person::operator=(other);
-            delete _bag;
-            _bag = other._bag->clone();
-            ...
-        }
-        return *this;
-    }
-
-    virtual ~Student() {
-        delete _bag;
-        ...
-    }
-};
-
-{
-    Student s(7, "ringo", new Bag7(), univ);
-}
-
+class Student : public Person, public Learning { Bag* _bag; ... };
 ```
 
-| Part of `s` | Cells |
+| Part of a `Student` | Cells |
 | --- | --- |
-| `Living` | (no fields) |
-| `Loving` | (no fields) |
-| `Person` | `id`, `name` (`chars`, `length`) |
+| `Person` | `_id`, `_name` |
 | `Learning` | (no fields) |
-| `Student` | `bag`, `books` (`lst`, `size`), `univ` |
+| `Student` | `_bag`, `_books`, `_univ` |
 
-**The destructor must be virtual,** so that deleting an object of a derived class through a pointer to its base runs the destruction mechanism of the derived class too.
+**Order of construction and destruction.** The easiest way to see the order is a class that prints.
 
 ```cpp
-Person* p;
-p = new Student(...);
-delete p;
+struct A { A() { cout << "A "; }  ~A() { cout << "~A "; } };
+struct B { B() { cout << "B "; }  ~B() { cout << "~B "; } };
+struct C : public A, public B {
+    C()  { cout << "C "; }
+    ~C() { cout << "~C "; }
+};
 
+{ C c; }    // prints: A B C ~C ~B ~A
 ```
 
-The next section explains what `virtual` does, and why the destructor needs it.
+- **Construction** goes base by base, in the order listed, then the derived class.
+- **Destruction** goes in exactly the reverse order.
+
+**Choosing a base constructor.** By default each base is built with its empty constructor. To pass it arguments, name it in the initializer list.
+
+```cpp
+Student(int id, const string& name, Bag* bag)
+    : Person(id, name), _bag(bag) { }
+```
+
+**Copying.** The same applies to the copy constructor: unless you name the base's copy constructor, the base is built with its *empty* constructor, and the `Person` part of the copy is lost.
+
+```cpp
+Student(const Student& other)
+    : Person(other),                    // copy the Person part
+      _bag(other._bag->clone()) { }     // then the Student part
+```
+
+**Assigning.** The assignment operator is different: the compiler does **not** call the base's assignment for you. You must call it yourself, inside the body.
+
+```cpp
+Student& operator=(const Student& other) {
+    if (this != &other) {
+        Person::operator=(other);       // assign the Person part
+        delete _bag;
+        _bag = other._bag->clone();     // then the Student part
+    }
+    return *this;
+}
+```
+
+For the rule of five, the move versions pass `std::move(other)` to the base, so the base receives an rvalue too.
+
+**The destructor must be `virtual`.**
+
+```cpp
+Person* p = new Student(...);
+delete p;
+```
+
+Without `virtual`, `delete p` looks only at the type `Person*`, runs `~Person`, and never runs `~Student`, so the student's bag is leaked. The next section explains what `virtual` does.
 
 ## Polymorphism in memory
 
@@ -328,38 +210,20 @@ In Java, binding is always dynamic, at run time. In C++, programmers decide, for
 Why would you want the translation to happen only at run time?
 
 ```cpp
-class A {
-    virtual void F() { cout << "A"; }   // address 1000
-};
+class A { void F() { cout << "A"; } };          // F's code is at address 1000
+class B : public A { void F() { cout << "B"; } };  // F's code is at address 2000
 
-class B : public A {
-    virtual void F() { cout << "B"; }   // address 2000
-};
-
-{
-    A* a;
-    ...
-    a = new B();
-    ...
-    a->F();   // pc = 1000, prints "A"  ----  pc = <formula for run time>, prints "B"
-}
-
+A* a = new B();
+a->F();
 ```
 
-- **With static binding,** the compiler sees only the type of `a`, which is `A*`, and translates the call into `pc = 1000`. It prints `A`, although the object is a `B`.
-- **With dynamic binding,** the address is computed at run time from the object itself, so the call prints `B`.
+- **With static binding,** the compiler sees only the declared type of `a`, which is `A*`, and translates the call into `pc = 1000`. It prints `A`, although the object is a `B`.
+- **With dynamic binding,** the compiler cannot write a fixed address. It writes a small formula that finds the address at run time, from the object itself, so the call prints `B`.
 
 To support polymorphism, the binding of the function must be dynamic. How do you tell the C++ compiler? The keyword `virtual` marks the requirement that calls to the function be translated only at run time.
 
 - **The `virtual` property of a function is inherited.**
 - **Now it is clear why abstract functions must be virtual:** you cannot ask the compiler to translate calls to them at compile time, because they have no implementation.
-
-```cpp
-Learning* l;
-l = new Student(...);
-l->learn();   // ???
-
-```
 
 :::definition id=def-virtual title="Virtual function and vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
 A function that is not virtual is selected by **static binding** (קשירה סטטית).
@@ -399,7 +263,21 @@ A pure virtual function is declared with `= 0`, and has no implementation in the
 
 ### How dynamic binding is carried out
 
-**The data structures.** The compiler defines, for every class that has a virtual method, a virtual table in memory that holds the addresses where the code of the virtual methods in that class is stored. That table is called the **v-table**. For example, for the classes `Person` and `Student`:
+Take this pair of classes.
+
+```cpp
+class Person {
+    virtual void live() { ... }     // code at address 7000
+    virtual void love() { ... }     // code at address 4000
+};
+
+class Student : public Person {
+    virtual void live() { ... }     // overrides: code at address 8000
+    virtual void learn() { ... }    // new: code at address 9000
+};
+```
+
+**The tables.** For every class that has a virtual method, the compiler builds a table in memory with the addresses of that class's virtual methods, in a fixed order. It is called the **v-table**.
 
 ```text
 Person v-table, at address 100: [7000, 4000]
@@ -407,40 +285,27 @@ Student v-table, at address 200: [8000, 4000, 9000]
 
 ```
 
-That means:
+Read the `Student` table as: entry 0 (`live`) is `Student`'s own version, entry 1 (`love`) is inherited from `Person`, so it is the same address, 4000, and entry 2 (`learn`) is new. Every class keeps the same order for the methods they share, so `live` is always entry 0.
 
-- the code of `live` in the class `Person` is at address 7000,
-- the code of `love` in the class `Person` is at address 4000,
-- the code of `live` in the class `Student` is at address 8000,
-- the code of `love` for `Student` is still the one in `Person`, at address 4000,
-- the code of `learn` in the class `Student` is at address 9000.
+**The extra cell.** Every object of a class with a v-table gets one more cell, at its start, holding the address of its class's table. `new` (or `push`, on the stack) fills it in when the object is created, according to the object's real class.
 
-**Every instance of a class that has a v-table** (a class with virtual methods) gets one more cell in memory, at its start, holding the address of its class's v-table. That cell is initialized by `new` or `push`, according to the object's type, at run time.
+| Cell of a `Student` | Content |
+| --- | --- |
+| first | 200, the address of `Student`'s v-table |
+| then | the `Person` fields, then the `Student` fields |
 
-This lets the compiler prepare a "formula" at compile time for finding the method's address according to the object's type at run time, through its v-table.
-
-- **The object's address is the cell that holds the v-table's address.**
-- **The method's place in that table, which lists the method addresses in order,** is known at compile time.
-- **So the method's address** is reached by following the object's first cell to the table, and reading the method's entry.
+**The call.** Now the compiler can write a formula instead of a fixed address.
 
 ```cpp
-{
-    Person* p;
-    p = new Student(7, "ringo", new Bag7(), univ);
-    p->live();
-}
-
+Person* p = new Student(...);
+p->live();      // pc = (*((*p) + 0))
 ```
 
-The call `p->live()` is translated to `pc = (*((*p) + 0))`: read the first cell of the object, which is the v-table's address (200), and jump to the address in its entry 0, which is 8000, `Student::live`.
+1. **`*p`:** read the object's first cell, the table's address: 200.
+2. **`+ 0`:** `live` is entry 0 of every table in this hierarchy.
+3. **`*(...)`:** read that entry: 8000, so `Student::live` runs.
 
-| Heap cell | Content |
-| --- | --- |
-| object start | 200, the address of `Student`'s v-table |
-| `Living`, `Loving` | (no fields) |
-| `Person` | `id`, `name` (`chars`, `length`) |
-| `Learning` | (no fields) |
-| `Student` | `bag`, `books` (`lst`, `size`), `univ` |
+If `p` pointed at a plain `Person`, step 1 would read 100, and step 3 would read 7000.
 
 Dynamic binding has two costs.
 
@@ -472,79 +337,40 @@ You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true 
 
 ## The double-dispatch design pattern
 
-The memory chapters end with a design pattern that sharpens how polymorphism is carried out: **double dispatch**.
+The memory chapters end with a design pattern that pushes polymorphism one step further.
 
-**Motivation.**
-
-- There are two interfaces, and each has several implementations.
-- There is different code for every combination of implementations of the two interfaces.
-- Given two objects of those interfaces, you must reach the code segment that fits them.
+**The setup.** There are two hierarchies, and the right code depends on the real class of **both** objects.
 
 ```cpp
-class Printer {
-    virtual void print(const Doc& doc) = 0;
-};
-
-class HP : public Printer {
-    virtual void print(const Doc& doc) { ... }
-};
-
-class Xerox : public Printer {
-    virtual void print(const Doc& doc) { ... }
-};
+class Printer { virtual void print(const Doc& doc) = 0; };
+class HP    : public Printer { ... };
+class Xerox : public Printer { ... };
 
 class Doc { ... };
-class PDF : public Doc { ... };
+class PDF  : public Doc { ... };
 class Word : public Doc { ... };
-
-{
-    Printer* hp;
-    Printer* xerox;
-    Doc* pdf;
-    Doc* word;
-    ...
-    hp = new HP();
-    xerox = new Xerox();
-    pdf = new PDF();
-    word = new Word();
-    ...
-    hp->print(*pdf);      // should be directed to HP-PDF code
-    hp->print(*word);     // should be directed to HP-Word code
-    xerox->print(*pdf);   // should be directed to Xerox-PDF code
-    xerox->print(*word);  // should be directed to Xerox-Word code
-    ...
-    delete hp;
-    delete xerox;
-    delete word;
-    delete pdf;
-}
-
 ```
-
-How does the compiler translate `hp->print(*pdf)`? The method `print` of the class `Printer` is virtual, so the compiler translates the call into a formula such as `pc = (*(*hp + 0))`. That reaches the implementation of `print` in the class `HP`. As we said, there is different code for printing each document. How does the method know which document it received (it arrives as a `Doc`)?
-
-**Option A:** check inside the code what the document's type is (`instanceof` in Java, `dynamic_cast` in C++).
 
 ```cpp
-class HP : public Printer {
-    virtual void print(const Doc& doc) {
-        if (dynamic_cast<PDF*>(&doc)) { /* code for HP-PDF */ }
-        if (dynamic_cast<Word*>(&doc)) { /* code for HP-Word */ }
-    }
-};
-
-class Xerox : public Printer {
-    virtual void print(const Doc& doc) {
-        if (dynamic_cast<PDF*>(&doc)) { /* code for Xerox-PDF */ }
-        if (dynamic_cast<Word*>(&doc)) { /* code for Xerox-Word */ }
-    }
-};
-
+Printer* hp = new HP();
+Doc* pdf = new PDF();
+hp->print(*pdf);      // should run the HP-PDF code
 ```
 
-- **The drawback:** every time there is a new implementation of `Doc`, you must enter every place in the code of every `Printer` implementation that refers to document types, update it with the new document type, compile, and run the tests.
+`print` is virtual, so the call reaches `HP::print`. That is one dispatch, on the printer. But inside `HP::print`, the parameter is just a `Doc`. How does it know it got a PDF?
 
-**A suggestion:** add to the `Printer` interface more signatures for `print`, one for every type of document. Then the update needed for every new printer, when there is a new document, is at the level of implementing a method, and not of updating existing code.
+**Attempt 1: check the type by hand.**
+
+```cpp
+void HP::print(const Doc& doc) {
+    if (dynamic_cast<const PDF*>(&doc))  { /* HP-PDF code */ }
+    if (dynamic_cast<const Word*>(&doc)) { /* HP-Word code */ }
+}
+```
+
+It works, but every new kind of document means editing every printer's `print`, recompiling, and testing again.
+
+**Attempt 2: one overload per document.**
 
 ```cpp
 class Printer {
@@ -552,60 +378,36 @@ class Printer {
     virtual void print(const PDF& pdf) = 0;
     virtual void print(const Word& word) = 0;
 };
-
-class HP : public Printer {
-    virtual void print(const Doc& doc) { ... }
-    virtual void print(const PDF& pdf) { /* code for HP-PDF */ }
-    virtual void print(const Word& word) { /* code for HP-Word */ }
-};
-
-class Xerox : public Printer {
-    virtual void print(const Doc& doc) { ... }
-    virtual void print(const PDF& pdf) { /* code for Xerox-PDF */ }
-    virtual void print(const Word& word) { /* code for Xerox-Word */ }
-};
-
 ```
 
-- **The problem:** the call `hp->print(*pdf)` does not reach the version of `print` in `HP` that takes a `PDF`, but the one that takes a `Doc`. The search through the v-table happens at run time, based on the object's type, but the choice among the overloads with the same name, that is, which signature, is fixed in the formula at compile time, from the declared type of the parameter (in our case `pdf` is declared a `Doc`, not a `PDF`).
+Now a new document means adding a method, not editing existing code. But `hp->print(*pdf)` still runs `print(const Doc&)`:
 
-So the dynamic-binding mechanism that carries out polymorphism activates the method of the class that matches the type of the object it runs on, at run time, but not the specific type of the method's parameter at run time.
+- **Which class's method runs** is decided at run time, through the vtable. That part works.
+- **Which overload runs** is decided at compile time, from the declared type of the argument. `*pdf` is declared `Doc`, so the compiler picks `print(const Doc&)`.
 
-**The solution:** run the mechanism a second time, by calling a method on the parameter.
+**The solution: dispatch a second time, on the document.** Let the document call the printer back, at a point where its own type is known exactly.
 
 ```cpp
 class Doc {
     virtual void printMe(const Printer& printer) = 0;
-    ...
 };
 
 class PDF : public Doc {
-    virtual void printMe(const Printer& printer) { printer.print(*this); }
-    ...
+    void printMe(const Printer& printer) { printer.print(*this); }
 };
-
-class Word : public Doc {
-    virtual void printMe(const Printer& printer) { printer.print(*this); }
-    ...
-};
-
-class HP : public Printer {
-    virtual void print(const Doc& doc) { doc.printMe(*this); }
-    virtual void print(const PDF& pdf) { /* code for HP-PDF */ }
-    virtual void print(const Word& word) { /* code for HP-Word */ }
-};
-
-class Xerox : public Printer {
-    virtual void print(const Doc& doc) { doc.printMe(*this); }
-    virtual void print(const PDF& pdf) { /* code for Xerox-PDF */ }
-    virtual void print(const Word& word) { /* code for Xerox-Word */ }
-};
-
 ```
 
-1. **`hp->print(*pdf)`** dispatches on the printer: it reaches `HP::print(const Doc&)`.
-2. **`doc.printMe(*this)`** dispatches on the document: it reaches `PDF::printMe`.
-3. **Inside `PDF::printMe`,** `*this` has the static type `PDF`, so the compiler picks the overload `print(const PDF&)`. Because `print` is virtual, it runs `HP::print(const PDF&)`, the HP-PDF code.
+```cpp
+void HP::print(const Doc& doc)  { doc.printMe(*this); }   // bounce back
+void HP::print(const PDF& pdf)  { /* HP-PDF code */ }
+void HP::print(const Word& w)   { /* HP-Word code */ }
+```
+
+Follow `hp->print(*pdf)`:
+
+1. **Dispatch on the printer:** `print` is virtual, so it reaches `HP::print(const Doc&)`.
+2. **Dispatch on the document:** `doc.printMe(*this)` is virtual, so it reaches `PDF::printMe`.
+3. **The right overload:** inside `PDF::printMe`, `*this` is declared `PDF`, so the compiler picks `print(const PDF&)`. It runs on the HP printer, so it is the HP-PDF code.
 
 :::check id=chk-double-dispatch
 In the overload-only version, `Doc* pdf = new PDF();` and `hp->print(*pdf)` runs. Which `print` is called?

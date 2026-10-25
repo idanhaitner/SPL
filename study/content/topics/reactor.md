@@ -43,394 +43,219 @@ This chapter turns the print server into a general server pattern. The pattern i
 
 ## The protocol
 
-A protocol defines the rules of a conversation between two processes. In other words, it is the shared "language" in which they speak.
+A protocol is the shared "language" of two processes: the rules of their conversation. Compare it with a human language, which has:
 
-What does a protocol include? To understand that, think for a moment about what a human language is made of.
+- a way letters form words, and words form sentences,
+- the meaning of a sentence,
+- rules for how sentences follow each other, and for when the conversation is over.
 
-- **The way letters turn into words** (morphology).
-- **The way words turn into a sentence,** including the structure of the sentence (syntax).
-- **The meaning of the sentence that was said** (semantics).
-- **The relation between different sentences in a conversation** (pragmatics, the theory of conversation).
-- **The decision when the conversation is over** (pragmatics, the theory of conversation).
+A protocol fixes the same things for messages:
 
-So a protocol fixes:
+| Part | Question it answers | In the print server |
+| --- | --- | --- |
+| **Encoding** | How does a message become bytes? | Java's `getBytes` |
+| **Framing** | Where does one message end in the byte stream? | a newline |
+| **Syntax** | What is inside a message? | one string |
+| **Semantics** | What should happen when a message arrives? | print it |
+| **Synchronization** | Which messages may come in which order? | any, at any time |
 
-- **encoding:** the way in which a message object turns into an array of bytes,
-- **framing:** the way bytes are grouped into a "message" for the receiver,
-- **syntax:** the internal structure of the different messages,
-- **semantics:** what is expected to be done in response to a message,
-- **synchronization:** constraints on the order of the messages that are received.
+A richer example: a **price server**.
 
-**Examples:**
+- **Encoding:** strings in UTF-8.
+- **Framing:** the first two bytes of every message give its length.
+- **Syntax and semantics:** `QUERY product` answers with `[<store price> ...]`, and `BUY product store` answers `SUCCESS` or `FAIL`.
+- **Synchronization:** you may not `BUY` a product before you `QUERY` its price.
 
-1. **The current print server.**
-   - **Encoding:** according to the implementation of `getBytes` in Java.
-   - **Framing:** a newline as the delimiter.
-   - **Syntax:** an internal structure of just a string to print.
-   - **Semantics:** one meaning only, print the message.
-   - **Synchronization:** no constraints, you can always send a string to print.
-2. **A price server** (a server that finds the prices of a given product in different stores).
-   - **Encoding:** messages of type string, encoded into bytes in UTF-8.
-   - **Framing:** the first two bytes in every message state its length.
-   - **Syntax and semantics:**
-     - `QUERY product` ⇒ `[<store price> ...]`
-     - `BUY product store` ⇒ `SUCCESS` or `FAIL`
-   - **Synchronization:** you cannot buy a product before you checked its price.
-3. **HTTP** (the rules of conversation between a web server and its clients).
-4. **STOMP** (in the assignment).
+HTTP, between browsers and web servers, is another protocol, and so is STOMP, from the assignment.
 
-### Two interfaces for the protocol
+### Two interfaces
 
-Define these aspects as two interfaces.
+The general server splits a protocol into two interfaces, so each can be swapped independently.
 
-- **`MessageEncoderDecoder`** handles encoding and framing.
-- **`MessagingProtocol`** handles syntax, semantics, and synchronization.
-
-The server will then be defined on the basis of these interfaces.
+**`MessageEncoderDecoder`** handles encoding and framing: turning messages into bytes, and finding messages in a stream of bytes.
 
 ```java
 public interface MessageEncoderDecoder<T> {
     byte[] encode(T message);
-    T decodeNextByte(byte nextByte);
+    T decodeNextByte(byte nextByte);   // a message when one is complete, else null
 }
-
 ```
 
-This interface fixes how a message turns into an array of bytes, including a mechanism for the reader to recognize that the message has ended: the method `encode`. A reader of an array of bytes can extract messages from it with the method `decodeNextByte`, which returns a message once its last byte has arrived, and `null` before that.
-
-Implement this interface for the print protocol above:
+For the print protocol, a message is a line:
 
 ```java
 public class LineMessageEncoderDecoder implements MessageEncoderDecoder<String> {
+    private List<Byte> bytes = new LinkedList<>();
 
-    private List<Byte> bytes = new LinkedList<Byte>();
-
-    @Override
     public byte[] encode(String message) {
-        return (message + "\n").getBytes("UTF-8");
+        return (message + "\n").getBytes(StandardCharsets.UTF_8);
     }
 
-    @Override
     public String decodeNextByte(byte nextByte) {
-        if (nextByte == '\n') {
-            String ret = new String(Bytes.toArray(bytes), "UTF-8");
+        if (nextByte == '\n') {               // the end of a message
+            String ret = toUtf8String(bytes);
             bytes.clear();
             return ret;
         }
-        bytes.add(nextByte);
+        bytes.add(nextByte);                  // still in the middle
         return null;
     }
 }
-
 ```
 
-The second interface fixes what must be done for a given message (the method `process`), and how you know that the conversation has ended (the method `shouldTerminate`).
+**`MessagingProtocol`** handles syntax, semantics, and synchronization: what to do with a message, and when the conversation ends.
 
 ```java
 public interface MessagingProtocol<T> {
-    T process(T msg);
+    T process(T msg);           // the reply, or null for none
     boolean shouldTerminate();
 }
-
 ```
 
-Implement this interface for the print protocol:
+For the print protocol:
 
 ```java
 public class PrintingProtocol implements MessagingProtocol<String> {
-
     private boolean shouldTerminate = false;
 
-    @Override
     public String process(String msg) {
-        if (msg.equals("bye!"))
-            shouldTerminate = true;
-        else
-            System.out.println(msg);
+        if (msg.equals("bye!")) shouldTerminate = true;
+        else System.out.println(msg);
         return null;
     }
 
-    @Override
-    public boolean shouldTerminate() {
-        return shouldTerminate;
-    }
+    public boolean shouldTerminate() { return shouldTerminate; }
 }
-
 ```
 
-### The connection handler and the base server
+### The connection handler
 
-On the basis of these two interfaces, you can now define a class that carries out **the management of a conversation with a given client according to a given protocol**: the `ConnectionHandler` class, which carries out the conversation with a client in its `run` method.
+A `ConnectionHandler` runs one conversation with one client: read bytes, let the encoder-decoder find messages, let the protocol answer them.
 
 ```java
-public class ConnectionHandler<T> implements Runnable {
-    private final Socket sock;
-    private final MessageEncoderDecoder<T> encdec;
-    private final MessagingProtocol<T> protocol;
-
-    public ConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, MessagingProtocol<T> protocol) {
-        this.sock = sock;
-        this.encdec = reader;
-        this.protocol = protocol;
-    }
-
-    @Override
-    public void run() {
-        int b;
-        while (!protocol.shouldTerminate() && (b = sock.getInputStream().read()) >= 0) {
-            T msg = encdec.decodeNextByte((byte) b);
-            if (msg != null) {
-                T ans = protocol.process(msg);
-                if (ans != null)
-                    sock.getOutputStream().write(encdec.encode(ans));
-            }
+public void run() {
+    int b;
+    while (!protocol.shouldTerminate() && (b = in.read()) >= 0) {
+        T msg = encdec.decodeNextByte((byte) b);
+        if (msg != null) {
+            T reply = protocol.process(msg);
+            if (reply != null)
+                out.write(encdec.encode(reply));
         }
     }
 }
-
 ```
 
-Now you can define the server program, according to the print pattern: connect a client, define a `ConnectionHandler` that manages the conversation with the client by running its `run` method, and so on. That pattern is carried out in the `serve` method.
+Its fields are the client's `Socket`, and one encoder-decoder and one protocol object for this client.
+
+### The base server
+
+The server accepts clients, and gives each one a connection handler. The protocol and the encoder-decoder are parameters, passed as **factories**.
 
 ```java
-class BaseServer {
-    private final int port;
-    private final Supplier<MessagingProtocol> protocolFactory;
-    private final Supplier<MessageEncoderDecoder> encdecFactory;
-
-    public BaseServer(int port,
-                      Supplier<MessagingProtocol> protocolFactory,
-                      Supplier<MessageEncoderDecoder> encdecFactory) {
-        this.port = port;
-        this.protocolFactory = protocolFactory;
-        this.encdecFactory = encdecFactory;
-    }
-
-    public void serve() {
-        ServerSocket serverSock = new ServerSocket(port);
-        while (!Thread.currentThread().isInterrupted()) {
-            Socket clientSock = serverSock.accept();
-            ConnectionHandler handler = new ConnectionHandler(
-                clientSock,
-                encdecFactory.get(),
-                protocolFactory.get());
-            handler.run();
-        }
-    }
-}
-
-```
-
-Run the server pattern for the print server:
-
-```java
-class TCPPrintServer {
-    public static void main(String[] args) {
-        int port = Integer.parseInt(args[0]);
-        new BaseServer(port,
-                       () -> new PrintingProtocol(),
-                       () -> new LineMessageEncoderDecoder())
-            .serve();
-    }
-}
-
-```
-
-- **Why factories (`Supplier`):** every client gets its own encoder-decoder and its own protocol object, because each one keeps the state of one conversation (the bytes of a half-read message, or whether `bye!` arrived).
-
-## The server's concurrency model
-
-As noted before, the second part of the server pattern is the way the server manages a conversation with several clients at once.
-
-In the existing code of `BaseServer`, the server talks to only one client at a time (by calling the `run` method of that client's `ConnectionHandler`). That decision should become a parameter of the server, chosen by the user.
-
-So define the way a conversation with a client is managed, alongside the other clients, given the `ConnectionHandler` of the client, as an abstract method `execute`, and carry it out in different ways, according to different concurrency models.
-
-```java
-abstract class BaseServer {
-    private final int port;
-    private final Supplier<MessagingProtocol> protocolFactory;
-    private final Supplier<MessageEncoderDecoder> encdecFactory;
-
-    abstract protected void execute(ConnectionHandler handler);
-
-    public BaseServer(int port,
-                      Supplier<MessagingProtocol> protocolFactory,
-                      Supplier<MessageEncoderDecoder> encdecFactory) {
-        this.port = port;
-        this.protocolFactory = protocolFactory;
-        this.encdecFactory = encdecFactory;
-    }
-
-    public void serve() {
-        ServerSocket serverSock = new ServerSocket(port);
-        while (!Thread.currentThread().isInterrupted()) {
-            Socket clientSock = serverSock.accept();
-            ConnectionHandler handler = new ConnectionHandler(
-                clientSock,
-                encdecFactory.get(),
-                protocolFactory.get());
-            execute(handler);
-        }
-    }
-}
-
-```
-
-Now look at the different possible implementations of the `execute` method, meaning different implementations of the server's concurrency model.
-
-### 1. A single thread
-
-The server is based on one thread. That thread waits for a client to connect, serves it until the end of the conversation, and comes back again.
-
-```java
-class SingleThreadServer extends BaseServer {
-    protected void execute(ConnectionHandler handler) {
+public void serve() {
+    ServerSocket serverSock = new ServerSocket(port);
+    while (!Thread.currentThread().isInterrupted()) {
+        Socket client = serverSock.accept();
+        ConnectionHandler handler = new ConnectionHandler(
+            client, encdecFactory.get(), protocolFactory.get());
         handler.run();
     }
 }
-
 ```
 
-- **The advantage:** simplicity. It needs no resources.
-- **The drawback:** availability. Only one client gets service at a given moment.
-- **It may fit a server that carries out a very simple protocol,** such as a time server, when there are not many clients at any given moment. But in general it is not enough.
+- **Why factories (`Supplier`):** each client needs its **own** encoder-decoder and protocol, because each keeps the state of one conversation (half a message, or whether `bye!` arrived). `get()` makes a fresh one per client.
 
-### 2. A thread for every client
+The print server is now one line:
 
 ```java
-class ThreadPerClientServer<T> extends BaseServer<T> {
-    protected void execute(ConnectionHandler<T> handler) {
-        new Thread(handler).start();
-    }
-}
-
+new BaseServer(7000,
+               () -> new PrintingProtocol(),
+               () -> new LineMessageEncoderDecoder()).serve();
 ```
 
-- **The advantage:** availability (seemingly). Every client has a thread of its own, which handles it until the end of the conversation.
-- **The drawbacks:** there is no reuse of existing threads (after a thread finishes handling a client, it ends its life, and a new thread is created for the next client), and scalability: for a large number of clients, the server may crash for lack of resources to create more threads.
-- **A model like this fits only cases in which the number of clients is bounded,** and not too large (relative to the resources of the hardware and the operating system). In general, that is not very practical.
+## The server's concurrency model
+
+`serve` above calls `handler.run()` itself, so the server talks to one client at a time. That decision should be a parameter too. Make it an abstract method:
+
+```java
+abstract class BaseServer {
+    abstract protected void execute(ConnectionHandler handler);
+
+    public void serve() {
+        ...
+        execute(handler);      // instead of handler.run()
+    }
+}
+```
+
+Now each concurrency model is a small subclass.
+
+### 1. A single thread
+
+```java
+protected void execute(ConnectionHandler handler) {
+    handler.run();
+}
+```
+
+- **Pro:** simple, and needs no extra resources.
+- **Con:** only one client is served at a time; everyone else waits.
+- **Fits** a trivial protocol with few clients, such as a time server.
+
+### 2. A thread per client
+
+```java
+protected void execute(ConnectionHandler handler) {
+    new Thread(handler).start();
+}
+```
+
+- **Pro:** every client is served at once.
+- **Con:** a new thread for every client, never reused. With thousands of clients, the server runs out of resources and crashes.
+- **Fits** only when the number of clients is small and bounded.
 
 ### 3. A thread pool
 
-This approach balances availability against scalability, while reusing existing threads, by defining a fixed pool of threads that run all the time, each handling one client at a time.
-
-The number of threads in the pool is fixed according to the expected number of clients, and according to the server's resources (hardware, operating system). The number of threads in the pool could change according to conditions, but in each case it is fixed, which means a new thread is not created for every new client.
-
-You could implement a fixed pool of threads like this, following the producer-consumer pattern:
+A fixed set of threads that keep running, each serving one client at a time, then taking the next. Java provides it as `ExecutorService`.
 
 ```java
-class ThreadPool {
-    BoundedQueue<Runnable> taskQueue;
-    List<Thread> threads;
+ExecutorService pool = Executors.newFixedThreadPool(numThreads);
 
-    ThreadPool(int numThreads) {
-        taskQueue = new BlockingQueue<Runnable>();
-        threads = new LinkedList<Thread>();
-        for (int i = 0; i < numThreads; i++) {
-            Thread t = new Thread(() -> {
-                while (!Thread.interrupted())
-                    taskQueue.remove().run();
-            });
-            threads.add(t);
-            t.start();
-        }
-    }
-
-    public void submit(Runnable task) { taskQueue.add(task); }
-
-    public void shutdown() {
-        for (Thread t : threads)
-            t.interrupt();
-    }
+protected void execute(ConnectionHandler handler) {
+    pool.submit(handler);
 }
-
 ```
 
-A thread pool like this is implemented today in Java's standard JDK, as the `ExecutorService` class.
+Inside, a pool is just the producer-consumer pattern from [Waiting and liveness](topic:waiting-and-liveness): a queue of tasks, and threads that loop on `taskQueue.remove().run()`.
 
-```java
-class FixedThreadPoolServer<T> extends BaseServer<T> {
-    ExecutorService pool;
+- **Pro:** controlled use of resources, and threads are reused.
+- **Con, utilization:** a thread serves a whole conversation, and spends most of it blocked on the client's socket, while other clients wait in the queue.
+- **Con, fairness:** a few clients get full service, and the rest get none until they finish.
 
-    FixedThreadPoolServer(int port,
-                          Supplier<MessagingProtocol> protocolFactory,
-                          Supplier<MessageEncoderDecoder> encdecFactory,
-                          int numThreads) {
-        super(port, protocolFactory, encdecFactory);
-        pool = Executors.newFixedThreadPool(numThreads);
-    }
-
-    protected void execute(ConnectionHandler<T> handler) {
-        pool.submit(handler);
-    }
-}
-
-```
-
-- **The advantages:** controlled availability, according to the system's capabilities, while reusing existing threads.
-- **The drawbacks:** utilization and fairness.
-- **An analogy:** the service in a bank branch, which works according to model 3, a pool of threads, or clerks.
-- **Utilization:** since the task run by the thread (the `run` method of the `ConnectionHandler`) is the management of the whole conversation with the client, including many I/O accesses (mainly reading from and writing to the socket), the threads move to the Blocked state while waiting for the clients they handle, even though there may be other clients waiting in the queue for a thread.
-- **Fairness:** the server's concurrency model is designed so that a small group of clients gets complete service (until they finish the conversation), while the other clients get no service at all.
-
-This model is common in real life, in practically every system that serves clients. The fourth model, below, comes from that model and fixes its two drawbacks, fairness and utilization of the processor.
+Think of a bank branch with a few clerks, each serving one customer from start to finish. That is model 3, and it is how most real systems work. Model 4 fixes its two problems.
 
 ### 4. The reactor
 
-As noted, the reactor model deals with the problems of fairness and utilization of the processor.
+Two changes fix model 3.
 
-**Broadly:**
+- **Fairness:** a task handles **one message** of a client, not the whole conversation. Then a thread moves on to another client.
+- **Utilization:** **one thread does all the I/O** with all the clients, and the other threads only process messages in memory, so they never block on a socket.
 
-- **Fairness:** limit the task given each time to a thread in the pool to **handling one message of a client** (or a small number of messages), instead of managing the whole conversation with the client.
-- **Utilization:** separate the management of the **communication** with the clients from **carrying out requests** according to the protocol. In other words, one of the threads manages all the communication with the clients (in particular, it reads bytes from them and writes bytes to them), and all the other threads carry out the clients' requests in memory.
+That one communication thread has a lot to do: accept new clients, read from every client, and write to every client. If any of those blocked, everyone would wait. Two tools make it possible.
 
-**The problem:** there is a heavy load on the communication thread.
-
-- **It must accept new clients** (by calling `accept` on the `ServerSocket`).
-- **It must read bytes from the connected clients** (by calling `read` on the `InputStream` of their `Socket`).
-- **It must write bytes to the connected clients** (by calling `write` on the `OutputStream` of their `Socket`).
-
-The problem gets worse because of the work: each attempt to read, write, or accept from a client is blocked until it succeeds (to connect a client, to read or write at least one byte), while the communication must still be managed for other clients.
-
-- **So turn the communication channels** (accepting, reading, writing) **into non-blocking I/O.** In this implementation, these operations do not wait. They read what is there right now (returning 0 if nothing is there), write what can be written right now (returning 0 if nothing can be written), and accept whoever is connecting right now (returning `null` if nobody is connecting).
-- **Still,** it would be very hard for the communication thread to run endlessly over a large number of clients, checking each time whether there is anything to accept, read from them, or write to them.
-- **So connect the communication thread to a component,** called a **Selector**, that sends it an alert when it needs to accept, read, or write for one of the clients.
-
-This way, one communication thread can handle managing the communication with all the clients, while leaving the processing of the messages in memory to the worker threads in the pool.
+- **Non-blocking I/O:** `read` returns what is there now (possibly nothing), `write` writes what fits now (possibly nothing), and `accept` returns a new client or `null`. Nothing waits.
+- **A `Selector`:** instead of polling every client, the communication thread asks the selector to wake it when some client is ready to be accepted, read from, or written to.
 
 ![The reactor loop: one selector thread, ready keys, and a pool only for protocol work](../../web/public/figures/reactor-loop.svg)
 
-The thread that calls `accept` must be free again quickly, to accept the next client.
+The events the selector reports:
 
-- **Blocking that thread stalls everyone:** while it waits in a read, a framing step, or a database query, no new client is accepted, and no other ready client is read.
-
-**Thread-per-client** moves the blocking work to a separate thread for each connection.
-
-- **Its weakness:** it does not scale to thousands of connections. Each thread needs its own stack, even when its client is idle, and the processor wastes time switching among them.
-
-**The reactor** keeps one thread waiting in `select` (in Java NIO, on a `Selector`), and has it handle only the non-blocking channels that are ready right now.
-
-- **The events it handles:** a new connection (`OP_ACCEPT`), bytes to read (`OP_READ`), and room to write (`OP_WRITE`), across many channels.
-- **That thread only copies bytes,** then goes straight back to `select`. Any heavy call on it would stall every client.
-- **The heavy protocol work** goes to a fixed pool of worker threads, shared by all connections.
-
-These are the Java NIO classes the reactor is built from.
-
-### The components and the code
-
-**Helper classes from Java's `nio` library:**
-
-- `Channel`, `SelectableChannel`,
-- `ServerSocketChannel`, `SocketChannel`, [`DatagramSocketChannel`].
-
-I/O events that happen in a `SelectableChannel` are detected by the operating system, and by the `Selector`.
-
-- **An ACCEPT event** happens when the transport layer receives a new client connection.
-- **A READ event** happens when the buffer of incoming bytes has at least one byte.
-- **A WRITE event** happens when the buffer of outgoing bytes has at least one free cell.
-
-And also `Selector`, `SelectionKey`, and `ByteBuffer`.
+| Event | Means |
+| --- | --- |
+| `OP_ACCEPT` | a new client is connecting |
+| `OP_READ` | at least one byte has arrived from a client |
+| `OP_WRITE` | there is room to send at least one byte to a client |
 
 :::definition id=def-reactor title="Java NIO pieces of the reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
 
@@ -440,160 +265,107 @@ And also `Selector`, `SelectionKey`, and `ByteBuffer`.
 - **`ByteBuffer`:** a block of memory that data is read into and written out of.
 :::
 
-**The `Reactor` class, the central class.**
 
-- **Its main fields:** `Selector`, `Executor`, `readerFactory`, `protocolFactory`.
-- **Initialization:** define the `Selector` and the `Executor`. Define a `ServerSocketChannel`, in non-blocking mode, on the required port. Register the `ServerSocketChannel` in the `Selector` for ACCEPT events (with no attached object).
-- **Its methods:**
-  - **`serve`:** run by the communication thread, in an endless loop: wait until one of the events registered in the `Selector` happens, and for every channel in which an event happened, handle the event according to its kind: accept, read, write.
-  - **`handleAccept`:** run by the communication thread when there is an `OP_ACCEPT` event. It runs `accept` on the `ServerSocketChannel`, and registers the returned `SocketChannel` in the `Selector` for `OP_READ` events, with an attached object: a `ConnectionHandler` created for that client.
-  - **`handleRead`:** run by the communication thread when there is an `OP_READ` event. It calls the `continueRead` method of the client's `ConnectionHandler`, and adds the returned task to the `Executor`'s queue of tasks.
-  - **`handleWrite`:** run by the communication thread when there is an `OP_WRITE` event. It calls the `continueWrite` method of the client's `ConnectionHandler`.
-  - **`updateInterestOps`:** run by the communication thread when it changes the registration from `OP_READ | OP_WRITE` to `OP_READ` (after all the replies to the client were written, and its `writeQueue` is empty). Run by a worker thread (from the `Executor`) after it adds a reply to the client's `writeQueue`, changing the registration to `OP_READ | OP_WRITE`. It changes the registration of events to listen for in the `Selector`.
+### The reactor, method by method
+
+**`serve`** is the communication thread's loop. It sets up a non-blocking server channel, registers it for `OP_ACCEPT`, and then waits for events.
 
 ```java
-public class Reactor {
+ServerSocketChannel serverSock = ServerSocketChannel.open();
+serverSock.bind(new InetSocketAddress(port));
+serverSock.configureBlocking(false);
+serverSock.register(selector, SelectionKey.OP_ACCEPT);
 
-    private int port;
-    private Supplier<MessagingProtocol<T>> protocolFactory;
-    private Supplier<MessageEncoderDecoder<T>> readerFactory;
-    private ExecutorService pool;
-    private Selector selector;
-    ...
-
-    public void serve() {
-        // Initialization
-        // 1. Create ServerSocket channel on the given port, in non-blocking mode
-        ServerSocketChannel serverSock = ServerSocketChannel.open();
-        serverSock.bind(new InetSocketAddress(port));
-        serverSock.configureBlocking(false);
-        // 2. Register the socket to the Selector for ACCEPT event
-        serverSock.register(selector, SelectionKey.OP_ACCEPT);
-
-        // Main loop
-        while (!Thread.currentThread().isInterrupted()) {
-            selector.select();   // wait for some event (in 'blocked' state)
-            for (SelectionKey key : selector.selectedKeys()) {   // for each event
-                if (!key.isValid()) {
-                    continue;
-                } else if (key.isAcceptable()) {
-                    handleAccept(serverSock, selector);
-                } else {   // read and/or write event
-                    handleReadWrite(key);
-                }
-            }
-            selector.selectedKeys().clear();   // clear the selected keys set
-        }
-        pool.shutdown();
+while (!Thread.currentThread().isInterrupted()) {
+    selector.select();                          // block until some event
+    for (SelectionKey key : selector.selectedKeys()) {
+        if (!key.isValid()) continue;
+        if (key.isAcceptable()) handleAccept(serverSock);
+        else handleReadWrite(key);
     }
-
-    private void handleAccept(ServerSocketChannel serverChan, Selector selector) throws IOException {
-        SocketChannel clientChan = serverChan.accept();
-        clientChan.configureBlocking(false);
-        final NonBlockingConnectionHandler handler = new NonBlockingConnectionHandler(
-            readerFactory.get(),
-            protocolFactory.get(),
-            clientChan,
-            this);
-        clientChan.register(selector, SelectionKey.OP_READ, handler);
-    }
-
-    private void handleReadWrite(SelectionKey key) {
-        // Get the attached ConnectionHandler
-        NonBlockingConnectionHandler handler = (NonBlockingConnectionHandler) key.attachment();
-        // Case 1: read event
-        if (key.isReadable()) {
-            Runnable task = handler.continueRead();
-            if (task != null)
-                pool.submit(task);
-        }
-        // Case 2: write event
-        if (key.isWritable())
-            handler.continueWrite();
-    }
-
-    void updateInterestedOps(SocketChannel chan, int ops) {
-        SelectionKey key = chan.keyFor(selector);
-        key.interestOps(ops);
-        selector.wakeup();
-    }
+    selector.selectedKeys().clear();
 }
-
 ```
 
-**The `NonBlockingConnectionHandler` class.**
-
-- **Its fields:** `SocketChannel`, `encDec`, `protocol`, and `Queue<ByteBuffer> writeQueue`.
-- **Its methods:**
-  - **`continueWrite`:** run by the communication thread when there is an `OP_WRITE` event. It takes `ByteBuffer`s out of the `writeQueue` and writes them to the `SocketChannel`, until it can write no more (everything is non-blocking). If no more bytes are left in the `writeQueue`, it returns the registration in the `Selector` to `OP_READ` only.
-  - **`continueRead`:** run by the communication thread when there is an `OP_READ` event. It reads a `ByteBuffer` from the client's `SocketChannel` with the `read` method, and returns a task that handles the array of bytes, as a `Runnable` object, whose `run` task is:
-    - run by a worker thread (from the `Executor`),
-    - with the fields `ByteBuffer`, `encDec`, `protocol`, `writeQueue`,
-    - extract messages from the `ByteBuffer` with `encDec` (byte after byte),
-    - carry out every message according to the `protocol`,
-    - move the reply to every message, as a `ByteBuffer`, to the client's `writeQueue`, while updating the client's registration in the `Selector` to `READ | WRITE`.
+**`handleAccept`** accepts the new client, makes its channel non-blocking, and registers it for `OP_READ`, with its connection handler attached to the key.
 
 ```java
-public class NonBlockingConnectionHandler {
+SocketChannel client = serverSock.accept();
+client.configureBlocking(false);
+NonBlockingConnectionHandler handler = new NonBlockingConnectionHandler(
+    readerFactory.get(), protocolFactory.get(), client, this);
+client.register(selector, SelectionKey.OP_READ, handler);
+```
 
-    private static final int BUFFER_ALLOCATION_SIZE = 1 << 13;   // 8k
-    private final MessagingProtocol<T> protocol;
-    private final MessageEncoderDecoder<T> encdec;
-    private final Queue<ByteBuffer> writeQueue = new LinkedList<ByteBuffer>();
-    private final SocketChannel chan;
-    private final Reactor reactor;
-    ...
+**`handleReadWrite`** finds the client's handler on the key. On a read event, it reads the bytes and hands the processing to the pool. On a write event, it writes what is waiting.
 
-    public Runnable continueRead() {
-        ByteBuffer buf = ByteBuffer.allocateDirect(BUFFER_ALLOCATION_SIZE);
+```java
+NonBlockingConnectionHandler handler = (NonBlockingConnectionHandler) key.attachment();
+if (key.isReadable()) {
+    Runnable task = handler.continueRead();
+    if (task != null) pool.submit(task);
+}
+if (key.isWritable())
+    handler.continueWrite();
+```
 
-        if (chan.read(buf) > 0) {   // 1. Read bytes from the client's channel
-            buf.flip();
-            return () -> {   // 2. Return a task for the executor, based on the bytes read from the client
-                while (buf.hasRemaining()) {
-                    T nextMessage = encdec.decodeNextByte(buf.get());
-                    if (nextMessage != null) {
-                        T response = protocol.process(nextMessage);
-                        if (response != null) {
-                            writeQueue.add(ByteBuffer.wrap(encdec.encode(response)));
-                            reactor.updateInterestOps(chan,
-                                SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                        }
-                    }
-                }
-            };
-        } else {   // read byte is -1, so the client disconnected
-                   // (0 is not possible, since the read is applied after an OP_READ event)
-            close();
-            return null;
-        }
+**`updateInterestOps`** changes which events the selector watches for a client.
+
+```java
+void updateInterestOps(SocketChannel chan, int ops) {
+    chan.keyFor(selector).interestOps(ops);
+    selector.wakeup();
+}
+```
+
+### The non-blocking connection handler
+
+Each client has a handler with its channel, its encoder-decoder, its protocol, and a **write queue** of replies waiting to be sent.
+
+**`continueRead`** runs on the communication thread. It only reads the bytes, then returns a task that does the rest on a worker thread.
+
+```java
+public Runnable continueRead() {
+    ByteBuffer buf = ByteBuffer.allocateDirect(BUFFER_SIZE);
+    if (chan.read(buf) < 0) {       // -1: the client disconnected
+        close();
+        return null;
     }
+    buf.flip();
+    return () -> process(buf);      // the worker's job
+}
+```
 
-    public void close() {
-        try {
-            chan.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+**The worker's task** decodes messages, processes them, and queues the replies. Queuing a reply means the selector should now also watch for `OP_WRITE`.
 
-    public void continueWrite() {
-        while (!writeQueue.isEmpty()) {
-            ByteBuffer top = writeQueue.peek();
-            chan.write(top);
-            if (top.hasRemaining())
-                return;
-            else
-                writeQueue.remove();
-        }
-        // the while-loop can break due to an exception (see the full code in the website)
-        if (writeQueue.isEmpty()) {
-            if (protocol.shouldTerminate()) close();
-            else reactor.updateInterestOps(chan, SelectionKey.OP_READ);
+```java
+private void process(ByteBuffer buf) {
+    while (buf.hasRemaining()) {
+        T msg = encdec.decodeNextByte(buf.get());
+        if (msg != null) {
+            T reply = protocol.process(msg);
+            if (reply != null) {
+                writeQueue.add(ByteBuffer.wrap(encdec.encode(reply)));
+                reactor.updateInterestOps(chan, OP_READ | OP_WRITE);
+            }
         }
     }
 }
+```
 
+**`continueWrite`** runs on the communication thread. It writes as much as the channel accepts, and once the queue is empty, stops watching for `OP_WRITE`.
+
+```java
+public void continueWrite() {
+    while (!writeQueue.isEmpty()) {
+        ByteBuffer top = writeQueue.peek();
+        chan.write(top);
+        if (top.hasRemaining()) return;     // the channel is full; try later
+        writeQueue.remove();
+    }
+    if (protocol.shouldTerminate()) close();
+    else reactor.updateInterestOps(chan, OP_READ);
+}
 ```
 
 The interest set needs care, especially `OP_WRITE`.
@@ -605,6 +377,7 @@ Leaving `OP_WRITE` set when there is nothing to send makes `select` spin.
 - **The fix:** set `OP_WRITE` only while the write queue holds bytes, and clear it as soon as the last of them has been written.
 :::
 
+
 :::check id=chk-write-interest
 A channel's write queue is empty, and `OP_WRITE` is still set. What does the selector thread do?
 
@@ -615,6 +388,7 @@ A channel's write queue is empty, and `OP_WRITE` is still set. What does the sel
 - **Why it spins:** a channel with free space in its send buffer counts as ready for writing, so `select` returns immediately, over and over.
 - **The fix:** clear `OP_WRITE` from the interest set, and set it again only when a reply is waiting in the write queue.
 :::
+
 
 ### ByteBuffer indexes
 
@@ -655,556 +429,179 @@ channel.write(buf);
 :::
 :::
 
+
 ## Synchronization in the reactor
 
-Look at a number of "issues" around the current pattern. Since this is a concurrent system, based on several threads running concurrently, you must check the scenarios in which different threads reach shared information at the same time.
+The reactor is a concurrent program, so look for places where two threads touch the same data. There are two kinds.
 
-You can classify the meeting points between threads into two kinds.
+### 1. The communication thread and a worker
 
-### 1. The communication thread and a worker thread
-
-The `writeQueue` in the `NonBlockingConnectionHandler`, which holds the replies to send to a given client, is reached at the same time by the communication thread and by a worker thread: while the communication thread removes a `ByteBuffer` to send to the client through the `Socket`, a worker thread may add a new reply to the same client's `writeQueue`.
-
-- **So the `writeQueue` must be synchronized:**
+Each client's `writeQueue` is filled by workers and emptied by the communication thread, at the same time. So it must be a thread-safe queue:
 
 ```java
-public class NonBlockingConnectionHandler {
-    ...
-    private final Queue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<ByteBuffer>();
-    ...
-}
-
+private final Queue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<>();
 ```
 
-Remember that a synchronized class makes every operation safe by itself, but if there is a logical connection between several operations on the structure (such as performing an `if` that refers to the structure's state, and then an operation according to it), you must still synchronize from outside around the series of operations. There are two such cases in the `continueWrite` method.
+A thread-safe queue makes each call safe, but not a check followed by an action. Look at the end of `continueWrite`:
 
 ```java
-while (!writeQueue.isEmpty()) {
-    // take bytes from writeQueue and write them to the client's socket
-}
-
+if (writeQueue.isEmpty())                     // 1. the communication thread sees "empty"
+    reactor.updateInterestOps(chan, OP_READ); // 3. ... and stops watching OP_WRITE
 ```
 
-If a worker thread adds a new reply to this client between the check of the condition and the exit from the loop, nothing bad happens, because the client's registration is `READ | WRITE`, so the communication thread will soon go back to `select`, wake up at once because the client is ready for writing, and come back to `continueWrite`.
+If a worker adds a reply at step 2, between the check and the change, the reply sits in the queue while the selector no longer watches for writing. The client, waiting for that reply, may never send anything again, so nothing ever wakes the reactor to send it. You will see below how the final design solves this.
+
+### 2. Two workers on the same client
+
+If a client's bytes arrive in two reads, two tasks for the same client may run at once, on two workers. Both feed bytes into the client's single encoder-decoder, and the messages get mixed.
+
+**Attempt 1: lock the handler inside the task.**
 
 ```java
-if (writeQueue.isEmpty()) {
-    // change the registration to READ only
-}
-
+return () -> {
+    synchronized (this) { process(buf); }
+};
 ```
 
-Here there may be a problem. A worker thread may add a reply to this client after the check `if (writeQueue.isEmpty())` came out empty, while the communication thread changes the registration to `READ` only. That way, the client's thread will not wake up from `select` until the client's bytes arrive (it is not certain that will happen at all, since the client is waiting for the reply to a request it sent), and in any case it will not handle writing the reply to the client.
+The bytes no longer mix, but their **order** is not kept. The tasks entered the pool in order, yet the worker holding the second task may be scheduled first. If the first read held `AB;C` and the second `D;`, the second task runs first, and the server executes a message `D` that the client never sent.
 
-- **So you should synchronize this `if` block.** But you will see later that this scenario is solved in another way, because of a mechanism added to the pattern for another reason.
-
-### 2. Two worker threads
-
-This scenario is possible when you receive several `ByteBuffer`s from the client in different reads, and they are handled concurrently by two tasks in the `Executor`. The bytes of the messages may get mixed in the client's shared `encDec` in its connection handler.
-
-- **So you must synchronize the access to the client's connection handler.**
-
-**A first attempt:** synchronize on the connection handler in the `run` method of the worker thread's task.
+**Attempt 2: keep a queue of tasks per client, and always run the first one.**
 
 ```java
-public Runnable continueRead() {
-    ...
-    return () -> {   // 2. Return a task for the executor, based on the bytes read from the client
-        synchronized (NonBlockingConnectionHandler.this) {
-            while (buf.hasRemaining()) {
-                T nextMessage = encdec.decodeNextByte(buf.get());
-                if (nextMessage != null) {
-                    T response = protocol.process(nextMessage);
-                    if (response != null) {
-                        writeQueue.add(ByteBuffer.wrap(encdec.encode(response)));
-                        reactor.updateInterestOps(chan,
-                            SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-                    }
-                }
-            }
-        }
-    };
-    ...
-}
-
-```
-
-- **The drawback:** the order in which the messages are carried out is still not kept, in the order the bytes were sent. The bytes are indeed read in order (by the TCP protocol), and they arrive in order as tasks to the `Executor` (there is one communication thread), and they are even taken in order from the queue of tasks in the `Executor` by the worker threads. But there is no guarantee of the scheduling: the thread that took the first array of bytes may run its task only after the thread that took the second array of bytes.
-- **Moreover,** there is a scenario in which the server carries out messages the client never sent, and on the other hand does not carry out messages the client did send. If the first `ByteBuffer` is `AB;C` and the second is `D;`, and the thread that took the second task is scheduled first, it carries out the message `D`, which was not sent, and the message `CD` is not carried out.
-
-**A second attempt:** extend the synchronization of the client, the connection handler, to also cover removing its tasks from the queue.
-
-For that, keep a data structure that maps each connection handler to the list of tasks to carry out for it. Define the task handed to the threads in the `Executor` as removal, under the synchronization of the connection handler, of the first task for the client, and running it (running its `run`).
-
-```java
-class Reactor {
-    ...
-    private Map<NonBlockingConnectionHandler, Queue<Runnable>> handler2tasks =
-        new ConcurrentHashMap<NonBlockingConnectionHandler, Queue<Runnable>>();
-    ...
-
-    private void handleAccept(ServerSocketChannel serverChan, Selector selector) throws IOException {
-        SocketChannel clientChan = serverChan.accept();
-        clientChan.configureBlocking(false);
-        final NonBlockingConnectionHandler handler = new NonBlockingConnectionHandler(
-            readerFactory.get(),
-            protocolFactory.get(),
-            clientChan,
-            this);
-        clientChan.register(selector, SelectionKey.OP_READ, handler);
-        handler2tasks.put(handler, new ConcurrentLinkedQueue<Runnable>());
+handler2tasks.get(handler).add(task);
+pool.submit(() -> {
+    synchronized (handler) {
+        handler2tasks.get(handler).remove().run();
     }
-
-    private void handleReadWrite(SelectionKey key) {
-        NonBlockingConnectionHandler handler = (NonBlockingConnectionHandler) key.attachment();
-        if (key.isReadable()) {
-            Runnable task = handler.continueRead();
-            if (task != null) {
-                handler2tasks.get(handler).add(task);
-                pool.submit(() -> {
-                    synchronized (handler) {
-                        tasks.remove(0).run();
-                    }
-                });
-            }
-        } else {
-            handler.continueWrite();
-        }
-    }
-}
-
+});
 ```
 
-The task defined for the threads in the `Executor` is: in a synchronized way on the connection handler, remove the first task in the list of tasks for the client, and run it (run its `run`). This way, there is no importance to the scheduling of the threads in the `Executor`: whoever runs first takes the first task and runs it, without allowing other threads to run other tasks of the same client.
+Now whichever worker runs, it runs the client's oldest task, so the order is kept. But if one client sends many messages, several workers take its tasks and all but one wait on its lock, while other clients wait in the pool's queue.
 
-- **The drawback:** this guarantees correctness, but it is not efficient in terms of liveness. Running several tasks of the same client concurrently moves all the threads except one to waiting, even though there are other clients that could be handled at that time.
+**Attempt 3: never put two tasks of the same client in the pool at once.** That is the **actor thread pool**.
 
-**A third attempt:** manage the clients' tasks in the `Executor` so that two tasks of the same client are never carried out at the same time. In other words, define a simple protocol, the "envelope", for the clients' tasks: the tasks are kept in a table, in a way that never puts two tasks of the same client in the `Executor`'s queue of tasks.
+### The actor thread pool
 
-Implement this in general (not only for the scenario of tasks in a server) with the **`ActorThreadPool`** design pattern, which implements an `ExecutorService` under a constraint of this kind:
+Call each client an **actor**. The pool keeps:
 
-- **a mapping from each "actor"** (in our case, the clients, the connection handlers) **to its current tasks** that need to be carried out,
-- **a list that says which "actors"** (connection handlers) **are being handled right now** by threads in the `Executor`,
-- **a task of an actor is added to the `Executor`'s queue of tasks only if it has no other tasks in the queue.**
+- **`acts`:** a queue of pending tasks for each actor,
+- **`playingNow`:** the set of actors that have a task in the pool right now.
 
-The task defined for the threads in the `Executor`:
-
-1. carry out the actor's first current task,
-2. add the next task of that client to the end of the `Executor`'s queue. If there are no more tasks for the actor, remove it from the list of active actors.
-
-### The ActorThreadPool class
-
-**Design.**
-
-- **`submit(T actor, Runnable task)`:**
-  - add the task to the client's list of tasks,
-  - if the client is not active (none of its tasks is being carried out by the `Executor`): add to the `Executor` a task made of running the task's `run`, and then running `complete` for this client (which adds the client's next task to the `Executor`). Adding such a task is defined in the method `execute`.
-- **`execute(Runnable task, T actor)`:**
-  - a helper function that adds a new task to the `Executor`, which includes:
-    - running the `run` method of the given task,
-    - calling `complete`, which adds the client's next task to the `Executor`.
-- **`complete(T actor)`:**
-  - if the actor has no more tasks, remove it from the list of active actors (`playingNow`),
-  - otherwise, add a new task to the `Executor` that includes running the next task, followed by `complete` (that is, a call to the method `execute`).
+**`submit`** runs a task right away only if the actor is idle. Otherwise the task waits in the actor's queue.
 
 ```java
-public class ActorThreadPool<T> {
-
-    private final Map<T, Queue<Runnable>> acts;
-    private final Set<T> playingNow;
-    private final ExecutorService threads;   // the 'executor'
-
-    public ActorThreadPool(int threads) {
-        this.threads = Executors.newFixedThreadPool(threads);
-        acts = new HashMap<T, Queue<Runnable>>();
-        playingNow = new HashSet<T>();
-    }
-
-    public void submit(T act, Runnable task) {
+public void submit(T act, Runnable task) {
+    synchronized (act) {
         if (!playingNow.contains(act)) {
             playingNow.add(act);
-            // add a new task to the executor: <r.run(); complete(...);>
             execute(task, act);
         } else {
-            // add the new task r to the tasks of act
             pendingRunnablesOf(act).add(task);
         }
     }
+}
+```
 
-    public void shutdown() {
-        threads.shutdownNow();
-    }
+**`execute`** wraps the task, so that when it finishes, the actor's next task is started.
 
-    private Queue<Runnable> pendingRunnablesOf(T act) {
-        // get the task list of the given actor
-        Queue<Runnable> pendingRunnables = acts.get(act);
-        if (pendingRunnables == null)
-            acts.put(act, pendingRunnables = new LinkedList<Runnable>());
-        return pendingRunnables;
-    }
+```java
+private void execute(Runnable task, T act) {
+    threads.submit(() -> {
+        try { task.run(); }
+        finally { complete(act); }
+    });
+}
+```
 
-    private void execute(Runnable task, T act) {
-        threads.submit(() -> {
-            try {
-                task.run();
-            } finally {
-                complete(act);
-            }
-        });
-    }
+**`complete`** starts the next pending task of the actor, or marks the actor idle.
 
-    private void complete(T act) {
+```java
+private void complete(T act) {
+    synchronized (act) {
         Queue<Runnable> pending = pendingRunnablesOf(act);
-        if (pending.isEmpty())
-            playingNow.remove(act);
-        else
-            // add a new task for this actor, in the task queue of the executor
-            execute(pending.poll(), act);
+        if (pending.isEmpty()) playingNow.remove(act);
+        else execute(pending.poll(), act);
     }
 }
-
 ```
 
-**Synchronization.** In our use of `ActorThreadPool`:
+So each actor has at most one task in the pool, its tasks run in order, and the other workers stay free for other clients.
 
-- **Different threads reach the `acts` table,** in particular in the method `pendingRunnablesOf`. So define it as a `ConcurrentHashMap`.
-- **The communication thread runs `submit`,** meaning it adds a task to process a `ByteBuffer` that was read for some client (connection handler). A worker thread runs `complete` after it finishes carrying out a task of some client. So both methods are synchronized on the actor.
+**Synchronization inside the pool.**
+
+- **`submit` runs on the communication thread, and `complete` on a worker.** Both read and change the same actor's state, so both lock the actor.
+- **`acts` is reached by many threads,** so it must be a thread-safe map, and `playingNow` a concurrent set (`ConcurrentHashMap.newKeySet()`).
+
+**A memory detail.** When a client disconnects, the selector drops its key, and with it the last reference to the handler, so the garbage collector can free it. But `acts` still holds the handler as a key, so it would never be freed. The fix is a `WeakHashMap`, which drops an entry once nothing else refers to its key. `WeakHashMap` is not thread-safe, so its accesses go through a `ReadWriteLock`:
 
 ```java
-public class ActorThreadPool<T> {
-
-    private final Map<T, Queue<Runnable>> acts;
-    private final Set<T> playingNow;
-    private final ExecutorService threads;   // the 'executor'
-
-    public ActorThreadPool(int threads) {
-        this.threads = Executors.newFixedThreadPool(threads);
-        acts = new ConcurrentHashMap<T, Queue<Runnable>>();
-        playingNow = ConcurrentHashMap.newKeySet();
+private Queue<Runnable> pendingRunnablesOf(T act) {
+    actsRWLock.readLock().lock();
+    Queue<Runnable> pending = acts.get(act);
+    actsRWLock.readLock().unlock();
+    if (pending == null) {
+        actsRWLock.writeLock().lock();
+        acts.put(act, pending = new LinkedList<>());
+        actsRWLock.writeLock().unlock();
     }
-
-    public void submit(T act, Runnable r) {
-        synchronized (act) {
-            if (!playingNow.contains(act)) {
-                playingNow.add(act);
-                execute(r, act);
-            } else {
-                pendingRunnablesOf(act).add(r);
-            }
-        }
-    }
-
-    public void shutdown() {
-        threads.shutdownNow();
-    }
-
-    private Queue<Runnable> pendingRunnablesOf(T act) {
-        Queue<Runnable> pendingRunnables = acts.get(act);
-        if (pendingRunnables == null)
-            acts.put(act, pendingRunnables = new LinkedList<>());
-        return pendingRunnables;
-    }
-
-    private void execute(Runnable r, T act) {
-        threads.submit(() -> {
-            try {
-                r.run();
-            } finally {
-                complete(act);
-            }
-        });
-    }
-
-    private void complete(T act) {
-        synchronized (act) {
-            Queue<Runnable> pending = pendingRunnablesOf(act);
-            if (pending.isEmpty()) {
-                playingNow.remove(act);
-            } else {
-                execute(pending.poll(), act);
-            }
-        }
-    }
+    return pending;
 }
-
 ```
 
-**A technical problem.** The address of each connection handler is kept in the `attachment` field of its `SelectionKey` in the `Selector` (in the field of the "attached object"). Until now, when a client disconnected, the `Selector`, in its internal implementation, removed its `SelectionKey` from the `Selector` automatically, so there were no more references to the connection handler, and the garbage collector would clean up its memory. But now there is still a reference to it, in the `acts` table of the `ActorThreadPool`.
-
-- **So that you do not have to manage removing a connection handler** as if it were no longer relevant, use Java's `WeakHashMap`, which automatically removes entries whose key has only one reference.
-- **Since `WeakHashMap` is not thread-safe,** perform the access to it under synchronization, with a `ReaderWriterLock`.
+The reactor then uses the actor pool, with the handler as the actor:
 
 ```java
-public class ActorThreadPool<T> {
-
-    private final Map<T, Queue<Runnable>> acts;
-    private final Set<T> playingNow;
-    private final ExecutorService threads;   // the 'executor'
-    private final ReadWriteLock actsRWLock;
-
-    public ActorThreadPool(int threads) {
-        this.threads = Executors.newFixedThreadPool(threads);
-        acts = new WeakHashMap<T, Queue<Runnable>>();
-        playingNow = ConcurrentHashMap.newKeySet();
-        actsRWLock = new ReentrantReadWriteLock();
-    }
-
-    public void submit(T act, Runnable r) {
-        synchronized (act) {
-            if (!playingNow.contains(act)) {
-                playingNow.add(act);
-                execute(r, act);
-            } else {
-                pendingRunnablesOf(act).add(r);
-            }
-        }
-    }
-
-    public void shutdown() {
-        threads.shutdownNow();
-    }
-
-    private Queue<Runnable> pendingRunnablesOf(T act) {
-        actsRWLock.readLock().lock();
-        Queue<Runnable> pendingRunnables = acts.get(act);
-        actsRWLock.readLock().unlock();
-
-        if (pendingRunnables == null) {
-            actsRWLock.writeLock().lock();
-            acts.put(act, pendingRunnables = new LinkedList<>());
-            actsRWLock.writeLock().unlock();
-        }
-        return pendingRunnables;
-    }
-
-    private void execute(Runnable task, T act) {
-        threads.submit(() -> {
-            try {
-                task.run();
-            } finally {
-                complete(act);
-            }
-        });
-    }
-
-    private void complete(T act) {
-        synchronized (act) {
-            Queue<Runnable> pending = pendingRunnablesOf(act);
-            if (pending.isEmpty()) {
-                playingNow.remove(act);
-            } else {
-                execute(pending.poll(), act);
-            }
-        }
-    }
-}
-
+pool.submit(handler, task);
 ```
 
-Now all that is left is to change the type of the `pool` in the `Reactor` class from `ExecutorService` to `ActorThreadPool`, and to add the connection handler in the call to `submit`:
+The notes also show a version of the actor pool that uses CAS instead of `synchronized`. It is reading material only, **not exam material**.
+
+### Changing the selector only from the communication thread (an exam case)
+
+Changing a channel's registration can **block** the changing thread while another thread is inside `select`. Here, a worker calls `updateInterestOps` after queuing a reply, while the communication thread sits in `select`, so the worker may get stuck.
+
+The fix: only the communication thread touches the selector. Other threads leave it a **task** to do so.
 
 ```java
-class Reactor {
-    ...
-    ActorThreadPool<NonBlockingConnectionHandler> pool;
-    ...
-
-    private void handleReadWrite(SelectionKey key) {
-        NonBlockingConnectionHandler handler = (NonBlockingConnectionHandler) key.attachment();
-        if (key.isReadable()) {
-            Runnable task = handler.continueRead();
-            if (task != null) {
-                pool.submit(handler, task);
-            }
-        } else {
-            handler.continueWrite();
-        }
+void updateInterestOps(SocketChannel chan, int ops) {
+    SelectionKey key = chan.keyFor(selector);
+    if (Thread.currentThread() == selectorThread) {
+        key.interestOps(ops);
+    } else {
+        selectorTasks.add(() -> { if (key.isValid()) key.interestOps(ops); });
+        selector.wakeup();            // get the communication thread out of select
     }
 }
-
 ```
 
-**A note:** in the given implementation of `ActorThreadPool`, `synchronized` is used to synchronize the methods `submit` and `complete`. You can avoid using `synchronized` (since, as we saw, it is not efficient in practice) and synchronize with `CAS`, but that requires a somewhat complex design. It is not done within the course (**it is not exam material**), but it is worth looking at the implementation as reading material.
+The communication thread runs those tasks each time it returns from `select`:
 
 ```java
-public class NonBlockingActorThreadPool<T> {
-
-    private ExecutorService pool;
-    private final ReadWriteLock actsRWLock = new ReentrantReadWriteLock();
-    private Map<T, Actor> acts = new WeakHashMap<>();
-
-    public NonBlockingActorThreadPool(int threads) {
-        this.pool = Executors.newFixedThreadPool(threads);
-    }
-
-    private Actor getActor(T act) {
-        actsRWLock.readLock().lock();
-        Actor actor = acts.get(act);
-        actsRWLock.readLock().unlock();
-
-        if (actor == null) {
-            actsRWLock.writeLock().lock();
-            acts.put(act, actor = new Actor());
-            actsRWLock.writeLock().unlock();
-        }
-        return actor;
-    }
-
-    public void submit(T act, Runnable r) {
-        getActor(act).add(r);
-    }
-
-    public void shutdown() {
-        pool.shutdownNow();
-    }
-
-    private static class ExecutionState {
-        // the amount of tasks that should be handled
-        public int tasksLeft;
-        // true if there is a thread that handles or is designated to handle these tasks
-        public boolean playingNow;
-
-        public ExecutionState(int tasksLeft, boolean playingNow) {
-            this.tasksLeft = tasksLeft;
-            this.playingNow = playingNow;
-        }
-    }
-
-    private class Actor implements Runnable {
-
-        public ConcurrentLinkedQueue<Runnable> tasksQueue = new ConcurrentLinkedQueue<>();
-        public AtomicReference<ExecutionState> state =
-            new AtomicReference<>(new ExecutionState(0, false));
-
-        public void add(Runnable task) {
-            tasksQueue.add(task);
-            ExecutionState oldState = state.get();
-            // after this operation completes, one additional task will be added to the queue,
-            // and a thread for this task will be executed if not already is
-            ExecutionState newState = new ExecutionState(oldState.tasksLeft + 1, true);
-
-            while (!state.compareAndSet(oldState, newState)) {
-                oldState = state.get();
-                newState.tasksLeft = oldState.tasksLeft + 1;
-            }
-
-            if (!oldState.playingNow) {
-                pool.submit(this);
-            }
-        }
-
-        @Override
-        public void run() {
-            // when this function completes, 0 tasks will be in the queue
-            // and no one will and the actor will not "play now"
-            ExecutionState newState = new ExecutionState(0, false);
-            int tasksDone = 0;
-            ExecutionState oldState;
-
-            do {
-                oldState = state.get();
-                for (; tasksDone < oldState.tasksLeft; tasksDone++) {
-                    tasksQueue.remove().run();
-                }
-            } while (!state.compareAndSet(oldState, newState));
-        }
-    }
-}
-
+selector.select();
+while (!selectorTasks.isEmpty())
+    selectorTasks.remove().run();
 ```
 
-### Registration changes from other threads (an exam case)
+This also fixes the race at the end of `continueWrite`. A worker's change to `READ | WRITE` is now a task plus a `wakeup`, so it always runs after the communication thread's change to `READ`, and the final registration is `READ | WRITE`, as it should be.
 
-Note that trying to change the registration of events for a channel in the `Selector` may move the thread doing it to the Blocked state, if another thread is performing `select` right now.
+### Reusing buffers
 
-In particular, in our system, if a worker thread, after adding a reply to a client in its `writeQueue`, changes the client's registration in the `Selector` from `READ` to `READ | WRITE`, it may get stuck, if the communication thread is performing `select`.
-
-- **So limit the updating of registrations in the `Selector` to the communication thread only** (just as you kept the worker thread away from I/O).
-
-**The mechanism:**
-
-- **define a queue of "registration update" tasks** for the communication thread,
-- **in the method `updateInterestOps`,** if the current thread is not the communication thread (define a variable that identifies the communication thread), do not actually change the registration, but add a "registration update" task to the list,
-- **add to the communication thread's loop** the running of the registration-update tasks.
+`continueRead` allocates a new `ByteBuffer` for every read. A small optimization keeps a shared pool of buffers instead:
 
 ```java
-public class Reactor {
-    private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
-    private Thread selectorThread;
-    ...
+private static final ConcurrentLinkedQueue<ByteBuffer> BUFFER_POOL = new ConcurrentLinkedQueue<>();
 
-    public void serve() {
-        selectorThread = Thread.currentThread();
-        ...
-        // Main loop
-        while (!Thread.currentThread().isInterrupted()) {
-            selector.select();
-            runSelectionThreadTasks();
-            for (SelectionKey key : selector.selectedKeys()) {
-                ... // handleAccept / ReadWrite
-            }
-            selector.selectedKeys().clear();
-        }
-        pool.shutdown();
-    }
-    ...
-
-    void updateInterestedOps(SocketChannel chan, int ops) {
-        SelectionKey key = chan.keyFor(selector);
-        if (Thread.currentThread() == selectorThread)
-            key.interestOps(ops);
-        else {
-            selectorTasks.add(() -> {
-                if (key.isValid())
-                    key.interestOps(ops);
-            });
-            selector.wakeup();
-        }
-    }
-
-    private void runSelectionThreadTasks() {
-        while (!selectorTasks.isEmpty())
-            selectorTasks.remove().run();
-    }
+private static ByteBuffer leaseBuffer() {
+    ByteBuffer buf = BUFFER_POOL.poll();
+    if (buf == null) return ByteBuffer.allocateDirect(BUFFER_SIZE);
+    buf.clear();
+    return buf;
 }
 
+private static void releaseBuffer(ByteBuffer buf) { BUFFER_POOL.add(buf); }
 ```
 
-**Back to the question of synchronizing the registration update in `continueWrite`:** thanks to this mechanism, updating the registration by a worker thread to `READ | WRITE` is defined as a task for the communication thread, plus `wakeup`. That is the "notify". So in any case, if the communication thread had updated the registration to `READ`, it is immediately woken in the next `select`, and runs the worker thread's update task. In the end, the registration is in any case `READ | WRITE`.
-
-### Reusing a ByteBuffer
-
-In the current code, a new `ByteBuffer` is created before every read. You can make this more efficient, and reuse existing `ByteBuffer`s (not part of the principle):
-
-```java
-public class NonBlockingConnectionHandler {
-    private static final ConcurrentLinkedQueue<ByteBuffer> BUFFER_POOL =
-        new ConcurrentLinkedQueue<ByteBuffer>();
-    ...
-
-    public Runnable continueRead() {
-        ByteBuffer buf = leaseBuffer();
-        ...
-        releaseBuffer(buf);
-    }
-
-    private static ByteBuffer leaseBuffer() {
-        ByteBuffer buff = BUFFER_POOL.poll();
-        if (buff == null) {
-            return ByteBuffer.allocateDirect(BUFFER_ALLOCATION_SIZE);
-        }
-        buff.clear();
-        return buff;
-    }
-
-    private static void releaseBuffer(ByteBuffer buff) {
-        BUFFER_POOL.add(buff);
-    }
-}
-
-```
-
-The full code of the reactor is in the course's class material.
+The full reactor code is in the course's class material.
 
 ## Practice
 

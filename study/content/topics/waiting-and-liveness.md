@@ -27,14 +27,14 @@ Operations in a program can fail, for example because their precondition does no
 
 ## When an operation fails
 
-Operations in a program may fail (and throw an exception) for many reasons. For example, because the precondition does not hold. There are several ways to deal with an operation that fails (what is carried out in the `catch` block):
+An operation may fail, for example because its precondition does not hold. A program can react in four ways, in its `catch` block:
 
 - **stop the program** (`System.exit`),
-- **continue as usual** (an empty block),
-- **pass the responsibility to "whoever called" the operation** (do not catch the exception, or throw it again),
+- **carry on as if nothing happened** (an empty `catch`),
+- **pass the problem up** to whoever called it (do not catch, or throw again),
 - **try again.**
 
-This chapter deals with the last option. (You already met it in the optimistic try and fail of `printAll` in [Synchronization](topic:synchronization).) Notice that this approach is relevant only to a concurrent program. In a serial program there is no point in trying again, because nobody else changes the state. In a concurrent program there is.
+This chapter is about the last one. In a serial program, trying again is pointless, because nothing else will change the state. In a concurrent program it makes sense: another thread may make the precondition true. (You already saw one form of it, the optimistic try-and-fail walk in [Synchronization](topic:synchronization).)
 
 ### Exceptions in Java
 
@@ -46,6 +46,7 @@ When something goes wrong at run time, a Java method throws an exception. The co
 - **Unchecked exceptions:** these inherit from `RuntimeException`. They stand for bugs in the program, such as `NullPointerException` and `IndexOutOfBoundsException`. A method may leave them undeclared.
 - **Errors:** these inherit from `java.lang.Error`. They stand for severe failures of the JVM, such as `OutOfMemoryError`. Ordinary application code leaves them uncaught.
 :::
+
 
 - **`finally`:** this block runs whenever control leaves the `try` block, whether the block finished normally or an exception was thrown.
 - **`try-with-resources`:** this form closes every resource that implements `AutoCloseable`, on every exit from the block, so you do not have to write the `finally` yourself.
@@ -60,841 +61,393 @@ A method calls an API that throws `java.io.FileNotFoundException`, a checked exc
 Checked exceptions are part of the method's type. Unchecked exceptions and `Error` stay outside that type.
 :::
 
-### A bounded queue
 
-The example for the rest of the chapter is a bounded queue. One kind of thread adds to it, and another removes from it.
+### The running example: a bounded queue
+
+One thread adds to a queue of limited size, and another removes from it. In a serial program, a full or empty queue is simply an error.
 
 ```java
-class BoundedQueue<T> {
-    List<T> lst;
-    int capacity;
-
-    BoundedQueue(int capacity) { this.capacity = capacity; this.lst = new ArrayList<T>(); }
-
-    public void add(T obj) {
-        if (lst.size() == capacity)
-            throw new Exception("full queue");
-        lst.add(obj);
-    }
-
-    public T remove() {
-        if (lst.size() == 0)
-            throw new Exception("empty queue");
-        return lst.remove(0);
-    }
+public void add(T obj) {
+    if (lst.size() == capacity)
+        throw new Exception("full queue");
+    lst.add(obj);
 }
-
 ```
+
+With threads, a full queue is usually temporary: the remover will soon make room. So instead of failing, `add` should **wait** until there is room. How?
 
 ## Trying again: busy waiting
 
-**A first attempt: a "hard" busy wait (do not do this!).**
+**First attempt: spin in a loop. Do not do this.**
 
 ```java
-class BoundedQueue<T> {
-    List<T> lst;
-    int capacity;
-    ...
-    public synchronized void add(T obj) {
-        while (lst.size() == capacity);
-        lst.add(obj);
-    }
-
-    public synchronized T remove() {
-        while (lst.size() == 0);
-        return lst.remove(0);
-    }
+public synchronized void add(T obj) {
+    while (lst.size() == capacity);    // spin until there is room
+    lst.add(obj);
 }
-
 ```
 
-Its drawbacks, in increasing order of severity:
+- **It can never succeed.** The spinning thread holds the queue's lock the whole time, so the remover can never get in to make room.
+- **It burns the processor** while waiting.
 
-- **The lock on the object is not released while waiting for it to change,** so no other thread can change it, as the waiter wants. (This could be solved by using a semaphore, as you will see.)
-- **Needless use of the processor's time.**
-
-**A second attempt: busy waiting with a pause.**
+**Second attempt: spin, but sleep between checks.**
 
 ```java
-class BoundedQueue<T> {
-    ...
-    public synchronized void add(T obj) {
-        while (lst.size() == capacity)
-            Thread.sleep(1000);
-        lst.add(obj);
-    }
-
-    public synchronized T remove() {
-        while (lst.size() == 0)
-            Thread.sleep(1000);
-        return lst.remove(0);
-    }
+public synchronized void add(T obj) {
+    while (lst.size() == capacity)
+        Thread.sleep(1000);
+    lst.add(obj);
 }
-
 ```
 
-Its drawbacks:
+- **Still holds the lock while sleeping,** so still nobody can make room.
+- **No reason to believe** the condition will hold after exactly one second.
 
-- **The lock on the object is still not released while waiting,** so no other thread can change it, as the waiter wants.
-- **There is no indication that after the period given to `sleep`, the precondition will actually hold.**
-
-So you need a mechanism of the run-time environment that moves a thread to the Blocked state until a change happens in some object.
+What is needed is a way to say: "block me, **release the lock** while I am blocked, and wake me when someone changes this object."
 
 ## wait and notify
 
-The run-time environment supports such a mechanism with two operations.
+The run-time environment provides exactly that, through two operations on an object `O`.
 
-- **`wait(T, O)`:** the thread `T` asks to move to the Blocked state until some change happens in the object `O` (in particular, until `notify` is performed on `O`), while releasing `T`'s lock on `O`.
-- **`notify(T, O)`:** the thread `T`, which is waiting for a change in the object `O`, returns to the Runnable state. Its first action is to lock `O` again.
+- **`wait`:** the current thread moves to Blocked, waiting for a change in `O`, and releases its lock on `O` meanwhile.
+- **`notify`:** a thread waiting on `O` becomes Runnable again. Its first action is to take the lock on `O` back.
 
-To carry this out, the environment keeps, for every object, a list of the threads waiting for a change in it. `wait` adds a thread to the list, and `notify` removes it from the list.
+To support this, every object keeps a list of the threads waiting on it. In Java, every `Object` has these three methods:
 
-In Java, the `Object` class has three methods for this mechanism.
+| Method | What it does |
+| --- | --- |
+| `o.wait()` | Release `o`'s lock and block until someone notifies `o` |
+| `o.notify()` | Wake **one** waiting thread, chosen at random |
+| `o.notifyAll()` | Wake **all** the waiting threads |
 
-- **`o.wait()`:** the current thread waits for a change in the object `o`. That is, it moves to the Blocked state until the method `notify` or `notifyAll` is called on `o`, and it releases its lock on `o` in the meantime.
-- **`o.notify()`:** a **random choice of one** of the threads waiting for a change in `o`, which moves to the Runnable state (and asks to lock `o` again).
-- **`o.notifyAll()`:** **all** of the threads waiting for a change in `o` move to the Runnable state (and each asks to lock `o` again).
+The rule of use: **call `wait` whenever the precondition does not hold, and `notifyAll` after every change.**
 
-**Using the mechanism**, broadly:
-
-- **every time the precondition does not hold,** call `wait`,
-- **after changes to the object,** call `notifyAll`.
-
-On what object do you call `wait` and `notifyAll`?
-
-### Protocol A: on `this`
-
-This matches protocol A of [Synchronization](topic:synchronization), full synchronization.
+### The bounded queue with wait and notify
 
 ```java
-class BoundedQueue<T> {
-    List<T> lst;
-    int capacity;
-
-    BoundedQueue(int capacity) {
-        this.capacity = capacity;
-        this.lst = new ArrayList<T>();
-    }
-
-    public synchronized void add(T obj) {
-        while (lst.size() == capacity)
-            this.wait();
-        lst.add(obj);
-        this.notifyAll();
-    }
-
-    public synchronized T remove() {
-        while (lst.size() == 0)
-            this.wait();
-        T ret = lst.remove(0);
-        this.notifyAll();
-        return ret;
-    }
+public synchronized void add(T obj) throws InterruptedException {
+    while (lst.size() == capacity)
+        wait();                   // releases the lock while waiting
+    lst.add(obj);
+    notifyAll();                  // the queue changed: wake the waiters
 }
 
+public synchronized T remove() throws InterruptedException {
+    while (lst.size() == 0)
+        wait();
+    T ret = lst.remove(0);
+    notifyAll();
+    return ret;
+}
 ```
 
-- **The queue starts empty.** T2 calls `q.remove()`, finds the queue empty, and calls `wait`, which releases the lock on `q` and blocks T2.
-- **T1 calls `q.add(1)`.** It can take the lock, adds 1, and calls `notifyAll`. T2 wakes up, takes the lock again, sees that the queue is not empty, and removes 1.
+Follow it on an empty queue.
 
-### Protocol B: on an object that represents part of `this`
+1. **T2 calls `remove()`.** The queue is empty, so it calls `wait()`, which releases the lock and blocks T2.
+2. **T1 calls `add(1)`.** The lock is free, so T1 gets in, adds 1, and calls `notifyAll()`.
+3. **T2 wakes up,** takes the lock back, checks the `while` again, finds 1, and removes it.
 
-This matches protocol B, partial synchronization.
+### On which object to wait
+
+`wait` and `notifyAll` are called on the same object whose lock protects the condition. That gives one version for each lock protocol from [Synchronization](topic:synchronization).
+
+- **Protocol A, the whole object:** `this.wait()` and `this.notifyAll()`, as in the queue above.
+- **Protocol B, one group of fields:** wait on that group's lock. A `Point` that may not leave a box waits on `lockY` for moves in `y`:
 
 ```java
-class Point {
-    int x, y;
-    final int minX, maxX, minY, maxY;
-    Object lockX, lockY;
-
-    Point(int x, int y, int minX, int maxX, int minY, int maxY) {
-        this.x = x;
-        this.y = y;
-        this.minX = minX; this.maxX = maxX; this.minY = minY; this.maxY = maxY;
-        lockX = new Object();
-        lockY = new Object();
-    }
-
-    public int getY() {
-        synchronized (lockY) {
-            return y;
-        }
-    }
-
-    public void up() {
-        synchronized (lockY) {
-            while (y == maxY)
-                lockY.wait();
-            y++;
-            lockY.notifyAll();
-        }
-    }
-
-    public void down() {
-        synchronized (lockY) {
-            while (y == minY)
-                lockY.wait();
-            y--;
-            lockY.notifyAll();
-        }
-    }
-
-    public int getX() {
-        synchronized (lockX) {
-            return x;
-        }
-    }
-
-    public void right() {
-        synchronized (lockX) {
-            while (x == maxX)
-                lockX.wait();
-            x++;
-            lockX.notifyAll();
-        }
-    }
-
-    public void left() {
-        synchronized (lockX) {
-            while (x == minX)
-                lockX.wait();
-            x--;
-            lockX.notifyAll();
-        }
+public void up() throws InterruptedException {
+    synchronized (lockY) {
+        while (y == maxY)
+            lockY.wait();
+        y++;
+        lockY.notifyAll();
     }
 }
-
 ```
 
-- **The point is at `y == maxY`.** T1 calls `p.up()`, and waits on `lockY`. T2 calls `p.left()`, which needs only `lockX`, so it runs. T3 calls `p.down()`, which moves `y` down and calls `lockY.notifyAll()`, so T1 can now move up.
+A thread stuck in `up` never blocks moves in `x`, which use `lockX`.
 
-### Protocol C: on an object that represents a group of objects
-
-This matches protocol C, locking several objects in one operation.
+- **Protocol C, several objects:** wait on the one lock object that stands for all of them.
 
 ```java
-List<Integer> l1, l2;
-Object lockL1L2;
-...
 synchronized (lockL1L2) {
     while (!preCond())
         lockL1L2.wait();
-    ... // do something with both L1 and L2
+    ... // work on both lists
     lockL1L2.notifyAll();
 }
-
 ```
 
-### The pattern, and the two problems it prevents
+### The pattern, and why every part of it matters
 
-Every one of the protocols has the same fixed pattern:
+All three are the same pattern; only the object `o` changes.
 
 ```java
 synchronized (o) {
-    while (!checkPreCond())
+    while (!preCondition())
         o.wait();
-    ... // code which changes the state
+    ... // change the state
     o.notifyAll();
 }
-
 ```
 
-The difference between the protocols is only the identity of the object `o`. The pattern prevents two central problems.
+Each part prevents a specific bug. Here they are, one at a time.
 
-**1. Running the code when the precondition does not hold.**
+**1. `while`, not `if`.** With `if`, a thread does not recheck after it wakes up.
 
-- **Using `if` instead of `while`:**
+The queue is empty, and T2 and T3 both wait in `remove`. T1 adds one item and calls `notifyAll`, which wakes both. T2 removes the item. T3, with `if`, continues past the check and removes from an empty queue. With `while`, T3 checks again, finds the queue empty, and goes back to waiting. (A thread can also wake up without any notify at all, which is one more reason to recheck.)
+
+**2. The check and the action in one `synchronized` block.**
 
 ```java
-public synchronized T remove() {
-    if (lst.size() == 0)
-        this.wait();
-    T ret = lst.remove(0);
-    this.notifyAll();
-    return ret;
-}
-
+synchronized (this) { while (lst.size() == capacity) wait(); }
+synchronized (this) { lst.add(obj); notifyAll(); }      // bug: two blocks
 ```
 
-The queue is empty. T2 and T3 both call `q.remove()` and wait. T1 calls `q.add(1)`, and both of them wake up. The first removes the 1. The second continues after its `if`, without checking again, and removes from an empty queue.
+The queue has one free place. T1 and T2 both pass the check in the first block, both leave it, and then both add. Now the queue is over capacity. The check is only meaningful if nothing can change between it and the action.
 
-So **you must check the precondition again after waiting**. (A thread can also wake up without being notified at all, which is another reason for the `while`.)
+**3. The check and the `wait` in one `synchronized` block.** Suppose the check and the `wait` were in separate blocks. The queue is full. T1 checks, finds it full, and leaves the block on its way to `wait`. Before it gets there, T2 removes an item and calls `notifyAll`, but nobody is waiting yet, so the notification is lost. Then T1 waits for a change that has already happened, possibly forever. (Java does not even let you write it: `wait` must be called while holding the lock.)
 
-- **Splitting the synchronization** between checking the precondition and running the code:
+**4. `notifyAll`, not `notify`.** `notify` wakes one thread at random, and it may be the wrong one.
 
-```java
-public void add(T obj) {
-    synchronized (this) {
-        while (lst.size() == capacity)
-            this.wait();
-    }
-    synchronized (this) {
-        lst.add(obj);
-        this.notifyAll();
-    }
-}
+The queue has capacity 1 and is empty. T2 and T3 wait in `remove`. T1 adds an item and calls `notify`, which wakes T2. T2 removes it and calls `notify`, which may wake T3, also a remover, which finds the queue empty and waits again. Meanwhile, a thread waiting in `add` was never woken. Use `notify` only when every waiting thread waits for the same condition, so any of them can proceed. You will see one in the semaphore.
 
-```
-
-The queue holds `{2, 3, 5}`, with capacity 3. T3 calls `q.remove()`, and the queue has room for one more. T1 calls `q.add(4)` and T2 calls `q.add(5)`: both pass the check in the first block, and both then add, so the queue goes over its capacity.
-
-So **you must have one continuous synchronization block** that covers checking the precondition and the operation that follows it.
-
-**2. Waiting in vain when the precondition does hold.**
-
-- **Splitting the synchronization** between checking the precondition and moving to `wait` (assume, for the sake of the example, that this were technically possible, for example with a semaphore, as you will see):
-
-```java
-public void add(T obj) {
-    synchronized (this) {
-        while (lst.size() == capacity)
-    }
-    synchronized (this) {
-        this.wait();
-        lst.add(obj);
-        this.notifyAll();
-    }
-}
-
-```
-
-The queue holds `{1, 2, 3}`, with capacity 3. T1 calls `q.add(4)`, finds the queue full, and leaves the first block. Before it reaches `wait`, T2 calls `q.remove()` and calls `notifyAll`, which nobody hears. Then T1 waits for a change that already happened.
-
-So **you must have one continuous synchronization block** that covers checking the precondition (in the `while`), the move to `wait`, and the operation after it.
-
-- **Calling `notify` instead of `notifyAll`:**
-
-The queue is empty, with capacity 1. T2 and T3 call `q.remove()`, and both wait. T1 calls `q.add(4)` and wakes only T2, which removes the 4 and calls `notify`. That `notify` may wake T3, which finds the queue empty again and waits, while T1, which might want to add again, is not woken.
-
-**Only if all the waiting threads wait for the same condition** can you use `notify` instead of `notifyAll`. You will see an example in the semaphore.
-
-**A note:** all of this is the meaning of `wait` and `notify` in Java's run-time environment. In the operating-systems course you will see other meanings, under which `if` and `notify` can be used.
-
-- **Always call `wait()` inside a `while` loop** that rechecks the condition. A thread can wake up without being notified (a spurious wakeup), or find that another thread already changed the condition.
+(This is how `wait` and `notify` behave in Java. The operating-systems course shows other semantics, in which `if` and `notify` can be correct.)
 
 ## Synchronizers built on wait and notify
 
-So far you have seen two ways to carry out a synchronization mechanism.
+So far there are two ways to protect a critical section: `synchronized` (waiters are Blocked) and CAS (waiters keep running). `wait` and `notify` give a third, and with them you can fix four limits of `synchronized`:
 
-- **With `synchronized`,** where the waiting threads move to the Blocked state.
-- **With the atomic `CompareAndSet` operation,** where the waiting threads stay in the Running state.
-
-This section builds a third way, with the `wait` and `notify` mechanism. That mechanism is mainly used to wait until a precondition holds, but it can also be used for synchronization. In this mechanism, as in `synchronized`, the waiting threads move to the Blocked state, but it also solves several drawbacks of `synchronized`.
-
-1. **You cannot lock or release the object dynamically at run time.** Where the lock and its release happen is already fixed at compile time (where `synchronized` is written, and where its block ends).
-2. **You cannot "try" to lock the object,** so that if it is not possible, you keep running and do something else.
-3. **You cannot carry out any policy other than the one in which only one thread runs the critical piece of code.**
-4. **There is no fairness** in taking the needed resource.
+1. **The lock is fixed in the code.** It is taken at the start of the block and released at its end. You cannot take it in one method and release it in another.
+2. **You cannot *try* to lock,** and do something else if it is taken.
+3. **Only one thread at a time** may be inside. There is no way to allow, say, five.
+4. **There is no fairness:** the thread that waited longest is not necessarily the next to get in.
 
 ### The semaphore
 
-The `Semaphore` class carries out a synchronization mechanism, with `wait` and `notify`, that fixes the drawbacks of `synchronized` above.
-
-1. **You can decide at run time,** dynamically, according to "field" conditions, when to lock the object and when to release it. In particular, define two methods, `acquire` and `release`, which carry out `lock` and `unlock`.
-2. **Define a method `tryAcquire`** that "tries" to lock the object, and if it cannot, returns `false` without moving the thread to Blocked.
-3. **Allow several threads at once into the critical piece of code,** according to a parameter.
-4. **Fairness, with a queue,** so that the thread that takes the lock is the one that has been waiting for it longest. (That is the `FairSemaphore` below.)
+A semaphore holds a number of **permits**. Up to that many threads can be inside at once.
 
 ```java
 class Semaphore {
-    protected final int permits;   // how many threads can work together
-    protected int free;            // how many places are currently left for other threads
+    private final int permits;    // how many may be inside together
+    private int free;             // how many places are left right now
 
     Semaphore(int permits) { this.permits = permits; this.free = permits; }
-
-    public synchronized void acquire() throws InterruptedException {   // implementation of lock
-        while (free == 0)
-            wait();
-        free--;
-    }
-
-    public synchronized boolean tryAcquire() {
-        if (free == 0)
-            return false;
-        free--;
-        return true;
-    }
-
-    public synchronized void release() {   // implementation of unlock
-        if (free < permits)
-            free++;
-        notify();
-    }
+    ...
 }
-
 ```
 
-- **Here `notify` is enough,** because every waiting thread waits for the same condition: a free place.
-
-Use the semaphore to synchronize the `Even` class, for example:
+`acquire` takes a place, waiting if there is none. It replaces `lock`.
 
 ```java
-class Even {
-    int val;
-    Semaphore sem;
-
-    Even(int val) throws Exception {
-        if (val % 2 != 0)
-            throw new Exception(...);
-        this.val = val;
-        this.sem = new Semaphore(1);
-    }
-
-    public int get() {
-        sem.acquire();
-        int ret = val;
-        sem.release();
-        return ret;
-    }
-
-    public void next() {
-        sem.acquire();
-        val++;
-        val++;
-        sem.release();
-    }
+public synchronized void acquire() throws InterruptedException {
+    while (free == 0)
+        wait();
+    free--;
 }
-
 ```
 
-- **The even number is 2, and `sem` has 1 free place out of 1.** T1 and T2 both call `e.next()`. One of them takes the only place, and the other waits in `acquire` until the first releases it.
+`release` gives a place back. It replaces `unlock`.
+
+```java
+public synchronized void release() {
+    if (free < permits)
+        free++;
+    notify();      // every waiter waits for the same thing: a free place
+}
+```
+
+`tryAcquire` takes a place if one is free, and otherwise returns `false` at once instead of waiting.
+
+```java
+public synchronized boolean tryAcquire() {
+    if (free == 0) return false;
+    free--;
+    return true;
+}
+```
+
+That fixes limits 1, 2, and 3: `acquire` and `release` can be called anywhere, `tryAcquire` tries, and `permits` sets how many get in. With one permit, a semaphore is a lock:
+
+```java
+Semaphore sem = new Semaphore(1);
+
+public void next() throws InterruptedException {
+    sem.acquire();
+    val++; val++;
+    sem.release();
+}
+```
 
 ### A fair semaphore
 
-Extend the semaphore so that it carries out fairness.
+Limit 4 is fairness. Keep a queue of the waiting threads, and let a thread in only when it is first in line.
 
 ```java
-class FairSemaphore {
-    protected final int permits;   // how many threads can work together
-    protected int free;            // how many places are currently left for other threads
-    List<Thread> waitingForLockThreads;
+List<Thread> waiting = new LinkedList<>();
 
-    FairSemaphore(int permits) {
-        this.permits = permits;
-        this.free = permits;
-        waitingForLockThreads = new LinkedList<Thread>();
-    }
-
-    public synchronized void acquire() {   // implementation of lock
-        waitingForLockThreads.add(Thread.currentThread());
-        while (free == 0 || waitingForLockThreads.get(0) != Thread.currentThread())
-            wait();
-        free--;
-        waitingForLockThreads.remove(0);
-        if (free > 0 && waitingForLockThreads.size() > 0)
-            notifyAll();
-    }
-
-    public synchronized boolean tryAcquire() {
-        if (free == 0 || waitingForLockThreads.size() > 0)
-            return false;
-        free--;
-        return true;
-    }
-
-    public synchronized void release() {   // implementation of unlock
-        if (free < permits)
-            free++;
-        notifyAll();
-    }
+public synchronized void acquire() throws InterruptedException {
+    waiting.add(Thread.currentThread());
+    while (free == 0 || waiting.get(0) != Thread.currentThread())
+        wait();
+    waiting.remove(0);
+    free--;
+    if (free > 0 && !waiting.isEmpty())
+        notifyAll();     // let the next in line check too
 }
-
 ```
 
-Notes:
+- **`release` must use `notifyAll`, not `notify`:** now each thread waits for a different condition ("am I first?"), and a random `notify` might wake a thread that is not first, while the first one sleeps on.
+- **`tryAcquire` must also respect the line:** it returns `false` if anyone is already waiting, even if there is a free place.
 
-- **`notifyAll` is needed, not `notify`,** because the waiting condition is different for each thread. In particular, a random `notify` might choose a thread whose condition does not hold, while another thread whose condition does hold stays asleep.
-- **You could think of a more efficient implementation** that "wakes" only the first thread in the list (instead of all of them, with only the first continuing to run), but that is technically hard, in terms of managing the synchronization of the operations on the list.
+### The reader-writer lock
 
-### Reader-writer
+The semaphore lets in a fixed number of threads. Often the right rule depends on **what** each thread does. The classic case: any number of threads may **read** at once, but a thread that **writes** needs the object to itself.
 
-This design pattern deals, broadly and more effectively, with the third drawback: carrying out different synchronization policies about when several threads may work together. (The `Semaphore` class could be extended simply, but that is not needed, given the accepted `ReaderWriter` pattern.)
-
-The class regulates access to perform read and write operations according to some synchronization policy, with this skeleton:
-
-```java
-class ReaderWriter {
-    public synchronized void readLock() {
-        while (!allowRead())
-            wait();
-        ...
-    }
-
-    public synchronized void readUnlock() {
-        ...
-        notifyAll();
-    }
-
-    public synchronized void writeLock() {
-        while (!allowWrite())
-            wait();
-        ...
-    }
-
-    public synchronized void writeUnlock() {
-        ...
-        notifyAll();
-    }
-
-    protected boolean allowRead() {
-        return ...;
-    }
-
-    protected boolean allowWrite() {
-        return ...;
-    }
-}
-
-```
-
-Carry out a specific synchronization policy in this skeleton:
-
-- **threads that read** can work together without limit,
-- **writing requires exclusivity:** you cannot read and write at the same time, and you cannot write and write at the same time.
-
-To carry out the synchronization policy you need:
-
-- **a data structure** for the decision whether entering the protected piece of code (for reading or writing) is allowed or forbidden,
-- **maintaining that data structure** according to the different scenarios in the skeleton (before entering and after it),
-- **carrying out the methods that allow or forbid** (`allowRead`, `allowWrite`) according to the state of the data structure.
-
-In this case, the structure holds the number of readers and the number of writers.
+The class has a lock and unlock for each kind of access, and two methods that decide who may enter.
 
 ```java
 class ReaderWriter {
     int activeReaders = 0, activeWriters = 0;
 
-    public synchronized void readLock() {
-        while (!allowRead())
-            wait();
+    public synchronized void readLock() throws InterruptedException {
+        while (!allowRead()) wait();
         activeReaders++;
     }
+    public synchronized void readUnlock() { activeReaders--; notifyAll(); }
 
-    public synchronized void readUnlock() {
-        activeReaders--;
-        notifyAll();
-    }
-
-    public synchronized void writeLock() {
-        while (!allowWrite())
-            wait();
-        activeWriters++;
-    }
-
-    public synchronized void writeUnlock() {
-        activeWriters--;
-        notifyAll();
-    }
-
-    protected boolean allowRead() {
-        return activeWriters == 0;
-    }
-
-    protected boolean allowWrite() {
-        return activeWriters == 0 && activeReaders == 0;
-    }
+    // writeLock and writeUnlock are the same, with activeWriters and allowWrite
+    ...
 }
-
 ```
 
-- **The drawback:** think of a scenario in which there are reading threads all the time, so the writing thread never gets its turn (even though it arrived before many of them). The current implementation has an excessive advantage for the reading threads.
-
-So extend the synchronization policy to take into account the number of threads waiting to write.
+The policy lives in the two decision methods.
 
 ```java
-class ReaderWriter {
-    int activeReaders = 0, activeWriters = 0, waitingWriters = 0;
-
-    public synchronized void readLock() {
-        while (!allowRead())
-            wait();
-        activeReaders++;
-    }
-
-    public synchronized void readUnlock() {
-        activeReaders--;
-        notifyAll();
-    }
-
-    public synchronized void writeLock() {
-        waitingWriters++;
-        while (!allowWrite())
-            wait();
-        waitingWriters--;
-        activeWriters++;
-    }
-
-    public synchronized void writeUnlock() {
-        activeWriters--;
-        notifyAll();
-    }
-
-    protected boolean allowRead() {
-        return activeWriters == 0 && waitingWriters == 0;
-    }
-
-    protected boolean allowWrite() {
-        return activeWriters == 0 && activeReaders == 0;
-    }
-}
-
+protected boolean allowRead()  { return activeWriters == 0; }
+protected boolean allowWrite() { return activeWriters == 0 && activeReaders == 0; }
 ```
 
-If the writing threads now have the excessive advantage, which you want to balance, add a field `waitingReaders`, maintain it, and include it in the considerations of `allowRead` and `allowWrite`.
+**A problem: writers can starve.** If readers keep arriving, there is always at least one active reader, so `allowWrite` is never true. Fix it by counting the writers who are **waiting**, and making new readers wait for them.
 
 ```java
-class ReaderWriter {
-    int activeReaders = 0, activeWriters = 0, waitingWriters = 0, waitingReaders = 0;
-
-    public synchronized void readLock() {
-        waitingReaders++;
-        while (!allowRead())
-            wait();
-        waitingReaders--;
-        activeReaders++;
-    }
-
-    public synchronized void readUnlock() {
-        activeReaders--;
-        notifyAll();
-    }
-
-    public synchronized void writeLock() {
-        waitingWriters++;
-        while (!allowWrite())
-            wait();
-        waitingWriters--;
-        activeWriters++;
-    }
-
-    public synchronized void writeUnlock() {
-        activeWriters--;
-        notifyAll();
-    }
-
-    protected boolean allowRead() {
-        return activeWriters == 0 && (waitingReaders > waitingWriters);
-    }
-
-    protected boolean allowWrite() {
-        return activeWriters == 0 && activeReaders == 0;
-    }
+public synchronized void writeLock() throws InterruptedException {
+    waitingWriters++;
+    while (!allowWrite()) wait();
+    waitingWriters--;
+    activeWriters++;
 }
 
+protected boolean allowRead() { return activeWriters == 0 && waitingWriters == 0; }
 ```
 
-An example of using the `ReaderWriter` synchronization mechanism:
+Now writers may get too much advantage. To balance, count `waitingReaders` the same way, and let readers in when more readers than writers are waiting:
 
 ```java
-class Even {
-    int val;
-    ReaderWriter rw;
+protected boolean allowRead() {
+    return activeWriters == 0 && waitingReaders > waitingWriters;
+}
+```
 
-    Even(int val) throws Exception {
-        if (val % 2 != 0)
-            throw new Exception(...);
-        this.val = val;
-        this.rw = new ReaderWriter();
-    }
+Using it:
 
-    public int get() {
-        rw.readLock();
-        int ret = val;
-        rw.readUnlock();
-        return ret;
-    }
-
-    public void next() {
-        rw.writeLock();
-        val++;
-        val++;
-        rw.writeUnlock();
-    }
+```java
+public int get() throws InterruptedException {
+    rw.readLock();
+    int ret = val;
+    rw.readUnlock();
+    return ret;
 }
 
+public void next() throws InterruptedException {
+    rw.writeLock();
+    val++; val++;
+    rw.writeUnlock();
+}
 ```
 
 Java's library also has ready-made versions of these ideas.
 
 - **`ReentrantLock`** is an explicit lock object. A fair `ReentrantLock` hands out the lock in the order the threads asked for it.
 - **`ReadWriteLock`** allows either many readers at once, or a single writer.
-- **A semaphore (סמפור)** holds a number of permits for a limited resource. `acquire` waits until a permit is free and takes it, and `release` gives one back. A semaphore with five permits lets five threads in at once.
 
 ## Cancellation
 
-We saw that the `Thread` class includes a `stop` method that stops a thread's run abruptly. We noted that this approach is not recommended at all, and that the right way to stop a thread is to "tell" it that it must finish.
+`Thread.stop()` kills a thread on the spot, possibly in the middle of changing an object, leaving it broken. Never use it. Instead, **tell** the thread to finish, and let it finish cleanly.
 
-**An example: the producer-consumer pattern.** A producer thread adds to a bounded queue, and a consumer thread removes from it.
-
-```java
-abstract class Producer<T> implements Runnable {
-    BoundedQueue<T> blockingQ;
-    public abstract T produce();
-    Producer(BoundedQueue<T> q) { blockingQ = q; }
-
-    public void run() {
-        while (true)
-            blockingQ.add(produce());
-    }
-}
-
-abstract class Consumer<T> implements Runnable {
-    BoundedQueue<T> blockingQ;
-    public abstract void consume(T obj);
-    Consumer(BoundedQueue<T> q) { blockingQ = q; }
-
-    public void run() {
-        while (true)
-            consume(blockingQ.remove());
-    }
-}
-
-class Test {
-    public static void main(String[] args) {
-        BoundedQueue<Integer> q = new BoundedQueue<Integer>();
-        Runnable producer = new Producer<Integer>(q) {
-            public Integer produce() { return Random.nextInt(); }
-        };
-        Runnable consumer = new Consumer<Integer>(q) {
-            public void consume(Integer i) { System.out.println(i); }
-        };
-        Thread tProducer = new Thread(producer);
-        Thread tConsumer = new Thread(consumer);
-        tProducer.start();
-        tConsumer.start();
-        tProducer.stop();    // ???
-        tConsumer.stop();    // ???
-    }
-}
-
-```
-
-How do you "tell" the different threads that they must finish?
-
-**Solution A:** extend the `Runnable` interface with the methods
+**The example: producer and consumer.** One thread produces items into a bounded queue, and another consumes them, forever.
 
 ```java
-void interrupt();
-boolean isInterrupted();
+// the producer's run
+while (true)
+    queue.add(produce());
 
+// the consumer's run
+while (true)
+    consume(queue.remove());
 ```
 
-and carry them out with a boolean field that says whether the thread must finish:
+How do you stop them?
 
-- **its initial value is `false`,**
-- **`interrupt`** sets the field to `true`,
-- **`isInterrupted`** returns the field's current value.
+**Attempt: a flag.** Give each task a `volatile boolean` that says "please stop", and check it in the loop.
 
 ```java
-abstract class Interruptable implements Runnable {
-    volatile boolean bInterrupted = false;
-    public boolean isInterrupted() { return bInterrupted; }
-    public void interrupt() { bInterrupted = true; }
+volatile boolean stopRequested = false;
+
+public void run() {
+    while (!stopRequested)
+        queue.add(produce());
 }
-
-class Producer<T> extends Interruptable implements Runnable {
-    ...
-    public void run() {
-        while (!isInterrupted())
-            blockingQ.add(produce());
-    }
-}
-
-class Consumer<T> extends Interruptable implements Runnable {
-    ...
-    public void run() {
-        while (!isInterrupted())
-            consume(blockingQ.remove());
-    }
-}
-
-// in main:
-producer.interrupt();
-consumer.interrupt();
-
 ```
 
-- **The problem:** the producer's and consumer's threads may be in the Blocked state (because of `wait` on the queue), so they never learn of the instruction to finish.
+**The problem:** the producer may be **blocked** inside `queue.add`, in `wait()`, because the queue is full. It never gets back to the loop to see the flag.
 
-So you need a service of the **environment**, which makes sure that if "old" threads go back to running, an `InterruptedException` is thrown, so they learn of it. That service is indeed provided by the environment, through the interface of the `Thread` class.
+**The solution: `interrupt`.** The run-time environment provides the flag, and also wakes a blocked thread: when a thread is interrupted while in `wait()` (or `sleep`, or `join`), that call throws `InterruptedException`.
 
 ```java
-class Producer<T> implements Runnable {
-    ...
-    public void run() {
-        while (!Thread.currentThread().isInterrupted())
-            blockingQ.add(produce());
-    }
+public void run() {
+    while (!Thread.currentThread().isInterrupted())
+        queue.add(produce());
 }
 
-class Consumer<T> implements Runnable {
-    ...
-    public void run() {
-        while (!Thread.currentThread().isInterrupted())
-            consume(blockingQ.remove());
-    }
-}
-
-// in main:
-tProducer.interrupt();
-tConsumer.interrupt();
-
-class BoundedQueue<T> {
-    ...
-    public synchronized void add(T obj) {
-        try {
-            while (lst.size() == capacity)
-                this.wait();
-            lst.add(obj);
-            this.notifyAll();
-        } catch (InterruptedException e) {
-            ... // closing actions
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public synchronized T remove() {
-        try {
-            while (lst.size() == 0)
-                this.wait();
-            T ret = lst.remove(0);
-            this.notifyAll();
-            return ret;
-        } catch (InterruptedException e) {
-            ... // closing actions
-            Thread.currentThread().interrupt();
-        }
-    }
-}
-
+tProducer.interrupt();     // in main: ask it to stop
 ```
 
-**Responding to `InterruptedException`:**
+Inside the queue, catch the exception, clean up, and pass the request on.
 
-- **logical closing actions,**
-- **deciding whether to pass on the information that the task was stopped.** The thread's interrupt flag is reset when `InterruptedException` is caught, meaning it goes back to `false`. So if you want to pass the information up, you must call `interrupt` on the current thread again.
+```java
+public synchronized void add(T obj) {
+    try {
+        while (lst.size() == capacity)
+            wait();
+        lst.add(obj);
+        notifyAll();
+    } catch (InterruptedException e) {
+        ... // any cleanup
+        Thread.currentThread().interrupt();
+    }
+}
+```
+
+**Why call `interrupt()` again?** Catching `InterruptedException` clears the thread's interrupted flag. Calling `interrupt()` sets it again, so the loop in `run` sees it and stops.
 
 ## Liveness
 
 ### Measuring a concurrent system
 
-You can evaluate the performance of a system at run time by different measures.
+How well does a system perform? Four measures:
 
-- **Throughput:** the number of operations per unit of time (or the time per operation).
-- **Latency:** how long it takes from raising a request until it is carried out.
-- **Efficiency:** how good the throughput or the latency is, relative to the resources that exist (processors, memory, ...): throughput divided by the number of resources.
-- **Scalability:** how much the throughput or the latency improves if resources are added to the system.
+- **Throughput:** operations per unit of time.
+- **Latency:** the time from a request until it is done.
+- **Efficiency:** throughput (or latency) relative to the resources used, such as processors and memory.
+- **Scalability:** how much throughput or latency improves when you add resources.
 
-You can check the efficiency of an existing system that runs by measures like these and others. Why would these measures not be ideal for a given system, which carries out its logic efficiently? Which factors harm them?
+Even a system whose logic is perfectly efficient can score badly, because its threads spend time waiting:
 
-- **In a serial or concurrent system:**
-  - waiting for I/O (input from the keyboard, from files, from the network),
-  - waiting for the processor (because of scheduling policies that are not fair).
-- **In a concurrent system:**
-  - synchronization: moving to Blocked to try to lock (or, in the case of `CompareAndSet`, a busy wait of a kind),
-  - waiting for a precondition to hold: moving to Blocked through `wait`.
+- **in any system:** waiting for I/O, or for the processor because the scheduler is not fair,
+- **in a concurrent system:** waiting for a lock (Blocked, or spinning on CAS), or waiting for a precondition (in `wait`).
 
-In cases like these we say that the system suffers from **liveness** problems. The next sections go through a number of classic scenarios.
+When that waiting gets out of hand, the system has a **liveness** problem. There are three classic ones.
 
 :::definition id=def-liveness title="Deadlock, livelock, and starvation" source="materials/lectures/Chapter 8 - Concurrency.pptx"
 
@@ -903,232 +456,127 @@ In cases like these we say that the system suffers from **liveness** problems. T
 - **Starvation (הרעבה):** a thread that is ready to run is passed over again and again, because other threads keep getting the resource first.
 :::
 
+
 ### Livelock
 
-In this scenario, a group of threads works without stopping, but the threads do not progress in their tasks, because they block each other without the preconditions holding.
+The threads are running, but none of them makes progress, because each keeps undoing the other's chance.
 
-**It happens when:**
-
-- **the code of the threads' tasks is symmetric,**
-- **there is a specific, repeating schedule** in which the order of operations causes the threads to cancel each other's preconditions.
-
-**Examples:**
-
-- **two people in a corridor,** who both step aside to the same side, again and again,
-- **the dining philosophers** (below).
-
-**A simple solution:** introduce a random dimension into the schedule (for example, by running `sleep` in the task's code for a random amount of time).
+- **The everyday example:** two people meet in a corridor. Both step to the same side, then both step to the other side, again and again.
+- **When it happens:** the threads run symmetric code, and the schedule keeps repeating in the same rhythm.
+- **The fix:** break the symmetry with randomness, for example `sleep` for a random time before trying again.
 
 ### Starvation
 
-Since the synchronization and waiting mechanisms are not fair (at least in Java), there may be a situation in which one of the threads always manages to take the lock, or is the first to wake up from waiting, while another thread loses again and again (and so is always waiting), and so it is in practice "starved" from the point of view of getting processor time, or running.
+A thread is ready to run, but always loses: another thread always gets the lock first, or is always the one that `notify` wakes. Java's locks and `wait`/`notify` make no promise of fairness, so this can happen.
 
-- **Example:** the dining philosophers.
-- **Solution:** use a fair synchronization or waiting mechanism, such as `FairSemaphore`.
+- **The fix:** a fair mechanism, such as the `FairSemaphore` above.
 
 ### Deadlock
 
-A group of threads is in the Blocked state, and no other thread can bring them out of that state, except threads from the group (which cannot, because they are in the Blocked state).
+A group of threads is Blocked, and only threads from the same group could release them, which they cannot, because they are blocked too. There are two kinds.
 
-There are two scenarios.
-
-**1. Each of the threads is in the Blocked state, waiting to lock a resource** (because of `synchronized` and the like).
-
-```java
-class Even {
-    int val;
-    ...
-    public void swap(Even other) {
-        synchronized (this) {
-            synchronized (other) {
-                int tmp = other.val;
-                other.val = val;
-                val = tmp;
-            }
-        }
-    }
-}
-
-```
-
-`e1` holds 2 and `e2` holds 4. T1 calls `e1.swap(e2)` and locks `e1`, and T2 calls `e2.swap(e1)` and locks `e2`. Now T1 waits for `e2`, which T2 holds, and T2 waits for `e1`, which T1 holds.
-
-**Solutions:**
-
-1. **Lock the two objects together,** with protocol C, in which several objects are represented by one synchronization object. That is not very efficient, because every access to one of the objects separately must lock both of them.
-2. **Lock the first object, and "try" to lock the second** (with `tryAcquire` in the `Semaphore` class). If it is already locked, release the first object and try again. That risks a livelock, as in the dining philosophers below.
-3. **Avoid it with a method that guarantees correctness and safety** through synchronization that does not move the waiting thread to Blocked, such as immutable objects.
-4. **Resource ordering (the royal way).** Fix an order in which resources are taken, so that every one of the threads takes the resources in that order. That prevents the deadlock that is always caused by symmetry in the order resources are taken.
-
-In our example, fix the order in which objects of type `Even` are taken by their unique identity in the system (as given by the method `identityHashCode` of the `System` class).
+**1. Waiting for each other's locks.** Swapping the values of two `Even` objects needs both locks.
 
 ```java
 public void swap(Even other) {
-    if (System.identityHashCode(this) < System.identityHashCode(other))
-        synchronized (this) {
-            synchronized (other) {
-                int tmp = other.val;
-                other.val = val;
-                val = tmp;
-            }
-        }
-    else
+    synchronized (this) {
         synchronized (other) {
-            synchronized (this) {
-                int tmp = other.val;
-                other.val = val;
-                val = tmp;
-            }
+            int tmp = other.val; other.val = val; val = tmp;
         }
+    }
 }
-
 ```
 
-- **`e1` has identity 100, and `e2` has identity 200.** Both T1 and T2 now lock `e1` first, so whichever of them comes second waits for `e1` while holding nothing, and the first one finishes.
+T1 calls `e1.swap(e2)` and locks `e1`. At the same moment, T2 calls `e2.swap(e1)` and locks `e2`. Now T1 waits for `e2`, which T2 holds, and T2 waits for `e1`, which T1 holds. Forever.
 
-**2. The threads in the group are in the Blocked state because they are waiting for a precondition to hold,** when the thread that should change the precondition is waiting for its own precondition, which depends on another thread in the group.
+Four ways out:
 
-**An example (from an exam):** a simulation of a home water-purification system. A water consumer pours dirty water into the dirty-water container and takes clean water from the clean-water container. A water purifier takes from the dirty-water container and puts into the clean-water container.
+1. **One lock for both** (protocol C). Correct, but every access to either object now locks both.
+2. **Lock the first, *try* the second** (`tryAcquire`), and if it fails, release the first and start over. Risks livelock.
+3. **Avoid locks altogether,** for example with immutable objects.
+4. **Resource ordering, the standard fix.** All threads take the locks in the same global order. Deadlock needs a cycle, and a fixed order makes a cycle impossible.
 
-- **A deadlock can happen** when both containers are full: the consumer cannot pour dirty water, and the purifier cannot put clean water. Each of them waits for its precondition.
-- **A possible solution: break the symmetry.** For example, an extra thread that wakes up from time to time, checks whether there is such a scenario (the total amount of water in the containers is full, as much as possible), and if so, "spills" water from one of the containers.
+For the order, use each object's identity number, `System.identityHashCode`:
+
+```java
+public void swap(Even other) {
+    Even first  = System.identityHashCode(this) < System.identityHashCode(other) ? this : other;
+    Even second = (first == this) ? other : this;
+    synchronized (first) {
+        synchronized (second) {
+            int tmp = other.val; other.val = val; val = tmp;
+        }
+    }
+}
+```
+
+Now both T1 and T2 lock the same object first. Whichever comes second waits while holding nothing, and the first finishes.
+
+**2. Waiting for each other's preconditions.** Each thread waits in `wait()` for a condition that only another waiting thread could make true.
+
+**An exam example:** a home water purifier. A consumer pours dirty water into the dirty-water tank and takes clean water from the clean-water tank. A purifier takes dirty water and puts clean water.
+
+- **The deadlock:** if both tanks are full, the consumer cannot pour (the dirty tank is full) and the purifier cannot put (the clean tank is full). Each waits for the other.
+- **A fix: break the symmetry.** An extra thread wakes up now and then, detects that state, and spills some water from one tank.
 
 ### The dining philosophers
 
-All the scenarios above appear in the problem of the dining philosophers.
-
-The life of a philosopher is made of thinking and eating. Eating requires taking two forks, on the philosopher's left and right.
+All three problems meet in one classic example. Philosophers sit around a table, with one fork between each pair. A philosopher thinks, then eats, and eating needs both neighboring forks.
 
 ```java
-class Philosopher implements Runnable {
-    Fork left, right;
-    Philosopher(Fork left, Fork right) { this.left = left; this.right = right; }
-
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            think();
-            synchronized (left) {
-                synchronized (right) {
-                    eat();
-                }
+public void run() {
+    while (!Thread.currentThread().isInterrupted()) {
+        think();
+        synchronized (left) {
+            synchronized (right) {
+                eat();
             }
         }
     }
 }
-
 ```
 
-**Problem A: deadlock.** Every philosopher takes the left fork at the same moment, and waits forever for the right one.
+**Problem 1: deadlock.** Everyone picks up the left fork at the same time, and waits forever for the right one.
 
-**Solution A1: resource ordering.**
+**Fix: resource ordering.** Each philosopher picks up the lower-numbered fork first.
 
 ```java
-class Philosopher implements Runnable {
-    Fork left, right;
-    Philosopher(Fork left, Fork right) { this.left = left; this.right = right; }
-
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            think();
-            if (System.identityHashCode(left) < System.identityHashCode(right)) {
-                synchronized (left) {
-                    synchronized (right) {
-                        eat();
-                    }
-                }
-            } else {
-                synchronized (right) {
-                    synchronized (left) {
-                        eat();
-                    }
-                }
-            }
-        }
+Fork first  = System.identityHashCode(left) < System.identityHashCode(right) ? left : right;
+Fork second = (first == left) ? right : left;
+synchronized (first) {
+    synchronized (second) {
+        eat();
     }
 }
-
 ```
 
-**Problem B: starvation.** A philosopher may always lose the race for a fork to a neighbor.
-
-**Solution: use a fair semaphore.**
+**Problem 2: starvation.** A philosopher may always lose the race for a fork to a neighbor. **Fix:** make each fork a `FairSemaphore(1)`, so forks are handed out in order of arrival.
 
 ```java
-class Fork {
-    public FairSemaphore sem = new FairSemaphore(1);
-    ...
-}
-
-class Philosopher implements Runnable {
-    Fork left, right;
-
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            think();
-            if (System.identityHashCode(left) < System.identityHashCode(right)) {
-                left.sem.acquire();
-                right.sem.acquire();
-                eat();
-                right.sem.release();
-                left.sem.release();
-            } else {
-                right.sem.acquire();
-                left.sem.acquire();
-                eat();
-                left.sem.release();
-                right.sem.release();
-            }
-        }
-    }
-}
-
+first.sem.acquire();
+second.sem.acquire();
+eat();
+second.sem.release();
+first.sem.release();
 ```
 
-**Solution A2 (to the deadlock problem):** take the first fork, try to take the second fork, and if it does not work, give up eating this time.
+**Another fix for the deadlock: give up instead of waiting.** Take the left fork, *try* the right one, and if it is taken, put the left one back.
 
 ```java
-class Philosopher implements Runnable {
-    Fork left, right;
-
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            think();
-            left.sem.acquire();
-            if (right.sem.tryAcquire()) {
-                eat();
-                right.sem.release();
-                left.sem.release();
-            } else
-                left.sem.release();
-        }
-    }
+left.sem.acquire();
+if (right.sem.tryAcquire()) {
+    eat();
+    right.sem.release();
 }
-
+left.sem.release();
 ```
 
-**Problem: livelock.** All the philosophers may take the left fork, fail on the right one, release, and do it again, in step, forever.
-
-**Solution: add a random element.**
+**Problem 3: livelock.** Now everyone may take the left fork, fail on the right, put it back, and repeat, all in step, forever. **Fix:** add randomness, so the rhythm breaks.
 
 ```java
-class Philosopher implements Runnable {
-    Fork left, right;
-
-    public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            think();
-            left.sem.acquire();
-            Thread.sleep(Random.nextInt(1000));
-            if (right.sem.tryAcquire()) {
-                eat();
-                left.sem.release();
-                right.sem.release();
-            } else
-                left.sem.release();
-        }
-    }
-}
-
+left.sem.acquire();
+Thread.sleep(Random.nextInt(1000));    // a random pause
+if (right.sem.tryAcquire()) { ... }
 ```
 
 ## Practice

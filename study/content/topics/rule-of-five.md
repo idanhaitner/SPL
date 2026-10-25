@@ -69,72 +69,47 @@ void convert(Image&& img);        // binds only a temporary, may steal
 
 ### Moving a Student
 
-The lecture notes show the optimization on `Student`. The copy and the assignment from [The rule of three](topic:rule-of-three) are deep, which is correct but wasteful when the source is a temporary, an rvalue that has no cell with an address in memory. Its fields that point at heap objects are not duplicated, but removed, because the object is temporary, and nobody will use them again.
-
-**For the copy constructor:**
+The deep copy from [The rule of three](topic:rule-of-three) is correct, but wasteful when the source is a temporary.
 
 ```cpp
-Student s1(Student(1, "yosi", new Bag7(), univ));
-
+Student ringo(Student(1, "yosi", new Bag7(), univ));
 ```
 
-Here you want a version of the copy constructor in which the copy is **not** deep: `s1._bag` will point at the temporary student's bag, and `s1._books` will point at the temporary student's books. You must then make sure those objects are not deleted by the temporary student's destructor, by setting its pointers to `nullptr`.
+The `Student(...)` in parentheses is a temporary, an rvalue. It is destroyed right after this line. Cloning its bag and books, only to delete the originals a moment later, is pointless. Better to **take** them.
 
-The two versions are told apart by the type of the parameter `other`.
+C++ tells the two cases apart by the parameter type.
 
-- **`Student&`** is an lvalue reference, for a parameter that is not temporary.
-- **`Student&&`** is an rvalue reference, for a temporary parameter.
+- **`const Student&`** binds to an lvalue, an object someone will still use. Copy it.
+- **`Student&&`** binds to an rvalue, a temporary nobody will use again. Take from it.
+
+**The move constructor** takes the pointers, then clears them in the source, so the source's destructor deletes nothing.
 
 ```cpp
 Student(Student&& other)
     : _id(other._id), _name(other._name), _univ(other._univ),
-      // "steal" the other student's bag
-      _bag(other._bag),
-      // "steal" the other student's books
-      _books(other._books)
+      _bag(other._bag),          // take the other's bag
+      _books(other._books)       // take the other's books
 {
-    // neutralize the deletion of the bag by the destructor of other
-    other._bag = nullptr;
-    // neutralize the deletion of the books by the destructor of other
+    other._bag = nullptr;        // the other's destructor deletes nothing
     other._books.clear();
 }
-
 ```
 
-**For the assignment operator:**
-
-```cpp
-s1 = Student(2, "danny", new Bag5(), univ);
-
-```
-
-Here you want a version of the assignment in which the copy is not deep: `s1._bag` points at the temporary student's bag, and `s1._books` at its books, and the temporary's pointers are neutralized in the same way.
+**The move assignment operator** does the same for an object that already exists. Like the ordinary assignment, it first releases what it held. Here is the part for `_bag`:
 
 ```cpp
 Student& operator=(Student&& other) {
-    if (&other != this) {
-        _id = other._id;
-        _name = other._name;
-        _univ = other._univ;
-
-        delete _bag;
-        // "steal" the other student's bag
-        _bag = other._bag;
-        // neutralize the deletion of the bag by the destructor of other
-        other._bag = nullptr;
-
-        // delete the old books
-        for (int i = 0; i < _books.size(); i++)
-            delete _books.at(i);
-        // "steal" the other student's books
-        _books = other._books;
-        // neutralize the deletion of the books by the destructor of other
-        other._books.clear();
+    if (this != &other) {
+        delete _bag;             // release the old bag
+        _bag = other._bag;       // take the other's
+        other._bag = nullptr;    // and leave it empty
+        ...                      // the same for _books, and copy the simple fields
     }
     return *this;
 }
-
 ```
+
+It runs for a line like `ringo = Student(2, "danny", new Bag5(), univ);`, where the right side is a temporary.
 
 Writing these two methods, in addition to the three from before, is called the **rule of five**.
 
@@ -177,97 +152,100 @@ After the swap, `other` holds the buffer that used to belong to `*this`. Since `
 
 ## Smart pointers
 
-To finish with objects, the lecture notes show a design pattern for managing deletion, copying, and assignment of objects: the smart pointer.
+The memory part of the notes ends with a design pattern that uses the rule of three to manage heap objects automatically: the **smart pointer**.
 
-**The goal:** a general class that manages information on the heap, represented by a pointer (its address), and in particular deletes it once nobody needs it anymore.
-
-```cpp
-{
-    Student* s1(new Student(...));
-    F(s1);
-    Student* s2(new Student(...));
-    ...
-    s1 = s2;
-    ...
-    delete s1;   // ???
-    delete s2;   // ???
-}
-
-void F(Student* s) { ... }
-
-```
-
-It is not clear whether `s1` and `s2` should be deleted before the end of the block, to prevent leaks, or whether that is forbidden, to prevent access to deleted memory. You cannot be sure what happened in `F`, or as a result of `s1 = s2`. So wrap the pointers in code of a class that manages their memory, and in particular deletes them when needed.
+**The problem.** With raw pointers, it is often unclear who should delete what.
 
 ```cpp
-{
-    smart_ptr<Student*> s1(new Student(...));
-    F(s1);
-    smart_ptr<Student*> s2(new Student(...));
-    ...
-    s1 = s2;
-    ...
-}
-
-void F(smart_ptr<Student*> s) { ... }
-
+Student* s1 = new Student(...);
+Student* s2 = new Student(...);
+s1 = s2;
+delete s1;   // ?
+delete s2;   // ?
 ```
 
-How do you design such a class?
+After `s1 = s2`, both point at the second student, and the first one is leaked. Deleting both pointers now deletes the second student twice. With more copies, passed into functions and stored in fields, nobody can tell when it is safe to delete.
 
-- **The class holds the address it manages** (it receives it in the constructor), and also a counter of how many variables know that address (1 at first).
-- **Every time a variable that knows the address is copied** to a new activation frame, or assigned to another pointer, the counter goes up.
-- **Every time a variable that knows the address is removed,** or reassigned to another address, the counter goes down.
-- **When the counter reaches 0,** the information on the heap at that address is deleted.
+**The idea.** Wrap the address in an object that counts how many variables currently know it.
 
-The implementation rests on the class's rule of three, because those three methods are exactly the scenarios that change the counter: the destructor, the copy constructor, and the assignment operator.
+- **When the wrapper is created,** the count is 1.
+- **When it is copied** (passed to a function, or assigned to another wrapper), the count goes up.
+- **When a copy is destroyed or reassigned,** the count goes down.
+- **When the count reaches 0,** nobody knows the address anymore, so the wrapper deletes the object.
+
+Those are exactly the three scenarios of the rule of three, so the wrapper is built from a constructor, a copy constructor, a destructor, and an assignment operator.
+
+**The fields.** The count is shared by every wrapper of the same address, so it lives on the heap too.
 
 ```cpp
 template <typename T>
 class smart_ptr {
-private:
-    T _ptr;
-    int* _refcount;
+    T _ptr;            // the address it manages
+    int* _refcount;    // how many smart_ptrs share it
 
     void checkIfDelete() {
-        if ((*_refcount) == 0) {
+        if (*_refcount == 0) {
             delete _ptr;
             delete _refcount;
         }
     }
-
-public:
-    smart_ptr(T ptr) : _ptr(ptr), _refcount(new int(1)) { }
-
-    smart_ptr(const smart_ptr& other)
-        : _ptr(other._ptr), _refcount(other._refcount) {
-        (*_refcount)++;
-    }
-
-    ~smart_ptr() {
-        (*_refcount)--;
-        checkIfDelete();
-    }
-
-    smart_ptr& operator=(const smart_ptr& other) {
-        if (this != &other) {
-            (*_refcount)--;
-            checkIfDelete();
-            _ptr = other._ptr;
-            _refcount = other._refcount;
-            (*_refcount)++;
-        }
-        return *this;
-    }
-
-    T getPtr() { return _ptr; }
+    ...
 };
-
 ```
 
-- **Why `_refcount` is a pointer:** every `smart_ptr` that shares the address must see the same counter, so the counter itself lives on the heap.
+**Creating and copying** start or increase the count.
 
-**A note on templates.** You want to define one general class for every kind of pointer (`Student*`, `int*`, `Animal*`, and so on), with the type of the pointer field decided when the class is used. C++ does this with the `template` syntax, which lets you define a code pattern with the option of plugging in different types. It is used for data structures, such as `vector` and `map`, and for algorithms, such as `sort`.
+```cpp
+smart_ptr(T ptr) : _ptr(ptr), _refcount(new int(1)) { }
+
+smart_ptr(const smart_ptr& other)
+    : _ptr(other._ptr), _refcount(other._refcount) {
+    (*_refcount)++;
+}
+```
+
+**Destroying** decreases it, and deletes on the last one.
+
+```cpp
+~smart_ptr() {
+    (*_refcount)--;
+    checkIfDelete();
+}
+```
+
+**Assigning** lets go of the old address, then joins the new one.
+
+```cpp
+smart_ptr& operator=(const smart_ptr& other) {
+    if (this != &other) {
+        (*_refcount)--;              // leave the old address
+        checkIfDelete();
+        _ptr = other._ptr;           // join the new one
+        _refcount = other._refcount;
+        (*_refcount)++;
+    }
+    return *this;
+}
+```
+
+**A trace.**
+
+```cpp
+{
+    smart_ptr<Student*> a(new Student(...));   // A: count 1
+    smart_ptr<Student*> b(new Student(...));   // B: count 1
+    smart_ptr<Student*> c = a;                 // A: count 2
+    a = b;                                     // A: count 1, B: count 2
+}                                              // c, b, a destroyed:
+                                               // A reaches 0 and is deleted,
+                                               // B reaches 0 and is deleted
+```
+
+Nobody wrote `delete`, and each student was deleted exactly once.
+
+**A note on `template`.** `template <typename T>` lets one class work for any pointer type (`Student*`, `int*`, ...), with `T` filled in where the class is used. The standard library uses the same feature for data structures such as `vector` and `map`, and for algorithms such as `sort`.
+
+The standard library already has smart pointers built on this idea.
 
 ### The rule of zero
 

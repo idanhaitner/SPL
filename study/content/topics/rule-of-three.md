@@ -23,65 +23,61 @@ This chapter shows what goes wrong when a class owns memory through a pointer, a
 
 ## Copying an object
 
-In C++ an object can be passed to a procedure by value, or returned from one by value. The object is then duplicated and copied from one activation frame to another. (This never happens in Java, because there an object variable always represents an address.)
+In C++ an object can be passed to a function by value, or returned from one by value. Either way, the object is copied from one activation frame to another. (This never happens in Java, where an object variable always holds an address.)
 
-How is the meaning of copying an object decided? For simple types, and for addresses, the meaning is clear. For objects it is not: should the copy be deep, or not, or something else?
+What does "copy an object" mean? For an `int` it is obvious. For an object that points at other objects, it is a choice: copy the pointers, or copy what they point at? In C++ the class decides, with a special constructor called the **copy constructor**. Whenever an object must be copied, the compiler calls it.
 
-In C++ the programmer decides what copying a class means, by writing a special constructor, called the **copy constructor**. Every time an object must be copied, when it is passed to or returned from a procedure, the compiler translates the copy into a call to that constructor.
-
-Because it matters so much, the compiler defines a default copy constructor for every class, which copies field by field. For the `Student` class from [Classes and objects](topic:classes-and-objects), that default is this:
+If you do not write one, the compiler writes one that copies field by field. Look at what that means for one field of `Student`, the pointer `_bag`.
 
 ```cpp
-class Student {
-    ...
-    Student(const Student& other)
-        : _id(other._id), _name(other._name), _bag(other._bag),
-          _books(other._books), _univ(other._univ)
-    {}
-};
+Student(const Student& other)
+    : _bag(other._bag)      // copies the address, not the Bag
+    , ...
+{ }
+```
 
+The copy gets the **same address**, so both students now point at one `Bag`. Here is where that goes wrong.
+
+```cpp
 void F(Student s) { ... }
 
 {
-    Student s(7, "ringo", new Bag7(), univ);
-    F(s);
-    cout << (*s.getBag());
+    Student ringo(7, "ringo", new Bag7(), univ);
+    F(ringo);                     // s is a copy of ringo
+    cout << ringo.getBag();       // ?
 }
-
 ```
 
-- **The call `F(s)`** copies `s` into `F`'s frame. The copy's `_bag` holds the same address as `s._bag`, and its `_books` holds the same book addresses.
-- **When `F` returns,** its copy of the student is destroyed, and `~Student` deletes the bag and the books.
-- **Back in the block,** `*s.getBag()` reads a bag that was already deleted, and at the end of the block `~Student` deletes the same bag and books a second time.
+1. **`F(ringo)`** copies `ringo` into `s`. Now `s._bag` and `ringo._bag` hold the same address.
+2. **When `F` returns,** `s` is destroyed, and its destructor deletes the `Bag`.
+3. **Back in the block,** `ringo.getBag()` reads a `Bag` that was already deleted.
+4. **At the end of the block,** `ringo`'s destructor deletes the same `Bag` a second time.
 
-If a class has no fields that are pointers, the default is enough. If it does, you must write a copy constructor that duplicates, in memory, the objects those fields point at.
+The same happens to every pointer in `_books`.
+
+**The fix: a deep copy.** A class with pointer fields writes its own copy constructor, which copies the objects the pointers point at, not just the addresses.
 
 ```cpp
-class Student {
-    ...
-    Student(const Student& other)
-        : _id(other._id), _name(other._name), _univ(other._univ)
-    {
-        _bag = other._bag->clone();
-        for (int i = 0; i < other._books.size(); i++)
-            _books.push_back(other._books.at(i)->clone());
-    }
-};
-
-class Bag7 : public Bag {
-    ...
-    virtual Bag* clone() { return new Bag7(*this); }
-};
-
-class DigitalBook : public Book {
-    ...
-    virtual Book* clone() { return new DigitalBook(*this); }
-};
-
+Student(const Student& other)
+    : _id(other._id), _name(other._name), _univ(other._univ)
+{
+    _bag = other._bag->clone();          // a new Bag, a copy of the other's
+    for (Book* b : other._books)
+        _books.push_back(b->clone());    // a new copy of every book
+}
 ```
 
-- **Why `clone` and not `new Bag(*other._bag)`:** `_bag` has the type `Bag*`, but the object it points at is a `Bag7`, or some other derived class the student does not know. A `virtual clone` method lets each class copy itself with its own copy constructor. [Inheritance and polymorphism](topic:inheritance) explains how the `virtual` call reaches the right class.
-- **The result:** the copy inside `F` gets its own bag and its own books, at new heap addresses, and deleting them leaves the original student intact.
+Why `clone()` and not `new Bag(*other._bag)`? Because `_bag` has the type `Bag*`, but the object may really be a `Bag7`, or some other kind of bag the `Student` class does not know. Each class copies itself, through a `virtual` method:
+
+```cpp
+class Bag7 : public Bag {
+    virtual Bag* clone() { return new Bag7(*this); }
+};
+```
+
+`virtual` makes the call reach the clone of the object's real class. [Inheritance and polymorphism](topic:inheritance) explains how.
+
+Now `s` inside `F` gets its own bag and its own books, and destroying it leaves `ringo` intact.
 
 ### The same bug with a byte buffer
 
@@ -124,112 +120,59 @@ This constructor could also delegate to `Image(int, int, char*)`, so that the al
 
 ## Assigning an object
 
-In C++ you can assign one object to another. (In Java that is impossible, because objects in Java are addresses.)
+In C++ you can also assign one object to another that already exists. (Again, Java cannot, because its object variables are addresses.)
 
 ```cpp
-Student s1(7, "ringo", new Bag7(), univ);
-...
-Student s2(8, "jango", new Bag5(), univ);
-...
-s1 = s2;   // s1.operator=(s2);
-
+Student ringo(7, "ringo", new Bag7(), univ);
+Student jango(8, "jango", new Bag5(), univ);
+ringo = jango;      // means ringo.operator=(jango)
 ```
 
-What does this assignment mean? For simple types, and for addresses, assignment is clear, but for objects it is not (deep assignment, or not, and so on). In C++ the meaning of assignment is defined by the programmer, through a special method called the **assignment operator**. Because it matters so much, the compiler defines a default one, which assigns field by field.
+The meaning of assignment is set by a special method, the **assignment operator**, `operator=`. If you do not write one, the compiler writes one that assigns field by field. For `_bag`, that is:
 
 ```cpp
-class Student {
-    ...
-    void operator=(const Student& other) {
-        if (&other != this) {
-            _id = other._id;
-            _name = other._name;
-            _bag = other._bag;
-            _books = other._books;
-            _univ = other._univ;
-        }
-    }
-};
+_bag = other._bag;      // copies the address
+```
 
-{
-    Student s1(7, "ringo", new Bag7(), univ);
-    ...
-    {
-        Student s2(8, "jango", new Bag5(), univ);
-        ...
-        s1 = s2;
-        ...
+After `ringo = jango`, that causes two problems.
+
+- **A leak:** `ringo`'s old `Bag7` is never deleted. Nothing points at it anymore.
+- **Sharing:** both students now point at `jango`'s `Bag5`. When one of them is destroyed, the other is left with a dangling pointer.
+
+**The fix** has to do two things for every pointer field: release what the object held before, and take a copy of the other object's. For `_bag`:
+
+```cpp
+delete _bag;                    // 1. release the old Bag
+_bag = other._bag->clone();     // 2. take a copy of the other's
+```
+
+For `_books`, the same two steps, in a loop:
+
+```cpp
+for (Book* b : _books)
+    delete b;                   // 1. release the old books
+_books.clear();
+for (Book* b : other._books)
+    _books.push_back(b->clone());   // 2. copy the other's books
+```
+
+Two more details complete the operator.
+
+```cpp
+Student& operator=(const Student& other) {
+    if (this != &other) {       // guard against ringo = ringo
+        ...                     // the steps above, plus the simple fields
     }
-    cout << (*s1.getBag());
+    return *this;               // allows a = b = c
 }
-
 ```
 
-The default assignment causes two problems.
-
-- **A memory leak:** the `Bag7` and the books that `s1` held are never deleted. Nothing points at them anymore.
-- **Sharing:** the two objects now share the same bag and the same books. Deleting one of them leaves the other with a dangling bag and dangling books, which is exactly what happens when the inner block ends and `s2` is destroyed.
-
-Here too the default is not enough when a class has pointer fields. Write the assignment so that it copies the content and not the addresses, and releases what the object held before.
-
-```cpp
-class Student {
-    ...
-    void operator=(const Student& other) {
-        if (&other != this) {
-            _id = other._id;
-            _name = other._name;
-            delete _bag;
-            _bag = other._bag->clone();
-            // delete the old books
-            for (int i = 0; i < _books.size(); i++)
-                delete _books.at(i);
-            // clear the old books' addresses
-            _books.clear();
-            // add copies of the other student's books
-            for (int i = 0; i < other._books.size(); i++)
-                _books.push_back(other._books.at(i)->clone());
-            _univ = other._univ;
-        }
-    }
-};
-
-```
-
-- **`if (&other != this)`** guards against `s1 = s1`. Without it, the method would delete its own bag and then try to clone it.
-
-To support `a = b = c`, which the compiler reads as `a.operator=(b.operator=(c))`, the operator must also return the object itself, so it can be used in a further assignment.
-
-```cpp
-class Student {
-    ...
-    Student& operator=(const Student& other) {
-        if (&other != this) {
-            ...   // as above
-        }
-        return *this;
-    }
-};
-
-```
+- **The self-assignment guard:** without it, `ringo = ringo` would delete its own bag, and then try to clone the bag it just deleted.
+- **Returning `*this`:** `a = b = c` is read as `a.operator=(b.operator=(c))`, so the inner assignment must give back an object for the outer one. Returning it by reference avoids a copy.
 
 ### Another way: copy and swap
 
-The copy constructor fixes copies that create a new object. Assignment is a separate case, because the object on the left already exists and already owns a buffer.
-
-```cpp
-Image avi(1080, 1920, bytesAvi);
-Image benni(1080, 1920, bytesBenni);
-avi = benni;
-```
-
-Here both objects already hold a buffer before the assignment.
-
-- **The generated assignment** copies `benni._bytes` into `avi._bytes`, so `avi` simply forgets its old array.
-- **Two bugs at once:** `avi`'s old array is leaked, because nothing points at it anymore, and the two objects now share `benni`'s buffer.
-- **The self-assignment trap:** a hand-written assignment that starts with `delete[]` breaks on `avi = avi`. It releases the buffer and then tries to copy from the memory it just released.
-
-The standard way to write assignment is the copy-and-swap idiom.
+The operator above deletes the old bag first, and copies second. If the copy fails halfway, for example because `new` throws, the object is left holding a deleted bag. The lecture slides show a safer standard way, called **copy and swap**, on the `Image` class: copy first into a temporary, then swap.
 
 ```cpp
 void Image::swap(Image& other) {
@@ -251,12 +194,6 @@ Before the call, `avi` and `benni` each hold their own buffer.
 - **Step 2:** `swap` exchanges the contents of `avi` and `temp`, so `avi` now holds the new buffer and `temp` holds `avi`'s old one.
 - **Step 3:** when the function returns, `temp` is destroyed, and its destructor releases `avi`'s old buffer.
 - **Why self-assignment is safe:** `temp` is always a separate copy, so swapping an object with a copy of itself leaves its values unchanged.
-
-Assignment returns `*this` as an `Image&`, so that assignments can be chained the way they are for built-in types.
-
-- **Chaining:** `=` groups from right to left, so `avi = benni = carmi` means `avi = (benni = carmi)`.
-- **What that needs:** the inner assignment must give back an `Image` that the outer assignment can use as its argument.
-- **Why a reference:** returning `*this` by reference gives back the object itself, without making another copy.
 
 ![Copy-and-swap: temp receives a new buffer B2, the swap gives B2 to avi, and temp's destructor releases the old buffer A](../../web/public/figures/copy-swap.svg)
 

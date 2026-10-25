@@ -161,143 +161,102 @@ Changing a class that is already `Serializable` creates a compatibility problem:
 
 ## Building the command-invocation server
 
-### 1. The command
+### 1. A command
 
-Define a "command" on a data structure of type `T` (the type of the information the server holds).
+A command is an object that knows how to run itself on the server's data.
 
 ```java
 public interface Command<T> extends Serializable {
     Serializable execute(T data);
 }
-
 ```
 
-- **The command must be `Serializable`,** and so must the value returned from the method `execute`, because the command and its reply move over the network.
-- **The `Serializable` interface** defines an object that can be "moved" over the network, with two methods: `writeObject`, which turns an object into an array of bytes ("encode"), and `readObject`, which builds an object again from an array of bytes ("decode").
-- **The good news:** every class in Java that is declared to implement `Serializable` gets an automatic implementation of these methods, so there is no need to implement the interface yourself.
+- **`T`** is the type of the data the server holds.
+- **The command, and what it returns, are `Serializable`,** because both travel over the network.
 
 ### 2. The protocol
 
-Define the server's protocol as running a command on the data structure it keeps.
+The server's protocol has one rule: run the command on the data, and send back the result.
 
 ```java
 public class RemoteCommandInvocationProtocol<T> implements MessagingProtocol<Serializable> {
-
     private T data;
 
-    public RemoteCommandInvocationProtocol(T data) {
-        this.data = data;
-    }
+    public RemoteCommandInvocationProtocol(T data) { this.data = data; }
 
-    @Override
     public Serializable process(Serializable msg) {
-        return ((Command) msg).execute(data);
+        return ((Command<T>) msg).execute(data);
     }
 
-    @Override
-    public boolean shouldTerminate() {
-        return false;
-    }
+    public boolean shouldTerminate() { return false; }
 }
-
 ```
+
+No parsing, no list of message types: the client's object brings its own behavior.
 
 ### 3. The encoder-decoder
 
-Define the server's `MessageEncoderDecoder`, which encodes commands and replies into bytes. Remember that the commands and the replies are already defined as `Serializable`, so they already implement a way to turn a message into an array of bytes (the method `writeObject`), and to build it again from a representation like this as an array of bytes (the method `readObject`). All that is needed is to match the signatures of `Serializable`'s `readObject` and `writeObject` to those of `encode` and `decodeNextByte` in the server's `MessageEncoderDecoder` interface.
+Java already turns a `Serializable` object into bytes (`writeObject`) and back (`readObject`). What is left is framing: where does one object end in the byte stream? The answer here is a **length prefix**.
 
-**Technical details:**
+**The message format:**
 
-- **`encode`:** define the structure of the encoded message as an array that includes four bytes for the length of the encoded command, and then the rest of the bytes in the array, which describe the command, according to the policy implemented in `writeObject`.
-- **`decodeNextByte`:**
-  - define two lists of bytes: one for the first four bytes, which give the size of the object (`lengthBytes`), and a second for storing the bytes of the object itself (`objectBytes`),
-  - when one of the first four bytes arrives (recognized by the size of `lengthBytes`), store it in the first array (`lengthBytes`). When the array is filled with the first four bytes that arrived, turn them into a number, so you know how many bytes to expect for the command itself (the field `objectLength`),
-  - when the bytes of the command itself arrive, store them in the second array (`objectBytes`). Once all of them have arrived (you know how many bytes to expect, `objectLength`), turn them into an object with a call to `Serializable`'s `readObject`.
+| Bytes | Content |
+| --- | --- |
+| first 4 | the length *n* of the object's bytes |
+| next *n* | the object, as written by `writeObject` |
+
+**`encode`** writes the object, then puts its length in front.
 
 ```java
-public class ObjectEncoderDecoder implements MessageEncoderDecoder<Serializable> {
-
-    private List<Byte> lengthBytes = new LinkedList<Byte>();
-    private List<Byte> objectBytes = new LinkedList<Byte>();
-    private int objectLength = 0;
-
-    @Override
-    public byte[] encode(Serializable message) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-
-        // placeholder for the object size
-        for (int i = 0; i < 4; i++)
-            bytes.write(0);
-
-        // encode the message to byte-array according to the writeObject method of Serializable
-        ObjectOutput out = new ObjectOutputStream(bytes);
-        out.writeObject(message);
-        out.flush();
-        byte[] result = bytes.toByteArray();
-
-        // now write the object size
-        intToBytes(result.length - 4, result);
-        return result;
-    }
-
-    @Override
-    public Serializable decodeNextByte(byte nextByte) {
-        if (lengthBytes.size() < 4) {
-            // indicates that we are still reading the length
-            lengthBytes.add(nextByte);
-            if (lengthBytes.size() == 4)
-                objectLength = bytesToInt(lengthBytes.toArray());
-        } else {
-            objectBytes.add(nextByte);
-            if (objectBytes.size() == objectLength) {
-                ObjectInput in = new ObjectInputStream(
-                    new ByteArrayInputStream(objectBytes.toArray()));
-                Serializable result = (Serializable) in.readObject();
-                objectBytes.clear();
-                lengthBytes.clear();
-                return result;
-            }
-        }
-        return null;
-    }
-
-    private static void intToBytes(int i, byte[] b) {
-        b[0] = (byte) (i >> 24);
-        b[1] = (byte) (i >> 16);
-        b[2] = (byte) (i >> 8);
-        b[3] = (byte) i;
-    }
-
-    private static int bytesToInt(byte[] b) {
-        // this is the reverse of intToBytes.
-        // note that for every byte, when casting it to int,
-        // it may include some changes to the sign bit, so we remove those
-        // by anding with 0xff
-        return ((b[0] & 0xff) << 24)
-             | ((b[1] & 0xff) << 16)
-             | ((b[2] & 0xff) << 8)
-             | (b[3] & 0xff);
-    }
+public byte[] encode(Serializable message) {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    bytes.write(new byte[4]);                      // room for the length
+    ObjectOutputStream out = new ObjectOutputStream(bytes);
+    out.writeObject(message);
+    out.flush();
+    byte[] result = bytes.toByteArray();
+    intToBytes(result.length - 4, result);         // fill in the length
+    return result;
 }
-
 ```
 
-**Food for thought:** what happens if the server does not know the class of the command the client sent?
+**`decodeNextByte`** first collects 4 bytes of length, then exactly that many bytes of object.
 
-- **In the current code,** a `ClassNotFoundException` is thrown in the server, during `readObject`, because the class is not known (it is not in its class-path).
-- **The current code assumes** that the server knows all the classes of the commands the client sends. In other words, the client cannot send any command it wants (unlike the second motivation).
-- **That approach is also right in terms of security:** it is risky to let a client run any code it wants on the server's computer.
+```java
+public Serializable decodeNextByte(byte nextByte) {
+    if (lengthBytes.size() < 4) {                  // still reading the length
+        lengthBytes.add(nextByte);
+        if (lengthBytes.size() == 4)
+            objectLength = bytesToInt(lengthBytes);
+        return null;
+    }
+    objectBytes.add(nextByte);                     // reading the object
+    if (objectBytes.size() < objectLength)
+        return null;
+    Serializable result = readObjectFrom(objectBytes);
+    lengthBytes.clear();
+    objectBytes.clear();
+    return result;
+}
+```
 
-If you wanted to support it after all:
+**The length as 4 bytes.** An `int` is split into its four bytes, most significant first, and put back together on the other side.
 
-- **you would need to define a "security" component in the server,** with a definition of what is allowed and what is forbidden (you can read data but not change it, you cannot write to disk, and so on),
-- **you would need to include in the serialization** not only a description of the command object, but also the code of the command's class (its `Class` object, which is already defined as `Serializable`). Something like:
-  - **`encode`:** four bytes for the size of the representation of the command's class, the representation of the command's class, four bytes for the size of the representation of the command object, and the representation of the command object,
-  - **`decodeNextByte`:** a matching interpretation of the bytes of the array as the encoding of the class, the bytes for the size of the encoded command, and the bytes for the encoding of the command,
-- **in addition,** after `readObject` creates the class's `Class` object (after `readObject` on the array of bytes that describes the command's class), you would have to load it into the memory of the server's process (you can do that with a `ClassLoader`),
-- **if the class depends on other classes,** they would have to be sent too. In other words, the mechanism is not simple.
+```java
+static void intToBytes(int i, byte[] b) {
+    b[0] = (byte) (i >> 24);
+    b[1] = (byte) (i >> 16);
+    b[2] = (byte) (i >> 8);
+    b[3] = (byte) i;
+}
 
-There are systems that support this at some level of abstraction, so they can also support clients that send commands as classes in other languages.
+static int bytesToInt(byte[] b) {
+    return ((b[0] & 0xff) << 24) | ((b[1] & 0xff) << 16)
+         | ((b[2] & 0xff) << 8)  |  (b[3] & 0xff);
+}
+```
+
+`& 0xff` matters: a Java `byte` is signed, so a byte such as `0x80` would turn into a negative `int` without it.
 
 :::check id=chk-object-frame
 The `ObjectEncoderDecoder` has received four bytes that encode 120, and then 119 more bytes. What does the next call to `decodeNextByte` return?
@@ -311,164 +270,79 @@ The `ObjectEncoderDecoder` has received four bytes that encode 120, and then 119
 - **Both lists are then cleared,** so the next byte starts the length prefix of the next message.
 :::
 
-### 4. A data structure: a news feed
+**What if the server does not know the command's class?** `readObject` then throws `ClassNotFoundException`, because the class is not on the server's class path. So in this design a client can send only commands the server already knows, which is also the safe choice: letting clients run arbitrary code on the server is dangerous. Supporting unknown commands would need much more: sending the class's code along with the object, loading it with a `ClassLoader`, sending every class it depends on, and a security component that limits what such code may do.
 
-To run a server like this as an example, define the data structure it keeps: for example, news items on different topics.
+### 4. An example: a news feed
+
+The data the server holds: news items, by category.
 
 ```java
 public interface NewsFeed {
     void publish(String category, String news);
     List<String> fetch(String category);
 }
+```
 
+```java
 public class NewsFeedImpl implements NewsFeed {
-
-    private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> newsPerCategory =
+    private ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> byCategory =
         new ConcurrentHashMap<>();
 
     public void publish(String category, String news) {
-        ConcurrentLinkedQueue<String> queue =
-            newsPerCategory.computeIfAbsent(category, (k) -> new ConcurrentLinkedQueue<>());
-        queue.add(news);
+        byCategory.computeIfAbsent(category, k -> new ConcurrentLinkedQueue<>()).add(news);
     }
 
     public List<String> fetch(String category) {
-        ConcurrentLinkedQueue<String> queue = newsPerCategory.get(category);
-        if (queue == null) {
-            return new ArrayList<>(0);   // empty
-        } else {
-            return new ArrayList<>(queue);   // copy of the queue, arraylist is serializable
-        }
+        Queue<String> q = byCategory.get(category);
+        return q == null ? new ArrayList<>() : new ArrayList<>(q);   // a serializable copy
     }
 }
-
 ```
 
-- **Why the concurrent collections:** the reactor's worker threads run several commands at once on this one shared object, so both the map and each queue must be thread-safe.
+- **The collections are concurrent** because the reactor's workers run several commands on this one object at once.
+- **`fetch` returns a copy,** an `ArrayList`, which is `Serializable` and safe to send.
 
-### 5. Running the server
-
-```java
-public class NewsFeedServer {
-
-    public static void main(String[] args) {
-        NewsFeed feed = new NewsFeedImpl();   // one shared object
-
-        new Reactor(
-            7777,   // port
-            () -> new RemoteCommandInvocationProtocol<Serializable>(feed),
-            () -> new ObjectEncoderDecoder<Serializable>(),
-            20
-        ).serve();
-    }
-}
-
-```
-
-### 6. Commands on the news feed
-
-**Fetching the news on a topic:**
-
-```java
-public class FetchNewsCommand implements Command<NewsFeed> {
-
-    private String category;
-
-    public FetchNewsCommand(String category) {
-        this.category = category;
-    }
-
-    public Serializable execute(NewsFeed feed) {
-        return feed.fetch(category);
-    }
-}
-
-```
-
-**Publishing a news item on a topic:**
+**The commands** are tiny classes:
 
 ```java
 public class PublishNewsCommand implements Command<NewsFeed> {
-
-    private String category;
-    private String news;
-
-    public PublishNewsCommand(String category, String news) {
-        this.category = category;
-        this.news = news;
-    }
-
+    private String category, news;
+    ...
     public Serializable execute(NewsFeed feed) {
         feed.publish(category, news);
         return "OK";
     }
 }
 
-```
-
-### 7. A client
-
-For example, a client that publishes and receives news on different topics. A helper class makes it easy to send requests to the server and receive its replies.
-
-```java
-public class RCIClient implements Closeable {
-
-    private final ObjectEncoderDecoder encdec;
-    private final Socket sock;
-    private final BufferedInputStream in;
-    private final BufferedOutputStream out;
-
-    public RCIClient(String host, int port) throws IOException {
-        sock = new Socket(host, port);
-        encdec = new ObjectEncoderDecoder();
-        in = new BufferedInputStream(sock.getInputStream());
-        out = new BufferedOutputStream(sock.getOutputStream());
-    }
-
-    public void send(Command<?> cmd) throws IOException {
-        out.write(encdec.encode(cmd));
-        out.flush();
-    }
-
-    public Serializable receive() throws IOException {
-        int read;
-        while ((read = in.read()) >= 0) {
-            Serializable msg = encdec.decodeNextByte((byte) read);
-            if (msg != null) {
-                return msg;
-            }
-        }
-        throw new IOException("disconnected before complete reading message");
-    }
-
-    @Override
-    public void close() throws IOException {
-        out.close();
-        in.close();
-        sock.close();
+public class FetchNewsCommand implements Command<NewsFeed> {
+    private String category;
+    ...
+    public Serializable execute(NewsFeed feed) {
+        return feed.fetch(category);
     }
 }
-
 ```
 
-The client program:
+**The server** is the reactor, with this protocol and this encoder-decoder:
 
 ```java
-public class NewsFeedClientMain {
+NewsFeed feed = new NewsFeedImpl();      // one object, shared by all clients
+new Reactor(7777,
+            () -> new RemoteCommandInvocationProtocol<>(feed),
+            () -> new ObjectEncoderDecoder(),
+            20).serve();
+```
 
-    public static void main(String[] args) throws Exception {
-        RCIClient c = new RCIClient(args[0], 7777);
-        c.send(new PublishNewsCommand("jobs",
-            "System Programmer, knowledge in C++. call 0x134693F"));
-        c.receive();   // ok
+**A client** sends commands and reads the replies. A small helper class, `RCIClient`, wraps a socket with the same encoder-decoder: `send(cmd)` writes `encdec.encode(cmd)`, and `receive()` feeds bytes to `decodeNextByte` until an object comes out.
 
-        c.send(new FetchNewsCommand("jobs"));
-        List<String> newss = (List<String>) c.receive();
-        for (String news : newss)
-            System.out.println(news);
-    }
-}
+```java
+RCIClient c = new RCIClient("132.4.5.6", 7777);
 
+c.send(new PublishNewsCommand("jobs", "System Programmer, knowledge in C++."));
+c.receive();                                   // "OK"
+
+c.send(new FetchNewsCommand("jobs"));
+List<String> news = (List<String>) c.receive();
 ```
 
 The full code is in the course's class material.

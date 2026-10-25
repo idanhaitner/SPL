@@ -152,114 +152,81 @@ TCP and UDP differ in how the bytes reach the application.
 
 ## A print server over UDP and over TCP
 
-Implement a client-server program for printing strings on the screen: the client sends a string to the server, and the server prints it. Do it for both kinds of connection.
+The smallest useful client-server program: the client sends a string, and the server prints it. Writing it twice, once with each kind of connection, shows the difference.
 
-### UDP
+### Over UDP: sending letters
+
+UDP works like mail. There is no connection. The client puts the message in an "envelope" that carries the server's address, and drops it in the "mailbox".
+
+**The client:**
 
 ```java
-class UDPPrintClient {
-    public static void main(String[] args) throws Exception {
-        // 1. Get the address (host:port) of the server
-        String serverIP = args[0];                 // 132.4.5.6
-        int serverPort = Integer.parseInt(args[1]); // 7000
-
-        // 2. Define the [udp] interface of the server (the 'Mail Box')
-        DatagramSocket socket = new DatagramSocket();
-        // 3. Define a packet for sending (the 'letter')
-        String msg = "Hello World";                // the content
-        DatagramPacket packet = new DatagramPacket(msg.getBytes(), msg.getBytes().length,
-            InetAddress.getByName(serverIP), serverPort);   // (the 'envelope')
-        // 4. Send the packet to the server ('put the envelope in the mail box')
-        socket.send(packet);
-        socket.close();
-    }
-}
-
-class UDPPrintServer {
-    public static void main(String[] args) throws Exception {
-        // 1. Get the address port of which the server listens
-        int port = Integer.parseInt(args[0]);      // 7000
-        // 2. Define the [udp] interface of the clients (the 'Mail Box')
-        DatagramSocket socket = new DatagramSocket(port);
-        while (!Thread.currentThread().isInterrupted()) {
-            // 3. Define an empty packet for receiving (an empty 'letter')
-            // part of the application protocol, limited msg length
-            byte[] content = new byte[256];
-            DatagramPacket packet = new DatagramPacket(content, content.length);
-            // 4. Receive a packet content from the client
-            socket.receive(packet);
-            String msg = new String(content, ...);
-            System.out.println(msg);
-        }
-        socket.close();
-    }
-}
-
+DatagramSocket socket = new DatagramSocket();              // my mailbox
+byte[] data = "Hello World".getBytes();
+DatagramPacket packet = new DatagramPacket(
+    data, data.length,
+    InetAddress.getByName("132.4.5.6"), 7000);             // the envelope: to whom
+socket.send(packet);                                       // drop it in
+socket.close();
 ```
 
-### TCP
+**The server** opens a mailbox on its port, and keeps taking letters out of it.
 
 ```java
-class TCPPrintClient {
-    public static void main(String[] args) throws Exception {
-        // 1. Get the address (host:port) of the server
-        String serverIP = args[0];                  // 132.4.5.6
-        int serverPort = Integer.parseInt(args[1]);  // 7000
-        Socket socket = new Socket(serverIP, serverPort);
-        String msg = "Hello World";
-        for (byte b : msg.getBytes())
-            socket.getOutputStream().write(b);
-        // indicate end of message (for the case of TCP)
-        socket.getOutputStream().write("\n");
-        socket.close();
-    }
+DatagramSocket socket = new DatagramSocket(7000);          // my mailbox, on port 7000
+while (!Thread.currentThread().isInterrupted()) {
+    byte[] buf = new byte[256];                            // room for one letter
+    DatagramPacket packet = new DatagramPacket(buf, buf.length);
+    socket.receive(packet);                                // wait for the next letter
+    System.out.println(new String(buf, 0, packet.getLength()));
 }
-
-class TCPPrintServer {
-    public static void main(String[] args) throws Exception {
-        // 1. Get the port of the server
-        int port = Integer.parseInt(args[0]);       // 7000
-        // 2. Define an interface for accepting new client connections ('switchboard')
-        ServerSocket serverSocket = new ServerSocket(port);
-        while (!Thread.currentThread().isInterrupted()) {
-            // wait for some client connection
-            Socket socket = serverSocket.accept();
-            List<Byte> receivedBytes = new LinkedList<Byte>();
-            while (true) {
-                byte b = socket.getInputStream().read();
-                if (b == '\n')
-                    break;
-                else
-                    receivedBytes.add(b);
-            }
-            String msg = new String(receivedBytes.toArray(), ...);
-            System.out.println(msg);
-            socket.close();
-        }
-    }
-}
-
 ```
 
-**A TCP server** waits in `accept` for a client to connect. It then wraps the connection's byte streams in a reader and a writer that agree on an encoding (UTF-8).
+- **Each `receive` returns one whole message,** from whoever sent it.
+- **The buffer size, 256, is part of the protocol:** a longer message would not fit.
+
+### Over TCP: a phone call
+
+TCP works like a phone call. The client first connects, and then sends a **stream of bytes**, with no message boundaries.
+
+**The client:**
 
 ```java
-ServerSocket server = new ServerSocket(8080);
-Socket client = server.accept();  // blocks until a client connects
+Socket socket = new Socket("132.4.5.6", 7000);             // dial
+OutputStream out = socket.getOutputStream();
+out.write("Hello World".getBytes());
+out.write('\n');                                           // mark the end of the message
+socket.close();                                            // hang up
+```
 
+Because a stream has no boundaries, the client must mark where the message ends. Here it uses a newline.
+
+**The server** has a "switchboard", a `ServerSocket`, which answers each incoming call with a new `Socket` for that conversation.
+
+```java
+ServerSocket server = new ServerSocket(7000);              // the switchboard
+while (!Thread.currentThread().isInterrupted()) {
+    Socket socket = server.accept();                       // wait for a call
+    InputStream in = socket.getInputStream();
+    StringBuilder msg = new StringBuilder();
+    int b;
+    while ((b = in.read()) != '\n')                        // read until the end mark
+        msg.append((char) b);
+    System.out.println(msg);
+    socket.close();
+}
+```
+
+- **`accept` blocks** until a client connects, and returns a socket for that one client.
+- **The server reads byte by byte** until it sees the newline, because a single `read` might return half a message, or a message and a half.
+
+In real Java code, the streams are usually wrapped in a reader and a writer that agree on an encoding:
+
+```java
 BufferedReader in = new BufferedReader(
-    new InputStreamReader(client.getInputStream(), "UTF-8"));
+    new InputStreamReader(socket.getInputStream(), "UTF-8"));
 PrintWriter out = new PrintWriter(
-    new OutputStreamWriter(client.getOutputStream(), "UTF-8"), true);
-```
-
-**A UDP server** has no connection to accept. It prepares a buffer and waits for the next datagram from anyone.
-
-```java
-DatagramSocket socket = new DatagramSocket(5000);
-byte[] buf = new byte[1024];
-DatagramPacket packet = new DatagramPacket(buf, buf.length);
-socket.receive(packet);  // blocks until a datagram arrives
+    new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
 ```
 
 :::problem id=worked-tcp-accept title="One accept" source="materials/lectures/Chapter 10 - Networking.pptx" kind=worked solution_origin=source
@@ -289,6 +256,7 @@ while (true) {
 - **Serving both at once:** that needs a separate thread for each client, or the non-blocking loop from [Server design and the reactor](topic:reactor).
 :::
 :::
+
 
 :::check id=chk-tcp-udp
 Which protocol preserves order and retransmits a lost segment?

@@ -81,59 +81,46 @@ b[0] = new String("Avi");
 
 ### The C++ answer
 
-In C++ the programmer chooses any combination of the two decisions: content or address, and a new variable or an alias. The example below goes through them, and marks which ones Java also allows.
+In C++ you make both decisions yourself, for every variable. Here are the three kinds, one at a time.
+
+**1. A variable that holds content.** The value itself sits in the variable's cell on the stack, for simple types and for objects alike.
 
 ```cpp
-// simple type, content                       [allowed in Java]
-int i(5);
-i++;
-
-// object, content                            [not in Java]
-Pair m(3, 4);
-m.sum();                  // returns 7
-
-// simple type, address                       [not in Java]
-int* pi = new int(15);
-// pi++ would increase pi, the address it holds, not the value 15
-cout << i;                // 6
-cout << pi;               // 100, the address of the int on the heap
-// to reach the content at an address, use the * operator
-cout << (*pi);            // 15
-(*pi)++;
-// to find the address of a content, use the & operator
-cout << (&i);             // 10000, the address of i on the stack
-
-// object, address                            [allowed in Java]
-Pair* pm = new Pair(8, 9);
-pm.first();               // error: pm is not an object
-(*pm).first();            // 8. Syntactic sugar: pm->first()
-
-// simple type, content, alias                [not in Java]
-int& j = i;
-j++;
-cout << (&j);             // 10000: j and i are the same cell
-
-// object, content, alias                     [not in Java]
-Pair& n = m;
-cout << n.second();       // 4
-
-// simple type, address, alias                [not in Java]
-int*& pj = pi;
-
-// object, address, alias                     [not in Java]
-Pair*& pn = pm;
-
+int i = 5;          // the cell of i holds 5
+Pair m(3, 4);       // the cells of m hold 3 and 4
 ```
 
-| Stack address | Content | Variable |
-| --- | --- | --- |
-| 10000 | 7 | `i`, `j` |
-| 9992 | 4 | `m`, `n` (second field) |
-| 9984 | 3 | `m`, `n` (first field) |
-| 9976 | 100 | `pi`, `pj` |
-| 9968 | 200 | `pm`, `pn` |
+- **`int i`** works exactly as in Java.
+- **`Pair m`** has no Java equivalent: in Java an object is always on the heap, and the variable holds only its address. Here the whole `Pair` lives on the stack, and disappears at the end of the block.
 
-An alias takes no cell of its own: `j` is another name for the cell of `i`, and `pn` is another name for the cell of `pm`.
+**2. A variable that holds an address.** The variable is a pointer, written with `*`. It holds the address of something else, usually on the heap.
+
+```cpp
+int* pi = new int(15);     // pi holds an address; 15 is on the heap
+Pair* pm = new Pair(8, 9); // pm holds an address; the Pair is on the heap
+```
+
+- **`Pair* pm`** is what every Java object variable is.
+- **`int* pi`** has no Java equivalent: Java never gives you the address of an `int`.
+- **To reach the content** at an address, write `*pi`, which is 15. To reach a member, write `pm->first()`, which is short for `(*pm).first()`. The next section goes through the syntax.
+
+**3. An alias for a variable that already exists.** A reference, written with `&`, is a second name for an existing cell. It takes no cell of its own.
+
+```cpp
+int& j = i;     // j is another name for i
+j++;            // i is now 6
+```
+
+- **Java has nothing like it.** Every Java variable is a cell of its own.
+- **You can make an alias for any kind of variable,** including a pointer: `Pair*& pn = pm;` is another name for the cell of `pm`.
+
+In short:
+
+| | Holds content | Holds an address |
+| --- | --- | --- |
+| **A new variable** | `int i;` `Pair m(3, 4);` | `int* pi;` `Pair* pm;` |
+| **An alias** | `int& j = i;` `Pair& n = m;` | `int*& pj = pi;` `Pair*& pn = pm;` |
+| **What Java allows** | simple types only | objects only |
 
 ## Pointers
 
@@ -379,192 +366,97 @@ You will see these scenarios in detail in what follows:
 
 ## Passing parameters
 
-A call to a procedure involves passing the information it needs: the current activation frame must hand the parameters over to the procedure's new activation frame. There are two ways to pass a parameter.
+A call to a procedure has to hand it the information it needs. That information starts in the caller's activation frame, and the procedure runs in a new frame. There are two ways to get it across.
 
-- **By value:** whatever the variable represents (content or address) is duplicated and copied into the new frame, as new variables.
-- **By reference:** the parameters do not move to the new frame, but stay where they are. The new frame gets access to information that lives elsewhere, which means the procedure gets additional names (aliases) for variables that already exist somewhere else.
+- **By value:** whatever the argument holds, content or an address, is **copied** into new variables in the new frame.
+- **By reference:** nothing is copied. The parameter is an **alias** for the caller's variable, which stays where it is.
 
-In Java there is only passing by value. In C++ the programmer chooses how to pass each parameter.
+Java passes only by value. C++ lets you choose, parameter by parameter. Each example below starts from `int x = 10;`.
 
-:::problem id=worked-pass-eight title="Eight ways to pass a pair" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
-Which of these functions copy their argument into the new frame, and which receive an alias for a variable of `main`?
-
-```cpp
-int sum1(int i, int j) { return i + j; }
-int sum2(Pair n) { return n.first() + n.second(); }
-int sum3(int* pi, int* pj) { return (*pi) + (*pj); }
-int sum4(Pair* pn) { return (*pn).first() + (*pn).second(); }
-
-int sum5(int& i, int& j) { return i + j; }
-int sum6(const Pair& n) { return n.first() + n.second(); }
-int sum7(int*& pi, int*& pj) { return (*pi) + (*pj); }
-int sum8(Pair*& pn) { return (*pn).first() + (*pn).second(); }
-
-{
-    int a(5);
-    int b(6);
-    Pair* pm = new Pair(3, 4);
-
-    cout << sum1(a, b);
-    cout << sum2(*pm);
-    cout << sum3(&a, &b);
-    cout << sum4(pm);
-
-    cout << sum5(a, b);
-    cout << sum6(*pm);
-    cout << sum7(&a, &b);
-    cout << sum8(pm);
-
-    delete pm;
-}
-
-```
-
-:::solution
-- **The default is by value.** `sum1` through `sum4` copy their arguments into the new frame: two `int`s, a whole `Pair`, two addresses, and one address.
-- **`sum2` copies the whole object,** both fields, which costs a copy for nothing.
-- **`sum3` and `sum4` copy only addresses,** so they reach `a`, `b`, and the pair on the heap through those copies.
-- **To pass by reference you mark the type with `&`,** and that is the only change: the rest of the code stays the same. `sum5` through `sum8` get aliases, so nothing new is placed in their frames for the parameters.
-- **`sum6` takes `const Pair&`,** which avoids copying the pair, and promises not to change it.
-- **`sum7(&a, &b)` does not compile:** `&a` is a temporary address, an rvalue, and a plain reference `int*&` cannot bind to it.
-:::
-:::
-
-How do you choose how to pass each parameter? You want to get the most out of three points.
-
-- **Saving copies.** Prefer to avoid copying objects or arrays.
-- **Not exposing a memory address** to a procedure that is not responsible for deleting it (it only uses the information).
-- **Supporting changes** that the procedure makes to the caller's information (a side effect, which is generally not recommended), or preventing the procedure from making changes.
-
-That gives a simple rule.
-
-| Is the parameter meant to change inside the procedure? | Pass it |
-| --- | --- |
-| Yes | By reference |
-| No, and it is a simple type | By value |
-| No, and it is an object | By `const` reference |
-
-The parameter's declaration decides how the argument is passed, and the call has to match it. Each of the four forms below starts from `int x = 10;`.
-
-**Pass by value.** The argument is copied into the called function's frame, so `n = n + 1` changes only the copy and `x` is unchanged.
+**Pass by value.** The parameter is a copy, so changing it does not touch the caller's variable.
 
 ```cpp
 void byValue(int n) {
-    n = n + 1;        // writes the copy only
+    n = n + 1;        // changes the copy only
 }
 
 byValue(x);           // x is still 10
 ```
 
-**Pass by pointer.** The address is copied, so the function can read and write `x` through `*p`. Because `nullptr` is a legal argument, the function must handle the null case.
+**Pass by pointer.** This is still pass by value, but the value copied is an address. Through that address, the function reaches the caller's variable.
 
 ```cpp
 void byPointer(int* p) {
     if (p == nullptr) return;
-    *p = *p + 1;      // writes the caller's int
+    *p = *p + 1;      // changes the caller's int
 }
 
-byPointer(&x);        // x is 11: the call passes the address of x
-byPointer(nullptr);   // legal, so byPointer checks for null
+byPointer(&x);        // x is 11
 ```
 
-**Pass by reference.** The parameter becomes another name for the caller's object, so `byRef(x)` changes `x` itself. A reference cannot be null, and it cannot be bound to a temporary such as `x + 1` or a literal such as `3`.
+- **The caller writes `&x`,** the address of `x`, and the function writes `*p` to reach it.
+- **`nullptr` is a legal argument,** so the function must check for it.
+
+**Pass by reference.** Add `&` to the parameter's type, and nothing else changes in the code. The parameter is now another name for `x`.
 
 ```cpp
 void byRef(int& n) {
-    n = n + 1;        // writes the caller's int
+    n = n + 1;        // changes x itself
 }
 
 byRef(x);             // x is 11
-byRef(x + 1);         // error: a plain reference needs a real object
-byRef(3);             // error: 3 is an rvalue
+byRef(3);             // error: 3 is not a variable, there is nothing to alias
 ```
 
-**Pass by `const` reference.** The function reads the caller's object in place, without copying it, and the compiler rejects any write. It also accepts temporaries and literals.
+**Pass by `const` reference.** Still no copy, but the function promises not to change the argument, and the compiler enforces it.
 
 ```cpp
-void byConstRef(const int& n) {
-    int seen = n;     // reading is allowed
-    // n = n + 1;     // error: a const reference cannot write
+void show(const int& n) {
+    cout << n;        // reading is fine
+    // n = 0;         // error: n is const
 }
 
-byConstRef(x);        // reads x, and x stays 10
-byConstRef(x + 1);    // legal: the temporary lasts for this call
-byConstRef(3);        // legal: the literal is kept alive for this call
+show(x);              // fine
+show(x + 1);          // also fine: a const reference can name a temporary
 ```
 
-**Which to choose:** use a `const` reference when the function only reads a large object. For a small type such as `int`, passing by value is simpler and just as fast.
+The difference matters most for objects, because copying an object copies all of its fields.
 
-## Returning a value
-
-A value can be returned from a function in two ways.
-
-- **By value:** the returned value (an address or content) is duplicated and copied from the function's activation frame into the previous frame.
-- **By reference:** the returned value stays where it is. What is returned is only an alias, and the previous frame gets access to it.
-
-In Java a function can return only by value. In C++ the programmer picks one of the two. Here too the default is to return by value, and you can return by reference by writing `&` next to the type of the returned value.
-
-:::problem id=worked-return-five title="Five ways to return a sum" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
-Which of these functions are correct, and which leave the caller with something that no longer exists?
+:::problem id=worked-pass-eight title="What does each call copy?" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=derived
+Each function adds the two fields of a `Pair`. What is copied into the new frame when it is called?
 
 ```cpp
-int sum9(int i, int j) { int ret(i + j); return ret; }
-Number sum10(int i, int j) { Number ret(i + j); return ret; }
-int& sum11(int i, int j) { int ret(i + j); return ret; }
-Number& sum12(int i, int j) { Number ret(i + j); return ret; }
-Number* sum13(int i, int j) { Number* ret = new Number(i + j); return ret; }
+int sumCopy(Pair n)         { return n.first() + n.second(); }
+int sumPtr(Pair* pn)        { return pn->first() + pn->second(); }
+int sumRef(const Pair& n)   { return n.first() + n.second(); }
 
-{
-    int a = sum9(1, 2);
-    Number n = sum10(1, 2);
-    int& b = sum11(1, 2);
-    Number& m = sum12(1, 2);
-    Number* pn = sum13(1, 2);
-    ...
-    delete pn;
-}
-
+Pair* pm = new Pair(3, 4);
+sumCopy(*pm);
+sumPtr(pm);
+sumRef(*pm);
 ```
 
 :::solution
-- **`sum9`** returns a simple type by value. It is correct and cheap.
-- **`sum10`** returns an object by value. It is correct, but it copies the object into the previous frame.
-- **`sum11` and `sum12`** return a reference to `ret`, a local variable. `ret` is destroyed when the function ends, so `b` and `m` are aliases for a cell that no longer exists. This is a serious bug.
-- **`sum13`** creates the `Number` on the heap and returns its address. It is correct, but now the caller is responsible for the object, and must `delete pn`.
+- **`sumCopy(*pm)`** copies the whole `Pair`, both fields, into the new frame. For a large object that is wasteful.
+- **`sumPtr(pm)`** copies one address. No `Pair` is copied, but now the function holds the address of a heap object it is not responsible for deleting.
+- **`sumRef(*pm)`** copies nothing. `n` is another name for the `Pair` on the heap, and `const` stops the function from changing it.
+- **All three return 7.** The difference is only in the cost, and in what the function is allowed to do.
 :::
 :::
 
-How do you choose the way to return a value? Here too you want to avoid copying objects, and not return a reference to a place that no longer exists in memory. There are two cases.
+So how do you choose? You want three things.
 
-**Case A: the function returns new information that it created** (most functions).
+- **No needless copies** of objects or arrays.
+- **No addresses handed out** to a procedure that is not responsible for deleting what is there.
+- **Control over side effects:** let the procedure change the caller's data only when that is the point.
 
-- **A simple type** is returned by value.
-- **An object** should not be returned by value, because the copy is inefficient. On the other hand it cannot be returned by reference, because it is erased from the stack when the function ends. This is a case of information whose lifetime is not tied to the block where it was defined, so define it on the heap and return its address. The caller is then responsible for deleting it. [Classes and objects](topic:classes-and-objects) shows a design pattern for this, called a factory.
+That gives a simple rule.
 
-**Case B: the function returns information that already exists.** The typical example is a getter of a class.
-
-- **Simple types** are returned by value.
-- **Objects** are returned by (`const`) reference.
-
-The `Student` class in [Classes and objects](topic:classes-and-objects) is an example.
-
-A function may return by value, by pointer, or by reference.
-
-- **Returning by value** gives the caller its own copy, so it does not matter that the function's local variables are destroyed.
-- **Returning a pointer or a reference** is safe only if the object it names is still alive after the function returns.
-- **Never return the address of a local:** a local variable is destroyed when its function returns, so the caller would get a pointer or reference to an object that no longer exists.
-
-```cpp
-int& bad() {
-    int local = 3;
-    return local;   // local is gone as soon as bad returns
-}
-
-int& good(int& n) {
-    return n;       // the caller's object is still alive
-}
-
-```
+| Is the parameter meant to change inside the procedure? | Pass it |
+| --- | --- |
+| Yes | By reference (`T&`) |
+| No, and it is a simple type | By value (`T`) |
+| No, and it is an object | By `const` reference (`const T&`) |
 
 :::check id=chk-pass-mode
 A procedure only reads a large object. What should the C++ parameter be?
@@ -577,6 +469,83 @@ A procedure only reads a large object. What should the C++ parameter be?
 - **Passing by value** is also fine when the object is cheap to copy.
 - **A plain reference** would allow the procedure to modify the caller's object, which a read-only procedure should not be able to do.
 - **A null pointer** passes no object at all, so the procedure would have nothing to read.
+:::
+
+## Returning a value
+
+The same two options exist on the way back.
+
+- **By value:** the returned value is copied from the function's frame into the caller's frame.
+- **By reference:** only an alias is returned. The caller reaches the value where it already is.
+
+Java returns only by value. In C++ the default is also by value, and you return by reference by adding `&` to the return type. Which one is right depends on where the returned thing lives.
+
+**Case A: the function creates something new.** That is most functions.
+
+A simple value is returned by value. The copy is cheap.
+
+```cpp
+int add(int i, int j) {
+    int sum = i + j;
+    return sum;          // fine: the caller gets its own copy of the int
+}
+```
+
+An object should not be returned by reference, because the local object is destroyed when the function ends.
+
+```cpp
+Number& makeBad(int i, int j) {
+    Number sum(i + j);
+    return sum;          // bug: sum is gone once makeBad returns
+}
+
+Number& n = makeBad(1, 2);   // n names a destroyed object
+```
+
+Returning it by value works, but copies it. So when the object is large, or its lifetime should not depend on the block, create it on the heap and return its address.
+
+```cpp
+Number* makeNumber(int i, int j) {
+    return new Number(i + j);   // lives on after the function returns
+}
+
+Number* pn = makeNumber(1, 2);
+...
+delete pn;                       // the caller is now responsible for it
+```
+
+[Classes and objects](topic:classes-and-objects) shows a design pattern built on this idea, the factory.
+
+**Case B: the function returns something that already exists.** The typical example is a getter, which returns a field of an object that outlives the call.
+
+```cpp
+class Student {
+    int _id;
+    string _name;
+public:
+    int getId() const { return _id; }                   // simple type: by value
+    const string& getName() const { return _name; }     // object: by const reference
+};
+```
+
+- **`_name` lives as long as the `Student`,** so returning a reference to it is safe, and saves copying the string.
+- **`const`** stops the caller from changing the student's name through the reference.
+
+:::problem id=worked-return-five title="Which return is a bug?" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=derived
+Which of these functions leave the caller with something that no longer exists?
+
+```cpp
+int& first(int i, int j)       { int ret = i + j; return ret; }
+int second(int i, int j)       { int ret = i + j; return ret; }
+int& third(vector<int>& v)     { return v[0]; }
+```
+
+:::solution
+- **`first`** is the bug. `ret` is a local, so it is destroyed when `first` returns, and the caller holds a reference to a dead cell.
+- **`second`** is fine. It returns a copy of `ret`.
+- **`third`** is fine. `v[0]` belongs to the caller's vector, which still exists after the call.
+- **The test:** a returned reference is safe only if the thing it names lives longer than the function.
+:::
 :::
 
 ## Common pointer mistakes
