@@ -1058,8 +1058,4 @@ Which description of the stack and the heap is right at the marked line?
 :::
 :::
 
-The vptr completes the C++ object model covered in this course.
-
-This closes the memory part of the course.
-
 - **Next:** [Threads](topic:concurrency) starts the concurrency part: several tasks running at once inside one process.

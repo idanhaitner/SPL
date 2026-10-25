@@ -475,6 +475,4 @@ The full code is in the course's class material.
 
 To sum up, the command-invocation server has one message type, a serializable command, which the server runs on its data and answers with a serializable result. The framing is a four-byte length prefix, and Java's `writeObject` and `readObject` do the rest.
 
-This closes the communication part of the course.
-
 - **Next:** [Databases](topic:persistence) asks how to keep data after the process ends, and why files of serialized objects are a poor way to do it.

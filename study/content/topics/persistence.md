@@ -314,7 +314,7 @@ As you saw, the information in the relational model is organized as records with
 
 To make the retrieval operation efficient (a simple lookup), at the price of a slightly more complex data organization, retrieving data is based mainly on the `JOIN` operation, which performs a cross product between tables, with filtering by different criteria (selection) on the records or rows, and on the fields or columns (projection).
 
-Here are simple rules for defining a query, "the complete guide".
+To write a query, follow these steps.
 
 **An example:** retrieve from the database the students' names, the names of the courses, and the grade for them.
 

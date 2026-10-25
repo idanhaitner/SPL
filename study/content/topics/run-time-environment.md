@@ -34,8 +34,6 @@ Each step needs a different kind of service.
 - **Downloading the film:** questions of storage, in **memory**, in files, and in **databases**.
 - **Playing the film:** **concurrency**, because downloading, decoding, and playing run at the same time, with constraints between them.
 
-Those bold words are the four parts of the course, and of the exam.
-
 | Part | Language | Share of the exam |
 | --- | --- | --- |
 | Memory management | C++ | 30% |

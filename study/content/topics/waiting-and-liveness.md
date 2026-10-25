@@ -1462,6 +1462,4 @@ The waiter compares the generation it saved, `g`, with the current one. If they 
 
 To sum up, a thread that must wait for a precondition calls `wait` inside a `while` loop, in one synchronization block with the check and the operation, and every change ends with `notifyAll`. On top of that mechanism you can build semaphores, fair semaphores, and reader-writer locks, and you must watch for the three liveness failures: livelock, starvation, and deadlock.
 
-This closes the concurrency part of the course.
-
 - **Next:** [Networking](topic:networking) moves from threads inside one process to communication between processes.

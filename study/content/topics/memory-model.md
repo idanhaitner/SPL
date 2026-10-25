@@ -32,8 +32,6 @@ You can compare the technologies by four parameters: size, access speed, price, 
 
 - **The rule:** the faster the access to the data, the smaller and more expensive the storage.
 
-So each component has its own job.
-
 - **Registers** hold the data the processor needs for the operation it is running now. Some registers have fixed jobs, such as the address of the next line of code to run (the `pc` register) or the address of the top of the current process's stack (the `sp` register).
 - **The cache** keeps a copy of "popular" RAM cells, the ones read or written most recently, to cut the time it takes to reach them.
 - **RAM** holds the information a process needs while it runs, in particular the program's variables.
@@ -774,8 +772,6 @@ What goes wrong if the forms are swapped?
 - **Never releasing at all** is a different failure: a memory leak.
 :::
 :::
-
-This picture of memory is the base for the rest of the course.
 
 - **Next:** [Variables, pointers, and references](topic:pointers) decides, for each variable, whether it holds content or an address, and whether it is a new variable or another name for an existing one.
 - **Later:** [The rule of three](topic:rule-of-three) shows what happens when objects that own heap buffers are copied.
