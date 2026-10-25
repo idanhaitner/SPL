@@ -330,14 +330,14 @@ class Student {
 {
     University univ(...);
     ...
-    Student s(7, "ringo", new Bag7(), univ);
-    Student* ps = new Student(8, "jango", new Bag5(), univ);
+    Student s(7, "ringo", new Bag(7), univ);
+    Student* ps = new Student(8, "jango", new Bag(5), univ);
     delete ps;
 }
 
 ```
 
-- **`delete ps`** runs `~Student` on the student at heap address 100, which deletes its `Bag5` and its two books. Then the destruction mechanism destroys `name` and `books`, which release their own arrays, and finally the student's own memory is released.
+- **`delete ps`** runs `~Student` on the student at heap address 100, which deletes its `Bag` and its two books. Then the destruction mechanism destroys `name` and `books`, which release their own arrays, and finally the student's own memory is released.
 - **At the end of the block,** `s` goes through the same steps, and its cells on the stack are popped.
 - **In the destructor, delete the pointers the class is responsible for.** Usually that means every pointer in the class, unless there are technical constraints, such as how hard it is to define a vector of references.
 

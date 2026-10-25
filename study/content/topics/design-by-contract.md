@@ -50,11 +50,17 @@ class Even {
     public void next() { val++; val++; }
 }
 
+class NextTask implements Runnable {
+    private Even e;
+    NextTask(Even e) { this.e = e; }
+    public void run() { e.next(); }
+}
+
 class Test {
     public static void main(String[] args) {
         Even e = new Even(0);
-        new Thread(() -> { e.next(); }).start();
-        new Thread(() -> { e.next(); }).start();
+        new Thread(new NextTask(e)).start();
+        new Thread(new NextTask(e)).start();
     }
 }
 
@@ -138,7 +144,7 @@ public void increment() {
 3. Thread t1 computes `tmp = 1` and writes `count` (1).
 4. Thread t2 computes `tmp = 1` and writes `count` (1).
 
-At the end, `count` holds 1, although any serial order of the two calls would give 2. Declaring `increment` `synchronized` makes the three steps one critical section, so this interleaving can no longer happen.
+At the end, `count` holds 1, although any serial order of the two calls would give 2. If the three steps ran as one, with no other thread in between, this interleaving could no longer happen.
 :::
 :::
 
@@ -440,22 +446,21 @@ Which results can two completed calls to `increment` leave in `count`?
 :::
 
 :::check id=ps6-counter-race-q2
-The body is {{=read count into a register|lock the object|call wait}}, then {{=add 1 to that register|notify a waiter|call join}}, then {{=write the register back to count|delete count|allocate a new counter}}.
+The body is {{=read count into a register|start a new thread|call join}}, then {{=add 1 to that register|call sleep|call join}}, then {{=write the register back to count|delete count|allocate a new counter}}.
 
 Those are the three steps of `count++`: read `count` into a register, add 1 to the register, and write the register back to `count`.
 :::
 
 :::check id=ps6-counter-race-q3
-Which repairs match the two failures?
+Which change would fix the lost update?
 
-- [ ] `volatile` makes the three steps of `count++` mutually exclusive
-- [x] `volatile`, or the same lock on the write and on the read, repairs a stale `getValue`
-- [ ] A lock only around `getValue` repairs the lost update
-- [x] A lock that makes the three steps mutually exclusive repairs the lost update
+- [ ] Calling `getValue` after each `increment`
+- [ ] Starting the two threads in the opposite order
+- [x] Making the three steps of `count++` run as one, with no other thread in between
 
-- **The class has two separate failures.** `increment` can lose updates, and `getValue` can return a stale value that another thread has already changed.
-- **Fixing the stale read:** make `count` `volatile`, or use the same lock for both the write and the read, so that the write is guaranteed to be visible (it "happens before" the read).
-- **Fixing the lost update:** only making the three steps of `count++` mutually exclusive helps. `volatile` does not, and a lock around `getValue` alone does not.
+- **The lost update** happens because the other thread slips in between the read and the write of `count++`.
+- **Only removing that gap helps.** Calling `getValue` reads the damage after it happened, and the start order does not decide which thread runs first.
+- **How to make the steps run as one** is the subject of [Synchronization](topic:synchronization).
 :::
 
 :::
@@ -565,19 +570,19 @@ Which of these belong to the contract?
 :::
 
 :::check id=exam-18a-q2-q3
-Which implementation breaks the postcondition even when a lock was held?
+Which implementation breaks the postcondition even when only one thread calls it?
 
 - [x] `size` grows past `capacity`, or `push` returns without storing `data`
 - [ ] `capacity()` stays constant across calls
 - [ ] `pop` returns the last element that is still on the stack
 
-- **A lock does not make code correct:** holding a lock only stops other threads from interfering. If the code itself lets `size` pass `capacity`, or forgets to store `data`, the contract is still broken.
+- **One thread is not enough to be correct:** keeping other threads out only stops them from interfering. If the code itself lets `size` pass `capacity`, or forgets to store `data`, the contract is still broken.
 - **The other two options** describe correct behavior, so they break nothing.
 :::
 :::
 
 :::problem id=exam-19a-q2 title="The invariant of a tree" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
-`SortedBinaryTree<T extends Comparable<T>>` has `getData`, `getLeft`, `getRight`, and `insert`. The implementation stores `data`, `left`, and `right` in `volatile` fields. The invariant describes the tree when no method is running on it.
+`SortedBinaryTree<T extends Comparable<T>>` has `getData`, `getLeft`, `getRight`, and `insert`. The invariant describes the tree when no method is running on it.
 
 :::check id=exam-19a-q2-q1
 Which claims belong to the invariant?
@@ -592,21 +597,21 @@ Which claims belong to the invariant?
 :::
 
 :::check id=exam-19a-q2-q2
-The precondition of `insert` is a {{=non-null|duplicate|volatile}} argument.
+The precondition of `insert` is a {{=non-null|duplicate|negative}} argument.
 
 `insert` compares the new value with `compareTo`, which fails on null, and the invariant forbids null data. So the caller must pass a non-null value.
 :::
 
 :::check id=exam-19a-q2-q3
-What does `volatile` guarantee for this tree?
+Two threads call `insert` on the same tree at the same time, and the tree ends up unsorted. What is at fault?
 
-- [ ] The three field updates inside `insert` are atomic
-- [x] A write of a single reference is visible to other threads
-- [ ] Two threads can no longer break the invariant
+- [ ] The invariant, because it says nothing about threads
+- [x] The implementation, because its several field updates inside `insert` can interleave with another thread's
+- [ ] Nothing, because the invariant only has to hold while `insert` is running
 
-- **What `volatile` gives:** each single write to a `volatile` field is immediately visible to other threads.
-- **What it does not give:** it does not make the several field updates inside `insert` one atomic step, so two threads inserting at once can still break the invariant.
-- **Whose problem that is:** that is a concurrency bug in the implementation. The invariant itself is still correctly stated.
+- **The invariant describes the tree when no method is running,** so it does not need to mention threads.
+- **The implementation is at fault:** `insert` updates several fields, and another thread can run between those updates and break the invariant.
+- **Whose problem that is:** a concurrency bug in the implementation. The invariant itself is still correctly stated.
 :::
 
 :::check id=exam-19a-q2-q4
@@ -622,7 +627,7 @@ Which postcondition does `insert` establish?
 :::
 
 :::problem id=exam-24a-q2 title="The contract for a set" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-`Set<T>` has `contains` and `add`. `SetImpl` is a linked list with a `volatile` head. `add` walks the list and returns if `equals` matches an element. Otherwise it links a new node at the end.
+`Set<T>` has `contains` and `add`. `SetImpl` is a linked list with a `head` field. `add` walks the list and returns if `equals` matches an element. Otherwise it links a new node at the end.
 
 :::check id=exam-24a-q2-q1
 The precondition of `add` is {{=obj != null|head == null|already present}}.
@@ -656,56 +661,14 @@ After `add(obj)`, `contains(obj)` is true. Every `y` that was a member before th
 :::check id=exam-24a-q2-q4
 What is true of the published `add` when two threads run it?
 
-- [ ] The contract says `add` is synchronized
+- [ ] The contract promises that `add` is safe for any number of threads
 - [x] The contract says nothing about threads. Two threads can both link a node, or both assign `head`, and an element is lost
-- [ ] `volatile` head makes the `equals` walk and the link atomic
+- [ ] Linking the new node at the end is one atomic step, so nothing can be lost
 
 - **The contract is silent about threads**, so the published `add` meets its postcondition only when one thread runs it at a time.
 - **What goes wrong:** two threads can both walk to the end and link a node in the same place, so one element is lost.
-- **Who must fix it:** keeping the contract under concurrency is the implementation's job, for example by synchronizing `add`. `volatile` alone is not enough.
+- **Who must fix it:** keeping the contract under concurrency is the implementation's job, with the tools of [Synchronization](topic:synchronization).
 :::
-:::
-
-:::problem id=exam-19b-q2 title="A sorted tree" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
-`SortedBinaryTree` states this invariant:
-
-```java
-//@INV: getData() != null &&
-// (getLeft() == null || getData().compareTo(getLeft().getData()) > 0) &&
-// (getRight() == null || getData().compareTo(getRight().getData()) < 0)
-```
-
-- **Insertion** walks down the child pointers to find the right place. The pointers are `volatile`, but the walk takes no lock.
-- **An alternative design** protects the same tree with a readers-writer lock.
-
-:::check id=exam-19b-q2-q1
-Start from a node that holds 5, with null children. Which interleaving breaks the invariant?
-
-- [ ] Both threads lock the root, so the second insert waits and the tree keeps 4
-- [x] A reads `left == null` to insert 3, B writes the node 4 into `left`, then A overwrites `left` with the node 3
-- [ ] A and B both write `right`, and the `compareTo` order stays true
-- [ ] The `volatile` pointers make the null check and the assignment one step, so the second insert sees the first child
-
-Both threads saw `left == null` before either wrote it, so A's write replaced B's. The node 4 is now disconnected, and the tree has lost a value. `volatile` makes each single write visible, but it does not make "check, then write" one step.
-:::
-
-:::check id=exam-19b-q2-q2
-Lock every node from the {{=root downward|leaf upward|left child only}}. Hold the lock on a node while the insertion {{=reads that node's child|calls wait|releases the parent}}, and, when the insertion updates that child, hold the same lock while it {{=writes the child|calls notifyAll|reads the root}}.
-
-This technique is called hand-over-hand locking. Because a node stays locked from the moment its child is read until the child is written, two insertions that reach the same node take turns on it, and neither can overwrite the other's child.
-:::
-
-:::check id=exam-19b-q2-q3
-What does a `ReadWriteLock` change?
-
-- [ ] `insert` takes the read lock, and `contains` takes the write lock
-- [ ] A `contains` that arrives during a write proceeds, because the read lock is shared with the writer
-- [ ] Readers and a writer all run together on the node being changed
-- [x] Concurrent `contains` calls take the read lock and overlap, and `insert` takes the write lock
-
-With a `ReadWriteLock`, many `contains` calls can take the read lock and run at the same time, while `insert` takes the write lock and runs alone. A `contains` that arrives during an insert waits until the insert finishes.
-:::
-
 :::
 
 To sum up, safety is defined on objects, through the invariant of each interface, and correctness is defined on runs, by comparing a concurrent run with the serial runs of the same methods.

@@ -381,7 +381,7 @@ public void printAll() {
 }
 ```
 
-The same idea works for any action, not only printing: pass the action as a parameter, for example `v.applyAll(i -> System.out.println(i))`, and retry the whole walk on the exception.
+The same idea works for any action, not only printing: pass the action as a parameter to a method like `applyAll`, and retry the whole walk on the exception.
 
 ## Lock-free synchronization
 
@@ -500,7 +500,7 @@ Which claims hold for this program and for the private-sum repair?
 :::
 
 :::check id=ps6-average-safe-q3
-Give each worker {{=a private sum|the shared total|a lock on the array}}, call {{=join|notify|wait}}, then {{=add the private sums in the parent|divide inside each worker|lock total for the division}}.
+Give each worker {{=a private sum|the shared total|a lock on the array}}, call {{=join|sleep|start}}, then {{=add the private sums in the parent|divide inside each worker|lock total for the division}}.
 
 Each worker writes only its own private sum, and the parent reads those sums only after `join`, so no two threads ever touch the same variable at the same time. No lock is needed.
 :::
@@ -523,7 +523,7 @@ Which description of the unsynchronized getter is right?
 - [ ] The null check and the assignment are one step, so the second thread sees the first object
 - [x] Both threads can observe `instance == null` and both construct an object
 - [ ] The field keeps every object the threads construct
-- [ ] The two threads deadlock on the class lock
+- [ ] The second thread waits forever for the first
 
 - **What goes wrong:** both threads can see `instance == null` before either assigns it, so both create an object.
 - **The result:** the field ends up holding one of the two objects. The other is lost, but a caller may already be using it, so the program has two "single" instances.
@@ -542,7 +542,7 @@ Synchronizing the getter fixes the race, so there is exactly one instance. The c
 :::
 
 :::check id=ps8-singleton-q3
-The holder class stays uninitialized until `getInstance` touches it. The JVM initializes its static `INSTANCE` {{=once|on every call|under the caller's lock}}, and later calls read the field {{=with no lock of their own|inside synchronized|after notifyAll}}.
+The holder class stays uninitialized until `getInstance` touches it. The JVM initializes its static `INSTANCE` {{=once|on every call|under the caller's lock}}, and later calls read the field {{=with no lock of their own|inside synchronized|after a join}}.
 
 The JVM guarantees that a class is initialized exactly once, and that the initialization is complete before any thread can use the class. So `INSTANCE` is created once and is safely visible to every thread, without any lock in `getInstance`.
 :::
@@ -611,8 +611,8 @@ The guard unlocks automatically when it goes out of scope, including on return, 
 :::
 
 :::examnote
-- **What the question looks like:** it shows a shared data structure, and asks you to find a race or a deadlock, or to fix it with `synchronized`, a semaphore, or an atomic variable.
-- **The usual traps:** taking locks in an order where each thread waits forever for a lock the other holds, or locking the update but leaving the read that returns the value outside the critical section.
+- **What the question looks like:** it shows a shared data structure, and asks you to find a race, or to fix it with `synchronized` or an atomic variable.
+- **The usual traps:** locking the update but leaving the read that returns the value outside the critical section.
 :::
 
 :::problem id=exam-15a-q1 title="Gears" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
@@ -658,14 +658,14 @@ Before `move` runs, the neighbor chain {{=contains no cycle this call would foll
 :::check id=exam-15a-q1-q4
 Several `Spinner` threads overlap their `move` calls, so the run matches no serial history. Which repair does?
 
-- [ ] A lock per gear, taken as this gear and then the neighbor
-- [x] One ordered lock along the chain, or one semaphore for the whole mesh
+- [ ] Locking only this gear while `move` writes the neighbors' `_state`
+- [x] One lock for the whole mesh, which every `move` takes before it starts
 - [ ] Making only `_state` volatile
 - [ ] Synchronizing the constructor and leaving `move` unsynchronized
 
-- **One semaphore for the whole mesh works:** every `move` calls `acquire` before it starts and `release` when it ends. There is a single permit, so moves run one at a time, and with only one lock there can be no cycle.
-- **A lock per gear, in a fixed order along the chain, also works.**
-- **A lock per gear taken as "this gear, then the neighbor" deadlocks:** two neighbors moving at once each hold their own lock and wait for the other's.
+- **One lock for the whole mesh works:** every `move` takes it before it starts and releases it when it ends, so moves run one at a time, and each run matches a serial history.
+- **Locking only this gear** leaves the neighbors' `_state` open to another thread's `move`.
+- **`volatile`** makes each write visible, but does not make the read and write of `_state` one step.
 :::
 
 :::
@@ -678,7 +678,7 @@ A game is played on a board.
 - **The requirement:** the solution must use locks.
 
 :::check id=exam-17a-q1-q1
-Each player's `run` asks the strategy, calls {{=board.move|Thread.stop|board.notify}}, and stops when the result is {{=WIN or LOST|SUCCESS|FAIL only}}. `main` starts each player with {{=Thread.start|run|wait}} and then calls {{=join|notifyAll|sleep}}.
+Each player's `run` asks the strategy, calls {{=board.move|Thread.stop|Thread.sleep}}, and stops when the result is {{=WIN or LOST|SUCCESS|FAIL only}}. `main` starts each player with {{=Thread.start|run|sleep}} and then calls {{=join|start|sleep}}.
 
 Each player is a `Runnable`. Its `run` loops: ask the strategy for a direction, call `board.move`, and stop when the result is `WIN` or `LOST`. `main` starts each player's thread with `Thread.start`, then `join`s them all, so it waits until every player has finished.
 :::
@@ -739,7 +739,7 @@ Both methods must lock the board. `lookAhead` needs the lock so that its walk se
 :::
 
 :::check id=exam-17b-q1-q3
-`lookAhead` builds a {{=Segment|Semaphore|Barrier}} from the player's cell and walks until {{=intersect|wait|compareAndSet}} hits another object's cell or the edge. `move` returns {{=WIN|FAIL|LOST}} when the destination is the cup.
+`lookAhead` builds a {{=Segment|Thread|Lock}} from the player's cell and walks until {{=intersect|join|compareAndSet}} hits another object's cell or the edge. `move` returns {{=WIN|FAIL|LOST}} when the destination is the cup.
 
 `lookAhead` builds a `Segment` from the player's cell in direction `dir`, and walks along it until `intersect` reports another object's cell or the edge. The same board lock covers that walk and the position update in `move`.
 :::
@@ -767,7 +767,7 @@ Which body is the compare-and-swap loop?
 final AtomicInteger n = new AtomicInteger(0);
 int observed;
 do {
-    observed = n.{{=get|incrementAndGet|notify}}();
+    observed = n.{{=get|incrementAndGet|decrementAndGet}}();
 } while (!n.compareAndSet(observed, {{=observed + 1|observed|1}}));
 ```
 
@@ -780,7 +780,7 @@ After both threads finish that loop, which claim holds?
 - [ ] `n` is 1, because a failed compare-and-swap drops that thread's update
 - [ ] The field still needs a separate `volatile` modifier
 - [x] `n` is 2, and a thread that loses the compare-and-swap retries without waiting on a lock
-- [ ] A third thread's `get` observes the value only after `notifyAll`
+- [ ] A third thread's `get` observes the value only after it takes a lock
 
 - **The final value is 2:** a failed compare-and-swap does not drop the update; that thread simply retries until it succeeds.
 - **No lock is involved,** so the losing thread retries instead of waiting.
@@ -808,7 +808,7 @@ Which of these run under the one lock?
 :::
 
 :::check id=exam-24c-q2-q2
-`add` increments {{=modCount|the iterator cursor|the list capacity}}. The iterator copies that value when it is created and throws {{=ConcurrentModificationException|InterruptedException|the copied nodes}} if the value changes before {{=next|clone|wait}}.
+`add` increments {{=modCount|the iterator cursor|the list capacity}}. The iterator copies that value when it is created and throws {{=ConcurrentModificationException|NullPointerException|the copied nodes}} if the value changes before {{=next|clone|add}}.
 
 This is a fail-fast iterator. `modCount` is a version number: if it changes after the iterator was created, the iterator knows the list was modified under it, and throws `ConcurrentModificationException` instead of returning wrong results.
 :::

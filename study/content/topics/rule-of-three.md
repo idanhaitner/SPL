@@ -1,7 +1,7 @@
 ---
 id: rule-of-three
 title: The rule of three
-blurb: "Copying and assigning an object that owns memory, with clone, and the rule of three."
+blurb: "Copying and assigning an object that owns memory, with a deep copy, and the rule of three."
 sources:
   - "materials/lectures/Chapter 4 - Rule of Thee.pptx"
   - "materials/sessions/SPL_PS3.pptx"
@@ -42,7 +42,7 @@ The copy gets the **same address**, so both students now point at one `Bag`. Her
 void F(Student s) { ... }
 
 {
-    Student ringo(7, "ringo", new Bag7(), univ);
+    Student ringo(7, "ringo", new Bag(7), univ);
     F(ringo);                     // s is a copy of ringo
     cout << ringo.getBag();       // ?
 }
@@ -61,21 +61,14 @@ The same happens to every pointer in `_books`.
 Student(const Student& other)
     : _id(other._id), _name(other._name), _univ(other._univ)
 {
-    _bag = other._bag->clone();          // a new Bag, a copy of the other's
+    _bag = new Bag(*other._bag);         // a new Bag, a copy of the other's
     for (Book* b : other._books)
-        _books.push_back(b->clone());    // a new copy of every book
+        _books.push_back(new Book(*b));  // a new copy of every book
 }
 ```
 
-Why `clone()` and not `new Bag(*other._bag)`? Because `_bag` has the type `Bag*`, but the object may really be a `Bag7`, or some other kind of bag the `Student` class does not know. Each class copies itself, through a `virtual` method:
-
-```cpp
-class Bag7 : public Bag {
-    virtual Bag* clone() { return new Bag7(*this); }
-};
-```
-
-`virtual` makes the call reach the clone of the object's real class. [Inheritance and polymorphism](topic:inheritance) explains how.
+- **`new Bag(*other._bag)`** calls `Bag`'s own copy constructor on the other student's bag, and puts the copy on the heap.
+- **Each class copies its own fields.** `Student` does not need to know what is inside a `Bag` or a `Book`.
 
 Now `s` inside `F` gets its own bag and its own books, and destroying it leaves `ringo` intact.
 
@@ -123,8 +116,8 @@ This constructor could also delegate to `Image(int, int, char*)`, so that the al
 In C++ you can also assign one object to another that already exists. (Again, Java cannot, because its object variables are addresses.)
 
 ```cpp
-Student ringo(7, "ringo", new Bag7(), univ);
-Student jango(8, "jango", new Bag5(), univ);
+Student ringo(7, "ringo", new Bag(7), univ);
+Student jango(8, "jango", new Bag(5), univ);
 ringo = jango;      // means ringo.operator=(jango)
 ```
 
@@ -136,14 +129,14 @@ _bag = other._bag;      // copies the address
 
 After `ringo = jango`, that causes two problems.
 
-- **A leak:** `ringo`'s old `Bag7` is never deleted. Nothing points at it anymore.
-- **Sharing:** both students now point at `jango`'s `Bag5`. When one of them is destroyed, the other is left with a dangling pointer.
+- **A leak:** `ringo`'s old `Bag` is never deleted. Nothing points at it anymore.
+- **Sharing:** both students now point at `jango`'s `Bag`. When one of them is destroyed, the other is left with a dangling pointer.
 
 **The fix** has to do two things for every pointer field: release what the object held before, and take a copy of the other object's. For `_bag`:
 
 ```cpp
 delete _bag;                    // 1. release the old Bag
-_bag = other._bag->clone();     // 2. take a copy of the other's
+_bag = new Bag(*other._bag);    // 2. take a copy of the other's
 ```
 
 For `_books`, the same two steps, in a loop:
@@ -153,7 +146,7 @@ for (Book* b : _books)
     delete b;                   // 1. release the old books
 _books.clear();
 for (Book* b : other._books)
-    _books.push_back(b->clone());   // 2. copy the other's books
+    _books.push_back(new Book(*b)); // 2. copy the other's books
 ```
 
 Two more details complete the operator.
@@ -167,7 +160,7 @@ Student& operator=(const Student& other) {
 }
 ```
 
-- **The self-assignment guard:** without it, `ringo = ringo` would delete its own bag, and then try to clone the bag it just deleted.
+- **The self-assignment guard:** without it, `ringo = ringo` would delete its own bag, and then try to copy the bag it just deleted.
 - **Returning `*this`:** `a = b = c` is read as `a.operator=(b.operator=(c))`, so the inner assignment must give back an object for the outer one. Returning it by reference avoids a copy.
 
 ### Another way: copy and swap
@@ -326,7 +319,7 @@ This way, assignment needs no new code of its own: it reuses the copy constructo
 :::
 
 :::problem id=exam-15a-q2 title="A vector as a list" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
-A class `mvector<T>` behaves like a vector, but it stores its elements in a linked list of heap nodes instead of a contiguous array.
+The `<T>` after a class name means the class works for any element type `T`, the way `std::vector<int>` holds `int`s. A class `mvector<T>` behaves like a vector, but it stores its elements in a linked list of heap nodes instead of a contiguous array.
 
 - **`insertAt`** allocates a new node and inserts it at position `pos`.
 - **`removeAt`** removes a node and shrinks the list.

@@ -167,7 +167,7 @@ Every call to the system, and every response to an event, goes through object-or
 
 For example, a detailed definition of which methods of which class a piece of code may run.
 
-Because the bytecode does not depend on the machine, the same `.class` file runs on any operating system that has a JVM. Every instance method in Java is also chosen at run time, from the class of the actual object. [Inheritance and polymorphism](topic:inheritance) explains how that works, and why C++ does it only for functions declared `virtual`.
+Because the bytecode does not depend on the machine, the same `.class` file runs on any operating system that has a JVM.
 
 ## Building a C++ program
 

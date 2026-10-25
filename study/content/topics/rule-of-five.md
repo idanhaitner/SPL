@@ -72,10 +72,10 @@ void convert(Image&& img);        // binds only a temporary, may steal
 The deep copy from [The rule of three](topic:rule-of-three) is correct, but wasteful when the source is a temporary.
 
 ```cpp
-Student ringo(Student(1, "yosi", new Bag7(), univ));
+Student ringo(Student(1, "yosi", new Bag(7), univ));
 ```
 
-The `Student(...)` in parentheses is a temporary, an rvalue. It is destroyed right after this line. Cloning its bag and books, only to delete the originals a moment later, is pointless. Better to **take** them.
+The `Student(...)` in parentheses is a temporary, an rvalue. It is destroyed right after this line. Copying its bag and books, only to delete the originals a moment later, is pointless. Better to **take** them.
 
 C++ tells the two cases apart by the parameter type.
 
@@ -109,7 +109,7 @@ Student& operator=(Student&& other) {
 }
 ```
 
-It runs for a line like `ringo = Student(2, "danny", new Bag5(), univ);`, where the right side is a temporary.
+It runs for a line like `ringo = Student(2, "danny", new Bag(5), univ);`, where the right side is a temporary.
 
 Writing these two methods, in addition to the three from before, is called the **rule of five**.
 

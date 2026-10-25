@@ -908,6 +908,48 @@ The waiter compares the generation it saved, `g`, with the current one. If they 
 
 :::
 
+:::problem id=exam-19b-q2 title="A sorted tree" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
+`SortedBinaryTree` states this invariant:
+
+```java
+//@INV: getData() != null &&
+// (getLeft() == null || getData().compareTo(getLeft().getData()) > 0) &&
+// (getRight() == null || getData().compareTo(getRight().getData()) < 0)
+```
+
+- **Insertion** walks down the child pointers to find the right place. The pointers are `volatile`, but the walk takes no lock.
+- **An alternative design** protects the same tree with a readers-writer lock.
+
+:::check id=exam-19b-q2-q1
+Start from a node that holds 5, with null children. Which interleaving breaks the invariant?
+
+- [ ] Both threads lock the root, so the second insert waits and the tree keeps 4
+- [x] A reads `left == null` to insert 3, B writes the node 4 into `left`, then A overwrites `left` with the node 3
+- [ ] A and B both write `right`, and the `compareTo` order stays true
+- [ ] The `volatile` pointers make the null check and the assignment one step, so the second insert sees the first child
+
+Both threads saw `left == null` before either wrote it, so A's write replaced B's. The node 4 is now disconnected, and the tree has lost a value. `volatile` makes each single write visible, but it does not make "check, then write" one step.
+:::
+
+:::check id=exam-19b-q2-q2
+Lock every node from the {{=root downward|leaf upward|left child only}}. Hold the lock on a node while the insertion {{=reads that node's child|calls wait|releases the parent}}, and, when the insertion updates that child, hold the same lock while it {{=writes the child|calls notifyAll|reads the root}}.
+
+This technique is called hand-over-hand locking. Because a node stays locked from the moment its child is read until the child is written, two insertions that reach the same node take turns on it, and neither can overwrite the other's child.
+:::
+
+:::check id=exam-19b-q2-q3
+What does a `ReadWriteLock` change?
+
+- [ ] `insert` takes the read lock, and `contains` takes the write lock
+- [ ] A `contains` that arrives during a write proceeds, because the read lock is shared with the writer
+- [ ] Readers and a writer all run together on the node being changed
+- [x] Concurrent `contains` calls take the read lock and overlap, and `insert` takes the write lock
+
+With a `ReadWriteLock`, many `contains` calls can take the read lock and run at the same time, while `insert` takes the write lock and runs alone. A `contains` that arrives during an insert waits until the insert finishes.
+:::
+
+:::
+
 To sum up, a thread that must wait for a precondition calls `wait` inside a `while` loop, in one synchronization block with the check and the operation, and every change ends with `notifyAll`. On top of that mechanism you can build semaphores, fair semaphores, and reader-writer locks, and you must watch for the three liveness failures: livelock, starvation, and deadlock.
 
 - **Next:** [Networking](topic:networking) moves from threads inside one process to communication between processes.

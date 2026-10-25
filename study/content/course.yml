@@ -825,7 +825,7 @@ exams:
       - id: exam-19b-q1
         topic: inheritance
       - id: exam-19b-q2
-        topic: design-by-contract
+        topic: waiting-and-liveness
       - id: exam-19b-q3
         topic: reactor
       - id: exam-19b-q4

@@ -263,7 +263,7 @@ Which fact keeps 3 out of the output?
 :::
 
 :::check id=exam-20a-q2-q3
-The constructor's write happens before {{=start|the assignment a = new A(3)|join}}, and `start` happens before {{=run|main assigns 3|notify}}, so both threads print {{=2|3|23}}.
+The constructor's write happens before {{=start|the assignment a = new A(3)|join}}, and `start` happens before {{=run|main assigns 3|join}}, so both threads print {{=2|3|23}}.
 
 Java guarantees that everything a thread did before calling `start` is visible to the new thread. The constructor wrote 2 before `start`, so both threads are guaranteed to see 2. The later assignment changes only `main`'s local variable, not the object.
 :::

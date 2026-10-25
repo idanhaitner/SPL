@@ -453,7 +453,7 @@ That gives a simple rule.
 | --- | --- |
 | Yes | By reference (`T&`) |
 | No, and it is a simple type | By value (`T`) |
-| No, and it is large (a `string`, a `vector`) | By `const` reference (`const T&`) |
+| No, and it is large (a long `string`) | By `const` reference (`const T&`) |
 
 :::check id=chk-pass-mode
 A procedure only reads a long `string`. What should the C++ parameter be?
@@ -535,13 +535,13 @@ Which of these functions leave the caller with something that no longer exists?
 ```cpp
 int& first(int i, int j)       { int ret = i + j; return ret; }
 int second(int i, int j)       { int ret = i + j; return ret; }
-int& third(vector<int>& v)     { return v[0]; }
+int& third(int* arr)           { return arr[0]; }
 ```
 
 :::solution
 - **`first`** is the bug. `ret` is a local, so it is destroyed when `first` returns, and the caller holds a reference to a dead cell.
 - **`second`** is fine. It returns a copy of `ret`.
-- **`third`** is fine. `v[0]` belongs to the caller's vector, which still exists after the call.
+- **`third`** is fine. `arr[0]` belongs to the caller's array, which still exists after the call.
 - **The test:** a returned reference is safe only if the thing it names lives longer than the function.
 :::
 :::

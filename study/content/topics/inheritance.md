@@ -118,7 +118,7 @@ The word after the colon, here `public`, sets how the base class's members can b
 The Liskov substitution principle says that an object of a derived class must be substitutable in every context that expects an object of the base class.
 
 - **The program must stay correct** when a derived object replaces a base object.
-- **The base class's invariants must still hold** for the derived object.
+- **Whatever is always true of a base object** must still be true of the derived object.
 :::
 
 The classic example that breaks the principle is deriving `Square` from `Rectangle`.
@@ -334,6 +334,23 @@ You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true 
 - **What must happen:** `~BlurFilter` has to run, followed by `~Filter`.
 - **How to make it happen:** declare `~Filter` virtual. The `delete` then dispatches through the vptr and reaches `~BlurFilter` first.
 :::
+
+### Copying through a base pointer: clone
+
+[The rule of three](topic:rule-of-three) copied a student's bag with `new Bag(*other._bag)`. Once `Bag` has derived classes, that is no longer enough.
+
+- **The problem:** `_bag` has the type `Bag*`, but the object may really be a `Bag7`, or some other kind of bag the `Student` class does not know. `new Bag(*other._bag)` always builds a plain `Bag`, and loses whatever the `Bag7` added.
+- **The fix:** each class copies itself, through a `virtual` method.
+
+```cpp
+class Bag7 : public Bag {
+    virtual Bag* clone() { return new Bag7(*this); }
+};
+
+_bag = other._bag->clone();     // a copy of the object's real class
+```
+
+`clone` is virtual, so dynamic binding reaches the version of the object's real class, which knows how to copy all of its fields.
 
 ## The double-dispatch design pattern
 
