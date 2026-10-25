@@ -38,6 +38,8 @@ int* p = &x;   // p holds the address of x
 
 ### Using const with pointers
 
+A pointer involves two things that could be constant: the object it points at, and the address it holds. Where you write `const` decides which one.
+
 ```cpp
 int x = 10, y = 20;
 
@@ -52,6 +54,24 @@ Whether `const` appears before or after the `*` decides what is constant. A simp
 - **`const int*`** is a pointer to a constant `int`. You can read the `int` through the pointer but not write it, and you can point the pointer somewhere else.
 - **`int* const`** is a constant pointer to an `int`. You can write the `int` through it, but the pointer always holds the same address.
 - **`const int* const`** makes both constant: you can neither write the `int` through it nor move the pointer.
+
+:::check id=chk-star-const
+Which line fails to compile?
+
+```cpp
+short s1 = 1, s2 = 2;
+const short* ps1 = &s1;
+```
+
+- [ ] `std::cout << *ps1;`
+- [x] `*ps1 = 3;`
+- [ ] `ps1 = &s2;`
+
+- **What `ps1` is:** `const` is to the left of `*`, so `ps1` is a pointer to a constant `short`.
+- **Reading is fine:** `std::cout << *ps1;` only reads the `short`.
+- **Writing fails:** `*ps1 = 3` tries to write the `short` through the pointer, so it does not compile.
+- **Moving the pointer is fine:** `ps1 = &s2` changes where the pointer points, which this declaration allows.
+:::
 
 ### Pointer arithmetic
 
@@ -90,6 +110,8 @@ int* next = px + 1;
 :::
 :::
 
+A pointer is itself a variable, so it also has an address, and a second pointer can hold that address. Its type gets a second star: an `int**` points at an `int*`.
+
 :::problem id=worked-pointer-trace title="A pointer to a pointer" source="materials/lectures/Chapter 2 - Pointers.pptx" kind=worked solution_origin=source
 What do `i`, `*pi`, `*ppi`, and `**ppi` print, and what is `&i` equal to?
 
@@ -118,23 +140,6 @@ ppi  = &pi
 :::
 :::
 
-:::check id=chk-star-const
-Which line fails to compile?
-
-```cpp
-short s1 = 1, s2 = 2;
-const short* ps1 = &s1;
-```
-
-- [ ] `std::cout << *ps1;`
-- [x] `*ps1 = 3;`
-- [ ] `ps1 = &s2;`
-
-- **What `ps1` is:** `const` is to the left of `*`, so `ps1` is a pointer to a constant `short`.
-- **Reading is fine:** `std::cout << *ps1;` only reads the `short`.
-- **Writing fails:** `*ps1 = 3` tries to write the `short` through the pointer, so it does not compile.
-- **Moving the pointer is fine:** `ps1 = &s2` changes where the pointer points, which this declaration allows.
-:::
 
 ## References
 
@@ -312,6 +317,18 @@ A procedure only reads a large object. What should the C++ parameter be?
 - **A null pointer** passes no object at all, so the procedure would have nothing to read.
 :::
 
+## Common pointer mistakes
+
+The compiler does not track what a pointer points at, so these mistakes all compile. Each one is undefined behavior when it runs.
+
+- **Null dereference:** `*p` when `p` is `nullptr`. There is no object to read or write, and the program usually crashes with a segmentation fault.
+- **Uninitialized pointer:** `int* q;` holds a garbage address that was never set, so `*q` reads or writes some random place in memory.
+- **Dangling pointer:** a pointer that still holds the address of an object that no longer exists. That happens after `delete p`, because `delete` releases the block but does not change `p`. It also happens to a pointer to a local after its function returns.
+- **A dangling copy:** if two pointers hold the same address and one of them is deleted, the other one is now dangling too.
+- **The safe habit:** after `delete p;`, write `p = nullptr;`, so a later mistake is a clean null dereference instead of a silent write into released memory.
+
+The practice below has one fragment for each of these mistakes.
+
 ## Practice
 
 :::problem id=ps2-pointer-dangers title="Four pointer faults" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
@@ -436,6 +453,7 @@ The pointer array held the only copies of the row addresses. Once it is released
 :::
 :::
 
+To sum up, a pointer is a variable that holds an address and may be null or moved, while a reference is a fixed second name for an object that already exists.
 
 - **Next:** [Classes and objects](topic:classes-and-objects) uses pointers to reach a `Student` on the heap.
 - **Later:** [The rule of three](topic:rule-of-three) uses them to decide whether a copy of an object shares a buffer with the original or allocates its own.

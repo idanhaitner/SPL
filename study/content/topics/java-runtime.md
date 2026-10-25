@@ -22,12 +22,14 @@ Java compiles a program to bytecode and runs that bytecode on the Java Virtual M
 1. **Compilation** happens before the program runs. `javac` translates `.java` into `.class`, checks types, enforces access control, and requires every checked exception to be caught or declared.
 2. **Execution** loads those `.class` files in the JVM. The JVM interprets the bytecode, and its just-in-time (JIT) compiler turns hot spots into native machine code.
 
-Every instance method in Java is virtual.
+Java also chooses which method to call differently from C++: every instance method in Java is virtual.
 
 - **Dynamic binding** (קשירה דינמית), also called late binding, means the method that runs is chosen at run time, from the class of the actual object.
 - **In C++**, a call is dispatched this way only when the function is declared `virtual`. Otherwise C++ picks the function at compile time, from the declared type.
 
 ## The Java storage model
+
+Java uses the same stack and heap as C++, but it decides for you what goes where.
 
 - **The stack** holds each method's local variables. A local of primitive type (`int`, `boolean`, and so on) holds its value directly, and a local of class type holds only a reference to an object.
 - **The heap** holds every object and every array, together with the fields inside them. Unlike C++, Java never puts an object on the stack.
@@ -39,18 +41,6 @@ An array in Java is an object on the heap.
 - **Reference elements:** a `String[]` stores only references. Each `String` they refer to is a separate object elsewhere on the heap.
 
 ![An int array is one block of ints on the heap. A String array is a block of references on the heap, and each string is a further object](../../web/public/figures/java-array.svg)
-
-## Exceptions
-
-:::definition id=def-exception title="How Java classifies exceptions" source="materials/lectures/Chapter 7 - Back to Java.pptx"
-
-- **Checked exceptions:** these inherit from `java.lang.Exception` but not from `RuntimeException`. They stand for failures a correct program should still expect, such as a missing file. The compiler requires the method to catch each one with `try-catch` or to declare it with `throws`.
-- **Unchecked exceptions:** these inherit from `RuntimeException`. They stand for bugs in the program, such as `NullPointerException` and `IndexOutOfBoundsException`. A method may leave them undeclared.
-- **Errors:** these inherit from `java.lang.Error`. They stand for severe failures of the JVM, such as `OutOfMemoryError`. Ordinary application code leaves them uncaught.
-:::
-
-- **`finally`:** this block runs whenever control leaves the `try` block, whether the block finished normally or an exception was thrown.
-- **`try-with-resources`:** this form closes every resource that implements `AutoCloseable`, on every exit from the block, so you do not have to write the `finally` yourself.
 
 :::problem id=worked-array-layout title="An array on the heap" source="materials/lectures/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
 What is on the stack, and what is on the heap?
@@ -68,6 +58,20 @@ b[0] = new String("Avi");
 - **`b[0]`:** after the third line, this slot refers to a new `String` object, which is a separate object on the heap. The other nine slots are still `null`.
 :::
 :::
+
+## Exceptions
+
+When something goes wrong at run time, a Java method throws an exception. The compiler treats the kinds of exception differently.
+
+:::definition id=def-exception title="How Java classifies exceptions" source="materials/lectures/Chapter 7 - Back to Java.pptx"
+
+- **Checked exceptions:** these inherit from `java.lang.Exception` but not from `RuntimeException`. They stand for failures a correct program should still expect, such as a missing file. The compiler requires the method to catch each one with `try-catch` or to declare it with `throws`.
+- **Unchecked exceptions:** these inherit from `RuntimeException`. They stand for bugs in the program, such as `NullPointerException` and `IndexOutOfBoundsException`. A method may leave them undeclared.
+- **Errors:** these inherit from `java.lang.Error`. They stand for severe failures of the JVM, such as `OutOfMemoryError`. Ordinary application code leaves them uncaught.
+:::
+
+- **`finally`:** this block runs whenever control leaves the `try` block, whether the block finished normally or an exception was thrown.
+- **`try-with-resources`:** this form closes every resource that implements `AutoCloseable`, on every exit from the block, so you do not have to write the `finally` yourself.
 
 :::check id=chk-checked
 A method calls an API that throws `java.io.FileNotFoundException`, a checked exception. What does the compiler require?

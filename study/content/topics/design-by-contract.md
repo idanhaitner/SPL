@@ -22,12 +22,7 @@ This chapter shows how a method and its caller agree, before any code is written
 
 ## The three clauses of the contract
 
-Design by contract writes that agreement down as three clauses.
-
-- **The precondition** (תנאי קדם) is what the caller must make true before the call. The method may simply assume it holds.
-- **The postcondition** (תנאי סיום) is what the method promises is true when it returns, as long as the precondition held.
-- **The invariant** (תנאי פנימי) is a fact about the object that is true whenever none of its public methods is running.
-- **The payoff:** when one of these statements turns out false, the contract tells you exactly whose bug it is.
+Design by contract writes that agreement down as three clauses. Each clause also says whose bug it is when the clause turns out false.
 
 :::definition id=def-dbc title="Precondition, invariant, and postcondition" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
 

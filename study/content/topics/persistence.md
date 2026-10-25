@@ -90,6 +90,19 @@ CREATE TABLE Enrollment (
 
 ```
 
+The database enforces these keys on every insert.
+
+:::check id=chk-fk
+The value 9 in `Students.DeptId`, when `Departments` contains the ids 1 and 2, breaks which constraint?
+
+- [ ] `PRIMARY KEY` on `Students.Id`
+- [x] the foreign key from `DeptId` to `Departments.Id`
+- [ ] `NOT NULL` on `Students.Name`
+
+- **The foreign key** requires every `DeptId` to match the key of some row in `Departments`. No department has id 9, so the value is rejected.
+- **The primary key** only requires `Students.Id` to be unique, and `NOT NULL` only requires `Name` to have a value, so neither is affected.
+:::
+
 ### JOIN operations in SQL
 
 A join combines rows from two or more tables.
@@ -120,14 +133,6 @@ LEFT JOIN Courses C ON E.CourseId = C.Id;
 
 ![INNER JOIN of Alice to prog. Bob and systems are marked because they have no junction row, so they are absent from the result](../../web/public/figures/sql-join.svg)
 
-## DTO, DAO, and repository
-
-The course organizes database code into three kinds of classes.
-
-- **DTO (data transfer object):** a simple object that represents one row of a table.
-- **DAO (data access object):** a class that performs CRUD operations (`Create`, `Read`, `Update`, `Delete`) on a single table.
-- **Repository:** a higher layer that holds the business logic, and the queries that span several tables or several DAOs.
-
 :::problem id=worked-inner-join title="What an inner join returns" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=worked solution_origin=source
 Alice is enrolled in `prog`. Bob is enrolled in nothing. Both `prog` and `systems` exist. What does this query return, and what does a left join add?
 
@@ -149,16 +154,14 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 :::
 :::
 
-:::check id=chk-fk
-The value 9 in `Students.DeptId`, when `Departments` contains the ids 1 and 2, breaks which constraint?
+## DTO, DAO, and repository
 
-- [ ] `PRIMARY KEY` on `Students.Id`
-- [x] the foreign key from `DeptId` to `Departments.Id`
-- [ ] `NOT NULL` on `Students.Name`
+The course organizes database code into three kinds of classes.
 
-- **The foreign key** requires every `DeptId` to match the key of some row in `Departments`. No department has id 9, so the value is rejected.
-- **The primary key** only requires `Students.Id` to be unique, and `NOT NULL` only requires `Name` to have a value, so neither is affected.
-:::
+- **DTO (data transfer object):** a simple object that represents one row of a table.
+- **DAO (data access object):** a class that performs CRUD operations (`Create`, `Read`, `Update`, `Delete`) on a single table.
+- **Repository:** a higher layer that holds the business logic, and the queries that span several tables or several DAOs.
+
 
 ## Practice
 

@@ -25,8 +25,7 @@ This chapter shows how two processes exchange data, whether they run on the same
 
 Networking in this course uses a client-server model: the server runs all the time and waits, and a client starts a conversation by connecting to it through a socket.
 
-- **TCP and UDP** are the transport protocols. They carry the bytes from one process to the other.
-- **The application** running on top of them must agree on a message format, because the transport does not tell it where one message ends and the next begins.
+A message on its way from the client to the server passes through four layers. Each layer does one job and relies on the layer below it for the rest.
 
 | Layer | Role | Unit of data |
 | --- | --- | --- |

@@ -40,6 +40,8 @@ In this course, **concurrency** (מקביליות) means several threads inside 
 
 ## The memory model under concurrency
 
+Threads can work on the same data because of where they live in memory. Start from the difference between a process and a thread.
+
 - **A process (תהליך)** has its own address space, which no other process can see.
 - **A thread (חוט)** is one sequential flow of execution inside a process. Each thread has its own stack.
 - **What threads share:** all the threads of a process share its heap and its static variables, so they can read and write the same objects.
@@ -81,9 +83,13 @@ public class Task implements Runnable {
 
 ## Race conditions
 
+To say whether concurrent code is correct, the course uses two properties.
+
 - **Safety (היסטוריה טורית):** a concurrent run is safe if its result equals some serial history, that is, the result of running the same calls one after another in some order.
 - **Liveness:** every thread that is ready to run eventually makes progress.
-- **Liveness failures:** deadlock, livelock, and starvation are the ways liveness can fail.
+- **Liveness failures:** deadlock, livelock, and starvation are the ways liveness can fail. They are covered under liveness hazards below.
+
+The most common way to break safety is a race condition.
 
 A **race condition** (מרוץ) happens when several threads access the same data at the same time, at least one of them writes it, and the result depends on how their steps happen to interleave.
 
@@ -96,41 +102,6 @@ public void increment() { count++; }
 - **The lost update:** if two threads both read 0, both compute 1 and both write 1, so one of the two increments is lost.
 
 ![Two threads both read 0, both add 1, and both write 1, so one increment is lost](../../web/public/figures/race-interleaving.svg)
-
-:::definition id=def-critical-section title="Critical section and mutual exclusion" source="materials/lectures/Chapter 8 - Concurrency.pptx"
-A **critical section** (אזור קריטי) is a stretch of code that at most one thread may execute at a given moment.
-
-- **Mutual exclusion (מניעה הדדית)** is the guarantee that only one thread at a time is inside the critical section. A lock, also called a mutex, enforces it.
-- **A `synchronized` method** locks the object `this` for the whole method.
-- **A `synchronized (obj)` block** locks the object `obj` for the length of the block.
-:::
-
-- **`volatile`** guarantees visibility for a variable, and limits how the compiler and processor may reorder instructions around it.
-- **Visibility** means that once one thread writes the variable, a later read by another thread sees the new value, rather than an old copy kept in a register or cache.
-- **`volatile` does not make `count++` atomic.** For that, the read, the change, and the write must happen as one action: inside one `synchronized` block, or as one compare-and-swap.
-
-An **immutable object** is always safe to share between threads. Its state never changes after construction, so no thread can ever see it in the middle of a change.
-
-### Synchronization, locks, and atomic variables
-
-- **`wait()`** releases the object's lock (its monitor) and sleeps until another thread calls `notify()` or `notifyAll()` on the same object.
-- **`notify()`** wakes one waiting thread, and **`notifyAll()`** wakes all of them.
-- **Always call `wait()` inside a `while` loop** that rechecks the condition. A thread can wake up without being notified (a spurious wakeup), or find that another thread already changed the condition.
-- **`ReentrantLock`** is an explicit lock object. A fair `ReentrantLock` hands out the lock in the order the threads asked for it.
-- **`ReadWriteLock`** allows either many readers at once, or a single writer.
-- **A semaphore (סמפור)** holds a number of permits for a limited resource. `acquire` waits until a permit is free and takes it, and `release` gives one back. A semaphore with five permits lets five threads in at once.
-- **Dining philosophers:** each fork can be a semaphore with one permit. A philosopher calls `acquire` on both forks before eating, and `release` on both afterward.
-- **`AtomicInteger` and `AtomicReference`** perform a whole read-modify-write as one atomic step.
-- **Compare-and-swap (CAS)** writes a new value only if the variable still holds the value the thread read earlier. Otherwise it fails, and the thread can retry. No lock is involved, so it is lock-free.
-
-### Liveness hazards
-
-:::definition id=def-liveness title="Deadlock, livelock, and starvation" source="materials/lectures/Chapter 8 - Concurrency.pptx"
-
-- **Deadlock (נעילה הדדית):** two or more threads are blocked forever, each waiting for a lock that another one holds. The usual fix is to make every thread acquire locks in the same global order.
-- **Livelock:** the threads are not blocked, but they spend all their time reacting to each other, so none of them gets any work done.
-- **Starvation (הרעבה):** a thread that is ready to run is passed over again and again, because other threads keep getting the resource first.
-:::
 
 :::problem id=worked-counter-race title="An interleaving that loses an update" source="materials/sessions/PS6-2026-1.pptx" kind=worked solution_origin=source
 Show an interleaving in which two calls to `increment()` lose an update.
@@ -155,6 +126,22 @@ At the end, `count` holds 1, although any serial order of the two calls would gi
 :::
 :::
 
+The fix is to make the three steps run as one, so no other thread can slip in between them.
+
+:::definition id=def-critical-section title="Critical section and mutual exclusion" source="materials/lectures/Chapter 8 - Concurrency.pptx"
+A **critical section** (אזור קריטי) is a stretch of code that at most one thread may execute at a given moment.
+
+- **Mutual exclusion (מניעה הדדית)** is the guarantee that only one thread at a time is inside the critical section. A lock, also called a mutex, enforces it.
+- **A `synchronized` method** locks the object `this` for the whole method.
+- **A `synchronized (obj)` block** locks the object `obj` for the length of the block.
+:::
+
+A lock is not the only keyword that touches shared variables, and the other one is often confused with it.
+
+- **`volatile`** guarantees visibility for a variable, and limits how the compiler and processor may reorder instructions around it.
+- **Visibility** means that once one thread writes the variable, a later read by another thread sees the new value, rather than an old copy kept in a register or cache.
+- **`volatile` does not make `count++` atomic.** For that, the read, the change, and the write must happen as one action: inside one `synchronized` block, or as one compare-and-swap.
+
 :::check id=chk-volatile
 Two threads execute `count++` on a field declared `volatile int`. Is the increment atomic?
 
@@ -164,6 +151,37 @@ Two threads execute `count++` on a field declared `volatile int`. Is the increme
 
 - **`volatile` only affects visibility:** `count++` is still three separate steps, and another thread can still slip in between them.
 - **To make the increment atomic,** run the three steps under one lock, or use a compare-and-swap, for example with `AtomicInteger`.
+:::
+
+An **immutable object** is always safe to share between threads. Its state never changes after construction, so no thread can ever see it in the middle of a change.
+
+### Synchronization, locks, and atomic variables
+
+Sometimes a thread holds the lock but must wait until another thread changes the state, for example until a queue is not empty. Java's monitors support this.
+
+- **`wait()`** releases the object's lock (its monitor) and sleeps until another thread calls `notify()` or `notifyAll()` on the same object.
+- **`notify()`** wakes one waiting thread, and **`notifyAll()`** wakes all of them.
+- **Always call `wait()` inside a `while` loop** that rechecks the condition. A thread can wake up without being notified (a spurious wakeup), or find that another thread already changed the condition.
+
+Beyond `synchronized`, the library offers locks with different rules about who may enter.
+
+- **`ReentrantLock`** is an explicit lock object. A fair `ReentrantLock` hands out the lock in the order the threads asked for it.
+- **`ReadWriteLock`** allows either many readers at once, or a single writer.
+- **A semaphore (סמפור)** holds a number of permits for a limited resource. `acquire` waits until a permit is free and takes it, and `release` gives one back. A semaphore with five permits lets five threads in at once.
+- **Dining philosophers:** each fork can be a semaphore with one permit. A philosopher calls `acquire` on both forks before eating, and `release` on both afterward.
+
+For a single variable, a lock can be avoided altogether.
+
+- **`AtomicInteger` and `AtomicReference`** perform a whole read-modify-write as one atomic step.
+- **Compare-and-swap (CAS)** writes a new value only if the variable still holds the value the thread read earlier. Otherwise it fails, and the thread can retry. No lock is involved, so it is lock-free.
+
+### Liveness hazards
+
+:::definition id=def-liveness title="Deadlock, livelock, and starvation" source="materials/lectures/Chapter 8 - Concurrency.pptx"
+
+- **Deadlock (נעילה הדדית):** two or more threads are blocked forever, each waiting for a lock that another one holds. The usual fix is to make every thread acquire locks in the same global order.
+- **Livelock:** the threads are not blocked, but they spend all their time reacting to each other, so none of them gets any work done.
+- **Starvation (הרעבה):** a thread that is ready to run is passed over again and again, because other threads keep getting the resource first.
 :::
 
 ## Client-side locking
@@ -199,7 +217,6 @@ synchronized (v) {
 - **Each method is safe on its own,** but the lock is released after `contains` returns, before `add` starts.
 - **The fix:** make the pair one action, either by having the caller lock `v` around both calls, or by giving the class a single method that does both under its lock.
 :::
-
 
 ## The same lock in C++
 

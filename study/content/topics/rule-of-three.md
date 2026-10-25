@@ -79,6 +79,8 @@ This constructor could also delegate to `Image(int, int, char*)`, so that the al
 
 ### Assignment and construction
 
+The copy constructor fixes copies that create a new object. Assignment is a separate case, because the object on the left already exists and already owns a buffer.
+
 ```cpp
 Image avi(1080, 1920, bytesAvi);
 Image benni(1080, 1920, bytesBenni);
@@ -177,7 +179,7 @@ b = a;
 :::
 
 :::trap
-- **The setup:** an `Image` may overload `operator()` so that `avi(x, y)` returns the pixel `_bytes[y * _width + x]`.
+- **The question:** does every overloaded operator join the rule of three? For example, an `Image` may overload `operator()` so that `avi(x, y)` returns the pixel `_bytes[y * _width + x]`.
 - **Why it does not matter here:** `operator()` is not one of the three special members, and an operator that only reads a value creates no ownership problem.
 - **What does matter:** the rule of three is required because the class owns memory through a raw pointer.
 :::

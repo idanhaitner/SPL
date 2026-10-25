@@ -50,6 +50,16 @@ public:
 - **The base is built first:** the derived constructor calls a base constructor in its initializer list, here `Filter("blur")`.
 - **If you leave that call out,** the compiler calls the base class's default constructor, and the code does not compile if the base has none.
 
+### Access levels and inheritance in C++
+
+The word after the colon, here `public`, sets how the base class's members can be reached through the derived class.
+
+| Kind of inheritance | A public member of the base becomes | A protected member of the base becomes | A private member of the base |
+| --- | --- | --- | --- |
+| `public` | `public` (an "is-a" relationship) | `protected` | inaccessible |
+| `protected` | `protected` | `protected` | inaccessible |
+| `private` | `private` (used like composition: "implemented in terms of") | `private` | inaccessible |
+
 ## The Liskov substitution principle
 
 :::definition id=def-lsp title="The Liskov substitution principle" source="materials/lectures/Chapter 6 - Inheritance.pptx"
@@ -65,15 +75,9 @@ The classic example that breaks the principle is deriving `Square` from `Rectang
 - **For a square,** the same call must also change the height, or it would stop being a square.
 - **The result:** code written for a `Rectangle` that sets the width and expects the height to stay the same breaks when it receives a `Square`. The override does something the base class's contract does not allow.
 
-### Access levels and inheritance in C++
+## Virtual functions
 
-| Kind of inheritance | A public member of the base becomes | A protected member of the base becomes | A private member of the base |
-| --- | --- | --- | --- |
-| `public` | `public` (an "is-a" relationship) | `protected` | inaccessible |
-| `protected` | `protected` | `protected` | inaccessible |
-| `private` | `private` (used like composition: "implemented in terms of") | `private` | inaccessible |
-
-### Virtual functions and the vtable
+A `Filter*` may point at a `Filter` or at any class derived from it. When the code calls `filter->apply(img)`, C++ must decide which `apply` to run.
 
 :::definition id=def-virtual title="Virtual function and vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
 A function that is not virtual is selected by **static binding** (קשירה סטטית).
@@ -87,23 +91,6 @@ A function declared `virtual` is selected by **dynamic binding** (קשירה ד�
 - **A polymorphic class** is one with at least one virtual function. The compiler puts a hidden vptr in every object of such a class.
 - **The vptr** points at the vtable of the object's own class. There is one vtable per class, shared by all its objects.
 :::
-
-### The virtual destructor
-
-:::theorem id=thm-virtual-dtor title="A polymorphic base needs a virtual destructor" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-If a class has virtual functions, it is meant to be used as a polymorphic base class, and its destructor must be declared `virtual`.
-
-:::proof
-- **The setup:** `Base* p = new Derived();` followed by `delete p;`. The destructor call follows the same binding rules as any other call.
-- **If the destructor is not virtual,** static binding picks `~Base` from the pointer's type, and only `~Base` runs.
-- **The consequence:** `~Derived` never runs, so whatever the derived class acquired is leaked. Formally, the behavior is undefined.
-:::
-:::
-
-A pure virtual function is declared with `= 0`, and has no implementation in the base class.
-
-- **An abstract class** (מחלקה מופשטת) is a class with at least one pure virtual function.
-- **You cannot create objects of an abstract class.** You can only create objects of derived classes that override every pure virtual function.
 
 :::problem id=worked-virtual-call title="Tracing a virtual call" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
 Which method runs when `apply` is declared `virtual`, and which method runs when it is not?
@@ -122,6 +109,23 @@ filter->apply(img);
 :::
 
 ![A BlurFilter object holds a vptr. The call follows it to the class vtable and finds BlurFilter::apply](../../web/public/figures/vtable-call.svg)
+
+A pure virtual function is declared with `= 0`, and has no implementation in the base class.
+
+- **An abstract class** (מחלקה מופשטת) is a class with at least one pure virtual function.
+- **You cannot create objects of an abstract class.** You can only create objects of derived classes that override every pure virtual function.
+
+### The virtual destructor
+
+:::theorem id=thm-virtual-dtor title="A polymorphic base needs a virtual destructor" source="materials/lectures/Chapter 6 - Inheritance.pptx"
+If a class has virtual functions, it is meant to be used as a polymorphic base class, and its destructor must be declared `virtual`.
+
+:::proof
+- **The setup:** `Base* p = new Derived();` followed by `delete p;`. The destructor call follows the same binding rules as any other call.
+- **If the destructor is not virtual,** static binding picks `~Base` from the pointer's type, and only `~Base` runs.
+- **The consequence:** `~Derived` never runs, so whatever the derived class acquired is leaked. Formally, the behavior is undefined.
+:::
+:::
 
 :::check id=chk-virtual-dtor
 You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true of `~Filter`?

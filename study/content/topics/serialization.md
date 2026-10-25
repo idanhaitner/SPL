@@ -13,11 +13,7 @@ This chapter shows how a program turns an object into bytes, so that a later run
 
 ## Writing and reading an object
 
-Serialization (סיריאליזציה) records an object as a sequence of bytes, so that a later run, or another process, can rebuild it.
-
-- **The image server** in the Reactor chapter received a file name and sent back the file's bytes.
-- **An object server** sends whole objects instead of raw files.
-- **The byte sequence** it sends records the object's type, the shape of its fields, and the field values.
+The image server in the Reactor chapter received a file name and sent back the file's bytes. An object server sends whole objects instead, and to do that it must first turn each object into bytes. That step is called serialization (סיריאליזציה).
 
 :::definition id=def-serialization title="Serialization" source="materials/lectures/Chapter 12 - Serialization.pptx"
 Serialization is the representation of an object as a sequence of bytes.
@@ -33,6 +29,16 @@ Serialization is the representation of an object as a sequence of bytes.
 
 - **Its only job:** it is a flag that says the class agrees to be serialized.
 - **What happens without it:** `ObjectOutputStream` refuses to write an object whose class does not implement `Serializable`, and throws `NotSerializableException`.
+
+:::check id=chk-marker
+Why does `class Pet` without `implements Serializable` fail in `writeObject`?
+
+- [ ] Because `Pet` has no `writeObject` method of its own
+- [x] Because `Serializable` is the marker interface the stream checks, and it declares no methods
+- [ ] Because `final` classes cannot be serialized
+
+`Serializable` is a marker interface. It has no methods, and the stream refuses any object whose class does not implement it.
+:::
 
 The class only has to declare `implements Serializable`.
 
@@ -98,17 +104,6 @@ After deserialization, `hash` is `null`, so the next call to `hashCode` computes
 - **When to use `transient`:** mark a field `transient` when its value has no meaning in another JVM, such as a cache, a thread, or a socket.
 - **What happens if you forget:** a field that holds a `Thread` or an `OutputStream` makes `writeObject` throw, because those classes are not `Serializable`.
 
-### serialVersionUID
-
-Changing a class that is already `Serializable` creates a compatibility problem: you wrote a file, then changed the class, and now you try to read the old file.
-
-- **`serialVersionUID`:** this is a version number you assign to the class, so the JVM can tell whether the stream and the class match.
-- **The basic rule:** the new class can read an old stream only when every change since then is on the compatible list.
-- **Adding a field is compatible:** the new field is filled with its default value, which is `null`, `0`, or `false`.
-- **Other compatible changes:** changing a field between `public`, `protected`, and `private`, adding a `static` or `transient` field, and reordering fields.
-- **Incompatible changes:** removing a field that is not `transient`, changing a field's type, and changing the class hierarchy.
-- **A mismatched `serialVersionUID`:** the read fails, even if the fields themselves would have matched.
-
 :::problem id=worked-transient-hash title="A transient field" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=worked solution_origin=source
 `pet` was serialized after `hashCode` had already filled the cache. In the object that `readObject` returns, what does `hash` contain, and what does `name` contain?
 
@@ -127,16 +122,6 @@ public final class Pet implements Serializable {
 :::
 :::
 
-:::check id=chk-marker
-Why does `class Pet` without `implements Serializable` fail in `writeObject`?
-
-- [ ] Because `Pet` has no `writeObject` method of its own
-- [x] Because `Serializable` is the marker interface the stream checks, and it declares no methods
-- [ ] Because `final` classes cannot be serialized
-
-`Serializable` is a marker interface. It has no methods, and the stream refuses any object whose class does not implement it.
-:::
-
 :::trap
 If a field refers to an object that cannot be serialized, the whole `writeObject` call fails, even if you never meant to send that field.
 
@@ -144,10 +129,23 @@ If a field refers to an object that cannot be serialized, the whole `writeObject
 - **The rule of thumb:** everything reachable from a serializable object should itself be serializable, or be marked `transient`.
 :::
 
+### serialVersionUID
+
+Changing a class that is already `Serializable` creates a compatibility problem: you wrote a file, then changed the class, and now you try to read the old file.
+
+- **`serialVersionUID`:** this is a version number you assign to the class, so the JVM can tell whether the stream and the class match.
+- **The basic rule:** the new class can read an old stream only when every change since then is on the compatible list.
+- **Adding a field is compatible:** the new field is filled with its default value, which is `null`, `0`, or `false`.
+- **Other compatible changes:** changing a field between `public`, `protected`, and `private`, adding a `static` or `transient` field, and reordering fields.
+- **Incompatible changes:** removing a field that is not `transient`, changing a field's type, and changing the class hierarchy.
+- **A mismatched `serialVersionUID`:** the read fails, even if the fields themselves would have matched.
+
 :::trap
 - **The risk of leaving it out:** if you do not declare `serialVersionUID`, Java computes one from the class. Even a harmless-looking edit changes that number, and old files stop loading.
 - **The fix:** declare an explicit `serialVersionUID` on every class that is part of a file format or a protocol.
 :::
+
+### Sending objects through the reactor
 
 A Reactor protocol can carry these bytes inside a `MessageEncoderDecoder<Serializable>`.
 

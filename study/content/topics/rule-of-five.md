@@ -20,7 +20,7 @@ This chapter shows how C++ copies and moves objects that own resources, without 
 - **The rule of five:** the five special members that make copying and moving correct.
 - **The rule of zero:** when you should write none of them, because the compiler's versions are already correct.
 
-## lvalues and rvalues
+## Copying versus moving
 
 Copying gives two objects the same data, but it is expensive, for example when a function returns a large object.
 
@@ -39,6 +39,12 @@ An lvalue names an object that has an address.
 - **`const T&`** can bind to an lvalue or to an rvalue. Binding it to a temporary keeps that temporary alive for as long as the reference exists.
 - **The `const`** means that code cannot modify the object through that reference.
 :::
+
+This is why the value category matters for moving. Stealing an object's buffer leaves that object empty.
+
+- **An rvalue is safe to move from:** it is a temporary, and nothing will read it again after this line.
+- **An lvalue is not:** it has a name, so the code below may still use it, and it must keep its contents.
+- **So the compiler moves only from rvalues.** To move from a named object anyway, you must say so explicitly, with `std::move`.
 
 `std::move(x)` does not move anything by itself. It is only a cast.
 
@@ -96,11 +102,6 @@ Image& Image::operator=(Image&& other) {
 ```
 
 After the swap, `other` holds the buffer that used to belong to `*this`. Since `other` is a temporary, its destructor soon releases that old buffer.
-
-Two common mistakes belong with this material.
-
-- **Mixing up `new` and a stack object:** `Image avi = new Image(...)` does not compile, because `new` returns an `Image*`, not an `Image`. Write `Image avi(...)` for an object on the stack, or `Image* avi = new Image(...)` for one on the heap.
-- **Using an object after moving from it:** after `std::move(avi)`, `avi` is in a valid but unspecified state, so any later use of its contents is a bug.
 
 ### The rule of zero
 
@@ -217,6 +218,11 @@ An object that was moved from still exists, in a valid but unspecified state.
 
 - **For `Image`**, that state is an empty image with a null buffer.
 - **So `processImage(avi)` after `std::move(avi)`** runs on an empty image, which is almost certainly a bug.
+:::
+
+:::trap
+- **Mixing up `new` and a stack object:** `Image avi = new Image(...)` does not compile, because `new` returns an `Image*`, not an `Image`.
+- **The fix:** write `Image avi(...)` for an object on the stack, or `Image* avi = new Image(...)` for one on the heap.
 :::
 
 :::trap

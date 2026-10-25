@@ -56,6 +56,8 @@ A process is always in one of five main states.
 
 :::
 
+A few points about the states, and about the other services the operating system provides to a running process.
+
 - **Runnable versus Blocked:** a runnable process is ready and only waiting for the scheduler to give it the CPU. A blocked process cannot run at all until some I/O or event completes.
 - **System calls:** a process asks the operating system's kernel for a service, such as reading a file, through a system call. An ordinary function call, by contrast, stays inside the process.
 - **Who touches the hardware:** the kernel performs the actual operation on the disk or network card, and reports the result back to the process.
@@ -68,7 +70,7 @@ A process is always in one of five main states.
 
 A process's virtual address space runs from low addresses to high addresses, and it is divided into regions.
 
-- **The course's drawings** use these regions all the time: a pointer (מצביע) on the stack (מחסנית), a buffer on the heap (ערימה), and an argument copied into the frame of a called function.
+- **Why it matters:** almost every picture in this course is drawn on these regions, for example a pointer (מצביע) on the stack (מחסנית) that holds the address of a buffer on the heap (ערימה).
 - **The two growing regions,** the stack and the heap, start at opposite ends and grow toward each other, so the free space between them can be used by whichever one needs it.
 
 :::definition id=def-address-space title="The address space of a process" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -143,6 +145,13 @@ int main() {
 | First call, at the line `int x = c` | 0 | 0 |
 | First call, when the function ends | 1 | Gone (popped off the stack) |
 | Second call, at the line `int x = c` | 1 | 1 |
+
+:::trap
+Global variables, and local variables declared `static`, live in the static region for the whole run of the program.
+
+- **They are not on the stack,** even when they are declared inside a function, so they survive when the function returns.
+- **They are not on the heap** either, so they are never released with `delete`.
+:::
 
 ### The stack frame
 
@@ -238,6 +247,8 @@ int main() {
 
 ### The heap
 
+The stack cannot hold an object that must outlive the function that created it. Such an object is allocated on the heap with `new` and released with `delete`.
+
 ```cpp
 int* pi = new int;       // one int on the heap; pi itself is local
 delete pi;
@@ -262,6 +273,26 @@ Student* ps = new Student("Avi");  // ps on the stack, the Student on the heap
 - **The first line** puts the pointer `pi` on the stack, holding an address, and the ten integers on the heap, as one contiguous block.
 - **The second line** puts the pointer `ps` on the stack, and the `Student` object on the heap.
 - **When the function returns,** the pointers disappear with its frame, but the heap blocks do not.
+
+:::check id=chk-where-array
+The following line runs inside a function. Where do `pi` and the ten integers live?
+
+```cpp
+int* pi = new int[10];
+
+```
+
+- [ ] Both are on the stack
+- [x] `pi` is on the stack and the ten integers are on the heap
+- [ ] Both are on the heap
+- [ ] `pi` is stored in the code region
+
+- **`pi`** is a local variable that holds an address, so it lives in the function's stack frame.
+- **The ten integers** are created by `new[]`, so they live on the heap.
+:::
+
+Because the heap block outlives the pointer, someone has to release it.
+
 - **In C++, you own every heap block:** `new` obtains it, and only a matching `delete` releases it.
 - **An analogy:** `new` is like taking the key to an apartment, and `delete` is returning it. If you never return the key, the apartment stays occupied until the process ends.
 - **A memory leak (זליגת זיכרון)** is a heap block that is still marked as occupied, although no pointer in the program holds its address anymore.
@@ -276,6 +307,42 @@ void leaky() {
 ```
 
 ![Inside leaky, the pointer on the stack points at the int on the heap. After the return the int is still there, and nothing points to it](../../web/public/figures/heap-leak.svg)
+
+:::problem id=worked-stack-array title="A pointer on the stack" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
+Explain where `ps` is stored, where the `Student` object is stored, and what happens in memory if nobody calls `delete`.
+
+```cpp
+int main() {
+    Student* ps = new Student("Avi");
+    return 0;
+}
+
+```
+
+:::solution
+
+- **`ps`** is a local pointer, so it occupies a cell in `main`'s stack frame.
+- **The `Student` object** is created by `new`, so it lives on the heap.
+
+```text
+stack (main):  ps  ----------+
+                             |
+heap:                        v
+                       Student("Avi")
+
+```
+
+- **When `main` returns,** its frame is popped and `ps` disappears.
+- **The `Student` block** stays allocated, but nothing points to it anymore, so it is a memory leak. In practice the operating system reclaims all of the process's memory when it exits, but inside a long-running program, a leak like this keeps growing.
+:::
+:::
+
+:::trap
+- **`delete`** releases a single object made with `new`.
+- **`delete[]`** releases an array made with `new[]`.
+- **Using `delete` on memory from `new[]`** is undefined behavior, and can corrupt the heap's bookkeeping.
+- **A memory leak** is a different mistake: the block is never released at all.
+:::
 
 ### All five regions in one run
 
@@ -431,7 +498,7 @@ WRITE 3000 R3
 :::
 :::
 
-In the course's simplified model, the stack and the heap each support a small set of operations.
+The lecture notes describe the stack and the heap as two simple machines on top of this RAM, each with a small set of operations.
 
 **Stack operations:**
 
@@ -456,87 +523,6 @@ A procedure call goes through these steps, in order.
 4. The arguments are pushed.
 5. The body runs, and the return value is written to a temporary location.
 6. The arguments are popped, and `removeAF` removes the frame, returning control to the caller's frame.
-
-:::check id=chk-where-array
-The following line runs inside a function. Where do `pi` and the ten integers live?
-
-```cpp
-int* pi = new int[10];
-
-```
-
-- [ ] Both are on the stack
-- [x] `pi` is on the stack and the ten integers are on the heap
-- [ ] Both are on the heap
-- [ ] `pi` is stored in the code region
-
-- **`pi`** is a local variable that holds an address, so it lives in the function's stack frame.
-- **The ten integers** are created by `new[]`, so they live on the heap.
-:::
-
-## An example layout
-
-Consider this code, running inside a function.
-
-```cpp
-int* pi = new int[10];
-pi[0] = 1;
-
-```
-
-| Name | Region | Contents |
-| --- | --- | --- |
-| `pi` | The stack frame | The address of the first `int` on the heap |
-| The ten `int`s | Heap | The array values (index 0 has been set to 1) |
-| The instructions | Code region (Text) | Machine instructions, read only |
-
-When the function returns, the local `pi` disappears with its frame.
-
-- **The ten integers stay** allocated on the heap until the program runs `delete[] pi`.
-- **If `pi` was the only copy of the address,** the integers can no longer be reached once it is gone, yet their block stays occupied. That is a memory leak.
-
-:::problem id=worked-stack-array title="A pointer on the stack" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
-Explain where `ps` is stored, where the `Student` object is stored, and what happens in memory if nobody calls `delete`.
-
-```cpp
-int main() {
-    Student* ps = new Student("Avi");
-    return 0;
-}
-
-```
-
-:::solution
-
-- **`ps`** is a local pointer, so it occupies a cell in `main`'s stack frame.
-- **The `Student` object** is created by `new`, so it lives on the heap.
-
-```text
-stack (main):  ps  ----------+
-                             |
-heap:                        v
-                       Student("Avi")
-
-```
-
-- **When `main` returns,** its frame is popped and `ps` disappears.
-- **The `Student` block** stays allocated, but nothing points to it anymore, so it is a memory leak. In practice the operating system reclaims all of the process's memory when it exits, but inside a long-running program, a leak like this keeps growing.
-:::
-:::
-
-:::trap
-- **`delete`** releases a single object made with `new`.
-- **`delete[]`** releases an array made with `new[]`.
-- **Using `delete` on memory from `new[]`** is undefined behavior, and can corrupt the heap's bookkeeping.
-- **A memory leak** is a different mistake: the block is never released at all.
-:::
-
-:::trap
-Global variables, and local variables declared `static`, live in the static region for the whole run of the program.
-
-- **They are not on the stack,** even when they are declared inside a function, so they survive when the function returns.
-- **They are not on the heap** either, so they are never released with `delete`.
-:::
 
 ## Practice
 

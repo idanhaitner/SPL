@@ -39,19 +39,21 @@ A server must keep accepting and serving clients, even while one client is slow.
 
 ## Comparing server architectures
 
-- **`accept`** returns one new connection, and the thread that called it must then be free again to accept the next client.
+The thread that calls `accept` must be free again quickly, to accept the next client.
+
 - **Blocking that thread stalls everyone:** while it waits in a read, a framing step, or a database query, no new client is accepted, and no other ready client is read.
-- **Thread-per-client** moves the blocking work to a separate thread for each connection. The cost is a stack and context switches for every connection, even the idle ones.
-- **The reactor pattern** keeps one thread waiting in `select` (in Java NIO, on a `Selector`), and has it handle only the non-blocking channels that are ready.
-- **The selector thread only copies bytes.** Any heavy call on it would stall every client, so the protocol work runs on a fixed pool of worker threads.
 
-In summary, the two designs look like this.
+**Thread-per-client** moves the blocking work to a separate thread for each connection.
 
-- **Thread-per-client** runs a separate thread for each connection.
-- **Its weakness:** it does not scale to thousands of connections, because each thread needs its own stack, and the processor wastes time switching among them.
-- **The reactor** uses one selector thread to handle the network events (`OP_ACCEPT`, `OP_READ`, `OP_WRITE`) of many non-blocking channels.
-- **That thread** only copies bytes, then goes straight back to `select`.
+- **Its weakness:** it does not scale to thousands of connections. Each thread needs its own stack, even when its client is idle, and the processor wastes time switching among them.
+
+**The reactor** keeps one thread waiting in `select` (in Java NIO, on a `Selector`), and has it handle only the non-blocking channels that are ready right now.
+
+- **The events it handles:** a new connection (`OP_ACCEPT`), bytes to read (`OP_READ`), and room to write (`OP_WRITE`), across many channels.
+- **That thread only copies bytes,** then goes straight back to `select`. Any heavy call on it would stall every client.
 - **The heavy protocol work** goes to a fixed pool of worker threads, shared by all connections.
+
+These are the Java NIO classes the reactor is built from.
 
 :::definition id=def-reactor title="Java NIO pieces of the reactor" source="materials/lectures/Chapter 11 - Reactor.pptx"
 
@@ -62,6 +64,26 @@ In summary, the two designs look like this.
 :::
 
 ![The reactor loop: one selector thread, ready keys, and a pool only for protocol work](../../web/public/figures/reactor-loop.svg)
+
+The interest set needs care, especially `OP_WRITE`.
+
+:::trap
+Leaving `OP_WRITE` set when there is nothing to send makes `select` spin.
+
+- **Why:** a channel is almost always ready for writing, so `select` returns immediately, finds nothing to do, and loops again, burning a whole CPU core.
+- **The fix:** set `OP_WRITE` only while the write queue holds bytes, and clear it as soon as the last of them has been written.
+:::
+
+:::check id=chk-write-interest
+A channel's write queue is empty, and `OP_WRITE` is still set. What does the selector thread do?
+
+- [ ] It blocks in `select` until the client sends a byte
+- [x] It spins, because the channel is already ready for writing
+- [ ] It closes the channel
+
+- **Why it spins:** a channel with free space in its send buffer counts as ready for writing, so `select` returns immediately, over and over.
+- **The fix:** clear `OP_WRITE` from the interest set, and set it again only when a reply is waiting in the write queue.
+:::
 
 ## ByteBuffer indexes
 
@@ -83,13 +105,6 @@ buf.clear();         // Reset buffer for writing: position = 0, limit = capacity
 
 ![Before flip the readable window is empty because position is already at the end of the data. flip sets limit to that end and position to 0](../../web/public/figures/buffer-flip.svg)
 
-:::trap
-Leaving `OP_WRITE` set when there is nothing to send makes `select` spin.
-
-- **Why:** a channel is almost always ready for writing, so `select` returns immediately, finds nothing to do, and loops again, burning a whole CPU core.
-- **The fix:** set `OP_WRITE` only while the write queue holds bytes, and clear it as soon as the last of them has been written.
-:::
-
 :::problem id=worked-flip title="Flipping a buffer" source="materials/sessions/SPL_PS10.pptx" kind=worked solution_origin=source
 You have just read 5 bytes into the buffer and now want to write them out. What does `flip` change?
 
@@ -109,16 +124,6 @@ channel.write(buf);
 :::
 :::
 
-:::check id=chk-write-interest
-A channel's write queue is empty, and `OP_WRITE` is still set. What does the selector thread do?
-
-- [ ] It blocks in `select` until the client sends a byte
-- [x] It spins, because the channel is already ready for writing
-- [ ] It closes the channel
-
-- **Why it spins:** a channel with free space in its send buffer counts as ready for writing, so `select` returns immediately, over and over.
-- **The fix:** clear `OP_WRITE` from the interest set, and set it again only when a reply is waiting in the write queue.
-:::
 
 ## Practice
 

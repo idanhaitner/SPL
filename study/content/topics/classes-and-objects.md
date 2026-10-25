@@ -9,21 +9,21 @@ sources:
 
 This chapter follows a C++ program from its source files all the way to a running object.
 
-- **Building:** how headers and `.cpp` files are compiled separately and then linked into one executable.
-- **Classes:** what an object looks like in memory, and how member functions operate on it.
-- **Using objects:** how an object is created, how its members get their first values, and how a member function finds its object through `this`.
+- **Building:** how a program split across several files is compiled one file at a time and then linked into one executable.
+- **Classes:** what an object looks like in memory, and how its members get their first values.
+- **Using objects:** how you reach an object's members, and how a member function finds its object through `this`.
 
 ## Building a program
 
-A function defined outside every class lives in the global scope.
+A real C++ program is split across many `.cpp` files, and each file is compiled on its own. So a file often calls a function whose body lives in a different file. The compiler can still check that call, as long as it knows the function's name and signature.
 
-- **A declaration** introduces the function's name and its signature, so other code can call it.
+- **A declaration** introduces a function's name and its signature, so other code can call it.
 - **A definition** is a declaration that also supplies the function's body.
 - **The One Definition Rule (ODR)** allows a function to be declared many times, but defined exactly once in the whole program.
 
-A forward declaration tells the compiler that a type or a function exists.
+The declarations that several files need are written once, in a header, and each file that needs them includes it.
 
-- **Header files** (`.h` or `.hpp`) collect the declarations that several `.cpp` files need to share.
+- **Header files** (`.h` or `.hpp`) collect the declarations that several `.cpp` files share. A declaration of a type or function that comes before its definition is called a forward declaration.
 - **`#include`** literally pastes the header's text into the source file at that point.
 - **Include guards** stop the same header from being pasted twice into one file, which also protects against two headers that include each other.
 
@@ -35,7 +35,9 @@ A forward declaration tells the compiler that a type or a function exists.
 
 ```
 
-The build has four stages, which always run in this order.
+### From source files to an executable
+
+Turning those files into a program takes four stages, which always run in this order.
 
 :::definition id=def-build title="The four stages of the build" source="materials/sessions/SPL_PS1 (1).pptx"
 
@@ -47,15 +49,35 @@ The build has four stages, which always run in this order.
 
 ![The four build stages in order: preprocessor, compiler, assembler, then the linker, which produces one executable](../../web/public/figures/build-pipeline.svg)
 
-Java and C++ finish the link at different times.
+The first three stages work on one `.cpp` file at a time. Only the linker sees the whole program.
 
-- **Java** compiles source code to bytecode. The JVM links dynamically while the program runs, at the moment each class is loaded.
-- **C++** resolves every symbol ahead of time, in the linker, so the executable is complete before it starts.
-- **`g++ -c`** stops the build after the assembler and writes a `.o` object file. It does not link.
-- **`g++ -o name`** sets the name of the output file. Without it, the executable on Linux is named `a.out`.
+- **An object file is unfinished.** When `a.cpp` calls a function defined in `b.cpp`, the compiler only checks the call against the declaration. It leaves a note in `a.o` saying "the address of this function is still missing".
+- **The linker fills those notes in.** It looks for each missing function among the definitions in all the object files. If no file defines it, the link fails with an **undefined reference** error. If two files define it, the link fails because the ODR is broken.
+- **The linker also needs a starting point.** An executable starts running at `main`, so when the linker builds an executable, exactly one of the object files must define `main`.
+
+You choose how far the build goes with `g++` flags.
+
+- **`g++ -c file.cpp`** runs the first three stages and stops before the linker. It writes `file.o`, and it does not care whether `main` or the other functions exist yet.
+- **`g++ -o name a.o b.o`** links the object files into an executable called `name`. Without `-o`, the executable on Linux is named `a.out`.
+- **`g++ -o name a.cpp b.cpp`** does all four stages in one command.
 
 :::problem id=worked-compile-vs-link title="Linking without main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
-The first command succeeds and the second fails. Which stage fails, and why?
+`student.cpp` defines the members of `Student` and nothing else.
+
+```cpp
+// student.cpp
+#include "student.h"
+
+Student::Student(const std::string& name, int year)
+    : _name(name), _year(year) {}
+
+void Student::print() const {
+    std::cout << _name << " " << _year;
+}
+
+```
+
+The first command below succeeds and the second fails. Which stage fails, and why?
 
 ```text
 g++ -c student.cpp
@@ -64,36 +86,57 @@ g++ -o app student.o
 ```
 
 :::solution
-- **The failing stage:** the linker fails, because linking is what the second command runs.
-- **Why the first command succeeds:** `g++ -c` writes `student.o` and stops before linking, so it never looks for `main`.
-- **Why the second command fails:** it asks for an executable, so it runs the linker. Every executable needs a `main`, and `student.o` does not define one, so the linker reports an undefined reference to `main`.
+- **Where to look:** search the file for `main`. It has a constructor and `print`, but no `main` function.
+- **Why the first command succeeds:** `-c` stops before the linker. Compiling one file only checks that file's own code, and a file without `main` is perfectly fine.
+- **Why the second command fails:** asking for an executable runs the linker, and an executable needs `main` as its starting point. `student.o` is the only object file given, and it does not define `main`.
+- **The failing stage:** the linker. It reports an undefined reference to `main`.
+- **The fix:** link it together with the file that defines `main`, for example `g++ -o app student.o main.o`.
 :::
 :::
 
-A `Makefile` records the dependencies of a build.
+### Rebuilding with make
 
+With many files, typing every `g++` command by hand gets slow, and recompiling every file after a one-line change wastes time. A `Makefile` records which file is built from which, so `make` can rebuild only what changed.
+
+- **A rule** has a target, a colon, and the files it depends on. The lines under it are the recipe, the commands that build the target.
+- **Recipe lines** must begin with a Tab character, not spaces.
+- **Rebuilding:** `make` runs a recipe only when the target is missing or one of its dependencies is newer than it.
 - **The default target:** when you run `make` without naming a target, it builds the first target in the file.
-- **Recipe lines:** each command under a target must begin with a Tab character, not spaces.
+
+In this makefile, `hello` is linked from two object files, and each object file is compiled from its own `.cpp` file. After an edit to `run.cpp`, `make` recompiles only `run.o` and then links again.
 
 ```makefile
-hello: helloWorld.o run.o
+hello: bin/helloWorld.o bin/run.o
 	g++ -o bin/hello bin/helloWorld.o bin/run.o
+
+bin/helloWorld.o: src/helloWorld.cpp
+	g++ -c -o bin/helloWorld.o src/helloWorld.cpp
+
+bin/run.o: src/run.cpp
+	g++ -c -o bin/run.o src/run.cpp
 
 ```
 
-The fundamental types in C++ include `int`, `double`, `bool`, and `char`.
+### Linking in Java
 
-- **`const`** marks a value that cannot change. Java uses `final` for the same job.
-- **`std::string`** is a string you can modify, and two strings are compared by content with `==`, unlike Java.
-- **`std::vector<T>`** is an array that grows as you add elements, like Java's `ArrayList`.
+Java and C++ finish the link at different times.
+
+- **C++** resolves every symbol ahead of time, in the linker, so the executable is complete before it starts.
+- **Java** compiles source code to bytecode and has no separate link step. The JVM links dynamically while the program runs, at the moment each class is loaded.
 
 ## Objects and values
+
+A class bundles data with the functions that work on it. Before the first class, here are the library types the examples use, compared with their Java counterparts.
+
+- **Fundamental types:** `int`, `double`, `bool`, and `char` work as in Java.
+- **`const`** marks a value that cannot change, the job `final` does in Java.
+- **`std::string`** is a string you can modify. Two strings are compared by content with `==`, unlike Java, where `==` compares references.
+- **`std::vector<T>`** is an array that grows as you add elements, like Java's `ArrayList`.
 
 A class defines the memory layout of its objects and the member functions that operate on them.
 
 - **Non-static data members:** each object gets its own copy of them.
-- **Member functions:** there is only one copy of each function, shared by all the objects of the class.
-- **`this`:** this hidden parameter carries the address of the current object into every non-static member function, which is how one shared function knows which object to work on.
+- **Member functions:** there is only one copy of each function, shared by all the objects of the class. How one shared function knows which object to work on is explained below, under `this`.
 
 :::definition id=def-class title="Class and struct" source="materials/lectures/Chapter 3 - Classes and Objects.pptx"
 A class is a set of data members and member functions, together with access rules.
@@ -112,11 +155,19 @@ struct Point {
 
 :::
 
+:::trap
+- **The mistake:** forgetting the semicolon after a `class` or `struct` definition is one of the most common compile errors.
+- **Why the error message is confusing:** the grammar allows objects to be declared right after the closing brace, so the compiler keeps reading into the next line and reports the error there, not where the semicolon is missing.
+:::
+
+### Constructors and the initializer list
+
 A constructor (בנאי) gives the members their first values in an initializer list, which is written after a colon and before the constructor body.
 
 - **`const` members and reference members** must receive their values in that list, because it is the only place they can be initialized.
 - **The constructor body** runs after every member already exists, so assigning to a `const` member there is a compile error.
 - **Other members** are also best initialized in the list. An assignment in the body would first default-construct the member and then assign it again, which does the work twice.
+- **A delegating constructor** names another constructor of the same class in its initializer list, and lets that constructor do the work.
 
 The header file only declares the constructor.
 
@@ -142,9 +193,12 @@ Student::Student(const std::string& name, int year)
 
 ```
 
-A large object is usually passed as `const T&`, a reference to const.
+The constructor takes `name` as `const std::string&`, a reference to const. This is the usual way to pass a large object.
 
-- **Why:** the parameter then names the caller's object itself, so the call skips the copy, and `const` promises the function will not change that object.
+- **The reference** names the caller's object itself, so the call skips the copy.
+- **`const`** promises that the function will not change that object.
+
+### Reaching an object's members
 
 Where an object lives decides how you reach its members.
 
@@ -160,38 +214,6 @@ delete pb;
 
 ```
 
-### The this pointer, const member functions, and static
-
-Every non-static member function receives a hidden pointer named `this`.
-
-- **`this`** holds the address of the object the function was called on.
-- **A `const` member function** promises not to change the object's members. Inside it, `this` has the type `const ClassName*`.
-- **A `const` object** may call only `const` member functions, because only they promise to leave it unchanged.
-- **A `static` member function** belongs to the class, not to an object, so it has no `this` and cannot reach the non-static members.
-- **A delegating constructor** names another constructor of the same class in its initializer list, and lets that constructor do the work.
-
-### Returning an object from a member function
-
-Returning an object by value creates a copy.
-
-- **Returning a reference to a local is undefined behavior.** The local object is destroyed when the function returns, so the caller is left holding a reference to an object that no longer exists.
-- **Returning a reference is safe only when the object outlives the call.** A data member is a good example, because it lives as long as the object it belongs to.
-
-```cpp
-Image& myPicture() {
-    Image avi(...);
-    return avi;          // Undefined Behavior: avi is destroyed at function exit
-}
-
-```
-
-The special member functions control how an object is created, copied, and destroyed.
-
-- **Default constructor:** this constructor takes no arguments. The compiler generates one only when the class declares no constructor of its own.
-- **Copy constructor (בנאי העתקה):** this constructor builds a new object from an existing one, which it receives as `const ClassName&`.
-- **Copy assignment operator (אופרטור השמה):** runs when one existing object is assigned to another existing object.
-- **Destructor (הורס):** runs at the end of the object's lifetime and releases the resources the object acquired.
-
 :::check id=chk-dot-arrow
 Given `Student* pb = new Student("Benni", 2000);`, how do you call `print`?
 
@@ -203,6 +225,17 @@ Given `Student* pb = new Student("Benni", 2000);`, how do you call `print`?
 - **`->`** first dereferences the pointer and then reaches the member.
 - **`(*pb).print()`** is the same call, written with an explicit dereference followed by a dot. `(*pb)->print()` fails, because `*pb` is already an object, not a pointer.
 :::
+
+### The this pointer, const member functions, and static
+
+A call like `a.print()` runs the one shared `print` function. The function knows to print `a` because every non-static member function receives a hidden pointer named `this`.
+
+- **`this`** holds the address of the object the function was called on. In `a.print()`, `this` is `&a`.
+- **A `const` member function**, like `print() const` above, promises not to change the object's members. Inside it, `this` has the type `const ClassName*`.
+- **A `const` object** may call only `const` member functions, because only they promise to leave it unchanged.
+- **A `static` member function** belongs to the class, not to an object, so it has no `this` and cannot reach the non-static members.
+
+The next example puts the initializer list and a `static` function together.
 
 :::problem id=worked-initializer title="The initializer list" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=worked solution_origin=source
 Why must `Point` initialize `x` and `y` in the initializer list, and why does `Line` use a static function to initialize `len`?
@@ -231,10 +264,31 @@ struct Line {
 :::
 :::
 
-:::trap
-- **The mistake:** forgetting the semicolon after a `class` or `struct` definition is one of the most common compile errors.
-- **Why the error message is confusing:** the grammar allows objects to be declared right after the closing brace, so the compiler keeps reading into the next line and reports the error there, not where the semicolon is missing.
-:::
+### Returning an object from a member function
+
+Returning an object by value creates a copy. Returning a reference avoids the copy, but only if the object is still alive after the call.
+
+- **Returning a reference to a local is undefined behavior.** The local object is destroyed when the function returns, so the caller is left holding a reference to an object that no longer exists.
+- **Returning a reference is safe only when the object outlives the call.** A data member is a good example, because it lives as long as the object it belongs to.
+
+```cpp
+Image& myPicture() {
+    Image avi(...);
+    return avi;          // Undefined Behavior: avi is destroyed at function exit
+}
+
+```
+
+### The special member functions
+
+Creating, copying, and destroying objects is handled by four special member functions. If you do not write them, the compiler writes them for you.
+
+- **Default constructor:** this constructor takes no arguments. The compiler generates one only when the class declares no constructor of its own.
+- **Copy constructor (בנאי העתקה):** this constructor builds a new object from an existing one, which it receives as `const ClassName&`. It is what makes the copy when an object is passed or returned by value.
+- **Copy assignment operator (אופרטור השמה):** runs when one existing object is assigned to another existing object.
+- **Destructor (הורס):** runs at the end of the object's lifetime and releases the resources the object acquired.
+
+The versions the compiler writes copy each member one by one. That is correct for `Student`, whose members are a `std::string` and an `int`. The next chapter shows when it is not.
 
 ## Practice
 
@@ -276,7 +330,7 @@ This makefile has two targets.
 clean:
 	rm -rf bin
 
-hello: helloWorld.o run.o
+hello: bin/helloWorld.o bin/run.o
 	g++ -o bin/hello bin/helloWorld.o bin/run.o
 
 ```
@@ -290,7 +344,7 @@ hello: helloWorld.o run.o
 :::check id=ps1-makefile-first-target-q2
 What does that run do?
 
-- [ ] It links `bin/hello` from `helloWorld.o` and `run.o`
+- [ ] It links `bin/hello` from `bin/helloWorld.o` and `bin/run.o`
 - [x] It deletes the build products, and `hello` stays unbuilt
 - [ ] It builds `hello`, then deletes `bin`
 
