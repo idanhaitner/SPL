@@ -69,19 +69,24 @@ Every push to `main` runs [.github/workflows/pages.yml](.github/workflows/pages.
 
 ## Course map
 
-1. Memory model  
-2. Pointers  
-3. Classes and objects  
-4. Rule of three  
-5. Rule of five  
-6. Inheritance  
-7. Back to Java  
-8. Concurrency  
-9. Design by contract  
-10. Networking  
-11. Reactor  
-12. Serialization  
-13. Persistence  
+The chapters follow the order of the lecture notes.
+
+1. The run-time environment
+2. The memory model
+3. Variables, pointers, and references
+4. Classes and objects
+5. The rule of three
+6. The rule of five and smart pointers
+7. Inheritance and polymorphism
+8. Threads
+9. Safety and correctness
+10. Synchronization
+11. Waiting and liveness
+12. Communication between processes
+13. Server design and the reactor
+14. The command-invocation server
+15. Databases
+16. Course review
 
 ## License
 

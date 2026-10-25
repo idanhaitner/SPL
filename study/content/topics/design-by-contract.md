@@ -1,8 +1,12 @@
 ---
 id: design-by-contract
-title: Design by contract
+title: Safety and correctness
+blurb: "Which concurrent results are legal: invariants, preconditions, postconditions, safety, and correctness."
 sources:
+  - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/lectures/Chapter 8 - Concurrency.pptx"
   - "materials/lectures/Chapter 9 - Design by Contract.pptx"
+  - "materials/sessions/PS6-2026-1.pptx"
   - "materials/sessions/SPL_PS5.pptx"
   - "materials/exams/16-a.pdf"
   - "materials/exams/16-a-solution.pdf"
@@ -10,19 +14,332 @@ sources:
   - "materials/exams/18-a-solution.pdf"
   - "materials/exams/19-a.pdf"
   - "materials/exams/19-a-solution.pdf"
+  - "materials/exams/19-b.pdf"
+  - "materials/exams/19-b-solution.pdf"
   - "materials/exams/24-a.pdf"
   - "materials/exams/24-a-solution.pdf"
 ---
 
-This chapter shows how a method and its caller agree, before any code is written, on what counts as correct use.
+A concurrent run of a program can produce many different results. This chapter asks which of them are legal, and gives formal definitions for the answer.
 
-- **The three clauses:** a contract is made of a precondition, an invariant, and a postcondition.
-- **Whose bug it is:** when a clause is broken, the contract tells you whether the caller or the implementation is at fault.
-- **Practice:** you will read and write contracts for the course's examples and past exam questions.
+- **What can go wrong:** an even number that two threads advance, and the three results its schedules produce.
+- **Safety:** the invariant, the precondition, and the postcondition of an interface, a contract that says what a legal state of an object is.
+- **Correctness:** when a concurrent run is correct, compared with the serial runs of the same calls.
 
-## The three clauses of the contract
+## What can go wrong
 
-Design by contract writes that agreement down as three clauses. Each clause also says whose bug it is when the clause turns out false.
+We saw that a concurrent run of the program that prints `Hello` and `Goodbye` on two tasks can produce many outputs.
+
+```text
+Hello Goodbye
+Goodbye Hello
+HelGoodlobye
+...
+
+```
+
+Which results are legal? Can different levels of wrong results be told apart? How can that be defined formally?
+
+**Another example:** a program that defines an even number, and two tasks on it, each of which advances it by 2.
+
+```java
+class Even {
+    int val;
+    Even(int val) { this.val = val; }
+    public int get() { return val; }
+    public void next() { val++; val++; }
+}
+
+class Test {
+    public static void main(String[] args) {
+        Even e = new Even(0);
+        new Thread(() -> { e.next(); }).start();
+        new Thread(() -> { e.next(); }).start();
+    }
+}
+
+```
+
+How many atomic operations does the `run` method of each of the two threads have, that is, how many atomic operations are there in `Even`'s `next` method? `val++` is translated into three atomic operations (with the field `val` at address 100):
+
+```text
+read 100,R1
+inc R1
+write R1, 100
+
+```
+
+So `next` has six atomic operations, and between any two atomic operations, the run may move from one thread to the other.
+
+**The first schedule:** T1 runs all six operations, then T2 runs all six.
+
+```text
+T1:  1. read 100,R1   // 0      T2:  7. read 100,R1   // 2
+     2. inc R1        // 1           8. inc R1        // 3
+     3. write R1, 100 // 1           9. write R1, 100 // 3
+     4. read 100,R1   // 1          10. read 100,R1   // 3
+     5. inc R1        // 2          11. inc R1        // 4
+     6. write R1, 100 // 2          12. write R1, 100 // 4
+
+```
+
+In this schedule the even number went 0 → 2 → 4.
+
+**The second schedule:** T1 runs 1–3, T2 runs 4–6, T1 runs 7, T2 runs 8, then T1 runs 9–10 and T2 runs 11–12.
+
+```text
+T1:  1. read 100,R1   // 0      T2:  4. read 100,R1   // 1
+     2. inc R1        // 1           5. inc R1        // 2
+     3. write R1, 100 // 1           6. write R1, 100 // 2
+     7. read 100,R1   // 2           8. read 100,R1   // 2
+     9. inc R1        // 3          11. inc R1        // 3
+    10. write R1, 100 // 3          12. write R1, 100 // 3
+
+```
+
+In this schedule the even number went 0 → 3.
+
+**The third schedule:** the two threads alternate one operation at a time.
+
+```text
+T1:  1. read 100,R1   // 0      T2:  2. read 100,R1   // 0
+     3. inc R1        // 1           5. inc R1        // 1
+     4. write R1, 100 // 1           6. write R1, 100 // 1
+     7. read 100,R1   // 1           8. read 100,R1   // 1
+     9. inc R1        // 2          11. inc R1        // 2
+    10. write R1, 100 // 2          12. write R1, 100 // 2
+
+```
+
+In this schedule the even number went 0 → 2.
+
+So there are three different results: 2, 3, and 4. Which of them are correct? It looks like only 4, but why? That has to be defined. And can different levels of error be told apart in the results 2 and 3? Why, and how is that defined?
+
+### A race condition
+
+A **race condition** (מרוץ) happens when several threads access the same data at the same time, at least one of them writes it, and the result depends on how their steps happen to interleave.
+
+```java
+public void increment() { count++; }
+
+```
+
+- **`count++` is not one step.** It is a read-modify-write made of three steps: read the value, add 1, and write the new value back.
+- **The lost update:** if two threads both read 0, both compute 1 and both write 1, so one of the two increments is lost.
+
+![Two threads both read 0, both add 1, and both write 1, so one increment is lost](../../web/public/figures/race-interleaving.svg)
+
+:::problem id=worked-counter-race title="An interleaving that loses an update" source="materials/sessions/PS6-2026-1.pptx" kind=worked solution_origin=source
+Show an interleaving in which two calls to `increment()` lose an update.
+
+```java
+public void increment() {
+    int tmp = count;   // read
+    tmp = tmp + 1;     // add
+    count = tmp;       // write
+}
+
+```
+
+:::solution
+
+1. Thread t1 reads `count` (0).
+2. Thread t2 reads `count` (0).
+3. Thread t1 computes `tmp = 1` and writes `count` (1).
+4. Thread t2 computes `tmp = 1` and writes `count` (1).
+
+At the end, `count` holds 1, although any serial order of the two calls would give 2. Declaring `increment` `synchronized` makes the three steps one critical section, so this interleaving can no longer happen.
+:::
+:::
+
+The fix is to make the three steps run as one, so no other thread can slip in between them.
+
+The tools for that, locks among them, are the subject of [Synchronization](topic:synchronization).
+
+## Safety of an object
+
+**The goal:** to describe formally the problems in scenarios such as advancing an even number from 0 to 3. Define the idea of a "preserved property", the invariant, and of "preconditions" and "postconditions".
+
+**The invariant** (אינווריאנטה). Given an interface, define the preserved property as the set of conditions on the values returned by the interface's queries (its getters) that an instance of it may be in. You can think of the invariant as defining the legal states of the object.
+
+**For example, the `Even` interface:**
+
+```java
+interface Even {
+    int get();
+    void next();
+}
+
+```
+
+The "state" of an object of type `Even` is defined by the information its queries return, that is, by the value returned by `get()`.
+
+- **Syntactically,** `get` may return any whole number (in the range of `int`), including odd ones. So the set of possible states of an `Even` object is `{Integer.MIN_VALUE, ..., -3, -2, -1, 0, 1, 2, 3, ..., Integer.MAX_VALUE}`.
+- **The invariant of `Even`** cuts that down to a smaller set, the right one in terms of meaning: `{Integer.MIN_VALUE, ..., -2, 0, 2, ..., Integer.MAX_VALUE - 1}`.
+
+In other words, the invariant formally defines **the meaning of the interface**, instead of the informal explanation in the documentation or the context of the interface's name.
+
+How is the invariant defined formally? It is defined by conditions on the values returned by the interface's queries. For example, `get() % 2 == 0`. Technically, you write the invariant's conditions as a comment on the interface, with the tag `@INV`.
+
+```java
+interface Even {
+    // @INV: get() % 2 == 0
+    int get();
+    void next();
+}
+
+```
+
+Every future implementation of the interface must satisfy the invariant's criterion (usually it is checked by dedicated tests, as you will see).
+
+The invariant defines the meaning of the interface as a whole. **Preconditions and postconditions** define the meaning of every method of the interface.
+
+- **The precondition** (תנאי התחלה) defines the criterion that must hold before running a given method, as conditions on the values returned by the queries.
+  - **A constraint on the state of the object** the method runs on. For example, a method that drives a car to a destination requires the car to have enough fuel.
+  - **A constraint on the parameters** passed to the method. For example, the destinations may be only inside Israel.
+- **The postcondition** (תנאי סיום) defines the result of running the method, as conditions on the queries.
+  - **The state of the object** after the method runs. For example, the car's location after the driving method equals the destination parameter.
+  - **The returned value.** For example, the trip's cost is computed correctly from its properties as given in the queries.
+
+```java
+interface Even {
+    // @INV: get() % 2 == 0
+
+    // @PRE: none
+    // @POST: trivial (simple getter)
+    int get();
+
+    // @PRE: none
+    // @POST: get() == @PRE(get()) + 2
+    void next();
+}
+
+```
+
+The notation `@PRE(get())` means the value that `get()` had when the method was entered, before it changed anything.
+
+### Contracts for a stack
+
+A second example, the `Stack` interface:
+
+```java
+interface Stack<T> {
+    void push(T obj);
+    T pop();
+    boolean isEmpty();
+    boolean isFull();
+}
+
+```
+
+**Defining the stack's invariant.** The invariant is a constraint on the values returned by the queries. Check each query by itself, and also how they combine, to see whether there are values that do not fit the meaning of a stack.
+
+- **`isEmpty`:** a stack can be empty or not, so there is no constraint on the boolean value `isEmpty()` returns (if we wanted to define a stack that is never empty, we would put `isEmpty() == false` in the invariant).
+- **`isFull`:** likewise, a stack can be full or not, so there is no constraint.
+- **`pop`:** what does the object returned by `pop` mean? It is the last object pushed onto the stack, the method's return value. Is there a general constraint on the type of the object returned (beyond its being of the stack's type `T`)? Can it return `null`, in other words, can the stack hold objects that are not defined? Assume that `null` cannot be stored in the stack: `pop() != null`.
+- **`isEmpty` and `isFull` together:** can the stack be both empty and full? Assume not: `!(isEmpty() && isFull())`.
+
+```java
+interface Stack<T> {
+    // @INV: !(isEmpty() && isFull()) && pop() != null
+
+    void push(T obj);
+    T pop();
+    boolean isEmpty();
+    boolean isFull();
+}
+
+```
+
+**Preconditions and postconditions.**
+
+`push`:
+
+- **Precondition:** the parameter `obj` cannot be `null` (`@param obj != null`), and the stack cannot be full (`!isFull()`).
+- **Postcondition:** the stack is not empty (`!isEmpty()`). The contents of the stack from the start of the method did not change: ??? (there are no "pure" queries that do not change the stack that could describe it). The object passed as a parameter is at the top of the stack: ??? (it cannot be described with a "pure" query that does not change the stack).
+
+`pop`:
+
+- **Precondition:** the stack cannot be empty (`!isEmpty()`).
+- **Postcondition:** the stack is not full (`!isFull()`). The contents of the stack from the start of the method did not change, except for the last element: ??? The object returned was at the top of the stack, the last object pushed: ???
+
+**Design principles.** Sometimes you must extend the existing interface, so that the preconditions, postconditions, and invariant can be defined more exactly. Build a basic infrastructure for defining the conditions.
+
+- **Separate the interface's queries, which do not change the object, from its commands, which change the object but do not return anything.** In the basic version of the `Stack` interface you cannot separate them, because `pop` changes the object and also returns something. This is called command-query separation (CQS).
+- **Separate basic queries and commands from derived ones,** which are specific uses of basic queries and commands.
+
+For the `Stack` interface:
+
+1. **Add three methods:**
+
+```java
+T itemAt(int i);
+int size();
+int capacity();
+
+```
+
+2. **Separate queries from commands.** Instead of `pop`, define a query and a command:
+
+```java
+T top();
+void remove();
+
+```
+
+**Basic versus derived.** These methods derive from the basic ones, meaning they can be carried out with simple use of them:
+
+```text
+top()     ≡  itemAt(size() - 1)
+pop()     ≡  top() && remove()
+isEmpty() ≡  size() == 0
+isFull()  ≡  size() == capacity()
+
+```
+
+**The bottom line:** define the invariant, and the preconditions and postconditions of the **basic commands**, in terms of the **basic queries**.
+
+```java
+interface Stack<T> {
+    // @INV: 0 <= size() <= capacity() &&
+    //       ∀i < size() - 1, itemAt(i) != null
+
+    T itemAt(int i);
+    int size();
+    int capacity();
+
+    // @PRE: size() > 0
+    // @POST: size() == @PRE(size()) - 1 &&
+    //        ∀i < size() - 1, itemAt(i) == @PRE(itemAt(i))
+    void remove() throws Exception;
+
+    // @PRE: @param obj != null && size() < capacity()
+    // @POST: size() == @PRE(size()) + 1 && itemAt(size() - 1) == @param obj &&
+    //        ∀i < size(), itemAt(i) == @PRE(itemAt(i))
+    void push(T obj) throws Exception;
+
+    T top();
+    boolean isEmpty();
+    boolean isFull();
+    T pop();
+}
+
+```
+
+### Defining safety
+
+:::definition id=def-safety title="Safety" source="materials/notes/lecture-notes.docx.pdf"
+
+- **A safe object:** an object is safe if the invariants of every interface it implements hold throughout the program's run.
+- **A safe run:** a run of a program is safe if all of its objects are safe.
+:::
+
+- **The run that reached the even number 3 is not safe.** The run that reached the even number 2 is safe.
+- **Is the run that printed `HelGoodbyelo` safe?** Since no invariant was defined for the print task (for example, that it must print words from the English dictionary), the program is safe according to the definition.
+
+## The contract between a method and its caller
+
+The lecture slides present the same three clauses as a contract that also says whose bug it is when a clause turns out false.
 
 :::definition id=def-dbc title="Precondition, invariant, and postcondition" source="materials/lectures/Chapter 9 - Design by Contract.pptx"
 
@@ -40,43 +357,6 @@ Defensive programming and a contract answer different questions.
 
 - **Defensive programming** checks the inputs at run time and throws an exception when an input is invalid.
 - **A contract** decides, at design time, who is responsible for making sure the data is valid. The method does not have to re-check what the caller already promised.
-
-### Command-query separation (CQS)
-
-Contracts are easier to state and to test when commands and queries are separate.
-
-- **Query:** a method that returns information and leaves the object's state unchanged, such as `size()`.
-- **Command:** a method that changes the object's state and returns no value, such as `push`.
-- **Why it helps:** a postcondition can then use queries to describe what a command did, without the queries changing anything themselves.
-
-```java
-/**
- * @inv isEmpty() == (size() == 0)
- * @inv size() >= 0
- */
-public interface Stack<T> {
-    /**
-     * @pre obj != null
-     * @post size() == size()@pre + 1
-     * @post top() == obj
-     */
-    void push(T obj);
-
-    /**
-     * @pre !isEmpty()
-     * @post size() == size()@pre - 1
-     */
-    void removeTop();
-
-    /**
-     * @pre !isEmpty()
-     */
-    T top();
-}
-
-```
-
-The notation `size()@pre` means the value that `size()` had when the method was entered, before it changed anything.
 
 :::problem id=worked-crop-contract title="The contract for crop" source="materials/lectures/Chapter 9 - Design by Contract.pptx" kind=worked solution_origin=source
 State the precondition, the invariant, and the postcondition of `crop`, an image method that keeps only the rectangle starting at (`x`, `y`) with width `w` and height `h`.
@@ -109,7 +389,79 @@ void crop(int x, int y, int w, int h);
 - **The method owes nothing:** when the precondition does not hold, the method is not required to establish its postcondition.
 :::
 
+## Correctness of a concurrent run
+
+How do you formally define the problems of the scenario that printed `HelGoodbyelo`, and of the run that took the even number from 0 to 2?
+
+:::definition id=def-correctness title="Correctness" source="materials/notes/lecture-notes.docx.pdf"
+The idea of correctness describes the run of a program, beyond the correctness of each of its objects.
+
+- **A serial run is correct** if every method that was run satisfied the postcondition defined for it. In other words, all the operations in the code ran correctly.
+- **For a concurrent run that is not enough.** In the third schedule of the even number, the postcondition of `next` holds for each thread separately (each one saw `get()` go from 0 to 2), yet the program as a whole is not correct: it reached 2 instead of 4.
+- **A concurrent run is correct** if the result of running the methods concurrently could have been obtained by some serial run of the methods, in any order.
+:::
+
+Some examples:
+
+- **`Hello Goodbye`:**
+  - Method A runs `run` on a `MsgPrinter` with the field `Hello`.
+  - Method B runs `run` on a `MsgPrinter` with the field `Goodbye`.
+  - A serial run in the order A then B gives `Hello Goodbye`, and in the order B then A gives `Goodbye Hello`.
+  - **The set of legal results is `{Hello Goodbye, Goodbye Hello}`.** The concurrent run that reached `HelGoodbyelo` is not correct, because that result is not in the set of legal results.
+- **`Even`:**
+  - Method A runs `next`, advancing the even number by 2.
+  - Method B runs `next`, advancing the even number by 2.
+  - A serial run in the order A then B gives 4, and in the order B then A also gives 4.
+  - **The set of legal results is `{4}`.** The concurrent run that reached 2 is not correct, because that result is not in the set of legal results.
+
+So the run that reached 3 is neither safe nor correct, and the run that reached 2 is safe but not correct.
+
 ## Practice
+
+:::problem id=ps6-counter-race title="A counter without a lock" source="materials/sessions/PS6-2026-1.pptx" kind=exercise solution_origin=source
+Two threads each call `cnt.increment()` once on the same object of this class. The constructor starts `count` at 0.
+
+```java
+public class Counter {
+    private int count;
+    public Counter() { count = 0; }
+    public void increment() { count++; }
+    public int getValue() { return count; }
+}
+```
+
+:::check id=ps6-counter-race-q1
+Which results can two completed calls to `increment` leave in `count`?
+
+- [x] 2, when one call finishes before the other starts
+- [ ] 0, because the two writes cancel
+- [x] 1, when both threads read 0 before either of them writes
+
+- **The result can be 2:** when one call finishes before the other starts, as in a serial run.
+- **The result can be 1:** when both threads read 0 before either one writes, so one increment is lost.
+- **The result cannot be 0:** each thread writes at least the value 1.
+:::
+
+:::check id=ps6-counter-race-q2
+The body is {{=read count into a register|lock the object|call wait}}, then {{=add 1 to that register|notify a waiter|call join}}, then {{=write the register back to count|delete count|allocate a new counter}}.
+
+Those are the three steps of `count++`: read `count` into a register, add 1 to the register, and write the register back to `count`.
+:::
+
+:::check id=ps6-counter-race-q3
+Which repairs match the two failures?
+
+- [ ] `volatile` makes the three steps of `count++` mutually exclusive
+- [x] `volatile`, or the same lock on the write and on the read, repairs a stale `getValue`
+- [ ] A lock only around `getValue` repairs the lost update
+- [x] A lock that makes the three steps mutually exclusive repairs the lost update
+
+- **The class has two separate failures.** `increment` can lose updates, and `getValue` can return a stale value that another thread has already changed.
+- **Fixing the stale read:** make `count` `volatile`, or use the same lock for both the write and the read, so that the write is guaranteed to be visible (it "happens before" the read).
+- **Fixing the lost update:** only making the three steps of `count++` mutually exclusive helps. `volatile` does not, and a lock around `getValue` alone does not.
+:::
+
+:::
 
 :::problem id=ps5-stack-contract title="The contract for Stack" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
 `Stack` has `push`, `top`, `isEmpty`, and `size`. `push` rejects null. `top` returns the last element that was pushed and does not remove it. `size` is never negative, and an empty stack has size 0.
@@ -317,9 +669,48 @@ What is true of the published `add` when two threads run it?
 :::
 :::
 
-A contract still applies when several threads call the object, and the implementation must keep it true.
+:::problem id=exam-19b-q2 title="A sorted tree" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
+`SortedBinaryTree` states this invariant:
 
-- **The invariant under concurrency** is still a fact about the data that holds whenever no public method is running.
-- **Interleaving** of threads, which you saw in [Concurrency](topic:concurrency), is what can break it.
-- **How to write an invariant:** state it as a fact about the data. A sentence that only says "the method is `synchronized`" describes the implementation and leaves the actual fact unstated.
-- **Next:** [Networking](topic:networking) moves from threads inside one process to communication between processes.
+```java
+//@INV: getData() != null &&
+// (getLeft() == null || getData().compareTo(getLeft().getData()) > 0) &&
+// (getRight() == null || getData().compareTo(getRight().getData()) < 0)
+```
+
+- **Insertion** walks down the child pointers to find the right place. The pointers are `volatile`, but the walk takes no lock.
+- **An alternative design** protects the same tree with a readers-writer lock.
+
+:::check id=exam-19b-q2-q1
+Start from a node that holds 5, with null children. Which interleaving breaks the invariant?
+
+- [ ] Both threads lock the root, so the second insert waits and the tree keeps 4
+- [x] A reads `left == null` to insert 3, B writes the node 4 into `left`, then A overwrites `left` with the node 3
+- [ ] A and B both write `right`, and the `compareTo` order stays true
+- [ ] The `volatile` pointers make the null check and the assignment one step, so the second insert sees the first child
+
+Both threads saw `left == null` before either wrote it, so A's write replaced B's. The node 4 is now disconnected, and the tree has lost a value. `volatile` makes each single write visible, but it does not make "check, then write" one step.
+:::
+
+:::check id=exam-19b-q2-q2
+Lock every node from the {{=root downward|leaf upward|left child only}}. Hold the lock on a node while the insertion {{=reads that node's child|calls wait|releases the parent}}, and, when the insertion updates that child, hold the same lock while it {{=writes the child|calls notifyAll|reads the root}}.
+
+This technique is called hand-over-hand locking. Because a node stays locked from the moment its child is read until the child is written, two insertions that reach the same node take turns on it, and neither can overwrite the other's child.
+:::
+
+:::check id=exam-19b-q2-q3
+What does a `ReadWriteLock` change?
+
+- [ ] `insert` takes the read lock, and `contains` takes the write lock
+- [ ] A `contains` that arrives during a write proceeds, because the read lock is shared with the writer
+- [ ] Readers and a writer all run together on the node being changed
+- [x] Concurrent `contains` calls take the read lock and overlap, and `insert` takes the write lock
+
+With a `ReadWriteLock`, many `contains` calls can take the read lock and run at the same time, while `insert` takes the write lock and runs alone. A `contains` that arrives during an insert waits until the insert finishes.
+:::
+
+:::
+
+To sum up, safety is defined on objects, through the invariant of each interface, and correctness is defined on runs, by comparing a concurrent run with the serial runs of the same methods.
+
+- **Next:** [Synchronization](topic:synchronization) shows the ways to keep a concurrent run safe and correct.

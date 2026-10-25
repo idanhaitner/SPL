@@ -1,40 +1,92 @@
 ---
 id: networking
-title: Networking
+title: Communication between processes
+blurb: "Why processes communicate, network layers, sockets and ports, and UDP versus TCP."
 sources:
+  - "materials/notes/lecture-notes.docx.pdf"
   - "materials/lectures/Chapter 10 - Networking.pptx"
   - "materials/sessions/PS9 2026.pptx"
-  - "materials/sessions/SPL_PS10.pptx"
-  - "materials/exams/15-b.pdf"
-  - "materials/exams/15-b-solution.pdf"
-  - "materials/exams/16-a.pdf"
-  - "materials/exams/16-a-solution.pdf"
-  - "materials/exams/17-b.pdf"
-  - "materials/exams/17-b-solution.pdf"
-  - "materials/exams/20-b.pdf"
-  - "materials/exams/20-b-solution.pdf"
 ---
 
-This chapter shows how two processes exchange data, whether they run on the same machine or on opposite sides of a network.
+So far the course dealt with concurrency of several threads inside one process. This chapter moves to processes that talk to each other, usually on different computers.
 
-- **Layers:** the network is built in four layers (application, transport, network, and link), and each one has its own job.
-- **Sockets:** a socket is how a client and a server open a conversation in this course's Java code.
-- **Bytes on the wire:** TCP and UDP carry the bytes, and the application must agree on how those bytes form messages.
+- **Why processes communicate:** the scenarios that need it, and the client-server architecture that this part of the course uses.
+- **The network:** its layers, and the concepts of host, IP address, socket, and port.
+- **The two kinds of connection:** UDP and TCP, and a print server written with each.
 
-## The layer model
+## Why processes communicate
 
-Networking in this course uses a client-server model: the server runs all the time and waits, and a client starts a conversation by connecting to it through a socket.
+So far the course dealt with a concurrency model of several threads in one process:
 
-A message on its way from the client to the server passes through four layers. Each layer does one job and relies on the layer below it for the rest.
+- **one memory space** for all the threads (a shared heap),
+- **a stack of its own** for each thread,
+- **autonomy over the processor** (even when the processor is shared by several threads, the values in the registers are specific to each thread).
 
-| Layer | Role | Unit of data |
+It turns out that this concurrency model, in which several tasks run concurrently in one process, is not enough for common applications that need concurrency. For example:
+
+1. **Several processes on the same computer that need to cooperate,** and in particular to "talk" to each other (less common).
+   - **An application for building a timetable** (a real case):
+     - the scheduling engine (an implementation of the algorithm that solves all the constraints) is a process in the logic language Prolog,
+     - the user interface is implemented in Java,
+     - so ongoing communication is needed between the two processes.
+   - **An application for managing a newsroom:**
+     - the application is in C++, and includes a word processor,
+     - the spell check is done by a separate process (because of the complexity of a spell check in Hebrew), `ispell` or `aspell`.
+2. **Two processes running on different computers.**
+   - **The client-server architecture:**
+
+```text
+Web Client  -- GET www.cs.bgu.ac.il/~spl212/a.html\n -->  Web Server
+Web Client  <-------------- a.html -------------------  Web Server
+
+Price Client -- GET-PRICE iphone4.1; -->  Price Server
+Price Client <-- [<store17, 1500>, <store48, 1600>]; --  Price Server
+
+```
+
+   - **The peer-to-peer architecture,** in which every process talks directly to several others, with no central server.
+3. **A cluster of computers in the cloud** that run a "big data" job together (cloud computing), or a complex algorithm that needs more concurrency than the number of threads possible in one process.
+
+This part of the course focuses on the client-server architecture, the most common one. In particular, it goes through the different communication problems for its design, up to defining a general, efficient server pattern.
+
+## The architecture of the network
+
+Communication between different computers on such a network relies on different levels of communication and services, or, if you like, an architecture of several "layers".
+
+To explain this, look at what happens when you send a letter to a friend.
+
+| Sender | Post office | Receiver |
 | --- | --- | --- |
-| **Application** | The application-level protocol (HTTP, STOMP, FTP) | Message |
-| **Transport** | End-to-end communication between processes (TCP, UDP) | Segment / datagram (דטגרם) |
-| **Network** | Routing packets across the network (IP) | Packet |
-| **Link** | Carrying bits over the physical medium | Frame |
+| Write the letter, put it in an envelope, mark the sender and receiver addresses, drop the envelope in the mailbox | Collect letters from the mailboxes, move them to the local post office, sort them by address, move them between post offices along a route that fits the addresses, check that no part was lost on the way | Take the letter out of the mailbox, read it, answer it |
+
+A computer network works the same way, in layers.
+
+| Layer | What it does | Unit of data |
+| --- | --- | --- |
+| **Application** | The layer we write in: applications, programs that rely on communication with other processes. Communication with other processes goes through an interface given by the transport layer (a service of the run-time environment), with operations to receive or read and to write or send | Message |
+| **Transport** | The abstraction of a direct connection between processes for the application layer. It is responsible for moving the information that arrives at the router to the right place in the local process, and in the other direction, for moving information sent by a process on the computer to the network layer. It also provides extra services (examples later). The existing implementations are the TCP and UDP protocols | Segment / datagram (דטגרם) |
+| **Network** | Moving units of information across the network, along a route of "routers" from one remote node to another (implementing routing algorithms). It also defines the network addresses (IP) | Packet |
+| **Data link** | Moving bits from one node to its neighbor. Error detection, error correction, and so on | Frame |
 
 ![Four layers, application on top, then transport, network, and link](../../web/public/figures/network-layers.svg)
+
+The rest of the chapter relies on the services given by the transport layer.
+
+## Concepts of communication between processes
+
+- **Host:** a station on the network, a computer connected to the network.
+- **IP address:** the address of a host on the network. The IP protocol of the network layer defines the address space as a number of 32 bits, displayed as four numbers in the range 0–255, for example `132.23.45.107`. You can also describe the address with a name such as `www.cs.bgu.ac.il`, when there is a name server, DNS, that translates such names into IP addresses.
+- **Communication:** exchanging information between two processes running on hosts. The basic unit of information that passes through the network's sub-layers is called a packet.
+- **Socket:** the interface given by the transport layer to processes that want to manage communication in the application layer. This interface usually includes operations of sending or writing, and receiving or reading.
+  - You can think of a socket as an "opening" of the process to the outside, through which it can receive or send information (like a mailbox, or a telephone receiver).
+  - In terms of the implementation: when you receive a socket from the transport layer, following a call to the system, the operating system defines two arrays of bytes, "buffers", for it: one holds the bytes to send, and the other the bytes that arrived from the network. The transport layer then moves the bytes from the network into the receive buffer, and sends bytes from the write buffer to the network.
+- **Port:** to let a process manage several conversations at once, with several processes, you mark the different sockets the process uses (one for each conversation). The port number serves this purpose, like a telephone number, or a mailbox number in a building.
+- **A note:** in practice, communication between two processes, through two sockets, can be identified uniquely by this quadruple:
+
+```text
+<source host address, source host port, target host address, target port>
+
+```
 
 :::definition id=def-host-port title="IP address and port" source="materials/lectures/Chapter 10 - Networking.pptx"
 
@@ -43,7 +95,46 @@ A message on its way from the client to the server passes through four layers. E
 - **Together:** an IP address and a port identify exactly one endpoint of a conversation.
 :::
 
-### TCP and UDP
+## Two kinds of connection
+
+The transport layer provides two kinds of connection between processes. You can characterize such connections by several parameters.
+
+- **Is the connection between the processes session-oriented, or datagram-oriented?**
+  - **Session-oriented** (like a phone call):
+    - a procedure for setting up the connection (which includes the address and so on) is needed, and the other side must be available at that moment,
+    - a free transfer of bytes, in both directions, a "stream of bytes", with no need to state the address again and again,
+    - the responsibility for interpreting the bytes as "messages" lies with the parties,
+    - the parties decide when the conversation ends.
+  - **Datagram-oriented** (like sending a letter by mail):
+    - there is no setting up of a "connection", and the other side does not need to be connected right now,
+    - the unit transferred is a "message", not just a stream of bytes, so the address must be stated in every message sent,
+    - the receiver receives the bytes already in the structure of a message,
+    - the connection ends after every message is received. There is no "conversation" in the simple sense; the conversation is a series of message transfers.
+- **The "topology" of the connection** between the processes (in terms of the number of processes taking part, and the relations between them):
+  - **unicast:** one process to one process,
+  - **multicast:** one process to several processes.
+- **The level of "extra services"** that come with the connection (examples below).
+
+The two kinds of connection provided by the transport layer are:
+
+- **UDP (User Datagram Protocol):**
+  - datagram-oriented,
+  - supports unicast and also multicast,
+  - limited extra services:
+    - **reliability:** if messages A and B were sent, they may not arrive (you may receive A or B, or neither), they may arrive in the reverse order (you receive B, A), but whatever arrives is free of errors (you will not receive C).
+- **TCP (Transmission Control Protocol):**
+  - session-oriented,
+  - supports only unicast,
+  - wider extra services:
+    - **reliability:** the messages sent arrive (unless the network failed, or the processes crashed), in the order they were sent, with no errors (if A and B were sent, you will receive A, B),
+    - **flow control:** control over the rate of sending messages, according to the load on the network, and the number of messages not yet handled,
+    - ...
+
+**The bottom line:** when you write applications or programs that want to send information to another process, you can ask for a socket from the transport layer according to one of the two kinds of connection, TCP or UDP.
+
+In most cases TCP is chosen, because of its reliability, but there are quite a few applications that use UDP, because of its speed (video streaming, for example), or because they must send an alert to a group of processes that want that information.
+
+In summary:
 
 | Property | TCP | UDP |
 | --- | --- | --- |
@@ -59,7 +150,96 @@ TCP and UDP differ in how the bytes reach the application.
 - **UDP has no connection.** There is no `accept`; the server simply receives datagrams from anyone.
 - **A UDP datagram arrives whole or not at all.** It may be lost or arrive out of order, but it is never split or merged with another datagram.
 
-### Sockets in Java
+## A print server over UDP and over TCP
+
+Implement a client-server program for printing strings on the screen: the client sends a string to the server, and the server prints it. Do it for both kinds of connection.
+
+### UDP
+
+```java
+class UDPPrintClient {
+    public static void main(String[] args) throws Exception {
+        // 1. Get the address (host:port) of the server
+        String serverIP = args[0];                 // 132.4.5.6
+        int serverPort = Integer.parseInt(args[1]); // 7000
+
+        // 2. Define the [udp] interface of the server (the 'Mail Box')
+        DatagramSocket socket = new DatagramSocket();
+        // 3. Define a packet for sending (the 'letter')
+        String msg = "Hello World";                // the content
+        DatagramPacket packet = new DatagramPacket(msg.getBytes(), msg.getBytes().length,
+            InetAddress.getByName(serverIP), serverPort);   // (the 'envelope')
+        // 4. Send the packet to the server ('put the envelope in the mail box')
+        socket.send(packet);
+        socket.close();
+    }
+}
+
+class UDPPrintServer {
+    public static void main(String[] args) throws Exception {
+        // 1. Get the address port of which the server listens
+        int port = Integer.parseInt(args[0]);      // 7000
+        // 2. Define the [udp] interface of the clients (the 'Mail Box')
+        DatagramSocket socket = new DatagramSocket(port);
+        while (!Thread.currentThread().isInterrupted()) {
+            // 3. Define an empty packet for receiving (an empty 'letter')
+            // part of the application protocol, limited msg length
+            byte[] content = new byte[256];
+            DatagramPacket packet = new DatagramPacket(content, content.length);
+            // 4. Receive a packet content from the client
+            socket.receive(packet);
+            String msg = new String(content, ...);
+            System.out.println(msg);
+        }
+        socket.close();
+    }
+}
+
+```
+
+### TCP
+
+```java
+class TCPPrintClient {
+    public static void main(String[] args) throws Exception {
+        // 1. Get the address (host:port) of the server
+        String serverIP = args[0];                  // 132.4.5.6
+        int serverPort = Integer.parseInt(args[1]);  // 7000
+        Socket socket = new Socket(serverIP, serverPort);
+        String msg = "Hello World";
+        for (byte b : msg.getBytes())
+            socket.getOutputStream().write(b);
+        // indicate end of message (for the case of TCP)
+        socket.getOutputStream().write("\n");
+        socket.close();
+    }
+}
+
+class TCPPrintServer {
+    public static void main(String[] args) throws Exception {
+        // 1. Get the port of the server
+        int port = Integer.parseInt(args[0]);       // 7000
+        // 2. Define an interface for accepting new client connections ('switchboard')
+        ServerSocket serverSocket = new ServerSocket(port);
+        while (!Thread.currentThread().isInterrupted()) {
+            // wait for some client connection
+            Socket socket = serverSocket.accept();
+            List<Byte> receivedBytes = new LinkedList<Byte>();
+            while (true) {
+                byte b = socket.getInputStream().read();
+                if (b == '\n')
+                    break;
+                else
+                    receivedBytes.add(b);
+            }
+            String msg = new String(receivedBytes.toArray(), ...);
+            System.out.println(msg);
+            socket.close();
+        }
+    }
+}
+
+```
 
 **A TCP server** waits in `accept` for a client to connect. It then wraps the connection's byte streams in a reader and a writer that agree on an encoding (UTF-8).
 
@@ -106,7 +286,7 @@ while (true) {
 
 - **With an accept loop:** the server handles one client until it is finished, then calls `accept` again. Client 2 is served, but only after client 1's conversation ends.
 - **The name of this pattern:** a single-threaded, or iterative, server.
-- **Serving both at once:** that needs a separate thread for each client, or the non-blocking loop from the Reactor chapter.
+- **Serving both at once:** that needs a separate thread for each client, or the non-blocking loop from [Server design and the reactor](topic:reactor).
 :::
 :::
 
@@ -121,6 +301,20 @@ Which protocol preserves order and retransmits a lost segment?
 - **UDP** keeps each datagram whole, but it does not retransmit and does not guarantee order.
 - **IP** only routes packets between machines, and guarantees neither delivery nor order.
 :::
+
+### What is fixed in this design
+
+The design above makes a number of specific decisions.
+
+- **Encoding the strings into bytes** is done in a specific way (Java's default, with `getBytes`).
+- **[For TCP] The decision how to mark the boundaries of messages** (with a newline as the delimiter).
+- **The internal structure of a message** (one parameter: the string to print).
+- **The server's reaction to receiving a message** (printing on the screen).
+- **When the conversation with a client ends** (after one message).
+- **The way the server handles several clients** (with threads, serially).
+- ...
+
+So define a general server pattern that receives all the decisions above as parameters. That is the subject of [Server design and the reactor](topic:reactor).
 
 ## Practice
 
@@ -204,213 +398,6 @@ The class that applies the charset to the socket input is {{=InputStreamReader|B
 :::
 :::
 
+To sum up, processes talk through sockets given by the transport layer, and choose between UDP, which sends whole datagrams with no connection or guarantees, and TCP, which keeps a reliable, ordered stream of bytes over a connection.
 
-:::problem id=ps10-stomp title="STOMP frames" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
-A client wants to receive messages for `/topic/a`.
-
-:::check id=ps10-stomp-q1
-What does the client send first, and what does it send after it has read the reply?
-
-- [ ] `SUBSCRIBE`, then `CONNECT`
-- [ ] `MESSAGE`, then `SUBSCRIBE`
-- [x] `CONNECT` with `accept-version` and `host`, then `SUBSCRIBE` with `id` and `destination`
-
-- **First:** the client sends `CONNECT` with the headers `accept-version` and `host`, and waits for the server's `CONNECTED` frame.
-- **The reply:** `CONNECTED` carries a `version` header, which names the protocol version the session will use.
-- **Then:** the client sends `SUBSCRIBE` with an `id`, such as `sub-1`, and `destination:/topic/a`.
-:::
-
-:::check id=ps10-stomp-q2
-Which of these hold after that `SUBSCRIBE`?
-
-- [x] If the server cannot create the subscription, it sends `ERROR` with a `message` header
-- [ ] The headers are rejected unless `id` comes before `destination`
-- [x] A subscription that succeeded later delivers `MESSAGE` frames whose `destination` is `/topic/a`
-
-- **On failure:** if the server cannot create the subscription, it sends an `ERROR` frame with a `message` header that explains why.
-- **On success:** every later message sent to `/topic/a` reaches the client as a `MESSAGE` frame whose `destination` is `/topic/a`.
-- **Header order:** STOMP headers may appear in any order.
-:::
-
-:::check id=ps10-stomp-q3
-Every frame ends with {{=a null character|a newline|a length prefix}}.
-
-Every STOMP frame ends with the null character `'\0'`, which is how the receiver knows the frame is complete.
-:::
-
-:::check id=ps10-stomp-q4
-How does the client leave before closing the socket when it wants a receipt?
-
-- [x] It sends `DISCONNECT` with a `receipt` header, and the server answers `RECEIPT`
-- [ ] It sends `UNSUBSCRIBE` and waits for another `CONNECTED`
-- [ ] It closes the socket, and the server answers `ERROR`
-
-To leave politely, the client sends `DISCONNECT` with a `receipt` header. The server answers with a `RECEIPT` frame, which confirms it has processed everything the client sent, and only then does the client close the socket.
-:::
-:::
-
-:::examnote
-- **What the question looks like:** it asks you to replace a delimiter with a length prefix, to cap the number of clients, or to design a small command protocol on top of the existing server.
-- **The usual traps:** treating one TCP read as one whole message, or forgetting that UDP has no `accept`.
-:::
-
-:::problem id=exam-15b-q3 title="A spell-check server" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-The message server in the exam's appendix is a thread-per-client server, which starts one thread for each accepted socket. The question changes it as follows.
-
-- **At most 10 handlers** may run at the same time.
-- **`MessageLengthBasedTokenizer`** frames each message as a length followed by exactly that many bytes, replacing the delimiter used in class.
-- **`SpellMessageEncoder`** turns a `SpellMessage` into bytes and back.
-- **The spell-check server** uses `SpellMessage`, that framing, and a thread-safe `LexiconBasedSpellChecker` with an empty constructor.
-
-:::check id=exam-15b-q3-q1
-Which body caps the running handlers at 10?
-
-- [ ] `new Thread(connectionHandler).start()` for every accepted socket
-- [ ] `Executors.newFixedThreadPool(10)` created inside each handler, after `accept` has returned
-- [x] `ExecutorService executor = Executors.newFixedThreadPool(10);` and `executor.execute(connectionHandler)` for each accepted socket
-
-- **The official solution** creates one pool of 10 threads and calls `executor.execute(connectionHandler)` for each accepted socket.
-- **The accept loop** stays on the main thread, so the server keeps accepting connections.
-- **The cap:** the pool has only 10 threads, so at most 10 handlers run at once.
-- **Extra connections:** an 11th handler waits in the pool's queue until a thread is free.
-- **Why the second option is wrong:** a new pool per handler gives no shared limit at all.
-:::
-
-:::check id=exam-15b-q3-q2
-`nextMessage` returns only after the tokenizer has the integer length and then {{=that many payload bytes|a delimiter|one line}}.
-
-- **How the tokenizer works:** it collects bytes until it has read the integer length, then keeps collecting until it has exactly that many payload bytes.
-- **When `nextMessage` returns:** only after the whole payload has arrived.
-- **No delimiter:** with a length prefix, the tokenizer never searches for a delimiter.
-:::
-
-:::check id=exam-15b-q3-q3
-Which of these hold for the encoder and the handler?
-
-- [x] The encoder writes the request type, the language, and the word, in an agreed order, with the length prefix the tokenizer expects
-- [x] `fromBytes` rebuilds a `SpellMessage`
-- [ ] The handler examines a delimiter and skips `SpellMessageEncoder`
-
-The handler is built with `new SpellMessageEncoder()`, `new MessageLengthBasedTokenizer()`, and a protocol object. The protocol reads `SpellMessage.getRequest()` and calls either `LexiconBasedSpellChecker.check` or `getCorrections`. The handler never looks for a delimiter.
-:::
-
-:::check id=exam-15b-q3-q4
-Which of these hold for `SpellChecker` and the client?
-
-- [ ] Each handler builds a private checker, because the implementation is not safe to share
-- [x] `SpellChecker` stays the interface, and the handlers share one instance because the implementation is already thread-safe
-- [x] The client opens a `Socket` to the host and port, sends one encoded `SpellMessage`, and reads one framed reply
-
-- **`SpellChecker`** stays the interface that the handlers program against.
-- **One shared instance is fine:** the implementation is already thread-safe, so all handlers can share a single checker.
-- **The client** opens a `Socket` to the server's host and port, sends one encoded `SpellMessage`, and reads one framed reply.
-:::
-:::
-
-:::problem id=exam-16a-q3 title="A printer protocol" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-A printer service was originally an RMI interface with one method, `Printer.print(String)`. The question changes it as follows.
-
-- **A protocol server** replaces the stub and skeleton that RMI generated.
-- **At most ten handler threads** may run at once.
-- **Messages are framed with a length prefix** that fits in a Java `int`, instead of the delimiter used before.
-- **The same service also runs over UDP.**
-- **A `Math` interface** gets a hand-written stub and skeleton in the same style.
-
-:::check id=exam-16a-q3-q1
-Which body caps the printer handlers at ten?
-
-- [x] `Executors.newFixedThreadPool(10)` around the connection handler
-- [ ] `new Thread(connectionHandler).start()` for every accepted socket, with no pool
-- [ ] `Executors.newFixedThreadPool(Integer.MAX_VALUE)` around the connection handler
-
-A fixed pool of 10 threads runs the connection handlers, exactly as in the official solution for the message server. A pool of `Integer.MAX_VALUE` threads would set no real limit.
-:::
-
-:::check id=exam-16a-q3-q2
-The length occupies the first {{=four bytes|delimiter|datagram}}. The bytes after that prefix are the body.
-
-- **The frame:** a Java `int` takes four bytes, so the first four bytes hold the length, and the bytes after them are the body.
-- **The limit:** `Integer.MAX_VALUE` is only the largest value the type can hold. The server should still refuse a length larger than the buffer it is willing to allocate.
-:::
-
-:::check id=exam-16a-q3-q3
-Which of these hold when the printer speaks UDP?
-
-- [ ] `receive` runs only after `accept` returns a connected socket
-- [x] `ServerSocket` and `Socket` are replaced by `DatagramSocket`, and there is no `accept`
-- [x] One datagram must hold the entire frame, because the stream tokenizer was kept
-
-- **The sockets:** `DatagramSocket` replaces both `ServerSocket` and `Socket`.
-- **No connection:** UDP has no connection, so there is no `accept`.
-- **Replying:** `receive` fills a `DatagramPacket` that also records the sender's address, and the server sends its reply to that `SocketAddress`.
-- **The length prefix:** in UDP it is usually unnecessary, because one datagram is one message. Here it stays, because the student kept the stream tokenizer.
-- **The consequence:** each datagram must then hold one entire frame, length prefix included.
-:::
-
-:::check id=exam-16a-q3-q4
-Which of these hold for the stub and the skeleton?
-
-- [x] `Math_Stub` implements `Math`, writes a command such as `add 2 3`, and reads the reply line
-- [ ] `Math_Skel` implements `Math` on the client and turns a decimal result into the command string
-- [x] `Math_Skel` parses the command, calls the real `Math`, and returns the decimal result
-- [x] An exception on the server becomes an error line, which the stub turns into a `RemoteException`
-
-- **The stub (`Math_Stub`) runs on the client.** It implements `Math`, so the client calls it like a normal object. Each method sends a command such as `add 2 3` through the socket and reads the reply line.
-- **The skeleton (`Math_Skel`) runs on the server.** It parses the command, calls the real `Math` implementation, and sends back the decimal result.
-- **Errors:** an exception on the server is sent back as an error line, and the stub turns it into a `RemoteException` for the client.
-:::
-:::
-
-:::problem id=exam-17b-q3 title="Bank commands" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-A bank server uses the command-invocation protocol from class. It accepts three commands.
-
-- **`LOGIN name`:** the server remembers which client this connection belongs to, and answers `ack`.
-- **`DEPOSIT money`:** the server adds the amount to this client's balance, and answers `ack`.
-- **`BALANCE`:** the server answers with this client's current balance.
-
-:::check id=exam-17b-q3-q1
-Which of these hold for `execute`?
-
-- [x] Login stores the connection's name in the protocol's session and returns `"ack"`
-- [ ] Deposit before login returns `"ack"` and creates the account
-- [x] Deposit parses the amount, adds it to that session's account, and returns `"ack"`
-
-- **The command classes:** `LoginCommand`, `DepositCommand`, and `BalanceCommand` each implement `Command<Bank>`.
-- **`LoginCommand.execute`** stores the client's name in this connection's session and returns `"ack"`.
-- **`DepositCommand.execute`** parses the amount, adds it to the logged-in client's account, and returns `"ack"`.
-- **A deposit before login** has no account to use, so it must not succeed silently.
-:::
-
-:::check id=exam-17b-q3-q2
-A deposit before login returns {{=an error string|"ack"|the balance}}.
-
-Before `LOGIN`, the session has no name, so the deposit cannot know whose account to change. It returns an error string instead of `"ack"`.
-:::
-
-:::check id=exam-17b-q3-q3
-Which of these hold for the bank and the session?
-
-- [ ] Each connection builds its own `Bank`
-- [x] `Bank` is a map from name to balance, and its mutators are synchronized
-- [x] Each connection gets its own protocol object, so the session name is not shared between clients
-
-- **One shared `Bank`:** it is a map from each name to a balance, shared by all connections, and its methods that change balances are `synchronized`.
-- **Why the lock matters:** without it, two simultaneous deposits to the same account could overwrite each other, and one amount would be lost.
-- **One protocol object per connection:** each client's session, including its login name, is kept separately, so clients never see each other's sessions.
-:::
-
-:::check id=exam-17b-q3-q4
-Which `main` is correct?
-
-- [ ] It builds a new `Bank` inside every connection
-- [x] It builds one `Bank`, a protocol factory that closes over that bank, and the thread-per-client server from the appendix
-- [ ] It builds the protocol factory and constructs the `Bank` on the first `LOGIN`
-
-The server's `main` creates one `Bank`, then a protocol factory that gives every new protocol object a reference to that same bank, and finally starts the thread-per-client server from the appendix on the port the question names. Creating a `Bank` per connection would give every client a separate, empty bank.
-:::
-:::
-
-
-A simple server gets stuck whenever a thread blocks on a socket read.
-
-- **Next:** the [Reactor](topic:reactor) shows how one server can wait on many sockets at once, without a thread for each one.
+- **Next:** [Server design and the reactor](topic:reactor) builds a general server out of the decisions this print server made by hand.

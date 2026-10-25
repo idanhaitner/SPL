@@ -1,6 +1,7 @@
 ---
 id: rule-of-five
 title: The rule of five and zero
+blurb: "Moving from temporaries, the rule of five, smart pointers, and the rule of zero."
 sources:
   - "materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
   - "materials/sessions/SPL_PS4.pptx"
@@ -66,6 +67,77 @@ void convert(Image&& img);        // binds only a temporary, may steal
 
 ```
 
+### Moving a Student
+
+The lecture notes show the optimization on `Student`. The copy and the assignment from [The rule of three](topic:rule-of-three) are deep, which is correct but wasteful when the source is a temporary, an rvalue that has no cell with an address in memory. Its fields that point at heap objects are not duplicated, but removed, because the object is temporary, and nobody will use them again.
+
+**For the copy constructor:**
+
+```cpp
+Student s1(Student(1, "yosi", new Bag7(), univ));
+
+```
+
+Here you want a version of the copy constructor in which the copy is **not** deep: `s1._bag` will point at the temporary student's bag, and `s1._books` will point at the temporary student's books. You must then make sure those objects are not deleted by the temporary student's destructor, by setting its pointers to `nullptr`.
+
+The two versions are told apart by the type of the parameter `other`.
+
+- **`Student&`** is an lvalue reference, for a parameter that is not temporary.
+- **`Student&&`** is an rvalue reference, for a temporary parameter.
+
+```cpp
+Student(Student&& other)
+    : _id(other._id), _name(other._name), _univ(other._univ),
+      // "steal" the other student's bag
+      _bag(other._bag),
+      // "steal" the other student's books
+      _books(other._books)
+{
+    // neutralize the deletion of the bag by the destructor of other
+    other._bag = nullptr;
+    // neutralize the deletion of the books by the destructor of other
+    other._books.clear();
+}
+
+```
+
+**For the assignment operator:**
+
+```cpp
+s1 = Student(2, "danny", new Bag5(), univ);
+
+```
+
+Here you want a version of the assignment in which the copy is not deep: `s1._bag` points at the temporary student's bag, and `s1._books` at its books, and the temporary's pointers are neutralized in the same way.
+
+```cpp
+Student& operator=(Student&& other) {
+    if (&other != this) {
+        _id = other._id;
+        _name = other._name;
+        _univ = other._univ;
+
+        delete _bag;
+        // "steal" the other student's bag
+        _bag = other._bag;
+        // neutralize the deletion of the bag by the destructor of other
+        other._bag = nullptr;
+
+        // delete the old books
+        for (int i = 0; i < _books.size(); i++)
+            delete _books.at(i);
+        // "steal" the other student's books
+        _books = other._books;
+        // neutralize the deletion of the books by the destructor of other
+        other._books.clear();
+    }
+    return *this;
+}
+
+```
+
+Writing these two methods, in addition to the three from before, is called the **rule of five**.
+
 ### Move operations
 
 :::definition id=def-rule-of-five title="The rule of five" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
@@ -102,6 +174,100 @@ Image& Image::operator=(Image&& other) {
 ```
 
 After the swap, `other` holds the buffer that used to belong to `*this`. Since `other` is a temporary, its destructor soon releases that old buffer.
+
+## Smart pointers
+
+To finish with objects, the lecture notes show a design pattern for managing deletion, copying, and assignment of objects: the smart pointer.
+
+**The goal:** a general class that manages information on the heap, represented by a pointer (its address), and in particular deletes it once nobody needs it anymore.
+
+```cpp
+{
+    Student* s1(new Student(...));
+    F(s1);
+    Student* s2(new Student(...));
+    ...
+    s1 = s2;
+    ...
+    delete s1;   // ???
+    delete s2;   // ???
+}
+
+void F(Student* s) { ... }
+
+```
+
+It is not clear whether `s1` and `s2` should be deleted before the end of the block, to prevent leaks, or whether that is forbidden, to prevent access to deleted memory. You cannot be sure what happened in `F`, or as a result of `s1 = s2`. So wrap the pointers in code of a class that manages their memory, and in particular deletes them when needed.
+
+```cpp
+{
+    smart_ptr<Student*> s1(new Student(...));
+    F(s1);
+    smart_ptr<Student*> s2(new Student(...));
+    ...
+    s1 = s2;
+    ...
+}
+
+void F(smart_ptr<Student*> s) { ... }
+
+```
+
+How do you design such a class?
+
+- **The class holds the address it manages** (it receives it in the constructor), and also a counter of how many variables know that address (1 at first).
+- **Every time a variable that knows the address is copied** to a new activation frame, or assigned to another pointer, the counter goes up.
+- **Every time a variable that knows the address is removed,** or reassigned to another address, the counter goes down.
+- **When the counter reaches 0,** the information on the heap at that address is deleted.
+
+The implementation rests on the class's rule of three, because those three methods are exactly the scenarios that change the counter: the destructor, the copy constructor, and the assignment operator.
+
+```cpp
+template <typename T>
+class smart_ptr {
+private:
+    T _ptr;
+    int* _refcount;
+
+    void checkIfDelete() {
+        if ((*_refcount) == 0) {
+            delete _ptr;
+            delete _refcount;
+        }
+    }
+
+public:
+    smart_ptr(T ptr) : _ptr(ptr), _refcount(new int(1)) { }
+
+    smart_ptr(const smart_ptr& other)
+        : _ptr(other._ptr), _refcount(other._refcount) {
+        (*_refcount)++;
+    }
+
+    ~smart_ptr() {
+        (*_refcount)--;
+        checkIfDelete();
+    }
+
+    smart_ptr& operator=(const smart_ptr& other) {
+        if (this != &other) {
+            (*_refcount)--;
+            checkIfDelete();
+            _ptr = other._ptr;
+            _refcount = other._refcount;
+            (*_refcount)++;
+        }
+        return *this;
+    }
+
+    T getPtr() { return _ptr; }
+};
+
+```
+
+- **Why `_refcount` is a pointer:** every `smart_ptr` that shares the address must see the same counter, so the counter itself lives on the heap.
+
+**A note on templates.** You want to define one general class for every kind of pointer (`Student*`, `int*`, `Animal*`, and so on), with the type of the pointer field decided when the class is used. C++ does this with the `template` syntax, which lets you define a code pattern with the option of plugging in different types. It is used for data structures, such as `vector` and `map`, and for algorithms, such as `sort`.
 
 ### The rule of zero
 
@@ -151,7 +317,7 @@ public:
 
 ```
 
-### Copy elision
+## Copy elision
 
 Copy elision is an optimization that lets the compiler skip the copy when a function returns an object by value.
 

@@ -1,19 +1,141 @@
 ---
 id: pointers
-title: Pointers and references
+title: Variables, pointers, and references
+blurb: "Content or address, a new variable or an alias: pointers, references, passing parameters, and returning values."
 sources:
-  - "materials/lectures/Chapter 2 - Pointers.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/lectures/Chapter 2 - Pointers.pptx"
+  - "materials/lectures/Chapter 7 - Back to Java.pptx"
   - "materials/sessions/SPL_PS2 (1).pptx"
+  - "materials/sessions/SPL_PS3.pptx"
 ---
 
-This chapter shows how C++ stores memory addresses in variables and follows them to reach objects.
+Programming languages let you reach memory, to read or write it, through a convenient abstraction: variables. This chapter looks at exactly what a variable represents, how it sits in memory, how it is passed as a parameter, and how it comes back as a return value.
 
-- **Pointers and references:** a pointer stores an address, and a reference is a second name for an existing object.
-- **`const` and lifetime:** what a pointer is allowed to change, and how long the object it points at stays alive.
-- **Common mistakes:** null pointers, dangling pointers, and what actually happens when you use them.
+- **Defining a variable:** the two decisions behind every variable, and how Java and C++ answer them.
+- **Pointers and references:** the C++ syntax for a variable that holds an address, and for a second name of an existing variable.
+- **Parameters and return values:** how to choose the way each one is passed, so that nothing is copied for no reason and no address leaks to code that should not own it.
 
-## Basic syntax
+## Defining a variable
+
+```java
+int i;
+...
+i = 4;      // write i
+i++;
+...
+j = i;      // read i, write j
+
+```
+
+In most languages a variable also has a **type**, which fixes how large it is, and, for objects, its structure as well.
+
+When you define a variable for some piece of information, you make two decisions.
+
+1. **What exactly does the variable represent?** Does it represent the **content** of the cells in memory, or the **address** of a cell that holds the information (or where the information starts)?
+2. **Is a new variable defined on the stack** (representing content or an address), or is this an additional name, an **alias** (a reference), for an existing variable that represents content or an address?
+
+### The Java answer
+
+In Java the language designers already answered both questions, so programmers are spared the decision.
+
+1. **Variables of simple types** (`int`, `long`, `boolean`, ...) represent **content**. **Variables of object types** (a `class`) represent an **address**.
+2. **You cannot give an alias to an existing variable.** Java has no references in the C++ sense.
+
+```java
+Pair p1 = new Pair(3, 4);
+Pair p2 = p1;            // p2 holds the same address: both name one Pair
+p1 = new Pair(8, 0);     // p1 now holds a new address; p2 still points at (3, 4)
+
+```
+
+So Java decides for you what goes where.
+
+- **The stack** holds each method's local variables. A local of primitive type holds its value directly, and a local of class type holds only an address of an object.
+- **The heap** holds every object and every array, together with the fields inside them. Unlike C++, Java never puts an object on the stack.
+
+An array in Java is an object on the heap.
+
+- **`length`:** the array's length is stored inside the array object itself.
+- **Primitive elements:** an `int[]` stores the `int` values themselves, inside the array object.
+- **Reference elements:** a `String[]` stores only addresses. Each `String` they refer to is a separate object elsewhere on the heap.
+
+![An int array is one block of ints on the heap. A String array is a block of references on the heap, and each string is a further object](../../web/public/figures/java-array.svg)
+
+:::problem id=worked-array-layout title="An array on the heap" source="materials/lectures/Chapter 7 - Back to Java.pptx" kind=worked solution_origin=source
+What is on the stack, and what is on the heap?
+
+```java
+int[] a = new int[10];
+String[] b = new String[10];
+b[0] = new String("Avi");
+```
+
+:::solution
+- **On the stack:** `a` and `b` are two references in the frame of the running method. Nothing else is on the stack.
+- **`a`:** it points at one array object on the heap. That object holds a header, the length 10, and ten `int` values, all 0.
+- **`b`:** it points at a second array object, whose ten slots are references. Every slot starts as `null`.
+- **`b[0]`:** after the third line, this slot refers to a new `String` object, which is a separate object on the heap. The other nine slots are still `null`.
+:::
+:::
+
+### The C++ answer
+
+In C++ the programmer chooses any combination of the two decisions: content or address, and a new variable or an alias. The example below goes through them, and marks which ones Java also allows.
+
+```cpp
+// simple type, content                       [allowed in Java]
+int i(5);
+i++;
+
+// object, content                            [not in Java]
+Pair m(3, 4);
+m.sum();                  // returns 7
+
+// simple type, address                       [not in Java]
+int* pi = new int(15);
+// pi++ would increase pi, the address it holds, not the value 15
+cout << i;                // 6
+cout << pi;               // 100, the address of the int on the heap
+// to reach the content at an address, use the * operator
+cout << (*pi);            // 15
+(*pi)++;
+// to find the address of a content, use the & operator
+cout << (&i);             // 10000, the address of i on the stack
+
+// object, address                            [allowed in Java]
+Pair* pm = new Pair(8, 9);
+pm.first();               // error: pm is not an object
+(*pm).first();            // 8. Syntactic sugar: pm->first()
+
+// simple type, content, alias                [not in Java]
+int& j = i;
+j++;
+cout << (&j);             // 10000: j and i are the same cell
+
+// object, content, alias                     [not in Java]
+Pair& n = m;
+cout << n.second();       // 4
+
+// simple type, address, alias                [not in Java]
+int*& pj = pi;
+
+// object, address, alias                     [not in Java]
+Pair*& pn = pm;
+
+```
+
+| Stack address | Content | Variable |
+| --- | --- | --- |
+| 10000 | 7 | `i`, `j` |
+| 9992 | 4 | `m`, `n` (second field) |
+| 9984 | 3 | `m`, `n` (first field) |
+| 9976 | 100 | `pi`, `pj` |
+| 9968 | 200 | `pm`, `pn` |
+
+An alias takes no cell of its own: `j` is another name for the cell of `i`, and `pn` is another name for the cell of `pm`.
+
+## Pointers
 
 A **pointer** (מצביע) is a variable that stores the address of another object.
 
@@ -140,7 +262,6 @@ ppi  = &pi
 :::
 :::
 
-
 ## References
 
 A reference (רפרנס), written `T&`, is another name for an object that already exists. It is not a second cell you can point somewhere else.
@@ -231,7 +352,97 @@ const int& i = next(x);  // ok: the returned temporary lives as long as i does
 - **In practice, for parameters:** `void show(const int& v)` accepts `show(x)`, `show(n)`, `show(x + 1)`, and `show(3)`. The temporary in `show(x + 1)` lasts until the call ends.
 - **By contrast:** `void edit(int& v)` accepts only real, writable objects such as `edit(x)` or `edit(slot(x))`. `edit(x + 1)` and `edit(3)` do not compile.
 
-### Passing a parameter
+## Choosing the kind of variable
+
+How do you choose the kind of variable you need: content or address, and a new variable or an alias?
+
+### Content or address
+
+**The general idea:** where you can, always prefer to define the information itself, the content, on the stack, rather than allocate it on the heap. Allocation on the stack is far more efficient, and its release is automatic and safe.
+
+- **Always prefer, where possible, a variable that represents content.** The variable always sits on the stack, and if it represents content, then the content is on the stack too.
+
+When is that possible? When the size of the information is known at compile time (not an array of unknown size, and no inheritance whose concrete type is unknown in advance), and the information is needed only in the current block. Otherwise, define the variable as an address, a pointer.
+
+### When an alias is needed
+
+**The general idea:** a reference lets you support two concepts.
+
+- **Avoiding a needless copy** of an object.
+- **Not exposing the address of a heap object** to an activation frame that is not responsible for deleting it.
+
+You will see these scenarios in detail in what follows:
+
+- **a heap object** passed as a parameter to a procedure,
+- **a field of a class** that refers to information belonging to another object,
+- **a getter of a class** that returns an object.
+
+## Passing parameters
+
+A call to a procedure involves passing the information it needs: the current activation frame must hand the parameters over to the procedure's new activation frame. There are two ways to pass a parameter.
+
+- **By value:** whatever the variable represents (content or address) is duplicated and copied into the new frame, as new variables.
+- **By reference:** the parameters do not move to the new frame, but stay where they are. The new frame gets access to information that lives elsewhere, which means the procedure gets additional names (aliases) for variables that already exist somewhere else.
+
+In Java there is only passing by value. In C++ the programmer chooses how to pass each parameter.
+
+:::problem id=worked-pass-eight title="Eight ways to pass a pair" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+Which of these functions copy their argument into the new frame, and which receive an alias for a variable of `main`?
+
+```cpp
+int sum1(int i, int j) { return i + j; }
+int sum2(Pair n) { return n.first() + n.second(); }
+int sum3(int* pi, int* pj) { return (*pi) + (*pj); }
+int sum4(Pair* pn) { return (*pn).first() + (*pn).second(); }
+
+int sum5(int& i, int& j) { return i + j; }
+int sum6(const Pair& n) { return n.first() + n.second(); }
+int sum7(int*& pi, int*& pj) { return (*pi) + (*pj); }
+int sum8(Pair*& pn) { return (*pn).first() + (*pn).second(); }
+
+{
+    int a(5);
+    int b(6);
+    Pair* pm = new Pair(3, 4);
+
+    cout << sum1(a, b);
+    cout << sum2(*pm);
+    cout << sum3(&a, &b);
+    cout << sum4(pm);
+
+    cout << sum5(a, b);
+    cout << sum6(*pm);
+    cout << sum7(&a, &b);
+    cout << sum8(pm);
+
+    delete pm;
+}
+
+```
+
+:::solution
+- **The default is by value.** `sum1` through `sum4` copy their arguments into the new frame: two `int`s, a whole `Pair`, two addresses, and one address.
+- **`sum2` copies the whole object,** both fields, which costs a copy for nothing.
+- **`sum3` and `sum4` copy only addresses,** so they reach `a`, `b`, and the pair on the heap through those copies.
+- **To pass by reference you mark the type with `&`,** and that is the only change: the rest of the code stays the same. `sum5` through `sum8` get aliases, so nothing new is placed in their frames for the parameters.
+- **`sum6` takes `const Pair&`,** which avoids copying the pair, and promises not to change it.
+- **`sum7(&a, &b)` does not compile:** `&a` is a temporary address, an rvalue, and a plain reference `int*&` cannot bind to it.
+:::
+:::
+
+How do you choose how to pass each parameter? You want to get the most out of three points.
+
+- **Saving copies.** Prefer to avoid copying objects or arrays.
+- **Not exposing a memory address** to a procedure that is not responsible for deleting it (it only uses the information).
+- **Supporting changes** that the procedure makes to the caller's information (a side effect, which is generally not recommended), or preventing the procedure from making changes.
+
+That gives a simple rule.
+
+| Is the parameter meant to change inside the procedure? | Pass it |
+| --- | --- |
+| Yes | By reference |
+| No, and it is a simple type | By value |
+| No, and it is an object | By `const` reference |
 
 The parameter's declaration decides how the argument is passed, and the call has to match it. Each of the four forms below starts from `int x = 10;`.
 
@@ -284,7 +495,58 @@ byConstRef(3);        // legal: the literal is kept alive for this call
 
 **Which to choose:** use a `const` reference when the function only reads a large object. For a small type such as `int`, passing by value is simpler and just as fast.
 
-### Returning a value
+## Returning a value
+
+A value can be returned from a function in two ways.
+
+- **By value:** the returned value (an address or content) is duplicated and copied from the function's activation frame into the previous frame.
+- **By reference:** the returned value stays where it is. What is returned is only an alias, and the previous frame gets access to it.
+
+In Java a function can return only by value. In C++ the programmer picks one of the two. Here too the default is to return by value, and you can return by reference by writing `&` next to the type of the returned value.
+
+:::problem id=worked-return-five title="Five ways to return a sum" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+Which of these functions are correct, and which leave the caller with something that no longer exists?
+
+```cpp
+int sum9(int i, int j) { int ret(i + j); return ret; }
+Number sum10(int i, int j) { Number ret(i + j); return ret; }
+int& sum11(int i, int j) { int ret(i + j); return ret; }
+Number& sum12(int i, int j) { Number ret(i + j); return ret; }
+Number* sum13(int i, int j) { Number* ret = new Number(i + j); return ret; }
+
+{
+    int a = sum9(1, 2);
+    Number n = sum10(1, 2);
+    int& b = sum11(1, 2);
+    Number& m = sum12(1, 2);
+    Number* pn = sum13(1, 2);
+    ...
+    delete pn;
+}
+
+```
+
+:::solution
+- **`sum9`** returns a simple type by value. It is correct and cheap.
+- **`sum10`** returns an object by value. It is correct, but it copies the object into the previous frame.
+- **`sum11` and `sum12`** return a reference to `ret`, a local variable. `ret` is destroyed when the function ends, so `b` and `m` are aliases for a cell that no longer exists. This is a serious bug.
+- **`sum13`** creates the `Number` on the heap and returns its address. It is correct, but now the caller is responsible for the object, and must `delete pn`.
+:::
+:::
+
+How do you choose the way to return a value? Here too you want to avoid copying objects, and not return a reference to a place that no longer exists in memory. There are two cases.
+
+**Case A: the function returns new information that it created** (most functions).
+
+- **A simple type** is returned by value.
+- **An object** should not be returned by value, because the copy is inefficient. On the other hand it cannot be returned by reference, because it is erased from the stack when the function ends. This is a case of information whose lifetime is not tied to the block where it was defined, so define it on the heap and return its address. The caller is then responsible for deleting it. [Classes and objects](topic:classes-and-objects) shows a design pattern for this, called a factory.
+
+**Case B: the function returns information that already exists.** The typical example is a getter of a class.
+
+- **Simple types** are returned by value.
+- **Objects** are returned by (`const`) reference.
+
+The `Student` class in [Classes and objects](topic:classes-and-objects) is an example.
 
 A function may return by value, by pointer, or by reference.
 
@@ -453,7 +715,45 @@ The pointer array held the only copies of the row addresses. Once it is released
 :::
 :::
 
-To sum up, a pointer is a variable that holds an address and may be null or moved, while a reference is a fixed second name for an object that already exists.
+:::problem id=ps3-pass-by-value title="Three signatures of emphasize" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
+Here are three ways to pass a string to a function.
 
-- **Next:** [Classes and objects](topic:classes-and-objects) uses pointers to reach a `Student` on the heap.
+```cpp
+void emphasize1(std::string word);
+void emphasize2(std::string& word);
+void emphasize3(std::string* word);
+
+```
+
+:::check id=ps3-pass-by-value-q1
+What does `emphasize1` do with the caller's string?
+
+- [x] It receives a copy. Changes inside the function leave the caller's string as it was
+- [ ] It modifies the caller's string
+- [ ] It accepts `nullptr` in place of the string
+
+- **`emphasize1` takes its parameter by value**, so it receives its own copy of the string.
+- **Changes to that copy** inside the function leave the caller's string as it was.
+:::
+
+:::check id=ps3-pass-by-value-q2
+Which of these hold?
+
+- [x] `emphasize2` receives a reference, so changes inside the function modify the caller's string
+- [ ] `emphasize2` can be passed `nullptr`
+- [x] `emphasize3` receives a pointer. Changes through that pointer modify the caller's string, and the pointer may be `nullptr`
+
+A reference always refers to a real object, so it can never be `nullptr`. A pointer, by contrast, may be `nullptr`.
+:::
+
+:::check id=ps3-pass-by-value-q3
+The body of `emphasize3` has to check for {{=nullptr|a reference|a copy}} before it uses the pointer.
+
+Dereferencing a `nullptr` is undefined behavior, so a function that takes a pointer must check for `nullptr` before using it.
+:::
+:::
+
+To sum up, every variable is a choice between content and an address, and between a new variable and an alias. Java makes that choice for you. In C++ you make it each time, guided by two goals: avoid needless copies, and never hand out an address to code that is not responsible for it.
+
+- **Next:** [Classes and objects](topic:classes-and-objects) applies the same questions to objects: how they are laid out in memory, initialized, and deleted.
 - **Later:** [The rule of three](topic:rule-of-three) uses them to decide whether a copy of an object shares a buffer with the original or allocates its own.

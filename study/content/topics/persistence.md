@@ -1,9 +1,10 @@
 ---
 id: persistence
-title: Persistence and SQL
+title: Databases
+blurb: "Why a database, the relational model, SQL queries and joins, and a Python persistence layer."
 sources:
-  - "materials/lectures/Chapter 13 - Persistance.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/lectures/Chapter 13 - Persistance.pptx"
   - "materials/sessions/SPL_PS12.pptx"
   - "materials/sessions/SPL_PS13_PRES.pptx"
   - "materials/exams/15-a.pdf"
@@ -32,23 +33,95 @@ sources:
   - "materials/exams/20-b-solution.pdf"
 ---
 
-This chapter shows how a program keeps its data after the process ends, and how it talks to a database in SQL.
+This chapter shows how a program keeps its data after the process ends: in a database, managed by a dedicated run-time environment, and reached in SQL.
 
-- **Why a database:** what a database gives you that process memory and plain files do not.
-- **The relational model:** tables, keys, and the SQL queries you write against them.
-- **In code:** the DTO, DAO, and repository classes the course uses to connect a program to its database.
+- **Why a database:** what a database management system gives you that process memory and plain files do not.
+- **The relational model and SQL:** designing tables from classes, and writing the definitions, updates, and queries against them.
+- **An application over a database:** a grading program in Python, refined step by step into a persistence layer of DTOs, DAOs, and a repository.
 
-## The relational model
+## Why a database
 
-Process memory lasts only as long as the process does, so data that must survive needs to be stored somewhere else.
+**The motivation:** keeping the data of students and courses at a university.
 
-- **Plain files** outlive the process, but the application must then handle everything itself: the byte layout, searching, and what happens when two writers update the file at once.
-- **A DBMS** (database management system) handles all of that for you. It provides durable storage, a query language, integrity constraints, and transactions.
+- the students' data,
+- the courses' data,
+- the departments' data,
+- constraints: prerequisite courses, the year of study, ...
+- ...
 
-The relational model (מודל רלציוני) stores data as tables.
+A program implemented as usual in memory would have classes such as `Student`, `Course`, and `Department`, which include fields and methods that hold the data and implement the constraints between the different parts.
 
-- **A table** is a set of rows that all have the same columns. Each cell holds a single value, never a list.
-- **SQL** is the language used both to define tables and to query them.
+```text
+Student: getYear(), getCourses(), ...
+Course: getPreRequirements(), getStudents()
+
+```
+
+**The drawbacks:**
+
+- **When the process ends** (logically, or because of a failure such as a power cut), all the data is erased, since it is kept in memory, in a volatile technology.
+- **You cannot always keep all the data in memory.** Many applications deal with data much larger than the RAM.
+
+So keep the data on disk.
+
+- **It is kept there for a long time,** even after the process ends.
+- **The disk's storage capacity is much larger** than that of the RAM.
+
+**An implementation:** define the relevant classes as implementing an interface of serialization and deserialization to disk. Something like:
+
+```java
+toFile(OutputStream)
+fromFile(InputStream)
+
+```
+
+(You could use the `ObjectEncoderDecoder` class you wrote for this, from [The command-invocation server](topic:serialization), or implement it in a popular format, such as the common JSON format.)
+
+**The drawbacks:**
+
+- **Retrieving data:** retrieving a group of students with some property (computer-science students in their second year) is not trivial when they are kept in different places on disk, such as in files.
+- **Updating data:** adding a grade to a group of students with some property is not simple, and mainly not efficient (students of Systems Programming, moed A).
+- **Support for concurrent operations** of several processes on the data shared on disk: locking mechanisms, synchronization, concurrent runs, ...
+- **Support for compound operations:** for example, a transaction, which performs a series of different operations, where the failure of one of them returns the state to what it was before (cancelling a current registration to a course for a registration to an elective course; withdrawing money from an ATM; buying a number of shares at a given rate).
+- **Abstraction:** no dependence on the programming language, the file system, the operating system, or the storage technology.
+- **Convenient interfaces.**
+- **Optimizations.**
+- ...
+
+So you need a **dedicated run-time environment** that supports storing data and performing different operations on it, with support for concurrency, modularity, optimizations, and so on.
+
+An environment like this is called a **DataBase Management System (DBMS)**. Examples of such systems are MySQL, Microsoft SQL Server, Oracle, and Sybase.
+
+As with the other run-time environments in the course (the operating system, the JVM), this course does not deal with how the environment is implemented (that belongs in the database course), but with how it is used: how to define the data model, and how to perform operations through that environment. At this stage, here is only the broad architecture of such systems:
+
+- **security management,**
+- **transaction management,**
+- **retrieving data:** running queries, optimizations,
+- **operations on data:** adding, updating, deleting,
+- **access to files,**
+- **access to disk.**
+
+## The data model
+
+A data model is an abstract description of information, based on the definition of the data and the operations on it, with no dependence on the storage and on the implementation of those operations.
+
+There are different kinds of data models, meaning different ways of organizing information. For example:
+
+- **A relational data model:** the information is organized, as you will see, in tables with fields, relations between them, and options for keys.
+- **A key-value data model:** the information is organized as one big table, which maps a key to an object (like a `HashMap` on disk). There are different systems like this: Berkeley DB, Redis, Amazon's S3 service.
+- **An object-oriented data model:** the database includes a collection of objects that you can retrieve by their properties (all the students whose `year` field is 2): object4j, Amazon's DynamoDB service.
+
+This course focuses on the relational model, the classic one.
+
+### The relational model
+
+In a relational data model, information is organized in **tables** (relations), and each table is defined by a set of **fields** (attributes), with **integrity constraints** against other tables, and **indexes**.
+
+- **A field** is defined by: a name, a type (`integer`), a domain of definition (the numbers 14 to 60), and more conditions or requirements. For example, you can require that its values be **unique** (`UNIQUE`) in the table: the field "id number" in the "students" table must be unique, which means there are no two students with the same id number. In addition, you can require that the field must always receive a value (`NOT NULL`) (assume the student's name).
+- **A table** is a set of fields that it defines (like the "students" table, which includes fields such as an id number, a name, and so on).
+- **Constraints between tables** are defined by a **foreign key**, which creates a dependency between the existence of a set of fields with some value in one table and a field that identifies another table. For example, the field "department" in the "students" table must contain the name of a department defined in the "departments" table.
+  - Notice that you can define two kinds of constraints: local constraints on content (the field's type, its domain, its uniqueness) and constraints outside tables (foreign keys).
+- **Defining a field as an index** makes access to it efficient. In particular, defining a field as an index requires the environment to arrange it accordingly, and in particular, to define a data structure that supports fast access to the field (like the "index" that sometimes appears in the last pages of books). In general, you do not want to define all the fields as an index, but only the fields by which you usually search the data (like "student name").
 
 :::definition id=def-relational title="Principles of the relational model" source="materials/lectures/Chapter 13 - Persistance.pptx"
 
@@ -58,12 +131,44 @@ The relational model (מודל רלציוני) stores data as tables.
 - **Referential integrity:** the database rejects any foreign-key value that does not match a row in the other table.
 :::
 
-When you turn classes into tables, follow these rules.
+The relational model has different kinds of **operations**.
 
-- **Each class** becomes a table.
-- **A one-to-many (1:N) relationship** becomes a foreign key on the "many" side. For example, each enrollment row points at one student.
-- **A many-to-many (N:M) relationship** becomes a separate **junction table**, which holds a foreign key to each of the two tables.
-- **Never use repeated columns** such as `course1`, `course2`, and `course3`. They fix the maximum length of the list, and queries cannot treat them as rows.
+- **Adding a record (a row) to a table:** adding a new "row" to a given table, with values for each of the fields defined in it (adding a record to the "students" table with a student's details, as defined in its fields: id number, name, department, and so on).
+- **Updating a record in a table:** setting a new value for one or more fields in a given row of the table.
+- **Deleting a record from a table.**
+- **Retrieving data from tables:**
+  - **selection:** choosing a number of records from a table by some criterion (computer-science students). Part of the rows,
+  - **projection:** choosing a number of fields from a table's records (only the students' names and the name of their department). Part of the columns,
+  - **operations on groups:** union of groups of records, intersection, difference, Cartesian product,
+  - **the join operation** is the central operation in retrieving data. In this operation, records and fields are retrieved from different tables under the constraint of matching certain fields. In other words, selection + projection + cross product.
+
+### Defining a relational model for data that needs storing
+
+Given data that must be kept for a long time in a relational database, you must define a data model for it.
+
+For example, define a relational data model for the data of the students, courses, and departments at the university. In particular, describe the data as a set of tables with fields, and the connections between them through keys.
+
+For simplicity, rely on an approach that matches the design approaches already familiar from the programming world, object-oriented design.
+
+1. **A class in Java is defined as a table in the data model.** The fields of the class are the fields of the table, with matching types. Where a field requires uniqueness, and/or the assignment of a value, define it as `UNIQUE` and/or `NOT NULL`.
+2. **If a field in the class is of an "object" type,** define it as a separate table, and include in the current table a "pointer" to it, which means a foreign key. (Otherwise, its different fields would be stored again in every record of the original table.)
+3. **If the field represents an "array" of data, and the relation is many-to-many,** define an intermediate table that maps a field (or a set of fields) that is unique in one table to a field or set of fields in a second table.
+4. **Add the index property to fields that are central in retrieving data,** meaning fields whose value is a criterion for retrieving the record.
+5. **Every table must have a field (or a set of fields) that is unique and also an index.** In other words, the requirement is that there is at least one way to retrieve the data of a record uniquely and efficiently. Such a field (or set of fields) is called a **primary key**. (There may be other fields that are both unique and an index, but only one of them is the "primary key". There is no importance to that at the moment.)
+
+The foreign key is also defined as an index, built in, since many queries are based on it.
+
+```text
+Students [Definition]    Departments [Definition]    Courses [Definition]
+             \                ^                          ^
+              \              /                          /
+           StudentsCourses [Definition]  ---------------
+
+Students [Data]   Departments [Data]   Courses [Data]   StudentsCourses [Data]
+
+```
+
+The lecture slides show the same rules on a smaller schema, with an `Enrollment` junction table.
 
 For example, students and courses are two classes, so each gets its own table.
 
@@ -103,7 +208,224 @@ The value 9 in `Students.DeptId`, when `Departments` contains the ids 1 and 2, b
 - **The primary key** only requires `Students.Id` to be unique, and `NOT NULL` only requires `Name` to have a value, so neither is affected.
 :::
 
-### JOIN operations in SQL
+## SQL
+
+SQL (Structured Query Language) is the interface between applications and a system for managing databases. It is a generic language: every system for managing databases must support it, so applications do not depend on the kind of system they work with at run time. (Over the years, different variants of the language were developed for different systems. This course deals with classic SQL.)
+
+SQL supports two central categories of operations.
+
+### Defining the data model (Data Definition Language)
+
+Defining tables, fields, keys, indexes, and so on. Here is how to describe or create the data model defined for the students and courses, with SQL operations (there are systems that automatically translate diagrams like the one above into SQL code).
+
+```sql
+CREATE TABLE Departments (Id INTEGER PRIMARY KEY,
+                          Name VARCHAR(20) UNIQUE NOT NULL,
+                          Building INTEGER);
+CREATE INDEX idx_departments_name ON Departments(name);
+
+CREATE TABLE Students (Id INTEGER PRIMARY KEY,
+                       Name VARCHAR(20) NOT NULL,
+                       Login VARCHAR(10) UNIQUE,
+                       DeptId INTEGER,
+                       FOREIGN KEY (DeptId) REFERENCES Departments(Id));
+CREATE INDEX idx_users_name ON Students(name);
+
+CREATE TABLE Courses (Id INTEGER PRIMARY KEY,
+                      Name VARCHAR(20) UNIQUE NOT NULL,
+                      NAKAZ INTEGER);
+CREATE INDEX idx_courses_name ON Courses(name);
+
+CREATE TABLE StudentsCourses (StudId INTEGER,
+                              CourseId INTEGER,
+                              Year INTEGER,
+                              Grade INTEGER,
+                              PRIMARY KEY (StudId, CourseId, Year),
+                              FOREIGN KEY (StudId) REFERENCES Students(Id),
+                              FOREIGN KEY (CourseId) REFERENCES Courses(Id));
+CREATE INDEX idx_studentscourses_year ON StudentsCourses(year);
+
+```
+
+### Operations on data (Data Manipulation Language)
+
+**Adding records to a table:**
+
+```sql
+INSERT INTO Students(Id, Name, Login, DeptId) VALUES(17, 'Dina', 'din', 201)
+
+```
+
+This operation fails, because there is no department whose `Id` field is 201. So you must first define the departments:
+
+```sql
+INSERT INTO Departments(Id, Name, Building) VALUES(201, 'math', 58)
+INSERT INTO Departments(Id, Name, Building) VALUES(202, 'cs', 37)
+INSERT INTO Students(Id, Name, Login, DeptId) VALUES(17, 'Dina', 'din', 201)
+INSERT INTO Students(Id, Name, Login, DeptId) VALUES(89, 'Danny', 'dan', 202)
+INSERT INTO Students(Id, DeptId) VALUES(5, 202)
+
+```
+
+The last operation fails, because the field `Name` in the `Students` table was defined as `NOT NULL`, which means it is required that there be no student without a name.
+
+```sql
+INSERT INTO Students(Id, Name, DeptId) VALUES(5, 'Ringo', 202)
+
+```
+
+Notice that the field `Login` received no value (its value right now is `NULL`). That is fine, since it was not required to be `NOT NULL`.
+
+```sql
+INSERT INTO Courses(Id, Name, Level) VALUES(7, 'infi', 4)
+INSERT INTO Courses(Id, Name, Level) VALUES(8, 'spl', 4)
+INSERT INTO Courses(Id, Name, Level) VALUES(9, 'ppl', 4)
+INSERT INTO StudentsCourses(StudId, CourseId, Year, Grade) VALUES(17, 7, 18, 70)
+INSERT INTO StudentsCourses(StudId, CourseId, Year, Grade) VALUES(17, 8, 19, 90)
+INSERT INTO StudentsCourses(StudId, CourseId, Year, Grade) VALUES(89, 7, 18, 80)
+INSERT INTO StudentsCourses(StudId, CourseId, Year, Grade) VALUES(89, 8, 19, 85)
+
+```
+
+**Updating existing records:**
+
+```sql
+UPDATE Students SET Login = 'ring'
+
+```
+
+This operation changes the `Login` field of **all** the students. Besides not being logical, it also fails, because the field `Login` was defined as `UNIQUE`. So add a more exact criterion with `WHERE`:
+
+```sql
+UPDATE Students SET Login = 'ring' WHERE Name = 'Ringo'
+
+```
+
+**Deleting records:**
+
+```sql
+DELETE FROM StudentsCourses WHERE year < 1900
+
+```
+
+### Retrieving data with a query (the important topic)
+
+As you saw, the information in the relational model is organized as records with different fields in different tables. Notice that the information is kept **compactly**: there is no repetition of information except as a "pointer", meaning fields that are foreign keys. In such an organization, retrieving information usually involves **joining** information from different tables, going back over the information to other tables again and again. (Unlike other models, retrieving data is somewhat heavy, in exchange for saving storage space.)
+
+To make the retrieval operation efficient (a simple lookup), at the price of a slightly more complex data organization, retrieving data is based mainly on the `JOIN` operation, which performs a cross product between tables, with filtering by different criteria (selection) on the records or rows, and on the fields or columns (projection).
+
+Here are simple rules for defining a query, "the complete guide".
+
+**An example:** retrieve from the database the students' names, the names of the courses, and the grade for them.
+
+1. Write `SELECT`.
+2. List the fields (including their tables) you want to retrieve.
+3. Write `FROM`.
+4. List the names of the tables that appear in the `SELECT` line.
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM Students, Courses, StudentsCourses
+
+```
+
+What happens when a query like this runs? It turns out that the query engine builds, for each field in the `SELECT` line, a vector with all the values in the table for that field, and performs a Cartesian product on them. In our case:
+
+```text
+Dinna       infi    70
+Danny   X   spl  X  80
+Ringo       ppl     85
+                    90
+
+=>
+
+Dinna infi 70
+Dinna infi 80
+Dinna infi 85
+Dinna infi 90
+Dinna spl 70
+...
+Dinna ppl 90
+Danny infi 70
+...
+Danny ppl 90
+Ringo infi 70
+...
+Ringo ppl 90
+
+```
+
+The results are of course wrong: you get many rows of data that do not match the tables. So you must include in the query **a criterion for matching between the tables**, that is, a constraint on the operation of the join. Notice that the right join criterion is in fact defined by the foreign keys.
+
+1. Write `SELECT`.
+2. List the fields (including their tables) you want to retrieve.
+3. Write `FROM`.
+4. List the names of the tables that appear in the `SELECT` line, **including a description of the connection between them through the foreign keys, with the keyword `JOIN`** (if there is another table in the join that does not appear in the `SELECT` line, add it).
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+```
+
+```text
+Dinna  infi  70
+Danny  spl   80   (X_join: these combinations are filtered out)
+
+=>
+
+Dinna infi 70
+Dinna spl 90
+Danny infi 80
+Danny spl 85
+
+```
+
+5. **If you want to get only some of the records** (selection), add a `WHERE` part to the query. For example, get the grades of the students in the mathematics department only.
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+WHERE Students.DeptId = 201
+
+```
+
+```text
+Dinna infi 70
+Dinna spl 90
+
+```
+
+Another example, including the department's name in the results:
+
+```sql
+SELECT Students.Name, Departments.name, Courses.Name, StudentsCourses.Grade
+FROM ((Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+      INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id)
+     INNER JOIN Departments ON Students.DeptId = Departments.Id
+
+```
+
+6. **If you want the results sorted by different criteria,** add an `ORDER BY` part to the query (the default is sorting by the primary key). For example, sort the results in ascending order by the students' names, and in descending order by their grades.
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+WHERE Courses.NAKAZ = 4
+ORDER BY Students.Name ASC, StudentsCourses.Grade DESC
+
+```
+
+```text
+Danny spl 85
+Danny infi 80
+Dinna spl 90
+Dinna infi 70
+
+```
 
 A join combines rows from two or more tables.
 
@@ -112,24 +434,6 @@ A join combines rows from two or more tables.
 - **A join with no condition** is the Cartesian product: every row of the left table paired with every row of the right table.
 - **In relational-algebra terms,** a join is that product followed by a selection of the rows that meet the condition.
 - **`SELECT`** then picks (projects) only the columns you ask for.
-
-**An inner join** lists each student with each course they take. A student with no enrollment does not appear.
-
-```sql
-SELECT S.Name, C.Title
-FROM Students S
-INNER JOIN Enrollment E ON S.Id = E.StudentId
-INNER JOIN Courses C ON E.CourseId = C.Id;
-```
-
-**A left join** lists every student. A student with no enrollment appears once, with `Title` set to null.
-
-```sql
-SELECT S.Name, C.Title
-FROM Students S
-LEFT JOIN Enrollment E ON S.Id = E.StudentId
-LEFT JOIN Courses C ON E.CourseId = C.Id;
-```
 
 ![INNER JOIN of Alice to prog. Bob and systems are marked because they have no junction row, so they are absent from the result](../../web/public/figures/sql-join.svg)
 
@@ -154,7 +458,565 @@ INNER JOIN Courses C ON SC.course_id = C.id;
 :::
 :::
 
-## DTO, DAO, and repository
+### OUTER JOIN
+
+Suppose you want **all the course names**, and if there are students studying them, their names and grades. In the current query you get only the courses that some student takes (the course `ppl`, which no student takes, does not appear), because you required a match in the `JOIN` between the `Courses` table and the `StudentsCourses` table.
+
+Suppose you want **all the student names**, and if they take courses, the course names and their grades. In the current query you get only the students who take some course (`Ringo`, who is busy with his career as a drummer, takes no course right now, so he does not appear), because you required a match in the `JOIN` between the `Students` table and the `StudentsCourses` table.
+
+So define another kind of `JOIN`, which does not require a **two-sided** match like `INNER JOIN`, but a **one-sided** match. In other words, **all the values from one table** appear, and if there is a match with the values in the second table, they appear accordingly (otherwise, technically, `NULL` appears for a value that does not exist in the second table).
+
+**All the courses, plus the students who take courses:**
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     RIGHT OUTER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+```
+
+```text
+Dinna infi 70
+Dinna spl 90
+Danny infi 80
+Danny spl 85
+NULL ppl NULL
+
+```
+
+**All the students, plus the courses students take:**
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students LEFT OUTER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+```
+
+```text
+Dinna infi 70
+Dinna spl 90
+Danny infi 80
+Danny spl 85
+Ringo NULL NULL
+
+```
+
+**All the students, plus all the courses:** perform a `UNION` of the two queries.
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     RIGHT OUTER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+UNION
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM Students LEFT OUTER JOIN
+     (StudentsCourses INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id)
+     ON Students.Id = StudentsCourses.StudId
+
+```
+
+```text
+Dinna infi 70
+Dinna spl 90
+Danny infi 80
+Danny spl 85
+NULL ppl NULL
+Dinna infi 70
+Dinna spl 90
+Danny infi 80
+Danny spl 85
+Ringo NULL NULL
+
+```
+
+To avoid repetitions, restrict the second query so that it returns only the additions, with `WHERE`:
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     RIGHT OUTER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+UNION
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM Students LEFT OUTER JOIN
+     (StudentsCourses INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id)
+     ON Students.Id = StudentsCourses.StudId
+WHERE Courses.Name is NULL
+
+```
+
+```text
+Dinna infi 70
+Dinna spl 90
+Danny infi 80
+Danny spl 85
+NULL ppl NULL
+Ringo NULL NULL
+
+```
+
+### GROUP BY
+
+You can unite a number of records by the value of a shared field, to perform different operations on the value of another field, such as counting, summing, averaging, and so on. For example, for the original query:
+
+```sql
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+```
+
+```text
+Danny spl 85
+Danny infi 80
+Dinna spl 90
+Dinna infi 70
+
+```
+
+| Query | Aggregate | Result |
+| --- | --- | --- |
+| The average grade of each student | `AVG(StudentsCourses.Grade)` | Danny 82.5, Dinna 80 |
+| The lowest grade of each student | `MIN(StudentsCourses.Grade)` | Danny 80, Dinna 70 |
+| The highest grade of each student | `MAX(StudentsCourses.Grade)` | Danny 85, Dinna 90 |
+| The number of courses each student took | `COUNT(StudentsCourses.Grade)` | Danny 2, Dinna 2 |
+| The total credit points each student earned in courses | `SUM(Courses.NAKAZ)` | Danny 8, Dinna 8 |
+
+For example, the average:
+
+```sql
+SELECT Students.Name, AVG(StudentsCourses.Grade)
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+GROUP BY Students.Id
+
+```
+
+and the credit points, counting only passed courses:
+
+```sql
+SELECT Students.Name, SUM(Courses.NAKAZ)
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+WHERE StudentsCourses.grade > 55
+GROUP BY Students.Id
+
+```
+
+- **The order of the parts:** `WHERE` filters the rows before they are grouped, so it comes before `GROUP BY`.
+
+### DISTINCT
+
+**A note:** `DISTINCT` keeps only one appearance of identical records in the query's result (not for specific fields, as in `GROUP BY`).
+
+```sql
+SELECT Students.Id, Students.Name
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+```
+
+```text
+17 Dinna
+17 Dinna
+89 Danny
+89 Danny
+
+```
+
+```sql
+SELECT DISTINCT Students.Id, Students.Name
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+```
+
+```text
+17 Dinna
+89 Danny
+
+```
+
+## An application that manages data in a database
+
+This section designs a general pattern for managing data in a database, and an application that uses it for a defined purpose. The application is written in Python, and the operations on the database in SQL (using a Python library that provides an interface to the database).
+
+### A short introduction to Python
+
+- **Properties:**
+  - **a script language:**
+    - run line by line by an interpreter (no compiled file is run),
+    - less efficient: parsing happens at run time, and run-time errors that could have been prevented in advance,
+  - **no need to declare types:**
+    - a variable has a type at any given moment, according to the value it currently holds, but its type may change according to the current assignment: `x = 3`, then `x = 'abc'`,
+    - type errors are discovered only at run time,
+  - **you can implement OOP,** with classes and so on:
+    - objects on the heap,
+    - `self`, constructors, automatic cleanup,
+    - fields, methods,
+    - inheritance, polymorphism,
+  - **there are many libraries that support many and varied things** (apart from convenient packaging), including working with databases (`sqlite`),
+  - **convenient for writing and development, less for reading,** less efficient at run time (you can compile in advance for efficiency).
+- **Example code** is on the course site.
+  - When a procedure is defined, the interpreter keeps it in memory.
+  - Preventing the run of the `main` function when performing `import`, with the system variable `__name__`.
+  - (More details in the practical session.)
+
+### Designing the application
+
+Implement an application for automatically checking programming assignments, where the details of the students, the assignments, and the grades are managed in a database.
+
+**Given:** a database with the details of the students and the assignments, and a folder in the file system with the code of the assignment (in Python) that each student submitted.
+
+The application reads every assignment that was submitted, runs it (the function submitted is `run_assignment`), and compares it with the required result (which is given as part of the assignment's definition in the database). It computes the grade accordingly, and stores it in the database.
+
+**A first attempt:**
+
+```python
+import os
+import sqlite3
+import imp
+import atexit
+
+# connect to the database
+_conn = sqlite3.connect('grades.db')
+
+# register a function to be called immediately when the interpreter terminates
+def _close_db():
+    _conn.commit()
+    _conn.close()
+
+atexit.register(_close_db)
+
+# our application API:
+
+def create_tables():
+    _conn.executescript("""
+        CREATE TABLE students (
+            id      INT     PRIMARY KEY,
+            name    TEXT    NOT NULL
+        );
+
+        CREATE TABLE assignments (
+            num                 INT     PRIMARY KEY,
+            expected_output     TEXT    NOT NULL
+        );
+
+        CREATE TABLE grades (
+            student_id      INT     NOT NULL,
+            assignment_num  INT     NOT NULL,
+            grade           INT     NOT NULL,
+
+            FOREIGN KEY(student_id)     REFERENCES students(id),
+            FOREIGN KEY(assignment_num) REFERENCES assignments(num),
+
+            PRIMARY KEY (student_id, assignment_num)
+        );
+    """)
+
+def insert_student(id, name):
+    _conn.execute("INSERT INTO students (id, name) VALUES (?, ?)", [id, name])
+
+def insert_assignment(num, expected_output):
+    _conn.execute("INSERT INTO assignments (num, expected_output) VALUES (?, ?)",
+                  [num, expected_output])
+
+def insert_grade(student_id, assignment_num, grade):
+    _conn.execute("INSERT INTO grades (student_id, assignment_num, grade) VALUES (?, ?, ?)",
+                  [student_id, assignment_num, grade])
+
+def grade(assignments_dir, assignment_num):
+    query_data = _conn.cursor()
+    query_data.execute("SELECT expected_output FROM assignments WHERE num = ?", [assignment_num])
+
+    # the expected value is the first element in the fetched row
+    expected_output = query_data.fetchone()[0]
+
+    # loop over the files in the assignment_dir
+    for assignment in os.listdir(assignments_dir):
+
+        # the os.path.splitext split a file name that looks like: 'file.ext' into ['file', 'ext']
+        (student_id, ext) = os.path.splitext(assignment)
+
+        # imp.load_source loads python source code (module) into a variable
+        # the first argument will be the __name__ that the module will see when it loads
+        # and the second is the path to the module
+        code = imp.load_source('test', assignments_dir + '/' + assignment)
+
+        # calculating the grade
+        grade = 100 if code.run_assignment() == expected_output else 0
+
+        insert_grade(student_id, assignment_num, grade)
+
+def print_grades():
+    cur = _conn.cursor()
+
+    cur.execute("SELECT name as student_name, assignment_num, grade FROM students INNER JOIN grades ON students.id = grades.student_id")
+
+    print 'grades:'
+    for row in cur.fetchall():
+        print 'grade of student {} on assignment {} is {}'.format(*row)
+
+```
+
+**An example run.** Assume these files were submitted for the last assignment:
+
+```python
+#1111.py
+def run_assignment():
+    return 'spl'
+
+#2222.py
+def run_assignment():
+    return 'spl!'
+
+#3333.py
+def run_assignment():
+    return 'spl'
+
+```
+
+Running the code:
+
+```text
+> python
+
+>>> from vicious import *
+>>> create_tables()
+>>> insert_student(1111, 'Alice')
+>>> insert_student(2222, 'Bob')
+>>> insert_student(3333, 'Christ')
+>>> insert_assignment(1, 'spl')
+
+>>> grade('assignments', 1)
+>>> print_grades()
+grades:
+grade of student Alice on assignment 1 is 100
+grade of student Bob on assignment 1 is 0
+grade of student Christ on assignment 1 is 100
+
+```
+
+**The central drawback:** the code for accessing the database is mixed with the code of the "logic", the way the grade is computed and the reports are prepared.
+
+- **A change in the logic** (the method of computing the grade) means changing the code that accesses the database.
+- **A change in the code that accesses the database** (assume adding a caching layer, or using a better library than `sqlite3`) means changing the logic too.
+- **Using the code that accesses the database in another application** drags in loading the logic.
+- **Using the logic code** (automatic grade computation) **in another application** drags in loading the code that accesses the database.
+
+So separate the two parts:
+
+- **an independent layer for accessing the database,**
+- **the logic of giving the grade and preparing the reports.**
+
+**A second attempt:**
+
+```python
+# file: persistence.py
+
+import sqlite3
+import atexit
+
+# we want to make the persistence layer singleton so we are marking the
+# following class as private by prepending an underscore to its name.
+class _PersistenceLayer(object):
+    def __init__(self):
+        self._conn = sqlite3.connect('grades.db')
+
+    def _close(self):
+        self._conn.commit()
+        self._conn.close()
+
+    def create_tables(self):
+        # see code in previous version...
+
+    def insert_student(self, id, name):
+        # see code in previous version...
+
+    def insert_assignment(self, num, expected_output):
+        # see code in previous version...
+
+    def insert_grade(self, student_id, assignment_num, grade):
+        # see code in previous version...
+
+    def get_assignment_expected_output(self, assignment_num):
+        c = self._conn.cursor()
+        c.execute("SELECT expected_output FROM assignments WHERE num = ?", [assignment_num])
+        return str(c.fetchone()[0])
+
+    def get_all_grades(self):
+        c = self._conn.cursor()
+        return c.execute("SELECT name as student_name, assignment_num, grade FROM students INNER JOIN grades ON students.id = grades.student_id").fetchall()
+
+# persistence layer is a singleton
+psl = _PersistenceLayer()
+
+atexit.register(psl._close)
+
+```
+
+```python
+# file: grading.py
+
+from persistence import psl
+import os
+import imp
+
+def grade(assignments_dir, assignment_num):
+    expected_output = psl.get_assignment_expected_output(assignment_num)
+
+    for assignment in os.listdir(assignments_dir):
+        (student_id, ext) = os.path.splitext(assignment)
+
+        code = imp.load_source('test', assignments_dir + '/' + assignment)
+
+        grade = 100 if code.run_assignment() == expected_output else 0
+
+        psl.insert_grade(student_id, assignment_num, grade)
+
+def print_grades():
+    print 'grades:'
+    for grade in psl.get_all_grades():
+        print 'grade of student {} on assignment {} is {}'.format(*grade)
+
+```
+
+**The drawback:** the data the persistence layer provides is not generic. It includes only the data the logic part needs right now, and does not support wider data that the logic part may need later.
+
+- **`expected_output`:** if you want to improve the grading method in the future, based on other fields, you will have to change the layer that accesses the database.
+- **`get_all_grades`:** if you want to produce a report with richer content about a student than just the grade, you will have to change the layer that accesses the database.
+
+So define a general interface for storing and retrieving data from a table in the database.
+
+**A third attempt.**
+
+- **DTO (Data Transfer Object):** an object in the programming language (in this case Python) that represents the content of a record from a table in the database. The logic part works only with objects of this type. When it needs data from the database, the data is returned to it as an object of this type (and not as a record, the way it is represented in the database).
+- **DAO (Data Access Object):** an interface that supports the operation of **storing** (`insert`) an object that represents a record (a DTO), or **retrieving** a record (`find`) as such an object (a DTO).
+  - **The store operation** receives a DTO to keep in the table, and builds an `INSERT` query that adds a record with the values of its fields.
+  - **The retrieve operation** performs a `SELECT` query on a record from the table, and returns it as a DTO (the values of the fields in the record are the values of the fields of the DTO object).
+
+In our case there are three DTO classes, `Student`, `Grade`, and `Assignment`, and three DAO classes, `Students`, `Grades`, and `Assignments`.
+
+```python
+# file: persistence.py
+
+import sqlite3
+import atexit
+
+# Data Transfer Objects:
+
+class Student(object):
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+class Assignment(object):
+    def __init__(self, num, expected_output):
+        self.num = num
+        self.expected_output = expected_output
+
+class Grade(object):
+    def __init__(self, student_id, assignment_num, grade):
+        self.student_id = student_id
+        self.assignment_num = assignment_num
+        self.grade = grade
+
+# Data Access Objects:
+# All of these are meant to be singletons
+
+class _Students:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def insert(self, student):
+        self._conn.execute("INSERT INTO students (id, name) VALUES (?, ?)",
+                           [student.id, student.name])
+
+    def find(self, student_id):
+        c = self._conn.cursor()
+        c.execute("SELECT id, name FROM students WHERE id = ?", [student_id])
+        return Student(*c.fetchone())
+
+class _Assignments:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def insert(self, assignment):
+        self._conn.execute("INSERT INTO assignments (num, expected_output) VALUES (?, ?)",
+                           [assignment.num, assignment.expected_output])
+
+    def find(self, num):
+        c = self._conn.cursor()
+        c.execute("SELECT num, expected_output FROM assignments WHERE num = ?", [num])
+        return Assignment(*c.fetchone())
+
+class _Grades:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def insert(self, grade):
+        self._conn.execute("""
+            INSERT INTO grades (student_id, assignment_num, grade) VALUES (?, ?, ?)
+        """, [grade.student_id, grade.assignment_num, grade.grade])
+
+    def find_all(self):
+        c = self._conn.cursor()
+        all = c.execute("""
+            SELECT student_id, assignment_num, grade FROM grades
+        """).fetchall()
+
+        return [Grade(*row) for row in all]
+
+# The Repository
+class _Repository(object):
+    def __init__(self):
+        self._conn = sqlite3.connect('grades.db')
+        self.students = _Students(self._conn)
+        self.assignments = _Assignments(self._conn)
+        self.grades = _Grades(self._conn)
+
+    def _close(self):
+        self._conn.commit()
+        self._conn.close()
+
+    def create_tables(self):
+        # see code in previous version...
+
+# the repository singleton
+repo = _Repository()
+atexit.register(repo._close)
+
+```
+
+```python
+# file: grading.py
+
+from persistence import repo
+import os
+import imp
+
+def grade(assignments_dir, assignment_num):
+    expected_output = repo.assignments.find(assignment_num).expected_output
+
+    for assignment in os.listdir(assignments_dir):
+        (student_id, ext) = os.path.splitext(assignment)
+
+        code = imp.load_source('test', assignments_dir + '/' + assignment)
+
+        student_grade = Grade(student_id, assignment_num, 0)
+        if code.run_assignment() == expected_output:
+            student_grade.grade = 100
+
+        repo.grades.insert(student_grade)
+
+def print_grades():
+    print 'grades:'
+    for grade in repo.grades.find_all():
+        student = repo.students.find(grade.student_id)
+        print 'grade of student {} on assignment {} is {}'\
+            .format(student.name, grade.assignment_num, grade.grade)
+
+```
 
 The course organizes database code into three kinds of classes.
 
@@ -162,6 +1024,123 @@ The course organizes database code into three kinds of classes.
 - **DAO (data access object):** a class that performs CRUD operations (`Create`, `Read`, `Update`, `Delete`) on a single table.
 - **Repository:** a higher layer that holds the business logic, and the queries that span several tables or several DAOs.
 
+**The drawback:** the code of the different DAOs, `Students`, `Grades`, and `Assignments`, is almost identical, up to the names of the tables and the fields. So define a general DAO pattern.
+
+**A fourth attempt.** The class that implements the general DAO pattern receives, in its constructor, the DTO class it must move to or from the database, and formulates the matching queries accordingly.
+
+**The assumptions:**
+
+- **the names of the tables in the database are the names of the classes of the transferred objects** (the DTOs), with an `s` added (`Student` → `Students`, `Grade` → `Grades`, `Assignment` → `Assignments`),
+- **the names of the fields in the database are the names of the fields of the transferred object classes** (the DTOs),
+- **the constructor of the DTO object receives all the fields** (not necessarily in their order in the table in the database, which requires the `orm` procedure).
+
+To implement the general pattern on the basis of these assumptions, you need information about the fields of the DTO class (this can be done with Python's `inspect` package), and about the fields in the record returned from the database (included in the `cursor` object of `sqlite`).
+
+```python
+# file: dbtools.py
+
+import inspect
+
+# we can use our method above in order to start writing a generic Dao
+# note that this class is not complete and we will add methods to it next
+class Dao(object):
+    def __init__(self, dto_type, conn):
+        self._conn = conn
+        self._dto_type = dto_type
+
+        # dto_type is a class, its __name__ field contains a string representing the name of the class.
+        self._table_name = dto_type.__name__.lower() + 's'
+
+    def insert(self, dto_instance):
+        ins_dict = vars(dto_instance)              # { 'id': 3, 'name': 'danny' }
+
+        column_names = ','.join(ins_dict.keys())   # ['id', 'name'] => 'id,name'
+        params = ins_dict.values()                 # [3, 'danny']
+        qmarks = ','.join(['?'] * len(ins_dict))   # '?,?'
+
+        stmt = 'INSERT INTO {} ({}) VALUES ({})'\
+            .format(self._table_name, column_names, qmarks)
+
+        self._conn.execute(stmt, params)
+
+    def find_all(self):
+        c = self._conn.cursor()
+        c.execute('SELECT * FROM {}'.format(self._table_name))
+        return orm(c, self._dto_type)
+
+    def find(self, **keyvals):
+        # keyvals = { 'id': 17, 'name': 'danny' }
+        column_names = keyvals.keys()   # ['id', 'name']
+        params = keyvals.values()       # [17, 'danny']
+
+        stmt = 'SELECT * FROM {} WHERE {}' \
+            .format(self._table_name, ' AND '.join([col + '=?' for col in column_names]))
+        # SELECT * FROM students WHERE id=? AND name=?
+
+        c = self._conn.cursor()
+        c.execute(stmt, params)
+        return orm(c, self._dto_type)
+
+def orm(cursor, dto_type):
+
+    # the following line retrieve the argument names of the constructor
+    args = inspect.getargspec(dto_type.__init__).args   # ['self', 'id', 'name']
+
+    # the first argument of the constructor will be 'self', it does not correspond
+    # to any database field, so we can ignore it.
+    args = args[1:]   # ['id', 'name']
+
+    # gets the names of the columns returned in the cursor
+    # cursor.description = [ ['name', ...], ['id', ...] ]
+    # col_names = ['name', 'id']
+    col_names = [column[0] for column in cursor.description]
+
+    # map them into the position of the corresponding constructor argument
+    col_mapping = [col_names.index(arg) for arg in args]   # [1, 0]
+    # cursor.fetchall() = [ ['danny', 17], ['dinna', 45] ]
+    return [row_map(row, col_mapping, dto_type) for row in cursor.fetchall()]
+
+def row_map(row, col_mapping, dto_type):
+    # row = ['danny', 17]
+    # col_mapping [1, 0]
+    # dto_type = Student
+    ctor_args = [row[idx] for idx in col_mapping]   # [17, 'danny']
+    return dto_type(*ctor_args)   # Student(17, 'danny')
+
+# Repository
+class Repository(object):
+    def __init__(self):
+        self._conn = sqlite3.connect('grades.db')
+        self._conn.text_factory = bytes
+        self.students = Dao(Student, self._conn)
+        self.assignments = Dao(Assignment, self._conn)
+        self.grades = Dao(Grade, self._conn)
+
+    def _close(self):
+        # see code in previous version...
+
+    def create_tables(self):
+        # see code in previous version...
+
+# singleton
+repo = Repository()
+atexit.register(repo._close)
+
+```
+
+**The drawback:** every time a new field is defined in a table, or a new table in the database, you must update the matching DTO class in Python.
+
+- **So create the DTO classes automatically,** given the database:
+  - for every table, a DTO is defined with the name of the table (without the `s`),
+  - the names of the fields of the DTO class are the fields of the table.
+- **For that, you need information from the database** about our data model: the tables and the fields. You can get it in SQL:
+
+```sql
+SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+
+```
+
+The implementation is left as an exercise at home.
 
 ## Practice
 
@@ -824,8 +1803,6 @@ Which of these hold?
 
 :::
 
-The persistence layer from session 13 is what connects a Java or Python server to the database.
+To sum up, a database management system is a run-time environment for data that outlives the process. You design its tables from your classes, reach them in SQL, and keep the SQL inside a persistence layer of DTOs, DAOs, and a repository, so the logic never depends on how the data is stored.
 
-- **The server:** the [Reactor](topic:reactor) server from earlier in the course is the program that runs these SQL statements.
-- **Where the SQL lives:** all SQL stays inside the DAO classes.
-- **Who calls whom:** the server's protocol calls the repository, and the repository calls the DAOs.
+- **Next:** [Course review](topic:course-review) goes over the main topics, the design patterns, and the structure of the exam.

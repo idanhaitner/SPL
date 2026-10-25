@@ -1,130 +1,22 @@
 ---
 id: classes-and-objects
 title: Classes and objects
+blurb: "How an object is laid out in memory, initialized, created through a factory, and deleted."
 sources:
+  - "materials/notes/lecture-notes.docx.pdf"
   - "materials/lectures/Chapter 3 - Classes and Objects.pptx"
-  - "materials/sessions/SPL_PS1 (1).pptx"
   - "materials/sessions/SPL_PS3.pptx"
 ---
 
-This chapter follows a C++ program from its source files all the way to a running object.
+Programming languages let you define information with a given structure, an object that holds fields and methods. This chapter follows an object through its life in memory.
 
-- **Building:** how a program split across several files is compiled one file at a time and then linked into one executable.
-- **Classes:** what an object looks like in memory, and how its members get their first values.
-- **Using objects:** how you reach an object's members, and how a member function finds its object through `this`.
+- **Structure:** how an object's fields are laid out in memory, on the stack or on the heap.
+- **Initialization:** how an object is created, how its fields get their first values, and the factory pattern for objects that need more than a constructor.
+- **Deletion:** how an object is removed from memory, and what its destructor must release.
 
-## Building a program
+Copying and assigning objects come in [The rule of three](topic:rule-of-three), and moving them in [The rule of five](topic:rule-of-five).
 
-A real C++ program is split across many `.cpp` files, and each file is compiled on its own. So a file often calls a function whose body lives in a different file. The compiler can still check that call, as long as it knows the function's name and signature.
-
-- **A declaration** introduces a function's name and its signature, so other code can call it.
-- **A definition** is a declaration that also supplies the function's body.
-- **The One Definition Rule (ODR)** allows a function to be declared many times, but defined exactly once in the whole program.
-
-The declarations that several files need are written once, in a header, and each file that needs them includes it.
-
-- **Header files** (`.h` or `.hpp`) collect the declarations that several `.cpp` files share. A declaration of a type or function that comes before its definition is called a forward declaration.
-- **`#include`** literally pastes the header's text into the source file at that point.
-- **Include guards** stop the same header from being pasted twice into one file, which also protects against two headers that include each other.
-
-```cpp
-#ifndef POINT_H
-#define POINT_H
-// declarations
-#endif
-
-```
-
-### From source files to an executable
-
-Turning those files into a program takes four stages, which always run in this order.
-
-:::definition id=def-build title="The four stages of the build" source="materials/sessions/SPL_PS1 (1).pptx"
-
-1. **Preprocessor:** handles the `#` directives (`#include`, `#define`, `#ifndef`), strips comments, and writes the expanded source.
-2. **Compiler:** translates that expanded source into assembly.
-3. **Assembler:** translates the assembly into a machine-code object file (`.o` / `.obj`).
-4. **Linker:** combines the object files and the libraries, resolves the addresses of symbols and of external calls, and writes a single executable.
-:::
-
-![The four build stages in order: preprocessor, compiler, assembler, then the linker, which produces one executable](../../web/public/figures/build-pipeline.svg)
-
-The first three stages work on one `.cpp` file at a time. Only the linker sees the whole program.
-
-- **An object file is unfinished.** When `a.cpp` calls a function defined in `b.cpp`, the compiler only checks the call against the declaration. It leaves a note in `a.o` saying "the address of this function is still missing".
-- **The linker fills those notes in.** It looks for each missing function among the definitions in all the object files. If no file defines it, the link fails with an **undefined reference** error. If two files define it, the link fails because the ODR is broken.
-- **The linker also needs a starting point.** An executable starts running at `main`, so when the linker builds an executable, exactly one of the object files must define `main`.
-
-You choose how far the build goes with `g++` flags.
-
-- **`g++ -c file.cpp`** runs the first three stages and stops before the linker. It writes `file.o`, and it does not care whether `main` or the other functions exist yet.
-- **`g++ -o name a.o b.o`** links the object files into an executable called `name`. Without `-o`, the executable on Linux is named `a.out`.
-- **`g++ -o name a.cpp b.cpp`** does all four stages in one command.
-
-:::problem id=worked-compile-vs-link title="Linking without main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
-`student.cpp` defines the members of `Student` and nothing else.
-
-```cpp
-// student.cpp
-#include "student.h"
-
-Student::Student(const std::string& name, int year)
-    : _name(name), _year(year) {}
-
-void Student::print() const {
-    std::cout << _name << " " << _year;
-}
-
-```
-
-The first command below succeeds and the second fails. Which stage fails, and why?
-
-```text
-g++ -c student.cpp
-g++ -o app student.o
-
-```
-
-:::solution
-- **Where to look:** search the file for `main`. It has a constructor and `print`, but no `main` function.
-- **Why the first command succeeds:** `-c` stops before the linker. Compiling one file only checks that file's own code, and a file without `main` is perfectly fine.
-- **Why the second command fails:** asking for an executable runs the linker, and an executable needs `main` as its starting point. `student.o` is the only object file given, and it does not define `main`.
-- **The failing stage:** the linker. It reports an undefined reference to `main`.
-- **The fix:** link it together with the file that defines `main`, for example `g++ -o app student.o main.o`.
-:::
-:::
-
-### Rebuilding with make
-
-With many files, typing every `g++` command by hand gets slow, and recompiling every file after a one-line change wastes time. A `Makefile` records which file is built from which, so `make` can rebuild only what changed.
-
-- **A rule** has a target, a colon, and the files it depends on. The lines under it are the recipe, the commands that build the target.
-- **Recipe lines** must begin with a Tab character, not spaces.
-- **Rebuilding:** `make` runs a recipe only when the target is missing or one of its dependencies is newer than it.
-- **The default target:** when you run `make` without naming a target, it builds the first target in the file.
-
-In this makefile, `hello` is linked from two object files, and each object file is compiled from its own `.cpp` file. After an edit to `run.cpp`, `make` recompiles only `run.o` and then links again.
-
-```makefile
-hello: bin/helloWorld.o bin/run.o
-	g++ -o bin/hello bin/helloWorld.o bin/run.o
-
-bin/helloWorld.o: src/helloWorld.cpp
-	g++ -c -o bin/helloWorld.o src/helloWorld.cpp
-
-bin/run.o: src/run.cpp
-	g++ -c -o bin/run.o src/run.cpp
-
-```
-
-### Linking in Java
-
-Java and C++ finish the link at different times.
-
-- **C++** resolves every symbol ahead of time, in the linker, so the executable is complete before it starts.
-- **Java** compiles source code to bytecode and has no separate link step. The JVM links dynamically while the program runs, at the moment each class is loaded.
-
-## Objects and values
+## Classes in C++
 
 A class bundles data with the functions that work on it. Before the first class, here are the library types the examples use, compared with their Java counterparts.
 
@@ -160,7 +52,91 @@ struct Point {
 - **Why the error message is confusing:** the grammar allows objects to be declared right after the closing brace, so the compiler keeps reading into the next line and reports the error there, not where the semicolon is missing.
 :::
 
-### Constructors and the initializer list
+## The structure of an object in memory
+
+When an object is defined, on the stack or on the heap, it is given memory according to its size. When the structure of the object is fixed, its inner layout is set in advance by a fixed rule, so the compiler can translate every access to a field into the exact place of that field in memory, relative to the object's address.
+
+The usual layout is that the fields are placed one after another, each one starting in a new cell, in the order they are declared in the class. The first field starts at the object's address, the lowest one. When a field is itself an object, its inner structure is laid out recursively in the same way.
+
+This `Student` class is the example for the rest of the memory chapters.
+
+```cpp
+class Student {
+private:
+    const int id;
+    string name;
+    Bag* bag;
+    vector<Book*> books;
+    const University& univ;
+
+public:
+    int getId() const { return id; }
+    const string& getName() const { return name; }
+    const Bag& getBag() const { return *bag; }
+    const vector<Book*>& getBooks() const { return books; }
+    const University& getUniv() const { return univ; }
+};
+
+{
+    Student s(...);
+    Student* ps = new Student(...);
+}
+
+```
+
+- **The getters follow the rule** from [Variables, pointers, and references](topic:pointers): the simple type `id` is returned by value, and every object is returned by `const` reference.
+- **`s` is defined on the stack,** so all of its fields are on the stack.
+- **`ps` is a pointer on the stack,** and the `Student` it points at, with all of its fields, is on the heap.
+
+| Field of `s` | Takes the cells | What they hold |
+| --- | --- | --- |
+| `id` | one cell | the number |
+| `name` | two cells: `chars`, `length` | the address of the characters on the heap, and their count |
+| `bag` | one cell | the address of a `Bag` on the heap |
+| `books` | two cells: `lst`, `size` | the address of the vector's array on the heap, and its size |
+| `univ` | one cell | the address of the `University` it is an alias for |
+
+The `Student` on the heap that `ps` points at has exactly the same inner layout, starting at the address that `ps` holds.
+
+## Initializing an object
+
+As we have said several times, the compiler translates the definition of an object in memory, on the stack or on the heap, into two main operations.
+
+- **Allocating the memory:** on the stack with `push` operations according to the object's size, and on the heap with `new`, which searches at run time for free cells that fit the object's size.
+- **Running the initialization mechanism,** which makes sure that every part of the object goes through initialization, automatically.
+  - First, the initialization mechanism runs on every field of the object that is itself an object (not on simple types, and not on addresses of objects).
+  - Then the object's constructor runs.
+
+A first attempt at the constructor of `Student` assigns every field in the body.
+
+```cpp
+Student(int id, const string& name, Bag* bag, const University& univ) {
+    _id = id;
+    _name = name;
+    _bag = bag;
+    _univ = univ;
+    _books.push_back(new DigitalBook());
+    _books.push_back(new HardCopyBook());
+}
+
+```
+
+That attempt has two problems.
+
+- **Inefficiency:** a field of object type is first initialized (empty), and only then assigned. It is better to initialize it once, with the assignment you need.
+- **Fields that are `const`, and fields that are references,** cannot be assigned after they are defined at all.
+
+So you state in advance how each field is initialized.
+
+```cpp
+Student(int id, const string& name, Bag* bag, const University& univ)
+    : _id(id), _name(name), _bag(bag), _univ(univ)
+{
+    _books.push_back(new DigitalBook());
+    _books.push_back(new HardCopyBook());
+}
+
+```
 
 A constructor (בנאי) gives the members their first values in an initializer list, which is written after a colon and before the constructor body.
 
@@ -169,7 +145,7 @@ A constructor (בנאי) gives the members their first values in an initializer 
 - **Other members** are also best initialized in the list. An assignment in the body would first default-construct the member and then assign it again, which does the work twice.
 - **A delegating constructor** names another constructor of the same class in its initializer list, and lets that constructor do the work.
 
-The header file only declares the constructor.
+In a real project a class is split between a header and a source file. This smaller version of `Student`, with a name and a year, shows the split. The header only declares the constructor.
 
 ```cpp
 // student.h
@@ -197,6 +173,78 @@ The constructor takes `name` as `const std::string&`, a reference to const. This
 
 - **The reference** names the caller's object itself, so the call skips the copy.
 - **`const`** promises that the function will not change that object.
+
+### A picture of two students
+
+```cpp
+{
+    University univ(...);
+    ...
+    Student s(7, "ringo", new Bag7(), univ);
+    Student* ps = new Student(8, "jango", new Bag5(), univ);
+}
+
+```
+
+| Stack address | Content | Field of `s` |
+| --- | --- | --- |
+| 9952 | 7 | `id` |
+| 9960 | 200 | `name.chars` |
+| 9968 | 5 | `name.length` |
+| 9976 | 300 | `bag` |
+| 9984 | 350 | `books.lst` |
+| 9992 | 2 | `books.size` |
+| 10000 | the address of `univ` | `univ` |
+
+And `ps`, at stack address 9944, holds 100.
+
+| Heap address | What is there |
+| --- | --- |
+| 100 | The `Student` of `ps`: `id` 8, `name` (400, 5), `bag` 500, `books` (550, 2), `univ` |
+| 200 | The characters `ringo` |
+| 240, 260 | The `DigitalBook` and `HardCopyBook` of `s` |
+| 300 | The `Bag7` of `s` |
+| 350 | The array of `s.books`: the addresses 240 and 260 |
+| 400 | The characters `jango` |
+| 440, 460 | The two books of the `Student` at 100 |
+| 500 | The `Bag5` of the `Student` at 100 |
+| 550 | The array of its `books`: the addresses 440 and 460 |
+
+### The factory pattern
+
+Sometimes a constructor is not enough.
+
+- **Initialization may need more than setting the fields,** such as connecting to the university server and registering the student in the university database. You would rather keep that out of the constructor, for example because you do not want to send the server a student whose constructor has not finished yet (the next chapters show why).
+- **A constructor may throw an exception.** If it does that for an object on the heap, its address is not known, because creating it failed.
+
+The **factory** pattern solves both.
+
+- **Make the constructor `private`,** so nobody outside the class can create an instance by calling it.
+- **Define a `static` method** of the class that creates an instance on the heap, does the extra initialization, and returns its address.
+
+```cpp
+class Student {
+private:
+    Student(...) { ... }
+    ...
+public:
+    static Student* create(...) {
+        Student* ret = new Student(...);
+        // additional initialization code
+        UniversityServer.register(*ret);
+        return ret;
+    }
+};
+
+Student* s = Student::create(...);
+...
+delete s;
+
+```
+
+- **The drawback:** every instance must be created on the heap.
+
+## Using an object
 
 ### Reaching an object's members
 
@@ -264,6 +312,55 @@ struct Line {
 :::
 :::
 
+## Deleting an object
+
+The compiler translates the removal of an object from memory, when the block it was defined in ends if it is on the stack, or when `delete` is called on its address if it is on the heap, into two operations.
+
+- **Running the destruction mechanism:**
+  - First the object's destructor runs.
+  - Then the destruction mechanism runs automatically on every field of the object that is itself an object.
+- **Releasing the object's memory,** from the stack or from the heap.
+
+So you never need to delete a variable on the stack. You must call `delete` on every object stored on the heap. By the design rule from [Variables, pointers, and references](topic:pointers), whoever holds the variable with the object's address is the one who must call `delete` on it.
+
+```cpp
+class Student {
+    ...
+    ~Student() {
+        delete _bag;
+        for (int i = 0; i < _books.size(); i++)
+            delete _books.at(i);
+    }
+};
+
+{
+    University univ(...);
+    ...
+    Student s(7, "ringo", new Bag7(), univ);
+    Student* ps = new Student(8, "jango", new Bag5(), univ);
+    delete ps;
+}
+
+```
+
+- **`delete ps`** runs `~Student` on the student at heap address 100, which deletes its `Bag5` and its two books. Then the destruction mechanism destroys `name` and `books`, which release their own arrays, and finally the student's own memory is released.
+- **At the end of the block,** `s` goes through the same steps, and its cells on the stack are popped.
+- **In the destructor, delete the pointers the class is responsible for.** Usually that means every pointer in the class, unless there are technical constraints, such as how hard it is to define a vector of references.
+
+:::check id=chk-delete-order
+`delete ps` runs on a `Student`. In what order do things happen?
+
+- [ ] The memory is released, then `~Student` runs
+- [x] `~Student` runs, then the destructors of the object fields, then the memory is released
+- [ ] The destructors of the object fields run, then `~Student`
+
+- **The destructor runs first,** while every field still exists, so it can still read `_bag` and `_books` and delete what they point at.
+- **Then the fields that are objects are destroyed** automatically, here `name` and `books`.
+- **Last, the object's own memory is released.**
+:::
+
+## Returning objects, and the special member functions
+
 ### Returning an object from a member function
 
 Returning an object by value creates a copy. Returning a reference avoids the copy, but only if the object is still alive after the call.
@@ -288,121 +385,9 @@ Creating, copying, and destroying objects is handled by four special member func
 - **Copy assignment operator (אופרטור השמה):** runs when one existing object is assigned to another existing object.
 - **Destructor (הורס):** runs at the end of the object's lifetime and releases the resources the object acquired.
 
-The versions the compiler writes copy each member one by one. That is correct for `Student`, whose members are a `std::string` and an `int`. The next chapter shows when it is not.
+The versions the compiler writes copy each member one by one. That is correct for the small `Student` with a `std::string` and an `int`, whose members manage their own memory. It is wrong for the full `Student`, which holds a `Bag*` and pointers to books. The next chapter shows why.
 
-## Practice
+To sum up, an object's fields are laid out one after another, the initializer list is how a constructor gives them their first values, and the destructor releases what the object is responsible for before its memory goes.
 
-:::problem id=ps1-link-vs-java title="Where linking happens" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-Java and C++ both turn source into a program that can run. In this session the C++ compile step is `g++ -c`.
-
-:::check id=ps1-link-vs-java-q1
-`g++ -c` writes an {{=object file|executable|bytecode}}.
-
-- **The `.o` file** contains machine code, but its calls to functions in other files are still unresolved.
-- **`g++ -c`** runs the preprocessor, the compiler, and the assembler, and stops before the linker.
-:::
-
-:::check id=ps1-link-vs-java-q2
-Which of these hold for Java?
-
-- [ ] Java source is compiled straight to an `.o` file
-- [x] Java source is compiled to bytecode
-- [x] The JVM links dynamically while the program runs, when it loads a class
-
-Java has no `.o` files. Its linking happens while the program runs, each time the JVM loads a class.
-:::
-
-:::check id=ps1-link-vs-java-q3
-When does C++ linking run, relative to `g++ -c`?
-
-- [x] As a separate step, before the executable exists
-- [ ] Inside `g++ -c`, which already resolves every external symbol
-- [ ] While the program runs, when a class is loaded
-
-After `g++ -c`, external symbols are still unresolved. The linker runs as a separate step, and the executable exists only after it finishes.
-:::
-:::
-
-:::problem id=ps1-makefile-first-target title="The first target of make" source="materials/sessions/SPL_PS1 (1).pptx" kind=exercise solution_origin=source
-This makefile has two targets.
-
-```makefile
-clean:
-	rm -rf bin
-
-hello: bin/helloWorld.o bin/run.o
-	g++ -o bin/hello bin/helloWorld.o bin/run.o
-
-```
-
-:::check id=ps1-makefile-first-target-q1
-`make` with no arguments runs {{=clean|hello|bin}}.
-
-`make` with no arguments builds the first target in the file, and here that is `clean`.
-:::
-
-:::check id=ps1-makefile-first-target-q2
-What does that run do?
-
-- [ ] It links `bin/hello` from `bin/helloWorld.o` and `bin/run.o`
-- [x] It deletes the build products, and `hello` stays unbuilt
-- [ ] It builds `hello`, then deletes `bin`
-
-Running `clean` executes its recipe, `rm -rf bin`, which deletes the build products. Nothing gets built.
-:::
-
-:::check id=ps1-makefile-first-target-q3
-Which of these build the program?
-
-- [x] Run `make hello`
-- [ ] Run `make` with no arguments
-- [x] Move `hello` so it is the first target, then run `make`
-
-- **`make hello`** names the target explicitly, so it builds the program.
-- **Moving `hello` to the top** makes it the default target, so a plain `make` builds it.
-- **A plain `make`** keeps running `clean` for as long as `clean` is the first target.
-:::
-:::
-
-:::problem id=ps3-pass-by-value title="Three signatures of emphasize" source="materials/sessions/SPL_PS3.pptx" kind=exercise solution_origin=source
-Here are three ways to pass a string to a function.
-
-```cpp
-void emphasize1(std::string word);
-void emphasize2(std::string& word);
-void emphasize3(std::string* word);
-
-```
-
-:::check id=ps3-pass-by-value-q1
-What does `emphasize1` do with the caller's string?
-
-- [x] It receives a copy. Changes inside the function leave the caller's string as it was
-- [ ] It modifies the caller's string
-- [ ] It accepts `nullptr` in place of the string
-
-- **`emphasize1` takes its parameter by value**, so it receives its own copy of the string.
-- **Changes to that copy** inside the function leave the caller's string as it was.
-:::
-
-:::check id=ps3-pass-by-value-q2
-Which of these hold?
-
-- [x] `emphasize2` receives a reference, so changes inside the function modify the caller's string
-- [ ] `emphasize2` can be passed `nullptr`
-- [x] `emphasize3` receives a pointer. Changes through that pointer modify the caller's string, and the pointer may be `nullptr`
-
-A reference always refers to a real object, so it can never be `nullptr`. A pointer, by contrast, may be `nullptr`.
-:::
-
-:::check id=ps3-pass-by-value-q3
-The body of `emphasize3` has to check for {{=nullptr|a reference|a copy}} before it uses the pointer.
-
-Dereferencing a `nullptr` is undefined behavior, so a function that takes a pointer must check for `nullptr` before using it.
-:::
-:::
-
-To sum up, the initializer list is how a constructor gives members their first values, and `this` is how a member function finds the object it was called on.
-
-- **Next:** [Rule of three](topic:rule-of-three) (חוק השלושה) shows what must change when a member is a pointer to memory that the class allocated itself.
-- **Later:** [Inheritance](topic:inheritance) shows how a call through a base-class pointer can reach the function defined in the derived class.
+- **Next:** [The rule of three](topic:rule-of-three) shows what must change when an object like `Student` is copied or assigned, since it holds pointers to memory it owns.
+- **Later:** [Inheritance and polymorphism](topic:inheritance) shows how a call through a base-class pointer can reach the function defined in the derived class.

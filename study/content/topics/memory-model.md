@@ -1,72 +1,269 @@
 ---
 id: memory-model
 title: The memory model
+blurb: "Memory as the hardware, the operating system, and a language see it; the stack and heap models; and the regions of a C++ process."
 sources:
-  - "materials/lectures/Chapter 1 - The Memory Model.pptx"
   - "materials/notes/lecture-notes.docx.pdf"
+  - "materials/lectures/Chapter 1 - The Memory Model.pptx"
   - "materials/sessions/SPL_PS2 (1).pptx"
 ---
 
-This chapter shows how a running C++ program sits on the machine: what runs it, how its memory is divided into five regions, and why the stack and the heap are kept separate.
+The word "memory" means different things depending on who is looking at it. This chapter looks at it three times, and then builds the two models, the stack and the heap, that the rest of the course draws on.
 
-- **The run-time environment:** how the operating system turns a program into a running process.
-- **The five regions:** the stack, the heap, two static-data regions, and the code, all inside one virtual address space.
-- **The design and the machine:** why those regions exist, and what a running process looks like on a von Neumann machine.
+- **Three views:** memory as the hardware sees it, as the operating system sees it, and as a programming language sees it.
+- **The stack and the heap:** two ways to organize the cells a process receives, and how a compiler translates code into operations on them.
+- **A C++ process:** the five regions of its address space, with stack frames, heap blocks, and static variables.
 
-## The run-time environment
+## Three views of memory
 
-Systems programming keeps the programmer close to the machine. You deal directly with memory, with communication protocols, and with the run-time environment (סביבת זמן ריצה) that executes your program.
+### The hardware view
 
-Consider a program that searches for a film on the network, downloads it, and plays it.
+For the hardware, memory means the different technologies for storing information, and the operations on them.
 
-- **It needs many services:** searching the network, reading and writing files, and decoding video.
-- **The program does not talk to the hardware for these.** A layer between the program and the hardware provides them, on top of the processor's raw instruction set. That layer is the run-time environment.
+| Technology | Where | Access time | Keeps data with the power off? |
+| --- | --- | --- | --- |
+| Registers | On the processor chip | 1 clock pulse | No |
+| Cache memory | On the processor chip | About 3 pulses | No |
+| RAM | A separate component from the processor | About 10 pulses | No |
+| Disk | "Motherboard" storage: magnetic, or SSD, which is faster | About 10,000 pulses | Yes |
+| Tape | Optical technology with slow access | Slowest | Yes |
 
-:::definition id=def-runtime title="Computer, program, process, and run-time environment" source="materials/notes/lecture-notes.docx.pdf"
+You can compare the technologies by four parameters: size, access speed, price, and whether the data survives when the power is cut.
 
-- **Computer:** a machine that carries out tasks on its own, through its instruction set.
-- **Program:** a passive collection of instructions, which formally describes a task.
-- **Process:** one execution of a program, with its own address space and its own state.
-- **Run-time environment:** the layer between a program and the infrastructure it runs on. For a C++ program, that layer is the operating system, and the infrastructure under it is the hardware.
-- **The four jobs of a run-time environment:**
-  - **It preserves** the useful properties of the infrastructure.
-  - **It abstracts** the infrastructure, hiding its details.
-  - **It offers an interface** that is more convenient than the infrastructure itself.
-  - **It adds services** that the infrastructure does not provide on its own.
+- **The rule:** the faster the access to the data, the smaller and more expensive the storage.
+
+So each component has its own job.
+
+- **Registers** hold the data the processor needs for the operation it is running now. Some registers have fixed jobs, such as the address of the next line of code to run (the `pc` register) or the address of the top of the current process's stack (the `sp` register).
+- **The cache** keeps a copy of "popular" RAM cells, the ones read or written most recently, to cut the time it takes to reach them.
+- **RAM** holds the information a process needs while it runs, in particular the program's variables.
+- **The disk** holds information the user needs over time.
+- **Tape** is used for backups.
+
+![The processor components in a table, then the cache, the bus, and RAM, with the fast end of the memory hierarchy at the top](../../web/public/figures/memory-hierarchy.svg)
+
+The processor and the RAM are connected by two buses.
+
+- **The data bus width** is the number of bits that can be read or written in one operation, the size of one memory "cell", called a word. It is also the size of the registers.
+- **The address bus width** fixes how much memory the processor can reach. A RAM larger than that cannot be fully addressed, because each cell's address is described only by the bits of the address bus. For example, 32 address bits can address 2³² bytes, which is 4 GB.
+
+:::definition id=def-von-neumann title="The von Neumann machine" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
+
+- **The parts:** a von Neumann machine has a processor (CPU), a bus, and one main memory (RAM) shared by code and data.
+- **The fetch-decode-execute cycle:** the processor repeatedly fetches the next instruction from memory, decodes it, and executes it.
 :::
 
-The operating system is the run-time environment of a C++ process.
+![A von Neumann machine: a CPU, a bus, and one RAM that holds both the program and the data](../../web/public/figures/von-neumann-architecture.svg)
 
-- **Its position:** it stands between the process and the hardware.
-- **Starting a program:** the operating system creates a process for it, and then moves the process from state to state as it runs.
-- **The program counter (PC):** a processor register that holds the address of the next instruction to execute.
+These are the main parts of the processor.
 
-:::definition id=def-process-states title="Process states" source="materials/notes/lecture-notes.docx.pdf"
-A process is always in one of five main states.
+- **The control unit (CU)** runs the fetch-decode-execute cycle in step with the clock, and handles input and output through interrupts.
+- **The arithmetic-logic unit (ALU)** performs arithmetic, logical operations, comparisons, and bitwise operations, and detects arithmetic overflow.
+- **Registers** are the fastest storage in the machine, inside the processor itself.
 
-| State | Description | Next state |
-| --- | --- | --- |
-| Created | The process object is built, memory is allocated, the file is loaded, and the PC points at the first line of `main` | Runnable |
-| Runnable | The process is ready to run and is waiting for its turn from the scheduler | Running |
-| Running | The process is executing on the CPU. Each step advances the PC to the next instruction | Runnable (when the time slice ends); Blocked (waiting for an event or for I/O); Terminated (when the program finishes) |
-| Blocked | The process cannot run at the moment, and it is not in the scheduler's ready queue | Runnable (once the cause of the block is gone) |
-| Terminated | The resources have been released and the process has ended | none |
+Every processor has a set of operations it knows how to run, called its **instruction set**. Besides arithmetic, it has two basic memory operations: writing to RAM and reading from RAM.
 
-![Five process states: Created enters Runnable, Runnable and Running alternate, Running drops to Blocked and returns, and Running finishes in Terminated](../../web/public/figures/process-states.svg)
+- `ADD R1 R2 R3`: add the contents of registers R1 and R2, and write the sum into register R3.
+- `READ 100 R1`: copy the contents of cell 100 in RAM into register R1.
+- `WRITE R2 200`: copy the contents of register R2 into cell 200 in RAM.
 
+:::problem id=worked-add-trace title="A trace of an addition" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+The variable `i` is stored in cell 3000 and the variable `j` in cell 4000. Translate the fragment into `READ`, `WRITE`, and `ADD` instructions.
+
+```java
+int i = 10;
+int j = 20;
+i = i + j;
+
+```
+
+:::solution
+First the initial values are written into memory. Then both are loaded into registers, the ALU adds them, and the result is written back into the cell of `i`.
+
+```text
+WRITE 3000 10
+WRITE 4000 20
+READ  3000 R1
+READ  4000 R2
+ADD   R1 R2 R3
+WRITE 3000 R3
+
+```
+
+- **The final result:** cell 3000, which is `i`, holds 30.
+- **The ALU cannot add memory cells directly.** The values must first be loaded into registers, and the result must be written back to memory.
+:::
 :::
 
-A few points about the states, and about the other services the operating system provides to a running process.
+### The operating system view
 
-- **Runnable versus Blocked:** a runnable process is ready and only waiting for the scheduler to give it the CPU. A blocked process cannot run at all until some I/O or event completes.
-- **System calls:** a process asks the operating system's kernel for a service, such as reading a file, through a system call. An ordinary function call, by contrast, stays inside the process.
-- **Who touches the hardware:** the kernel performs the actual operation on the disk or network card, and reports the result back to the process.
-- **Multitasking:** the operating system can run more processes than there are CPU cores, by quickly switching the CPU from one process to another. That switch is called a context switch.
-- **Virtual memory:** each process gets its own virtual address space, which is usually larger than the physical RAM.
-- **Protection:** the operating system enforces permissions on files and on memory, so one process cannot touch another's memory.
-- **The JVM** is another run-time environment, which runs on top of the operating system. As the chapter [Back to Java](topic:java-runtime) explains, this is what lets the same bytecode run on different operating systems.
+For the operating system, the question is how to give memory to processes.
 
-## The five regions
+- **Allocating memory to a process:** how to find free cells in RAM, and what happens if there are none. Must the cells be contiguous? Can the process's memory grow while it runs?
+- **Sharing memory between processes:** how to give memory to two processes when there is not room for both. This is part of the context switch.
+- **More memory than RAM:** how to give a process more memory than the RAM has. This is virtual memory.
+
+### The programming language view
+
+A programming language organizes the memory that the operating system gives it. The questions here are the ones the next chapters answer.
+
+- **Organization:** how to arrange the memory in data structures that support different usage patterns while the program runs. This chapter answers it with the stack and the heap.
+- **Functions:** how a call to a function, and the return from it, are carried out in memory. That comes later in this chapter.
+- **Variables:** what they represent, and how they are kept in memory. See [Variables, pointers, and references](topic:pointers).
+- **Objects:** how they are laid out in memory, created, copied, moved, and deleted. See [Classes and objects](topic:classes-and-objects), [The rule of three](topic:rule-of-three), and [The rule of five](topic:rule-of-five).
+- **Inheritance and polymorphism:** how these ideas are carried out in memory. See [Inheritance and polymorphism](topic:inheritance).
+
+## The stack and the heap
+
+The operating system allocates a memory region to each process: an array of cells that the process reaches by reading or writing through an index, the address of the cell. From the process's point of view the cells are contiguous, even if physically they are not.
+
+Programming languages arrange that region as data structures that match the different ways a program uses memory while it runs.
+
+### Two usage patterns
+
+Think of the reservations for a cinema hall during one day. Some are made long in advance, for a known number of seats. Others arrive while the day is already running, for a number of seats nobody could know ahead. A program uses memory in the same two ways.
+
+**Static use.** A procedure is called and runs, or a variable is defined whose size is known at compile time.
+
+- **The memory is known in advance** ("compile time"), and it is used only while the procedure runs.
+- **Allocation and release are automatic.** The run-time environment does them, and allocation is efficient: it goes in the last place that was freed, and release happens at the end of the use.
+- **The advantage** is efficiency. **The drawback** is rigidity.
+
+**Dynamic use.** Information is defined whose size is not known at compile time, for example a structure whose size depends on user input, or whose lifetime is not known.
+
+- **The memory is known only at run time.** Allocation searches the memory for free space, and release depends on the programmer, which can leave "holes" in memory.
+- **The advantage** is flexibility. **The drawback** is efficiency.
+
+The memory a process receives is organized, by the operating system, as two data structures.
+
+- **The stack** supports the static usage pattern, which is efficient.
+- **The heap** supports the dynamic usage pattern, which is flexible.
+
+### The operations of each model
+
+**The heap** is a data structure with these operations.
+
+- `new`: allocate a run of contiguous cells, given the number of cells as a parameter. Each cell of the heap carries a flag saying whether it is allocated. `new` marks the run as allocated.
+- `delete`: release a run of cells. It clears the allocation flag.
+- `read`: read an allocated cell, by its address. Reading a cell that is not allocated is a run-time error.
+- `write`: write an allocated cell, by its address. Writing a cell that is not allocated is a run-time error.
+
+**The stack** is a data structure with these operations.
+
+- `createAF`: open a new region on the stack, called an activation frame (AF). Unlike the stack data structure from the data-structures course, our stack holds cells, but also groups them into regions. The stack keeps a list of the addresses where the regions start, and `createAF` adds the current top of the stack to that list.
+- `removeAF`: return to the previous region on the stack. It removes the last address from the list.
+- `push`: add one cell at the top of the stack, in the current region (AF).
+- `pop`: remove one cell from the top of the stack, from the current region.
+- `read`: read one of the cells in the current region. Unlike the stack data structure, you may read any cell of the region, not only the last one.
+- `write`: write one of the cells in the current region, again any cell of the region.
+
+### How a compiler uses them
+
+The compiler translates the program's code into operations on the stack and the heap. The general principle is that while the program runs, a procedure can reach memory (the stack or the heap) **only through the activation frame on top of the stack**.
+
+**1. Variables**
+
+- **Defining a variable** is always translated into `push` operations, according to its size, which is known at compile time.
+- **At the end of a block of code** (the closing `}` in Java), there is a `pop` for every variable that was defined in that block.
+- **Reaching a variable** in the AF, to read or write it, becomes `read` or `write` on the variable's cell. The variable's place relative to the top of the AF is known at compile time, so the compiler keeps a variable that points at the top of the stack, and sometimes keeps it in a register.
+
+**2. A call to a procedure**
+
+1. Open a new region on the stack (`createAF`).
+2. `push` the address of the next line in the code, so that the procedure knows where to return when it ends. That address is called the return address (`ra`).
+3. If the procedure is a method of an object, `push` `this`, the address of the object the method runs on, so that the method can reach the object's fields, which are not in its own AF.
+4. `push` every argument passed to the procedure, and write the values into place.
+5. Move to the procedure's code, by setting the `pc` to the procedure's address.
+
+**3. The definition of a function**
+
+1. At the end of the procedure, the returned value is written to a temporary place, such as a register set aside for it, so it can be copied to the right place in the previous AF.
+2. At the end of the procedure, besides `pop` for every variable defined in the block, including the parameters sent to it, there is a return to the previous AF (`removeAF`).
+3. Return to the caller's code, by setting the `pc` to the return address received as a parameter.
+
+**4. Dynamic information**
+
+- **Whenever information is defined whose size is known only at run time,** both its size and its lifetime are left to the programmer: allocation and release are written in by the programmer, with a call to `new` on the heap when it is created, and to `delete` when it is no longer needed.
+
+:::problem id=worked-java-trace title="A Java program as stack and heap operations" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
+`main` calls the static method `sum`, then creates a `Pair` on the heap and calls its `sum` method. How does the compiler translate the first call, and the body of `Test.sum`?
+
+```java
+class Pair {
+    int first, second;
+    Pair(int first, int second) { this.first = first; this.second = second; }
+    int sum() {
+        int ret = this.first + this.second;   // code address 7000
+        return ret;
+    }
+}
+
+class Test {
+    static int sum(int i, int j) {
+        int ret = i + j;                      // code address 6000
+        return ret;
+    }
+    public static void main(String[] args) {
+        int k = sum(1, 2);                    // code address 5000
+        Pair p = new Pair(3, 4);
+        k = p.sum();
+    }
+}
+
+```
+
+:::solution
+The call in `main`, starting at code address 0:
+
+```text
+0   stack.push            // the definition of k
+8   stack.createAF        // calling sum
+16  stack.push
+24  write [sp], 72        // the address of the code after the procedure
+32  stack.push            // a place for the first argument i
+40  stack.write [sp], 1   // the value of the first argument i
+48  stack.push            // a place for the second argument j
+56  stack.write [sp], 2   // the value of the second argument j
+64  pc = 6000             // move to the code of sum(int i, int j)
+72  stack.write [sp], R17 // copy the returned value into k
+80  stack.push            // for the variable p
+88  heap.new 2            // two cells on the heap for the Pair object
+
+```
+
+The body of `Test.sum`, starting at code address 6000:
+
+```text
+6000 stack.push              // a place for the local variable ret
+6008 stack.read [sp]+16, R1  // read the parameter i into a register
+6016 stack.read [sp]+8, R2   // read the parameter j into a register
+6024 add R1, R2, R3          // add the registers R1 and R2 into R3
+6032 stack.write R3, [sp]    // write the sum into ret, at the top of the stack
+6040 stack.write [sp], R17   // save the return value in a temporary place (R17)
+6048 stack.write [sp+24], R16 // save the return code address in a temporary place (R16)
+6056 stack.pop               // remove ret
+6064 stack.pop               // remove j
+6072 stack.pop               // remove i
+6080 stack.pop               // remove the return address
+6088 stack.removeAF          // close the AF of sum()
+6096 pc = [R16]              // return to the caller's code
+
+```
+
+- **After `heap.new 2`,** the code writes the pair's address into `p` (at `[sp]`), and initializes the pair on the heap to 3 and 4.
+- **The call `p.sum()`** follows the same steps, and also sends `this`, the address of the pair, as an additional parameter.
+:::
+:::
+
+To summarize what the example shows:
+
+- **The different usage patterns** become operations on the stack and on the heap.
+- **A procedure needs extra information:** the parameters, the return address, and the address of the object the method runs on (`this`).
+- **A function needs temporary storage** for the returned value, and for the return address, until the return.
+- **The advantage of the stack** is efficient allocation, with a simple `push`, and automatic release with `pop` at the end of the block, which guarantees there are no "holes" in memory. **Its drawback** is rigidity: the size of the information must be known in advance, and its lifetime is that of the block.
+- **The advantage of the heap** is flexibility: there is no need to commit in advance to the size of the information or to how long it is used. **Its drawback** is the search for free space when allocating with `new` at run time, and the danger of holes in memory, called a **memory leak**, when `delete` is not called.
+
+## The memory of a C++ process
 
 A process's virtual address space runs from low addresses to high addresses, and it is divided into regions.
 
@@ -424,106 +621,6 @@ Two kinds of data cannot live on the stack, and need the heap instead.
 - **Why the second case needs the heap:** the compiler must know the size of every local in a frame before the program runs.
 - **The solution:** the data goes on the heap, and the frame stores only a pointer to it, whose size is fixed and known.
 
-## The von Neumann machine
-
-In the von Neumann architecture, the same RAM holds both a program's data and its code, the instructions.
-
-:::definition id=def-von-neumann title="The von Neumann machine" source="materials/lectures/Chapter 1 - The Memory Model.pptx"
-
-- **The parts:** a von Neumann machine has a processor (CPU), a bus, and one main memory (RAM) shared by code and data.
-- **The fetch-decode-execute cycle:** the processor repeatedly fetches the next instruction from memory, decodes it, and executes it.
-:::
-
-![A von Neumann machine: a CPU, a bus, and one RAM that holds both the program and the data](../../web/public/figures/von-neumann-architecture.svg)
-
-These are the main parts of the processor.
-
-- **The control unit (CU)** runs the fetch-decode-execute cycle in step with the clock, and handles input and output through interrupts.
-- **The arithmetic-logic unit (ALU)** performs arithmetic, logical operations, comparisons, and bitwise operations, and detects arithmetic overflow.
-- **Registers** are the fastest storage in the machine, inside the processor itself.
-- **General-purpose registers** hold the values for the operation in progress, which are moved in and out of memory with `load` and `store`.
-- **Special registers** hold the execution state, such as `ip` (the instruction pointer) and `rsp` (the stack pointer).
-- **The cache** is fast memory between the registers and the RAM. It has several levels: L1 is the smallest and fastest, then L2, then L3.
-
-![The processor components in a table, then the cache, the bus, and RAM, with the fast end of the memory hierarchy at the top](../../web/public/figures/memory-hierarchy.svg)
-
-- **The regions are only a software convention.** The stack, the heap, and the code are all ordinary parts of the same physical RAM.
-- **For example,** when the processor loads a local variable, the address is in the stack region, and when it reads through the pointer `pi`, the address is in the heap region.
-- **Either way,** the access travels over the same bus.
-
-The memory hierarchy, listed from the fastest and smallest level to the slowest and largest:
-
-| Component | Role | Retains data with the power off? |
-| --- | --- | --- |
-| Register | Values for the processor's current operation | No |
-| Cache | A copy of recently used RAM cells, so the processor can avoid a slow access | No |
-| Main memory (RAM) | The process's data and code during the run | No |
-| Disk (SSD/HDD) | Permanent storage for files | Yes |
-| Magnetic tape | Long-term backup and retrieval | Yes |
-
-- **The data bus width** is how many bits move in one memory transfer. It usually matches the machine's word size.
-- **The address bus width** determines how much memory the processor can address. For example, 32 address bits can address 2³² bytes, which is 4 GB.
-
-The processor's raw instruction set includes simple operations like these.
-
-- `READ 100 R1`: copy the contents of cell 100 into register R1.
-- `ADD R1 R2 R3`: add the contents of R1 and R2, and store the result in R3.
-- `WRITE R3 200`: copy the contents of R3 into cell 200.
-
-:::problem id=worked-add-trace title="A trace of an addition" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=source
-The variable `i` is stored in cell 3000 and the variable `j` in cell 4000. Translate the fragment into `READ`, `WRITE`, and `ADD` instructions.
-
-```java
-int i = 10;
-int j = 20;
-i = i + j;
-
-```
-
-:::solution
-First the initial values are written into memory. Then both are loaded into registers, the ALU adds them, and the result is written back into the cell of `i`.
-
-```text
-WRITE 3000 10
-WRITE 4000 20
-READ  3000 R1
-READ  4000 R2
-ADD   R1 R2 R3
-WRITE 3000 R3
-
-```
-
-- **The final result:** cell 3000, which is `i`, holds 30.
-- **The ALU cannot add memory cells directly.** The values must first be loaded into registers, and the result must be written back to memory.
-:::
-:::
-
-The lecture notes describe the stack and the heap as two simple machines on top of this RAM, each with a small set of operations.
-
-**Stack operations:**
-
-- `createAF`: create a new stack frame.
-- `removeAF`: remove the current frame and return to the caller's frame.
-- `push`: add a cell at the top of the current frame.
-- `pop`: remove the cell at the top of the frame.
-- `read` / `write`: access a cell in the current frame only.
-
-**Heap operations:**
-
-- `new`: allocate a free run of cells on the heap and mark them occupied for this process.
-- `delete`: release an allocated range and mark it free.
-- `read` / `write`: access a cell that is currently allocated on the heap.
-- **After `delete`:** reading or writing a released cell is undefined behavior. It may crash with a segmentation fault, or it may silently corrupt data.
-
-A procedure call goes through these steps, in order.
-
-1. `createAF` creates a new frame.
-2. The return address is pushed.
-3. If the call is a method of an object, the `this` pointer is pushed.
-4. The arguments are pushed.
-5. The body runs, and the return value is written to a temporary location.
-6. The arguments are popped, and `removeAF` removes the frame, returning control to the caller's frame.
-
 ## Practice
 
 :::problem id=ps2-stack-vs-heap title="Stack versus heap" source="materials/sessions/SPL_PS2 (1).pptx" kind=exercise solution_origin=source
@@ -680,5 +777,5 @@ What goes wrong if the forms are swapped?
 
 This picture of memory is the base for the rest of the course.
 
-- **Next:** [Pointers and references](topic:pointers) looks closely at a stack cell that holds an address, which is only useful while the heap block it points at is alive.
-- **Later:** [The rule of three](topic:rule-of-three) shows what happens when objects that own heap buffers are copied, including the past-exam `mvector` questions that need a deep copy.
+- **Next:** [Variables, pointers, and references](topic:pointers) decides, for each variable, whether it holds content or an address, and whether it is a new variable or another name for an existing one.
+- **Later:** [The rule of three](topic:rule-of-three) shows what happens when objects that own heap buffers are copied.

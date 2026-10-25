@@ -6,11 +6,13 @@ term: "2026"
 summary: >
   Systems Programming (תכנות מערכות, 202-1-2031) is the practice of writing
   libraries and services that other programs use, close to the machine they
-  run on. The course follows the services a run-time environment provides:
-  memory in the process address space, the C++ rules for owning that memory,
-  concurrency with threads, design by contract, sockets and application
-  protocols, the reactor, and relational storage. The languages are C++, Java,
-  and SQL.
+  run on. Following Meni Adler's lecture notes, the course moves through four
+  parts: memory management in C++, from the run-time environment to objects,
+  inheritance, and polymorphism; concurrency with Java threads, safety and
+  correctness, synchronization, and waiting; communication between processes,
+  from sockets to a general server, the reactor, and a command-invocation
+  server; and databases, with SQL and a Python persistence layer. The
+  languages are C++, Java, Python, and SQL.
 
 changelog:
   - date: 2026-10-17
@@ -59,6 +61,8 @@ changelog:
     note: "The lvalue and rvalue section now walks each expression and a table of which references may bind to it."
   - date: 2026-10-23
     note: "Parameter passing shows a call for each form, and code line numbers sit in a gutter beside the text."
+  - date: 2026-10-25
+    note: "Chapters follow the order and material of Adler's lecture notes: a run-time environment chapter, the Student, Bag, and Book memory examples, design by contract as safety and correctness inside concurrency, new synchronization and waiting chapters, the general server, the command-invocation server, the Python persistence layer, and a course review. Back to Java was folded into the chapters that use it."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -482,15 +486,21 @@ sources:
     status: intentionally_excluded
     note: "Finished copy of a practice file. Not a course source."
 topics:
+  - id: run-time-environment
+    file: topics/run-time-environment.md
+    title: The run-time environment
+    exam_weight: taught
+    prerequisites: []
+    unlocks: [memory-model]
   - id: memory-model
     file: topics/memory-model.md
     title: The memory model
     exam_weight: taught
-    prerequisites: []
+    prerequisites: [run-time-environment]
     unlocks: [pointers]
   - id: pointers
     file: topics/pointers.md
-    title: Pointers and references
+    title: Variables, pointers, and references
     exam_weight: taught
     prerequisites: [memory-model]
     unlocks: [classes-and-objects]
@@ -509,7 +519,7 @@ topics:
     unlocks: [rule-of-five]
   - id: rule-of-five
     file: topics/rule-of-five.md
-    title: The rule of five and zero
+    title: The rule of five and smart pointers
     exam_weight: core
     exam_shape: "Steal a buffer, or delay the clone until a write. The trap is leaving the source pointer alive so two destructors free one block, or copying a unique_ptr."
     prerequisites: [rule-of-three]
@@ -520,53 +530,66 @@ topics:
     exam_weight: core
     exam_shape: "Two derived types sit behind one base pointer. The call is non-virtual, the destructor is non-virtual, or an overload is used where an override was needed. The trap is a memory drawing that omits the vptr, or a delete through the base that skips the derived destructor."
     prerequisites: [rule-of-five]
-    unlocks: [java-runtime]
-  - id: java-runtime
-    file: topics/java-runtime.md
-    title: Back to Java
-    exam_weight: taught
-    prerequisites: [inheritance]
     unlocks: [concurrency]
   - id: concurrency
     file: topics/concurrency.md
-    title: Concurrency
-    exam_weight: core
-    exam_shape: "A shared structure. Show a race, a deadlock, or a repair with synchronized, a semaphore, or an atomic. The trap is a lock order that waits forever, or protecting the update but not the read that publishes it."
-    prerequisites: [java-runtime]
+    title: Threads
+    exam_weight: taught
+    prerequisites: [inheritance]
     unlocks: [design-by-contract]
   - id: design-by-contract
     file: topics/design-by-contract.md
-    title: Design by contract
+    title: Safety and correctness
     exam_weight: core
     exam_shape: "Write the invariant and the preconditions and postconditions of a method. The trap is an invariant that forgets the empty case, or a postcondition that is only true when nobody else mutates the object."
     prerequisites: [concurrency]
+    unlocks: [synchronization]
+  - id: synchronization
+    file: topics/synchronization.md
+    title: Synchronization
+    exam_weight: core
+    exam_shape: "A shared structure. Show a race, or repair it with synchronized, an immutable copy, or an atomic compare-and-set. The trap is protecting the update but not the read that publishes it, or relying on a thread-safe class across two calls."
+    prerequisites: [design-by-contract]
+    unlocks: [waiting-and-liveness]
+  - id: waiting-and-liveness
+    file: topics/waiting-and-liveness.md
+    title: Waiting and liveness
+    exam_weight: core
+    exam_shape: "A guarded wait on a shared queue or resource, or a deadlock to explain and fix. The trap is if instead of while around wait, notify where notifyAll is needed, or a lock order that waits forever."
+    prerequisites: [synchronization]
     unlocks: [networking]
   - id: networking
     file: topics/networking.md
-    title: Networking
+    title: Communication between processes
     exam_weight: core
     exam_shape: "Replace a delimiter with a length prefix, cap the clients, or write a small command protocol. The trap is treating a TCP read as a whole message, or forgetting that UDP has no accept."
-    prerequisites: [design-by-contract]
+    prerequisites: [waiting-and-liveness]
     unlocks: [reactor]
   - id: reactor
     file: topics/reactor.md
-    title: The reactor
+    title: Server design and the reactor
     exam_weight: core
     exam_shape: "Edit the reactor from the appendix. Move tokenization off the selector, cap work per client, add a log, or serve a query without blocking select. The trap is a heavy call on the selector thread, or leaving OP_WRITE set so select spins."
     prerequisites: [networking]
     unlocks: [serialization]
   - id: serialization
     file: topics/serialization.md
-    title: Serialization
-    exam_weight: taught
+    title: The command-invocation server
+    exam_weight: core
     prerequisites: [reactor]
     unlocks: [persistence]
   - id: persistence
     file: topics/persistence.md
-    title: Persistence and SQL
+    title: Databases
     exam_weight: core
     exam_shape: "Design the tables, with a primary key, foreign keys, and a junction table for a many-to-many, then write one SELECT with a join. The trap is a Cartesian product with no join condition, or a list stored as columns instead of a junction table."
     prerequisites: [serialization]
+    unlocks: [course-review]
+  - id: course-review
+    file: topics/course-review.md
+    title: Course review
+    exam_weight: taught
+    prerequisites: [persistence]
     unlocks: []
 
 glossary:
@@ -622,13 +645,13 @@ glossary:
     topic: concurrency
     definition: "A sequential flow of execution inside a process. It has its own stack and shares the process heap with the other threads."
   - term: deadlock
-    topic: concurrency
+    topic: waiting-and-liveness
     definition: "A cycle of waiting in which each thread holds a lock that the next thread needs, so all of them stay blocked forever."
   - term: livelock
-    topic: concurrency
+    topic: waiting-and-liveness
     definition: "A failure in which the threads are not blocked, but each spends its time reacting to the others, so no work ever finishes."
   - term: starvation
-    topic: concurrency
+    topic: waiting-and-liveness
     definition: "A failure in which a thread that is ready to run is passed over indefinitely, because other threads keep getting the CPU or the lock first."
   - term: TCP
     topic: networking
@@ -652,14 +675,39 @@ glossary:
     topic: persistence
     definition: "A column whose values must equal a key of another table. It is the relational form of a pointer."
   - term: process
-    topic: memory-model
+    topic: run-time-environment
     definition: "One running execution of a program, with its own address space and its own execution state. The program itself is only the passive list of instructions."
   - term: runtime environment
-    topic: memory-model
+    topic: run-time-environment
     definition: "The layer between a program and the infrastructure it runs on. It preserves the infrastructure's properties, hides its details behind a more convenient interface, and adds services the hardware does not provide."
   - term: system call
-    topic: memory-model
+    topic: run-time-environment
     definition: "The way a process asks the operating system's kernel for a service, such as reading a file. Unlike an ordinary function call, the kernel performs the operation."
+
+  - term: critical section
+    topic: synchronization
+    definition: "A stretch of code that at most one thread may run at a time. In Java it is marked with synchronized, which locks an object for the length of the block."
+  - term: immutable object
+    topic: synchronization
+    definition: "An object whose fields never change after its constructor. A command returns a new copy instead of assigning, so the object is safe to share between threads."
+  - term: compare-and-set
+    topic: synchronization
+    definition: "An atomic processor operation that writes a new value to a cell only if the cell still holds an expected old value. It is the basis of lock-free synchronization."
+  - term: semaphore
+    topic: waiting-and-liveness
+    definition: "A synchronizer with a number of permits. acquire waits until a permit is free and takes it, tryAcquire returns false instead of waiting, and release gives a permit back."
+  - term: smart pointer
+    topic: rule-of-five
+    definition: "A class that wraps an address on the heap with a reference count, and deletes the object when the last copy that knows the address is gone."
+  - term: double dispatch
+    topic: inheritance
+    definition: "A pattern that chooses code by the dynamic types of two objects, by making a virtual call on the first and then a second virtual call on the parameter."
+  - term: actor thread pool
+    topic: reactor
+    definition: "An executor that keeps a queue of tasks per actor, such as a client, and never runs two tasks of the same actor at the same time, so each client's messages run in order."
+  - term: DBMS
+    topic: persistence
+    definition: "A database management system: a run-time environment for data that outlives the process, with queries, integrity constraints, concurrency, and transactions."
 
 exams:
   - year: 2015
@@ -667,7 +715,7 @@ exams:
     pattern: "Threads, a stack-and-heap drawing of a vector, a UDP edit of the reactor, and a BigApple schema."
     questions:
       - id: exam-15a-q1
-        topic: concurrency
+        topic: synchronization
       - id: exam-15a-q2
         topic: rule-of-three
       - id: exam-15a-q3
@@ -679,11 +727,11 @@ exams:
     pattern: "Narrowed synchronization, the vector again, a length-prefix tokenizer, and number portability."
     questions:
       - id: exam-15b-q1
-        topic: concurrency
+        topic: waiting-and-liveness
       - id: exam-15b-q2
         topic: inheritance
       - id: exam-15b-q3
-        topic: networking
+        topic: reactor
       - id: exam-15b-q4
         topic: persistence
   - year: 2016
@@ -695,7 +743,7 @@ exams:
       - id: exam-16a-q2
         topic: inheritance
       - id: exam-16a-q3
-        topic: networking
+        topic: reactor
       - id: exam-16a-q4
         topic: persistence
   - year: 2016
@@ -703,7 +751,7 @@ exams:
     pattern: "Threads, move and copy, a reactor edit, and a restricted set of roles."
     questions:
       - id: exam-16b-q1
-        topic: concurrency
+        topic: waiting-and-liveness
       - id: exam-16b-q2
         topic: rule-of-five
       - id: exam-16b-q3
@@ -715,7 +763,7 @@ exams:
     pattern: "Threads, the rule of three, a reactor edit, and a glasses shop."
     questions:
       - id: exam-17a-q1
-        topic: concurrency
+        topic: synchronization
       - id: exam-17a-q2
         topic: rule-of-three
       - id: exam-17a-q3
@@ -727,11 +775,11 @@ exams:
     pattern: "Threads, the rule of three, a command protocol, and a garage."
     questions:
       - id: exam-17b-q1
-        topic: concurrency
+        topic: synchronization
       - id: exam-17b-q2
         topic: rule-of-three
       - id: exam-17b-q3
-        topic: networking
+        topic: reactor
       - id: exam-17b-q4
         topic: persistence
   - year: 2018
@@ -753,7 +801,7 @@ exams:
       - id: exam-18b-q1
         topic: inheritance
       - id: exam-18b-q2
-        topic: concurrency
+        topic: waiting-and-liveness
       - id: exam-18b-q3
         topic: reactor
       - id: exam-18b-q4
@@ -777,7 +825,7 @@ exams:
       - id: exam-19b-q1
         topic: inheritance
       - id: exam-19b-q2
-        topic: concurrency
+        topic: design-by-contract
       - id: exam-19b-q3
         topic: reactor
       - id: exam-19b-q4
@@ -801,7 +849,7 @@ exams:
       - id: exam-20b-q1
         topic: rule-of-five
       - id: exam-20b-q2
-        topic: concurrency
+        topic: synchronization
       - id: exam-20b-q3
         topic: reactor
       - id: exam-20b-q4
@@ -823,7 +871,7 @@ exams:
       - id: exam-24b-q1
         topic: inheritance
       - id: exam-24b-q2
-        topic: concurrency
+        topic: waiting-and-liveness
       - id: exam-24b-q3
         topic: reactor
   - year: 2024
@@ -833,6 +881,6 @@ exams:
       - id: exam-24c-q1
         topic: rule-of-five
       - id: exam-24c-q2
-        topic: concurrency
+        topic: synchronization
       - id: exam-24c-q3
         topic: reactor

@@ -1,6 +1,7 @@
 ---
 id: rule-of-three
 title: The rule of three
+blurb: "Copying and assigning an object that owns memory, with clone, and the rule of three."
 sources:
   - "materials/lectures/Chapter 4 - Rule of Thee.pptx"
   - "materials/sessions/SPL_PS3.pptx"
@@ -14,35 +15,81 @@ sources:
   - "materials/exams/17-b-solution.pdf"
 ---
 
-This chapter shows what goes wrong when a class owns a resource, such as a heap buffer, and you let the compiler copy it member by member.
+This chapter shows what goes wrong when a class owns memory through a pointer, and you let the compiler copy it field by field.
 
-- **The bug:** after a default copy, two objects both think they own the same buffer, and both try to release it.
-- **The three operations:** the destructor, the copy constructor, and the copy assignment operator are the functions you must write to fix it.
-- **Deep copy:** those three give every object its own buffer, so each object releases only what it owns.
+- **Copying:** passing or returning an object by value copies it, and the default copy shares the pointers, so two objects think they own the same memory.
+- **Assignment:** assigning one existing object to another leaks the old memory and shares the new.
+- **The rule of three:** the destructor, the copy constructor, and the assignment operator are the three functions you must write together to fix it.
 
-## The three operations
+## Copying an object
 
-When a class owns a resource, the compiler's default copy copies the pointer, not what it points at, so both objects end up believing they own the same buffer.
+In C++ an object can be passed to a procedure by value, or returned from one by value. The object is then duplicated and copied from one activation frame to another. (This never happens in Java, because there an object variable always represents an address.)
+
+How is the meaning of copying an object decided? For simple types, and for addresses, the meaning is clear. For objects it is not: should the copy be deep, or not, or something else?
+
+In C++ the programmer decides what copying a class means, by writing a special constructor, called the **copy constructor**. Every time an object must be copied, when it is passed to or returned from a procedure, the compiler translates the copy into a call to that constructor.
+
+Because it matters so much, the compiler defines a default copy constructor for every class, which copies field by field. For the `Student` class from [Classes and objects](topic:classes-and-objects), that default is this:
+
+```cpp
+class Student {
+    ...
+    Student(const Student& other)
+        : _id(other._id), _name(other._name), _bag(other._bag),
+          _books(other._books), _univ(other._univ)
+    {}
+};
+
+void F(Student s) { ... }
+
+{
+    Student s(7, "ringo", new Bag7(), univ);
+    F(s);
+    cout << (*s.getBag());
+}
+
+```
+
+- **The call `F(s)`** copies `s` into `F`'s frame. The copy's `_bag` holds the same address as `s._bag`, and its `_books` holds the same book addresses.
+- **When `F` returns,** its copy of the student is destroyed, and `~Student` deletes the bag and the books.
+- **Back in the block,** `*s.getBag()` reads a bag that was already deleted, and at the end of the block `~Student` deletes the same bag and books a second time.
+
+If a class has no fields that are pointers, the default is enough. If it does, you must write a copy constructor that duplicates, in memory, the objects those fields point at.
+
+```cpp
+class Student {
+    ...
+    Student(const Student& other)
+        : _id(other._id), _name(other._name), _univ(other._univ)
+    {
+        _bag = other._bag->clone();
+        for (int i = 0; i < other._books.size(); i++)
+            _books.push_back(other._books.at(i)->clone());
+    }
+};
+
+class Bag7 : public Bag {
+    ...
+    virtual Bag* clone() { return new Bag7(*this); }
+};
+
+class DigitalBook : public Book {
+    ...
+    virtual Book* clone() { return new DigitalBook(*this); }
+};
+
+```
+
+- **Why `clone` and not `new Bag(*other._bag)`:** `_bag` has the type `Bag*`, but the object it points at is a `Bag7`, or some other derived class the student does not know. A `virtual clone` method lets each class copy itself with its own copy constructor. [Inheritance and polymorphism](topic:inheritance) explains how the `virtual` call reaches the right class.
+- **The result:** the copy inside `F` gets its own bag and its own books, at new heap addresses, and deleting them leaves the original student intact.
+
+### The same bug with a byte buffer
+
+The lecture slides show the same problem with an `Image` class.
 
 - **The example:** an `Image` holds a `char* _bytes`, a buffer that its constructor (בנאי) allocated on the heap.
 - **The copy:** copying the `Image` copies only that pointer, so both images point at one buffer.
 - **The crash:** when the first image's destructor (הורס) releases the buffer, the other image is still using it, and later releases it a second time.
-
-:::definition id=def-rule-of-three title="The rule of three (חוק השלושה)" source="materials/lectures/Chapter 4 - Rule of Thee.pptx"
-The rule of three: if you write the destructor, the copy constructor (בנאי העתקה), or the copy assignment operator (אופרטור השמה), write all three.
-
-- **The destructor** releases the resource.
-- **The copy constructor** allocates a new resource and copies the contents into it.
-- **The copy assignment operator** does both jobs: it releases the resource this object already holds, and it makes a deep copy (העתקה עמוקה) of the other object.
-- **`Image b = a`** creates a new object, so the copy constructor runs, even though the line contains `=`.
-- **`b = a`** assigns to an object that already exists, so the copy assignment operator runs.
-
-```cpp
-Image a(...);
-Image b = a;   // copy constructor, not assignment
-b = a;         // assignment, both objects already exist
-```
-:::
 
 A destructor is named `~` followed by the class name. It takes no parameters and has no return type.
 
@@ -51,8 +98,6 @@ A destructor is named `~` followed by the class name. It takes no parameters and
 - **In C++:** when an `Image` is destroyed, only the pointer itself disappears. The bytes it points at stay allocated unless the destructor releases them.
 
 ![An Image object on the stack: width, height, and a pointer to a separate byte buffer on the heap](../../web/public/figures/image-object-layout.svg)
-
-### Shallow copy (העתקה רדודה)
 
 `void processImage(Image img)` takes the image by value, so calling it makes a copy.
 
@@ -77,7 +122,98 @@ This constructor could also delegate to `Image(int, int, char*)`, so that the al
 
 ![A shallow copy shares one buffer, so one destructor releases it while the other object still uses it. A deep copy gives each Image a buffer of its own](../../web/public/figures/shallow-copy.svg)
 
-### Assignment and construction
+## Assigning an object
+
+In C++ you can assign one object to another. (In Java that is impossible, because objects in Java are addresses.)
+
+```cpp
+Student s1(7, "ringo", new Bag7(), univ);
+...
+Student s2(8, "jango", new Bag5(), univ);
+...
+s1 = s2;   // s1.operator=(s2);
+
+```
+
+What does this assignment mean? For simple types, and for addresses, assignment is clear, but for objects it is not (deep assignment, or not, and so on). In C++ the meaning of assignment is defined by the programmer, through a special method called the **assignment operator**. Because it matters so much, the compiler defines a default one, which assigns field by field.
+
+```cpp
+class Student {
+    ...
+    void operator=(const Student& other) {
+        if (&other != this) {
+            _id = other._id;
+            _name = other._name;
+            _bag = other._bag;
+            _books = other._books;
+            _univ = other._univ;
+        }
+    }
+};
+
+{
+    Student s1(7, "ringo", new Bag7(), univ);
+    ...
+    {
+        Student s2(8, "jango", new Bag5(), univ);
+        ...
+        s1 = s2;
+        ...
+    }
+    cout << (*s1.getBag());
+}
+
+```
+
+The default assignment causes two problems.
+
+- **A memory leak:** the `Bag7` and the books that `s1` held are never deleted. Nothing points at them anymore.
+- **Sharing:** the two objects now share the same bag and the same books. Deleting one of them leaves the other with a dangling bag and dangling books, which is exactly what happens when the inner block ends and `s2` is destroyed.
+
+Here too the default is not enough when a class has pointer fields. Write the assignment so that it copies the content and not the addresses, and releases what the object held before.
+
+```cpp
+class Student {
+    ...
+    void operator=(const Student& other) {
+        if (&other != this) {
+            _id = other._id;
+            _name = other._name;
+            delete _bag;
+            _bag = other._bag->clone();
+            // delete the old books
+            for (int i = 0; i < _books.size(); i++)
+                delete _books.at(i);
+            // clear the old books' addresses
+            _books.clear();
+            // add copies of the other student's books
+            for (int i = 0; i < other._books.size(); i++)
+                _books.push_back(other._books.at(i)->clone());
+            _univ = other._univ;
+        }
+    }
+};
+
+```
+
+- **`if (&other != this)`** guards against `s1 = s1`. Without it, the method would delete its own bag and then try to clone it.
+
+To support `a = b = c`, which the compiler reads as `a.operator=(b.operator=(c))`, the operator must also return the object itself, so it can be used in a further assignment.
+
+```cpp
+class Student {
+    ...
+    Student& operator=(const Student& other) {
+        if (&other != this) {
+            ...   // as above
+        }
+        return *this;
+    }
+};
+
+```
+
+### Another way: copy and swap
 
 The copy constructor fixes copies that create a new object. Assignment is a separate case, because the object on the left already exists and already owns a buffer.
 
@@ -171,6 +307,28 @@ b = a;
 - **`b = a`** assigns to an object that already exists, so it calls the copy assignment operator.
 - **Don't be fooled by `=`:** both lines contain it, but in a declaration it means initialization, not assignment.
 :::
+
+## The rule of three
+
+:::definition id=def-rule-of-three title="The rule of three (חוק השלושה)" source="materials/lectures/Chapter 4 - Rule of Thee.pptx"
+Write the destructor, the copy constructor (בנאי העתקה), and the assignment operator (אופרטור השמה) together: if a class needs one of them, it needs all three.
+
+- **The destructor** releases the resources the object is responsible for.
+- **The copy constructor** allocates new resources and copies the contents into them.
+- **The assignment operator** does both jobs: it releases the resources this object already holds, and it makes a deep copy (העתקה עמוקה) of the other object.
+- **`Image b = a`** creates a new object, so the copy constructor runs, even though the line contains `=`.
+- **`b = a`** assigns to an object that already exists, so the assignment operator runs.
+
+```cpp
+Image a(...);
+Image b = a;   // copy constructor, not assignment
+b = a;         // assignment, both objects already exist
+```
+:::
+
+These three methods define the meaning of a class in the basic scenarios of a programming language: removal from memory, passing by value, and assignment.
+
+**Operator overloading.** Just as you can define the assignment operator, every class can define the meaning of the standard operators, such as `+`, `-`, `*`, `/`, `<`, `>`, `==`, `+=`, `[]`, and `<<`. This is an elegant and recommended way to design classes, but only assignment belongs to the rule of three, because it defines the basic semantics of the class.
 
 :::trap
 - **The wrong test:** `if (this == other)` compares a pointer (`this`) with an object (`other`), so it does not compile.

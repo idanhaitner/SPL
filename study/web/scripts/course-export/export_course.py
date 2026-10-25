@@ -13,6 +13,8 @@ import studylib
 
 
 def lecture_blurb(sources: dict, meta: dict) -> str:
+    if str(meta.get("blurb") or "").strip():
+        return str(meta["blurb"]).strip()
     for path in meta.get("sources") or []:
         src = sources.get(studylib.norm_rel(path))
         if src and src.get("type") == "lecture" and str(src.get("note") or "").strip():
