@@ -7,15 +7,6 @@ Thumbs.db
 materials/
 practice/
 
-# Legacy static HTML site (Pages deploys study/web)
-study/index.html
-study/drill.html
-study/glossary.html
-study/topics/
-
-# Old static-site tree; figures live in study/web/public/figures/
-study/assets/
-
 # Next.js / Node
 study/web/node_modules/
 study/web/.next/
