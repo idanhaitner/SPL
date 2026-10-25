@@ -28,7 +28,7 @@ j = i;      // read i, write j
 
 ```
 
-In most languages a variable also has a **type**, which fixes how large it is, and, for objects, its structure as well.
+In most languages a variable also has a **type**, which fixes how large it is.
 
 When you define a variable for some piece of information, you make two decisions.
 
@@ -39,20 +39,21 @@ When you define a variable for some piece of information, you make two decisions
 
 In Java the language designers already answered both questions, so programmers are spared the decision.
 
-1. **Variables of simple types** (`int`, `long`, `boolean`, ...) represent **content**. **Variables of object types** (a `class`) represent an **address**.
+1. **Variables of simple types** (`int`, `long`, `boolean`, ...) represent **content**. **Variables of array types** (and every other non-simple type, such as `String`) represent an **address**.
 2. **You cannot give an alias to an existing variable.** Java has no references in the C++ sense.
 
 ```java
-Pair p1 = new Pair(3, 4);
-Pair p2 = p1;            // p2 holds the same address: both name one Pair
-p1 = new Pair(8, 0);     // p1 now holds a new address; p2 still points at (3, 4)
+int[] a1 = {3, 4};
+int[] a2 = a1;           // a2 holds the same address: both name one array
+a1 = new int[]{8, 0};    // a1 now holds a new address; a2 still points at {3, 4}
+a2[0] = 7;               // changes the old array, which only a2 still names
 
 ```
 
 So Java decides for you what goes where.
 
-- **The stack** holds each method's local variables. A local of primitive type holds its value directly, and a local of class type holds only an address of an object.
-- **The heap** holds every object and every array, together with the fields inside them. Unlike C++, Java never puts an object on the stack.
+- **The stack** holds each method's local variables. A local of primitive type holds its value directly, and a local of array type holds only the address of the array.
+- **The heap** holds every array, together with the values inside it. Unlike C++, Java never puts an array on the stack.
 
 An array in Java is an object on the heap.
 
@@ -83,26 +84,26 @@ b[0] = new String("Avi");
 
 In C++ you make both decisions yourself, for every variable. Here are the three kinds, one at a time.
 
-**1. A variable that holds content.** The value itself sits in the variable's cell on the stack, for simple types and for objects alike.
+**1. A variable that holds content.** The value itself sits in the variable's cell on the stack.
 
 ```cpp
 int i = 5;          // the cell of i holds 5
-Pair m(3, 4);       // the cells of m hold 3 and 4
+int arr[3];         // the three cells of arr are on the stack
 ```
 
 - **`int i`** works exactly as in Java.
-- **`Pair m`** has no Java equivalent: in Java an object is always on the heap, and the variable holds only its address. Here the whole `Pair` lives on the stack, and disappears at the end of the block.
+- **`int arr[3]`** has no Java equivalent: in Java an array is always on the heap, and the variable holds only its address. Here the whole array lives on the stack, and disappears at the end of the block.
 
 **2. A variable that holds an address.** The variable is a pointer, written with `*`. It holds the address of something else, usually on the heap.
 
 ```cpp
 int* pi = new int(15);     // pi holds an address; 15 is on the heap
-Pair* pm = new Pair(8, 9); // pm holds an address; the Pair is on the heap
+int* pa = new int[3];      // pa holds an address; the three ints are on the heap
 ```
 
-- **`Pair* pm`** is what every Java object variable is.
-- **`int* pi`** has no Java equivalent: Java never gives you the address of an `int`.
-- **To reach the content** at an address, write `*pi`, which is 15. To reach a member, write `pm->first()`, which is short for `(*pm).first()`. The next section goes through the syntax.
+- **`int* pa`** is what every Java array variable is.
+- **`int* pi`** has no Java equivalent: Java never gives you the address of a single `int`.
+- **To reach the content** at an address, write `*pi`, which is 15, or `pa[0]` for the first cell of the array. The next section goes through the syntax.
 
 **3. An alias for a variable that already exists.** A reference, written with `&`, is a second name for an existing cell. It takes no cell of its own.
 
@@ -112,15 +113,15 @@ j++;            // i is now 6
 ```
 
 - **Java has nothing like it.** Every Java variable is a cell of its own.
-- **You can make an alias for any kind of variable,** including a pointer: `Pair*& pn = pm;` is another name for the cell of `pm`.
+- **You can make an alias for any kind of variable,** including a pointer: `int*& pj = pi;` is another name for the cell of `pi`.
 
 In short:
 
 | | Holds content | Holds an address |
 | --- | --- | --- |
-| **A new variable** | `int i;` `Pair m(3, 4);` | `int* pi;` `Pair* pm;` |
-| **An alias** | `int& j = i;` `Pair& n = m;` | `int*& pj = pi;` `Pair*& pn = pm;` |
-| **What Java allows** | simple types only | objects only |
+| **A new variable** | `int i;` `int arr[3];` | `int* pi;` `int* pa;` |
+| **An alias** | `int& j = i;` | `int*& pj = pi;` |
+| **What Java allows** | simple types only | arrays (and other non-simple types) only |
 
 ## Pointers
 
@@ -355,14 +356,10 @@ When is that possible? When the size of the information is known at compile time
 
 **The general idea:** a reference lets you support two concepts.
 
-- **Avoiding a needless copy** of an object.
-- **Not exposing the address of a heap object** to an activation frame that is not responsible for deleting it.
+- **Avoiding a needless copy** of a large value, such as a long string.
+- **Not exposing the address of a heap block** to an activation frame that is not responsible for deleting it.
 
-You will see these scenarios in detail in what follows:
-
-- **a heap object** passed as a parameter to a procedure,
-- **a field of a class** that refers to information belonging to another object,
-- **a getter of a class** that returns an object.
+The next two sections show both: passing a parameter to a procedure, and returning a value from it.
 
 ## Passing parameters
 
@@ -420,33 +417,33 @@ show(x);              // fine
 show(x + 1);          // also fine: a const reference can name a temporary
 ```
 
-The difference matters most for objects, because copying an object copies all of its fields.
+The difference matters most for large values. Copying a long `std::string` copies every one of its characters.
 
 :::problem id=worked-pass-eight title="What does each call copy?" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=derived
-Each function adds the two fields of a `Pair`. What is copied into the new frame when it is called?
+Each function returns the first character of a string. What is copied into the new frame when it is called?
 
 ```cpp
-int sumCopy(Pair n)         { return n.first() + n.second(); }
-int sumPtr(Pair* pn)        { return pn->first() + pn->second(); }
-int sumRef(const Pair& n)   { return n.first() + n.second(); }
+char firstCopy(string s)          { return s[0]; }
+char firstPtr(string* ps)         { return (*ps)[0]; }
+char firstRef(const string& s)    { return s[0]; }
 
-Pair* pm = new Pair(3, 4);
-sumCopy(*pm);
-sumPtr(pm);
-sumRef(*pm);
+string* pt = new string("a very long sentence ...");
+firstCopy(*pt);
+firstPtr(pt);
+firstRef(*pt);
 ```
 
 :::solution
-- **`sumCopy(*pm)`** copies the whole `Pair`, both fields, into the new frame. For a large object that is wasteful.
-- **`sumPtr(pm)`** copies one address. No `Pair` is copied, but now the function holds the address of a heap object it is not responsible for deleting.
-- **`sumRef(*pm)`** copies nothing. `n` is another name for the `Pair` on the heap, and `const` stops the function from changing it.
-- **All three return 7.** The difference is only in the cost, and in what the function is allowed to do.
+- **`firstCopy(*pt)`** copies the whole string, every character, into the new frame. For a long string that is wasteful.
+- **`firstPtr(pt)`** copies one address. No string is copied, but now the function holds the address of a heap block it is not responsible for deleting.
+- **`firstRef(*pt)`** copies nothing. `s` is another name for the string on the heap, and `const` stops the function from changing it.
+- **All three return `'a'`.** The difference is only in the cost, and in what the function is allowed to do.
 :::
 :::
 
 So how do you choose? You want three things.
 
-- **No needless copies** of objects or arrays.
+- **No needless copies** of large values, such as long strings.
 - **No addresses handed out** to a procedure that is not responsible for deleting what is there.
 - **Control over side effects:** let the procedure change the caller's data only when that is the point.
 
@@ -456,19 +453,19 @@ That gives a simple rule.
 | --- | --- |
 | Yes | By reference (`T&`) |
 | No, and it is a simple type | By value (`T`) |
-| No, and it is an object | By `const` reference (`const T&`) |
+| No, and it is large (a `string`, a `vector`) | By `const` reference (`const T&`) |
 
 :::check id=chk-pass-mode
-A procedure only reads a large object. What should the C++ parameter be?
+A procedure only reads a long `string`. What should the C++ parameter be?
 
 - [ ] A plain reference, so the procedure can write later if it wants to
-- [x] A `const` reference, or pass by value when the object is cheap to copy
+- [x] A `const` reference, or pass by value when the value is cheap to copy
 - [ ] A null pointer, because no object is required
 
-- **A `const` reference** reads the object in place, without the cost of a copy, and promises not to change it.
-- **Passing by value** is also fine when the object is cheap to copy.
-- **A plain reference** would allow the procedure to modify the caller's object, which a read-only procedure should not be able to do.
-- **A null pointer** passes no object at all, so the procedure would have nothing to read.
+- **A `const` reference** reads the string in place, without the cost of a copy, and promises not to change it.
+- **Passing by value** is also fine when the value is cheap to copy, like an `int`.
+- **A plain reference** would allow the procedure to modify the caller's string, which a read-only procedure should not be able to do.
+- **A null pointer** passes no string at all, so the procedure would have nothing to read.
 :::
 
 ## Returning a value
@@ -491,45 +488,46 @@ int add(int i, int j) {
 }
 ```
 
-An object should not be returned by reference, because the local object is destroyed when the function ends.
+A local should not be returned by reference, because it is destroyed when the function ends.
 
 ```cpp
-Number& makeBad(int i, int j) {
-    Number sum(i + j);
-    return sum;          // bug: sum is gone once makeBad returns
+string& makeBad(const string& a, const string& b) {
+    string both = a + b;
+    return both;         // bug: both is gone once makeBad returns
 }
 
-Number& n = makeBad(1, 2);   // n names a destroyed object
+string& s = makeBad("ab", "cd");   // s names a destroyed string
 ```
 
-Returning it by value works, but copies it. So when the object is large, or its lifetime should not depend on the block, create it on the heap and return its address.
+Returning it by value works, but copies it. So when the value is large, or its lifetime should not depend on the block, create it on the heap and return its address.
 
 ```cpp
-Number* makeNumber(int i, int j) {
-    return new Number(i + j);   // lives on after the function returns
+int* makeArray(int n) {
+    return new int[n];           // lives on after the function returns
 }
 
-Number* pn = makeNumber(1, 2);
+int* arr = makeArray(100);
 ...
-delete pn;                       // the caller is now responsible for it
+delete[] arr;                    // the caller is now responsible for it
 ```
 
 [Classes and objects](topic:classes-and-objects) shows a design pattern built on this idea, the factory.
 
-**Case B: the function returns something that already exists.** The typical example is a getter, which returns a field of an object that outlives the call.
+**Case B: the function returns something that already exists.** For example, a function that picks one of the caller's strings.
 
 ```cpp
-class Student {
-    int _id;
-    string _name;
-public:
-    int getId() const { return _id; }                   // simple type: by value
-    const string& getName() const { return _name; }     // object: by const reference
-};
+const string& longer(const string& a, const string& b) {
+    if (a.size() >= b.size())
+        return a;        // a belongs to the caller, so it outlives the call
+    return b;
+}
+
+string x = "hello", y = "hi";
+const string& w = longer(x, y);   // w is another name for x; nothing was copied
 ```
 
-- **`_name` lives as long as the `Student`,** so returning a reference to it is safe, and saves copying the string.
-- **`const`** stops the caller from changing the student's name through the reference.
+- **`a` and `b` name the caller's strings,** which still exist after the call, so returning a reference to one of them is safe, and saves copying it.
+- **`const`** stops the caller from changing `x` through `w`.
 
 :::problem id=worked-return-five title="Which return is a bug?" source="materials/notes/lecture-notes.docx.pdf" kind=worked solution_origin=derived
 Which of these functions leave the caller with something that no longer exists?

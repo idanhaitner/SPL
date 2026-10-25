@@ -169,9 +169,8 @@ The compiler translates the program's code into operations on the stack and the 
 
 1. Open a new region on the stack (`createAF`).
 2. `push` the address of the next line in the code, so that the procedure knows where to return when it ends. That address is called the return address (`ra`).
-3. If the procedure is a method of an object, `push` `this`, the address of the object the method runs on, so that the method can reach the object's fields, which are not in its own AF.
-4. `push` every argument passed to the procedure, and write the values into place.
-5. Move to the procedure's code, by setting the `pc` to the procedure's address.
+3. `push` every argument passed to the procedure, and write the values into place.
+4. Move to the procedure's code, by setting the `pc` to the procedure's address.
 
 **3. The definition of a function**
 
@@ -224,9 +223,7 @@ While `add` runs, just before it returns, the stack looks like this:
 | `add` | `j` | 2 |
 | `add` | `r` | 3 |
 
-**What changes for a method of an object?** For `p.sum()` on an object `p`, one more cell is pushed in step 4 of the caller: `this`, the address of `p`, so the method can reach the object's fields, which are not in its own frame.
-
-**And for `new`?** `Pair p = new Pair(3, 4);` pushes one cell for `p` on the stack, calls `heap.new` for the two cells of the pair, and writes the pair's address into `p`.
+**And for `new`?** `int[] a = new int[2];` pushes one cell for `a` on the stack, calls `heap.new` for the cells of the array, and writes the array's address into `a`.
 
 :::check id=chk-trace-temp
 Why is the returned value copied to a temporary place before the frame is removed?
@@ -242,7 +239,7 @@ Why is the returned value copied to a temporary place before the frame is remove
 To summarize:
 
 - **The different usage patterns** become operations on the stack and on the heap.
-- **A procedure needs extra information:** the parameters, the return address, and the address of the object the method runs on (`this`).
+- **A procedure needs extra information:** the parameters and the return address.
 - **A function needs temporary storage** for the returned value, and for the return address, until the return.
 - **The advantage of the stack** is efficient allocation, with a simple `push`, and automatic release with `pop` at the end of the block, which guarantees there are no "holes" in memory. **Its drawback** is rigidity: the size of the information must be known in advance, and its lifetime is that of the block.
 - **The advantage of the heap** is flexibility: there is no need to commit in advance to the size of the information or to how long it is used. **Its drawback** is the search for free space when allocating with `new` at run time, and the danger of holes in memory, called a **memory leak**, when `delete` is not called.
@@ -446,13 +443,13 @@ delete[] arr;            // the array form, not delete
 - **A pointer and its block can be in different regions,** as the next example shows.
 
 ```cpp
-int* pi = new int[10];             // pi on the stack, the ten ints on the heap
-Student* ps = new Student("Avi");  // ps on the stack, the Student on the heap
+int* pi = new int[10];     // pi on the stack, the ten ints on the heap
+double* pd = new double(2.5); // pd on the stack, the double on the heap
 
 ```
 
 - **The first line** puts the pointer `pi` on the stack, holding an address, and the ten integers on the heap, as one contiguous block.
-- **The second line** puts the pointer `ps` on the stack, and the `Student` object on the heap.
+- **The second line** puts the pointer `pd` on the stack, and one `double` on the heap.
 - **When the function returns,** the pointers disappear with its frame, but the heap blocks do not.
 
 :::check id=chk-where-array
@@ -490,11 +487,11 @@ void leaky() {
 ![Inside leaky, the pointer on the stack points at the int on the heap. After the return the int is still there, and nothing points to it](../../web/public/figures/heap-leak.svg)
 
 :::problem id=worked-stack-array title="A pointer on the stack" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=worked solution_origin=source
-Explain where `ps` is stored, where the `Student` object is stored, and what happens in memory if nobody calls `delete`.
+Explain where `pa` is stored, where the array is stored, and what happens in memory if nobody calls `delete[]`.
 
 ```cpp
 int main() {
-    Student* ps = new Student("Avi");
+    int* pa = new int[5];
     return 0;
 }
 
@@ -502,19 +499,19 @@ int main() {
 
 :::solution
 
-- **`ps`** is a local pointer, so it occupies a cell in `main`'s stack frame.
-- **The `Student` object** is created by `new`, so it lives on the heap.
+- **`pa`** is a local pointer, so it occupies a cell in `main`'s stack frame.
+- **The five ints** are created by `new[]`, so they live on the heap, as one block.
 
 ```text
-stack (main):  ps  ----------+
+stack (main):  pa  ----------+
                              |
 heap:                        v
-                       Student("Avi")
+                       [ ? | ? | ? | ? | ? ]
 
 ```
 
-- **When `main` returns,** its frame is popped and `ps` disappears.
-- **The `Student` block** stays allocated, but nothing points to it anymore, so it is a memory leak. In practice the operating system reclaims all of the process's memory when it exits, but inside a long-running program, a leak like this keeps growing.
+- **When `main` returns,** its frame is popped and `pa` disappears.
+- **The array block** stays allocated, but nothing points to it anymore, so it is a memory leak. In practice the operating system reclaims all of the process's memory when it exits, but inside a long-running program, a leak like this keeps growing.
 :::
 :::
 

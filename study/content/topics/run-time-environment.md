@@ -218,17 +218,19 @@ You choose how far the build goes with `g++` flags.
 - **`g++ -o name a.cpp b.cpp`** does all four stages in one command.
 
 :::problem id=worked-compile-vs-link title="Linking without main" source="materials/sessions/SPL_PS1 (1).pptx" kind=worked solution_origin=source
-`student.cpp` defines the members of `Student` and nothing else.
+`grades.cpp` defines two functions and nothing else.
 
 ```cpp
-// student.cpp
-#include "student.h"
+// grades.cpp
+#include <iostream>
+#include "grades.h"
 
-Student::Student(const std::string& name, int year)
-    : _name(name), _year(year) {}
+int average(int a, int b) {
+    return (a + b) / 2;
+}
 
-void Student::print() const {
-    std::cout << _name << " " << _year;
+void printGrade(int grade) {
+    std::cout << "grade: " << grade;
 }
 
 ```
@@ -236,17 +238,17 @@ void Student::print() const {
 The first command below succeeds and the second fails. Which stage fails, and why?
 
 ```text
-g++ -c student.cpp
-g++ -o app student.o
+g++ -c grades.cpp
+g++ -o app grades.o
 
 ```
 
 :::solution
-- **Where to look:** search the file for `main`. It has a constructor and `print`, but no `main` function.
+- **Where to look:** search the file for `main`. It has `average` and `printGrade`, but no `main` function.
 - **Why the first command succeeds:** `-c` stops before the linker. Compiling one file only checks that file's own code, and a file without `main` is perfectly fine.
-- **Why the second command fails:** asking for an executable runs the linker, and an executable needs `main` as its starting point. `student.o` is the only object file given, and it does not define `main`.
+- **Why the second command fails:** asking for an executable runs the linker, and an executable needs `main` as its starting point. `grades.o` is the only object file given, and it does not define `main`.
 - **The failing stage:** the linker. It reports an undefined reference to `main`.
-- **The fix:** link it together with the file that defines `main`, for example `g++ -o app student.o main.o`.
+- **The fix:** link it together with the file that defines `main`, for example `g++ -o app grades.o main.o`.
 :::
 :::
 

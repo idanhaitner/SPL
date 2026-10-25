@@ -272,6 +272,7 @@ Given `Student* pb = new Student("Benni", 2000);`, how do you call `print`?
 A call like `a.print()` runs the one shared `print` function. The function knows to print `a` because every non-static member function receives a hidden pointer named `this`.
 
 - **`this`** holds the address of the object the function was called on. In `a.print()`, `this` is `&a`.
+- **On the stack:** `this` is one more cell the caller pushes into the new frame, next to the return address and the arguments ([The memory model](topic:memory-model)), so the function can reach the object's fields, which are not in its own frame.
 - **A `const` member function**, like `print() const` above, promises not to change the object's members. Inside it, `this` has the type `const ClassName*`.
 - **A `const` object** may call only `const` member functions, because only they promise to leave it unchanged.
 - **A `static` member function** belongs to the class, not to an object, so it has no `this` and cannot reach the non-static members.
