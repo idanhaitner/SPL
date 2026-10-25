@@ -218,24 +218,36 @@ SQL supports two central categories of operations.
 
 Defining tables, fields, keys, indexes, and so on. Here is how to describe or create the data model defined for the students and courses, with SQL operations (there are systems that automatically translate diagrams like the one above into SQL code).
 
+A department has an id, a unique name, and a building. Its name gets an index, because queries look departments up by name.
+
 ```sql
 CREATE TABLE Departments (Id INTEGER PRIMARY KEY,
                           Name VARCHAR(20) UNIQUE NOT NULL,
                           Building INTEGER);
-CREATE INDEX idx_departments_name ON Departments(name);
+CREATE INDEX idx_departments_name ON Departments(Name);
+```
 
+A student belongs to a department, so `DeptId` is a foreign key into `Departments`.
+
+```sql
 CREATE TABLE Students (Id INTEGER PRIMARY KEY,
                        Name VARCHAR(20) NOT NULL,
                        Login VARCHAR(10) UNIQUE,
                        DeptId INTEGER,
                        FOREIGN KEY (DeptId) REFERENCES Departments(Id));
-CREATE INDEX idx_users_name ON Students(name);
+```
 
+A course has a unique name and a number of credit points (`NAKAZ`).
+
+```sql
 CREATE TABLE Courses (Id INTEGER PRIMARY KEY,
                       Name VARCHAR(20) UNIQUE NOT NULL,
                       NAKAZ INTEGER);
-CREATE INDEX idx_courses_name ON Courses(name);
+```
 
+Students and courses are many-to-many, so a junction table holds one row per student, course, and year, with the grade. Its primary key is the three fields together.
+
+```sql
 CREATE TABLE StudentsCourses (StudId INTEGER,
                               CourseId INTEGER,
                               Year INTEGER,
@@ -243,8 +255,6 @@ CREATE TABLE StudentsCourses (StudId INTEGER,
                               PRIMARY KEY (StudId, CourseId, Year),
                               FOREIGN KEY (StudId) REFERENCES Students(Id),
                               FOREIGN KEY (CourseId) REFERENCES Courses(Id));
-CREATE INDEX idx_studentscourses_year ON StudentsCourses(year);
-
 ```
 
 ### Operations on data (Data Manipulation Language)
@@ -516,19 +526,7 @@ FROM Students LEFT OUTER JOIN
 
 ```
 
-```text
-Dinna infi 70
-Dinna spl 90
-Danny infi 80
-Danny spl 85
-NULL ppl NULL
-Dinna infi 70
-Dinna spl 90
-Danny infi 80
-Danny spl 85
-Ringo NULL NULL
-
-```
+The result lists Dinna's and Danny's four rows twice, once from each query, plus `NULL ppl NULL` and `Ringo NULL NULL`.
 
 To avoid repetitions, restrict the second query so that it returns only the additions, with `WHERE`:
 
@@ -662,268 +660,125 @@ This section designs a general pattern for managing data in a database, and an a
   - Preventing the run of the `main` function when performing `import`, with the system variable `__name__`.
   - (More details in the practical session.)
 
-### Designing the application
+### The application: an auto-grader
 
-Implement an application for automatically checking programming assignments, where the details of the students, the assignments, and the grades are managed in a database.
+The application grades programming assignments automatically.
 
-**Given:** a database with the details of the students and the assignments, and a folder in the file system with the code of the assignment (in Python) that each student submitted.
+- **The database** holds the students, the assignments (with each one's expected output), and the grades.
+- **A folder** holds the submitted files. Each file is named after the student's id, and defines a function `run_assignment()`.
+- **The program** runs each submission, compares its result with the expected output, gives 100 or 0, and stores the grade.
 
-The application reads every assignment that was submitted, runs it (the function submitted is `run_assignment`), and compares it with the required result (which is given as part of the assignment's definition in the database). It computes the grade accordingly, and stores it in the database.
+The database has three tables:
 
-**A first attempt:**
+```sql
+CREATE TABLE students    (id INT PRIMARY KEY, name TEXT NOT NULL);
+CREATE TABLE assignments (num INT PRIMARY KEY, expected_output TEXT NOT NULL);
+CREATE TABLE grades      (student_id INT NOT NULL REFERENCES students(id),
+                          assignment_num INT NOT NULL REFERENCES assignments(num),
+                          grade INT NOT NULL,
+                          PRIMARY KEY (student_id, assignment_num));
+```
+
+The notes develop the program in four versions. Each one fixes the previous one's main weakness.
+
+### Version 1: everything in one place
+
+Python's `sqlite3` module talks to the database. A connection runs SQL, with `?` placeholders for values.
 
 ```python
-import os
 import sqlite3
-import imp
-import atexit
-
-# connect to the database
 _conn = sqlite3.connect('grades.db')
-
-# register a function to be called immediately when the interpreter terminates
-def _close_db():
-    _conn.commit()
-    _conn.close()
-
-atexit.register(_close_db)
-
-# our application API:
-
-def create_tables():
-    _conn.executescript("""
-        CREATE TABLE students (
-            id      INT     PRIMARY KEY,
-            name    TEXT    NOT NULL
-        );
-
-        CREATE TABLE assignments (
-            num                 INT     PRIMARY KEY,
-            expected_output     TEXT    NOT NULL
-        );
-
-        CREATE TABLE grades (
-            student_id      INT     NOT NULL,
-            assignment_num  INT     NOT NULL,
-            grade           INT     NOT NULL,
-
-            FOREIGN KEY(student_id)     REFERENCES students(id),
-            FOREIGN KEY(assignment_num) REFERENCES assignments(num),
-
-            PRIMARY KEY (student_id, assignment_num)
-        );
-    """)
-
-def insert_student(id, name):
-    _conn.execute("INSERT INTO students (id, name) VALUES (?, ?)", [id, name])
-
-def insert_assignment(num, expected_output):
-    _conn.execute("INSERT INTO assignments (num, expected_output) VALUES (?, ?)",
-                  [num, expected_output])
 
 def insert_grade(student_id, assignment_num, grade):
     _conn.execute("INSERT INTO grades (student_id, assignment_num, grade) VALUES (?, ?, ?)",
                   [student_id, assignment_num, grade])
+```
 
+The grading function reads the expected output, then runs every submission.
+
+```python
 def grade(assignments_dir, assignment_num):
-    query_data = _conn.cursor()
-    query_data.execute("SELECT expected_output FROM assignments WHERE num = ?", [assignment_num])
-
-    # the expected value is the first element in the fetched row
-    expected_output = query_data.fetchone()[0]
-
-    # loop over the files in the assignment_dir
-    for assignment in os.listdir(assignments_dir):
-
-        # the os.path.splitext split a file name that looks like: 'file.ext' into ['file', 'ext']
-        (student_id, ext) = os.path.splitext(assignment)
-
-        # imp.load_source loads python source code (module) into a variable
-        # the first argument will be the __name__ that the module will see when it loads
-        # and the second is the path to the module
-        code = imp.load_source('test', assignments_dir + '/' + assignment)
-
-        # calculating the grade
-        grade = 100 if code.run_assignment() == expected_output else 0
-
-        insert_grade(student_id, assignment_num, grade)
-
-def print_grades():
     cur = _conn.cursor()
+    cur.execute("SELECT expected_output FROM assignments WHERE num = ?", [assignment_num])
+    expected = cur.fetchone()[0]
 
-    cur.execute("SELECT name as student_name, assignment_num, grade FROM students INNER JOIN grades ON students.id = grades.student_id")
-
-    print 'grades:'
-    for row in cur.fetchall():
-        print 'grade of student {} on assignment {} is {}'.format(*row)
-
+    for filename in os.listdir(assignments_dir):
+        (student_id, ext) = os.path.splitext(filename)     # '1111.py' -> ('1111', '.py')
+        code = imp.load_source('test', assignments_dir + '/' + filename)
+        grade = 100 if code.run_assignment() == expected else 0
+        insert_grade(student_id, assignment_num, grade)
 ```
 
-**An example run.** Assume these files were submitted for the last assignment:
+- **`imp.load_source`** loads a Python file as a module, so its `run_assignment` can be called.
+- **`atexit.register`** registers a function to run when the program ends; here, one that commits and closes the connection.
+
+If the submissions return `'spl'`, `'spl!'`, and `'spl'`, and the expected output is `'spl'`, the grades are 100, 0, and 100.
+
+**The weakness:** the SQL and the grading logic are mixed together.
+
+- Changing how grades are computed means editing code that also talks to the database.
+- Changing the database code (adding a cache, or switching from `sqlite3`) means editing the grading logic.
+- Neither part can be reused in another program without dragging the other along.
+
+### Version 2: a separate persistence layer
+
+Move every SQL statement into one class in its own file, `persistence.py`. The grading file only calls its methods.
 
 ```python
-#1111.py
-def run_assignment():
-    return 'spl'
-
-#2222.py
-def run_assignment():
-    return 'spl!'
-
-#3333.py
-def run_assignment():
-    return 'spl'
-
-```
-
-Running the code:
-
-```text
-> python
-
->>> from vicious import *
->>> create_tables()
->>> insert_student(1111, 'Alice')
->>> insert_student(2222, 'Bob')
->>> insert_student(3333, 'Christ')
->>> insert_assignment(1, 'spl')
-
->>> grade('assignments', 1)
->>> print_grades()
-grades:
-grade of student Alice on assignment 1 is 100
-grade of student Bob on assignment 1 is 0
-grade of student Christ on assignment 1 is 100
-
-```
-
-**The central drawback:** the code for accessing the database is mixed with the code of the "logic", the way the grade is computed and the reports are prepared.
-
-- **A change in the logic** (the method of computing the grade) means changing the code that accesses the database.
-- **A change in the code that accesses the database** (assume adding a caching layer, or using a better library than `sqlite3`) means changing the logic too.
-- **Using the code that accesses the database in another application** drags in loading the logic.
-- **Using the logic code** (automatic grade computation) **in another application** drags in loading the code that accesses the database.
-
-So separate the two parts:
-
-- **an independent layer for accessing the database,**
-- **the logic of giving the grade and preparing the reports.**
-
-**A second attempt:**
-
-```python
-# file: persistence.py
-
-import sqlite3
-import atexit
-
-# we want to make the persistence layer singleton so we are marking the
-# following class as private by prepending an underscore to its name.
-class _PersistenceLayer(object):
+# persistence.py
+class _PersistenceLayer:
     def __init__(self):
         self._conn = sqlite3.connect('grades.db')
 
-    def _close(self):
-        self._conn.commit()
-        self._conn.close()
-
-    def create_tables(self):
-        # see code in previous version...
-
-    def insert_student(self, id, name):
-        # see code in previous version...
-
-    def insert_assignment(self, num, expected_output):
-        # see code in previous version...
-
-    def insert_grade(self, student_id, assignment_num, grade):
-        # see code in previous version...
-
-    def get_assignment_expected_output(self, assignment_num):
+    def get_assignment_expected_output(self, num):
         c = self._conn.cursor()
-        c.execute("SELECT expected_output FROM assignments WHERE num = ?", [assignment_num])
-        return str(c.fetchone()[0])
+        c.execute("SELECT expected_output FROM assignments WHERE num = ?", [num])
+        return c.fetchone()[0]
 
-    def get_all_grades(self):
-        c = self._conn.cursor()
-        return c.execute("SELECT name as student_name, assignment_num, grade FROM students INNER JOIN grades ON students.id = grades.student_id").fetchall()
+    def insert_grade(self, student_id, assignment_num, grade): ...
 
-# persistence layer is a singleton
-psl = _PersistenceLayer()
-
-atexit.register(psl._close)
-
+psl = _PersistenceLayer()      # the single instance (a singleton)
 ```
 
 ```python
-# file: grading.py
-
+# grading.py
 from persistence import psl
-import os
-import imp
 
 def grade(assignments_dir, assignment_num):
-    expected_output = psl.get_assignment_expected_output(assignment_num)
-
-    for assignment in os.listdir(assignments_dir):
-        (student_id, ext) = os.path.splitext(assignment)
-
-        code = imp.load_source('test', assignments_dir + '/' + assignment)
-
-        grade = 100 if code.run_assignment() == expected_output else 0
-
-        psl.insert_grade(student_id, assignment_num, grade)
-
-def print_grades():
-    print 'grades:'
-    for grade in psl.get_all_grades():
-        print 'grade of student {} on assignment {} is {}'.format(*grade)
-
+    expected = psl.get_assignment_expected_output(assignment_num)
+    ...
+    psl.insert_grade(student_id, assignment_num, grade)
 ```
 
-**The drawback:** the data the persistence layer provides is not generic. It includes only the data the logic part needs right now, and does not support wider data that the logic part may need later.
+- **The leading underscore** in `_PersistenceLayer` marks the class as private by convention. Everyone uses the one object `psl`, which makes it a **singleton**.
 
-- **`expected_output`:** if you want to improve the grading method in the future, based on other fields, you will have to change the layer that accesses the database.
-- **`get_all_grades`:** if you want to produce a report with richer content about a student than just the grade, you will have to change the layer that accesses the database.
+**The weakness:** the layer offers exactly what the grading code needs today, `get_assignment_expected_output`, and nothing more. If grading later needs another field of an assignment, or a report needs more about a student, the layer must change again.
 
-So define a general interface for storing and retrieving data from a table in the database.
+### Version 3: DTOs, DAOs, and a repository
 
-**A third attempt.**
+Make the layer general: let it move **whole records** between the database and the program.
 
-- **DTO (Data Transfer Object):** an object in the programming language (in this case Python) that represents the content of a record from a table in the database. The logic part works only with objects of this type. When it needs data from the database, the data is returned to it as an object of this type (and not as a record, the way it is represented in the database).
-- **DAO (Data Access Object):** an interface that supports the operation of **storing** (`insert`) an object that represents a record (a DTO), or **retrieving** a record (`find`) as such an object (a DTO).
-  - **The store operation** receives a DTO to keep in the table, and builds an `INSERT` query that adds a record with the values of its fields.
-  - **The retrieve operation** performs a `SELECT` query on a record from the table, and returns it as a DTO (the values of the fields in the record are the values of the fields of the DTO object).
+- **A DTO (Data Transfer Object)** is a plain object that holds one record of a table. The logic only ever sees DTOs, never rows.
+- **A DAO (Data Access Object)** stores DTOs in one table (`insert`), and reads them back as DTOs (`find`).
+- **A repository** holds the connection and one DAO per table.
 
-In our case there are three DTO classes, `Student`, `Grade`, and `Assignment`, and three DAO classes, `Students`, `Grades`, and `Assignments`.
+**The DTOs:**
 
 ```python
-# file: persistence.py
-
-import sqlite3
-import atexit
-
-# Data Transfer Objects:
-
-class Student(object):
+class Student:
     def __init__(self, id, name):
         self.id = id
         self.name = name
 
-class Assignment(object):
+class Assignment:
     def __init__(self, num, expected_output):
         self.num = num
         self.expected_output = expected_output
+```
 
-class Grade(object):
-    def __init__(self, student_id, assignment_num, grade):
-        self.student_id = student_id
-        self.assignment_num = assignment_num
-        self.grade = grade
+**A DAO** turns a DTO into an `INSERT`, and a `SELECT` result back into a DTO:
 
-# Data Access Objects:
-# All of these are meant to be singletons
-
+```python
 class _Students:
     def __init__(self, conn):
         self._conn = conn
@@ -935,212 +790,98 @@ class _Students:
     def find(self, student_id):
         c = self._conn.cursor()
         c.execute("SELECT id, name FROM students WHERE id = ?", [student_id])
-        return Student(*c.fetchone())
+        return Student(*c.fetchone())       # the row's values become the constructor's arguments
+```
 
-class _Assignments:
-    def __init__(self, conn):
-        self._conn = conn
+`_Assignments` and `_Grades` look the same, with their own tables and fields.
 
-    def insert(self, assignment):
-        self._conn.execute("INSERT INTO assignments (num, expected_output) VALUES (?, ?)",
-                           [assignment.num, assignment.expected_output])
+**The repository** ties them together:
 
-    def find(self, num):
-        c = self._conn.cursor()
-        c.execute("SELECT num, expected_output FROM assignments WHERE num = ?", [num])
-        return Assignment(*c.fetchone())
-
-class _Grades:
-    def __init__(self, conn):
-        self._conn = conn
-
-    def insert(self, grade):
-        self._conn.execute("""
-            INSERT INTO grades (student_id, assignment_num, grade) VALUES (?, ?, ?)
-        """, [grade.student_id, grade.assignment_num, grade.grade])
-
-    def find_all(self):
-        c = self._conn.cursor()
-        all = c.execute("""
-            SELECT student_id, assignment_num, grade FROM grades
-        """).fetchall()
-
-        return [Grade(*row) for row in all]
-
-# The Repository
-class _Repository(object):
+```python
+class _Repository:
     def __init__(self):
         self._conn = sqlite3.connect('grades.db')
         self.students = _Students(self._conn)
         self.assignments = _Assignments(self._conn)
         self.grades = _Grades(self._conn)
 
-    def _close(self):
-        self._conn.commit()
-        self._conn.close()
-
-    def create_tables(self):
-        # see code in previous version...
-
-# the repository singleton
 repo = _Repository()
-atexit.register(repo._close)
-
 ```
+
+Now the grading logic reads like plain object code:
 
 ```python
-# file: grading.py
-
-from persistence import repo
-import os
-import imp
-
-def grade(assignments_dir, assignment_num):
-    expected_output = repo.assignments.find(assignment_num).expected_output
-
-    for assignment in os.listdir(assignments_dir):
-        (student_id, ext) = os.path.splitext(assignment)
-
-        code = imp.load_source('test', assignments_dir + '/' + assignment)
-
-        student_grade = Grade(student_id, assignment_num, 0)
-        if code.run_assignment() == expected_output:
-            student_grade.grade = 100
-
-        repo.grades.insert(student_grade)
-
-def print_grades():
-    print 'grades:'
-    for grade in repo.grades.find_all():
-        student = repo.students.find(grade.student_id)
-        print 'grade of student {} on assignment {} is {}'\
-            .format(student.name, grade.assignment_num, grade.grade)
-
+expected = repo.assignments.find(assignment_num).expected_output
+...
+repo.grades.insert(Grade(student_id, assignment_num, grade))
 ```
 
-The course organizes database code into three kinds of classes.
+**The weakness:** the three DAO classes are almost identical. Only the table and field names differ.
+
+### Version 4: one generic DAO
+
+Write the DAO once, for any DTO class, by following three naming rules:
+
+- **the table's name** is the DTO class's name plus `s` (`Student` → `students`),
+- **the table's columns** have the same names as the DTO's fields,
+- **the DTO's constructor** takes all the fields as arguments.
+
+With those rules, the DAO can build its SQL from the DTO itself.
+
+**`insert`** reads the DTO's fields with `vars()`:
+
+```python
+def insert(self, dto):
+    fields = vars(dto)                         # {'id': 3, 'name': 'danny'}
+    columns = ','.join(fields.keys())          # 'id,name'
+    qmarks = ','.join(['?'] * len(fields))     # '?,?'
+    self._conn.execute('INSERT INTO {} ({}) VALUES ({})'
+                       .format(self._table_name, columns, qmarks),
+                       list(fields.values()))
+```
+
+**`find`** builds a `WHERE` from keyword arguments:
+
+```python
+def find(self, **keyvals):                     # find(id=17)
+    where = ' AND '.join([col + '=?' for col in keyvals.keys()])
+    c = self._conn.cursor()
+    c.execute('SELECT * FROM {} WHERE {}'.format(self._table_name, where),
+              list(keyvals.values()))
+    return orm(c, self._dto_type)
+```
+
+**`orm`** (object-relational mapping) turns each row into a DTO. The row's columns may come in a different order from the constructor's arguments, so it matches them by name:
+
+```python
+def orm(cursor, dto_type):
+    args = inspect.getargspec(dto_type.__init__).args[1:]   # ['id', 'name'], without self
+    cols = [d[0] for d in cursor.description]              # the row's column names
+    order = [cols.index(arg) for arg in args]               # where each argument is in the row
+    return [dto_type(*[row[i] for i in order]) for row in cursor.fetchall()]
+```
+
+The repository now needs only one line per table:
+
+```python
+self.students = Dao(Student, self._conn)
+self.assignments = Dao(Assignment, self._conn)
+self.grades = Dao(Grade, self._conn)
+```
+
+**The remaining weakness:** every new table or column still needs a DTO class written by hand. The DTO classes could be generated from the database itself, which describes its own tables and columns:
+
+```sql
+SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+```
+
+The notes leave that as an exercise.
+
+To sum up the roles:
 
 - **DTO (data transfer object):** a simple object that represents one row of a table.
 - **DAO (data access object):** a class that performs CRUD operations (`Create`, `Read`, `Update`, `Delete`) on a single table.
 - **Repository:** a higher layer that holds the business logic, and the queries that span several tables or several DAOs.
-
-**The drawback:** the code of the different DAOs, `Students`, `Grades`, and `Assignments`, is almost identical, up to the names of the tables and the fields. So define a general DAO pattern.
-
-**A fourth attempt.** The class that implements the general DAO pattern receives, in its constructor, the DTO class it must move to or from the database, and formulates the matching queries accordingly.
-
-**The assumptions:**
-
-- **the names of the tables in the database are the names of the classes of the transferred objects** (the DTOs), with an `s` added (`Student` → `Students`, `Grade` → `Grades`, `Assignment` → `Assignments`),
-- **the names of the fields in the database are the names of the fields of the transferred object classes** (the DTOs),
-- **the constructor of the DTO object receives all the fields** (not necessarily in their order in the table in the database, which requires the `orm` procedure).
-
-To implement the general pattern on the basis of these assumptions, you need information about the fields of the DTO class (this can be done with Python's `inspect` package), and about the fields in the record returned from the database (included in the `cursor` object of `sqlite`).
-
-```python
-# file: dbtools.py
-
-import inspect
-
-# we can use our method above in order to start writing a generic Dao
-# note that this class is not complete and we will add methods to it next
-class Dao(object):
-    def __init__(self, dto_type, conn):
-        self._conn = conn
-        self._dto_type = dto_type
-
-        # dto_type is a class, its __name__ field contains a string representing the name of the class.
-        self._table_name = dto_type.__name__.lower() + 's'
-
-    def insert(self, dto_instance):
-        ins_dict = vars(dto_instance)              # { 'id': 3, 'name': 'danny' }
-
-        column_names = ','.join(ins_dict.keys())   # ['id', 'name'] => 'id,name'
-        params = ins_dict.values()                 # [3, 'danny']
-        qmarks = ','.join(['?'] * len(ins_dict))   # '?,?'
-
-        stmt = 'INSERT INTO {} ({}) VALUES ({})'\
-            .format(self._table_name, column_names, qmarks)
-
-        self._conn.execute(stmt, params)
-
-    def find_all(self):
-        c = self._conn.cursor()
-        c.execute('SELECT * FROM {}'.format(self._table_name))
-        return orm(c, self._dto_type)
-
-    def find(self, **keyvals):
-        # keyvals = { 'id': 17, 'name': 'danny' }
-        column_names = keyvals.keys()   # ['id', 'name']
-        params = keyvals.values()       # [17, 'danny']
-
-        stmt = 'SELECT * FROM {} WHERE {}' \
-            .format(self._table_name, ' AND '.join([col + '=?' for col in column_names]))
-        # SELECT * FROM students WHERE id=? AND name=?
-
-        c = self._conn.cursor()
-        c.execute(stmt, params)
-        return orm(c, self._dto_type)
-
-def orm(cursor, dto_type):
-
-    # the following line retrieve the argument names of the constructor
-    args = inspect.getargspec(dto_type.__init__).args   # ['self', 'id', 'name']
-
-    # the first argument of the constructor will be 'self', it does not correspond
-    # to any database field, so we can ignore it.
-    args = args[1:]   # ['id', 'name']
-
-    # gets the names of the columns returned in the cursor
-    # cursor.description = [ ['name', ...], ['id', ...] ]
-    # col_names = ['name', 'id']
-    col_names = [column[0] for column in cursor.description]
-
-    # map them into the position of the corresponding constructor argument
-    col_mapping = [col_names.index(arg) for arg in args]   # [1, 0]
-    # cursor.fetchall() = [ ['danny', 17], ['dinna', 45] ]
-    return [row_map(row, col_mapping, dto_type) for row in cursor.fetchall()]
-
-def row_map(row, col_mapping, dto_type):
-    # row = ['danny', 17]
-    # col_mapping [1, 0]
-    # dto_type = Student
-    ctor_args = [row[idx] for idx in col_mapping]   # [17, 'danny']
-    return dto_type(*ctor_args)   # Student(17, 'danny')
-
-# Repository
-class Repository(object):
-    def __init__(self):
-        self._conn = sqlite3.connect('grades.db')
-        self._conn.text_factory = bytes
-        self.students = Dao(Student, self._conn)
-        self.assignments = Dao(Assignment, self._conn)
-        self.grades = Dao(Grade, self._conn)
-
-    def _close(self):
-        # see code in previous version...
-
-    def create_tables(self):
-        # see code in previous version...
-
-# singleton
-repo = Repository()
-atexit.register(repo._close)
-
-```
-
-**The drawback:** every time a new field is defined in a table, or a new table in the database, you must update the matching DTO class in Python.
-
-- **So create the DTO classes automatically,** given the database:
-  - for every table, a DTO is defined with the name of the table (without the `s`),
-  - the names of the fields of the DTO class are the fields of the table.
-- **For that, you need information from the database** about our data model: the tables and the fields. You can get it in SQL:
-
-```sql
-SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-
-```
-
-The implementation is left as an exercise at home.
 
 ## Practice
 
