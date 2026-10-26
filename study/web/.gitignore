@@ -4,11 +4,3 @@ out
 
 __pycache__/
 *.pyc
-
-# impeccable working files: screenshots, mocks, reference images, decision rounds
-.impeccable/review/
-.impeccable/mocks/
-.impeccable/quality/
-.impeccable/questions/
-.impeccable/hook.cache.json
-.impeccable/decision-payload.json
