@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SearchBox } from "@/components/SearchBox";
 import { Mixed } from "@/lib/bidi";
 import { readProgress } from "@/lib/progress";
+import type { PartId } from "@/lib/parts";
 import type { SearchHit } from "@/lib/types";
 
-type Chapter = { id: string; title: string; practiceIds: string[] };
+type Chapter = { id: string; title: string; part: PartId; practiceIds: string[] };
+type PartLabel = { id: PartId; numeral: string; name: string };
 
 function samePath(pathname: string, href: string) {
   const trim = (path: string) => (path.length > 1 ? path.replace(/\/+$/, "") : path);
@@ -23,39 +25,19 @@ export function Rail({
   courseId,
   title,
   chapters,
+  parts,
   hits,
 }: {
   courseId: string;
   title: string;
   chapters: Chapter[];
+  parts: PartLabel[];
   hits: SearchHit[];
 }) {
   const pathname = usePathname();
-  const chaptersRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const [mark, setMark] = useState<{ top: number; height: number } | null>(null);
   const [solved, setSolved] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
-
-  useLayoutEffect(() => {
-    const nav = chaptersRef.current;
-    if (!nav) return;
-    const place = () => {
-      const current = nav.querySelector<HTMLElement>("a.is-current");
-      if (!current || current.offsetParent === null) {
-        setMark(null);
-        return;
-      }
-      const inset = 8;
-      setMark({
-        top: current.offsetTop + inset,
-        height: Math.max(16, current.offsetHeight - inset * 2),
-      });
-    };
-    place();
-    window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
-  }, [pathname, open]);
 
   useEffect(() => {
     setOpen(false);
@@ -142,21 +124,45 @@ export function Rail({
           <Link className={samePath(pathname, "/") ? "is-current" : ""} href="/">Overview</Link>
           <Link className={samePath(pathname, "/glossary") ? "is-current" : ""} href="/glossary">Glossary</Link>
         </nav>
-        <p className="rail-label">Chapters</p>
-        <nav className="chapters-nav" ref={chaptersRef}>
-          {mark && <span className="rail-mark" style={{ top: mark.top, height: mark.height }} />}
-          {chapters.map((chapter, index) => {
-            const href = `/topics/${chapter.id}`;
-            const current = samePath(pathname, href);
-            const finished = chapter.practiceIds.length > 0 && chapter.practiceIds.every((id) => solved.includes(id));
+        {(() => {
+          const open = chapters.find((chapter) => samePath(pathname, `/topics/${chapter.id}`));
+          if (!open) {
             return (
-              <Link key={chapter.id} href={href} className={current ? "is-current" : ""}>
-                <span className={`dot${finished ? " is-done" : ""}`}>{String(index + 1).padStart(2, "0")}</span>
-                <span><Mixed text={chapter.title} /></span>
-              </Link>
+              <nav className="parts-nav" aria-label="Course parts">
+                {parts.map((part) => {
+                  const first = chapters.find((chapter) => chapter.part === part.id);
+                  if (!first) return null;
+                  return (
+                    <Link key={part.id} href={`/topics/${first.id}`} className={`rail-part-${part.id}`}>
+                      <span className="rail-numeral">{part.numeral}</span>
+                      {part.name}
+                    </Link>
+                  );
+                })}
+              </nav>
             );
-          })}
-        </nav>
+          }
+          const part = parts.find((item) => item.id === open.part) ?? parts[0];
+          return (
+            <section className={`rail-part rail-part-${part.id}`}>
+              <p className="rail-label"><span className="rail-numeral">{part.numeral}</span>{part.name}</p>
+              <nav className="chapters-nav" aria-label={part.name}>
+                {chapters.map((chapter, index) => {
+                  if (chapter.part !== part.id) return null;
+                  const href = `/topics/${chapter.id}`;
+                  const current = samePath(pathname, href);
+                  const finished = chapter.practiceIds.length > 0 && chapter.practiceIds.every((id) => solved.includes(id));
+                  return (
+                    <Link key={chapter.id} href={href} className={current ? "is-current" : ""} aria-current={current ? "page" : undefined}>
+                      <span className={`dot${finished ? " is-done" : ""}`}>{String(index + 1).padStart(2, "0")}</span>
+                      <span><Mixed text={chapter.title} /></span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </section>
+          );
+        })()}
         <p className="progress-count">{total ? <>{done} / {total} exercises solved</> : ""}</p>
       </div>
     </aside>

@@ -69,14 +69,7 @@ function Folds({
 }
 
 function DirectionMark({ way }: { way: "back" | "forward" }) {
-  const ltr = way === "back" ? "←" : "→";
-  const rtl = way === "back" ? "→" : "←";
-  return (
-    <span aria-hidden="true">
-      <span className="rtl:hidden">{ltr}</span>
-      <span className="hidden rtl:inline">{rtl}</span>
-    </span>
-  );
+  return <span className={`arrow is-${way}`} aria-hidden="true" />;
 }
 
 function SectionPop({
@@ -95,7 +88,7 @@ function SectionPop({
         <DirectionMark way={isPrev ? "back" : "forward"} />
       </span>
       <span className="section-pop-copy">
-        <span className="section-pop-kicker">{isPrev ? "Previous section" : "Next section"}</span>
+        <span className="sr-only">{isPrev ? "Previous section: " : "Next section: "}</span>
         <span className="section-pop-title">
           <Inline text={title} />
         </span>
@@ -108,7 +101,7 @@ function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "n
   const isPrev = side === "prev";
   const copy = (
     <span className="chapter-hop-copy">
-      <span className="chapter-hop-kicker">{isPrev ? "Previous chapter" : "Next chapter"}</span>
+      <span className="sr-only">{isPrev ? "Previous chapter: " : "Next chapter: "}</span>
       <span className="chapter-hop-title">
         <Inline text={chapter.title} />
       </span>
@@ -273,7 +266,6 @@ export function SectionSwitch({
     <>
       {intro && (
         <div className="chapter-lead">
-          <p className="chapter-lead-kicker">Chapter overview</p>
           {intro}
         </div>
       )}
