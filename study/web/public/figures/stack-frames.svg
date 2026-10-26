@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 460" width="780" height="460">
+  <style>
+    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
+    .d2 { animation-delay: 0.35s; }
+    .d3 { animation-delay: 0.7s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
   <rect width="780" height="460" fill="#f6f1e7" />
   <text x="200" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2f5f8a" direction="ltr">while <tspan direction="ltr">foo</tspan> runs</text>
   <text x="580" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2f5f8a" direction="ltr">after <tspan direction="ltr">foo</tspan> returns</text>

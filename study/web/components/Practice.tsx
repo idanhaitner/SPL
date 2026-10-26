@@ -80,7 +80,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
     return (
       <article className={`card practice is-folded${solved ? " is-solved" : ""}`} id={id}>
         <button type="button" className="fold-row" aria-expanded={false} onClick={() => setOpen(true)}>
-          <span className={`mark${solved ? " is-done" : ""}`} aria-hidden="true" />
+          <span className="kicker">Practice</span>
           <span className="fold-line"><Mixed text={summary} /></span>
           <span className="fold-open">Open</span>
         </button>
@@ -91,6 +91,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
   return (
     <article className={`card practice${solved ? " is-solved" : ""}`} id={id}>
       <header className="card-head">
+        <p className="kicker">{worked ? "Example" : "Practice"}</p>
         {!worked && (
           <div className="card-tools">
             <button type="button" onClick={() => setOpen(false)}>Close</button>
@@ -104,12 +105,12 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
           </div>
         )}
       </header>
-      <h3 className="practice-title">{worked && <span className="type">Example</span>}<Mixed text={summary} /></h3>
+      <h3 className="practice-title"><Mixed text={summary} /></h3>
       <div className="statement">{statement}</div>
       {hints.slice(0, openHints).map((hint, index) => (
         <div className="reveal" key={index}>
           <div className="hint">
-            <p className="lead-in">Hint {index + 1} of {hints.length}</p>
+            <p className="kicker">Hint {index + 1} of {hints.length}</p>
             {hint}
           </div>
         </div>
@@ -131,7 +132,7 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
       {!quiz && solution && showSolution && (
         <div className="reveal">
           <div className="solution">
-            <p className="lead-in">Solution</p>
+            <p className="kicker">Solution</p>
             {solution}
           </div>
         </div>

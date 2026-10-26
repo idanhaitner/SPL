@@ -153,7 +153,7 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
   if (name === "trap") {
     return (
       <aside className="callout callout-trap">
-        <p className="lead-in">Watch for this</p>
+        <p className="kicker">Watch for this</p>
         <Blocks blocks={children} courseId={courseId} />
       </aside>
     );
@@ -164,17 +164,14 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
     const body = children.filter((child) => !(child.type === "directive" && child.name === "proof"));
     return (
       <section className="formal" id={attrs.id}>
-        {attrs.title ? (
-          <h3><span className="type">{label}</span><Inline text={attrs.title} /></h3>
-        ) : (
-          <p className="lead-in">{label}</p>
-        )}
+        <p className="kicker">{label}</p>
+        {attrs.title && <h3><Inline text={attrs.title} /></h3>}
         {name === "algorithm" && attrs.complexity && <p className="meta">Complexity. <Mixed text={attrs.complexity} /></p>}
         {name === "algorithm" && attrs.invariant && <p className="meta">Invariant. <Mixed text={attrs.invariant} /></p>}
         <Blocks blocks={body} courseId={courseId} />
         {proof.map((item, index) => (
           <div className="proof" key={index}>
-            <p className="lead-in">Proof</p>
+            <p className="kicker">Proof</p>
             <Blocks blocks={item.type === "directive" ? item.children : []} courseId={courseId} />
           </div>
         ))}
@@ -184,7 +181,7 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
   if (name === "proof") {
     return (
       <div className="proof">
-        <p className="lead-in">Proof</p>
+        <p className="kicker">Proof</p>
         <Blocks blocks={children} courseId={courseId} />
       </div>
     );

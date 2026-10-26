@@ -1,4 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" width="680" height="300">
+  <style>
+    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
+    .d2 { animation-delay: 0.35s; }
+    .d3 { animation-delay: 0.7s; }
+    @keyframes appear { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
+  </style>
   <rect width="680" height="300" fill="#f6f1e7" />
   <g class="draw">
     <rect x="36" y="28" width="608" height="72" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />

@@ -3,7 +3,6 @@ import { Chapter } from "@/components/Chapter";
 import { Visit } from "@/components/Visit";
 import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
-import { partOf } from "@/lib/parts";
 
 export function generateStaticParams() {
   return loadCourse().topics.map((topic) => ({ slug: topic.id }));
@@ -18,11 +17,11 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
   const previous = course.topics[index - 1];
   const next = course.topics[index + 1];
   return (
-    <article className="page chapter" data-part={partOf(topic.id).id}>
+    <article className="page chapter">
       <Visit courseId={course.id} slug={topic.id} />
       <header className="masthead">
-        <span className="masthead-num"><span className="sr-only">Chapter </span>{String(index + 1).padStart(2, "0")}</span>
         <h1><Mixed text={topic.title} /></h1>
+        <span className="masthead-num" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
       </header>
       <Chapter
         blocks={topic.blocks}
