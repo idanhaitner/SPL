@@ -24,8 +24,10 @@ export function ChapterProgress({ courseId, practiceIds }: { courseId: string; p
   if (!total) return null;
   return (
     <span className="chapter-progress">
-      <span className="chapter-bar" aria-hidden="true">
-        <span style={{ width: `${Math.round((done / total) * 100)}%` }} />
+      <span className="marks" aria-hidden="true">
+        {practiceIds.map((id, index) => (
+          <span key={id} className={index < done ? "mark is-done" : "mark"} />
+        ))}
       </span>
       <span className="chapter-count">{done} / {total} solved</span>
     </span>

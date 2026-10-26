@@ -1,12 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280">
-  <style>
-    .draw { opacity: 0; animation: appear 0.35s ease forwards; }
-    .d2 { animation-delay: 0.3s; }
-    .d3 { animation-delay: 0.6s; }
-    .d4 { animation-delay: 0.9s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
   <rect width="720" height="280" fill="#f6f1e7" />
   <text x="190" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">thread 1</text>
   <text x="520" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" direction="ltr">thread 2</text>

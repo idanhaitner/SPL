@@ -16,11 +16,10 @@ export default function GlossaryPage() {
   const loose = course.glossary.filter((entry) => !known.has(entry.topic));
 
   return (
-    <article className="page glossary">
+    <article className="page glossary" data-part="cover">
       <header className="masthead">
-        <p className="kicker">Glossary</p>
         <h1>Glossary</h1>
-        <span className="masthead-num" aria-hidden="true">{String(course.glossary.length).padStart(2, "0")}</span>
+        <span className="masthead-count">{course.glossary.length} terms</span>
       </header>
       <p className="lead">The terms the lessons keep, grouped by the chapter that defines them.</p>
       {groups.length > 0 && (
