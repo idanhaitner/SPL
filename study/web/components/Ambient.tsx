@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const SPOT = ".chapter-list a, .continue, .chapter-hop, .glossary-card, .section-pop";
+const SPOT = ".chapter-hop, .glossary-card, .section-pop";
 
 export function Ambient() {
   useEffect(() => {

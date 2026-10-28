@@ -77,12 +77,15 @@ public synchronized T take() throws InterruptedException {
     file: "Reactor.java",
     lang: "java",
     note: "a heavy call on the selector thread.",
-    code: `// The selector thread only dispatches
+    code: `// The selector thread reads, the pool does the work
 while (!Thread.currentThread().isInterrupted()) {
     selector.select();
     for (SelectionKey key : selector.selectedKeys()) {
         if (key.isAcceptable()) accept(key);
-        else if (key.isReadable()) pool.submit(() -> read(key));
+        else if (key.isReadable()) {
+            Runnable task = handler(key).continueRead();
+            if (task != null) pool.submit(handler(key), task);
+        }
     }
     selector.selectedKeys().clear();
 }`,
@@ -166,7 +169,7 @@ export default async function HomePage() {
   return (
     <div className="landing">
       <Reveal />
-      <LandingNav courseId={course.id} title={course.title} chapters={chapters} />
+      <LandingNav courseId={course.id} title={course.title} chapters={chapters} hits={course.search} />
 
       <section className="l-hero" aria-labelledby="hero-title">
         <div className="l-wrap l-hero-grid">
@@ -298,7 +301,7 @@ export default async function HomePage() {
             The exam is closer<br />
             than it looks
           </h2>
-          <p className="l-sub">Start with chapter 1. The guide remembers where you stop, so your next session opens on the right page.</p>
+          <p className="l-sub">The guide remembers where you stop, so your next session opens on the right page.</p>
           <div className="l-cta-row">
             <ResumeLink className="lbtn" courseId={course.id} chapters={chapters} />
             <span className="l-reassure">Free, no account, progress stays on your device</span>

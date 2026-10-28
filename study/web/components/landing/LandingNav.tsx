@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ResumeLink } from "@/components/landing/ResumeLink";
+import { SearchBox } from "@/components/SearchBox";
+import type { SearchHit } from "@/lib/types";
 
 type Chapter = { id: string; title: string };
 
@@ -15,7 +17,17 @@ const LINKS = [
   { href: "/glossary", label: "Glossary" },
 ];
 
-export function LandingNav({ courseId, title, chapters }: { courseId: string; title: string; chapters: Chapter[] }) {
+export function LandingNav({
+  courseId,
+  title,
+  chapters,
+  hits,
+}: {
+  courseId: string;
+  title: string;
+  chapters: Chapter[];
+  hits: SearchHit[];
+}) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("");
 
@@ -26,7 +38,9 @@ export function LandingNav({ courseId, title, chapters }: { courseId: string; ti
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) setActive(`#${entry.target.id}`);
+          const href = `#${entry.target.id}`;
+          if (entry.isIntersecting) setActive(href);
+          else setActive((current) => (current === href ? "" : current));
         }
       },
       { rootMargin: "-45% 0px -50% 0px" },
@@ -40,11 +54,17 @@ export function LandingNav({ courseId, title, chapters }: { courseId: string; ti
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const onWide = () => {
+      if (wide.matches) setOpen(false);
+    };
     document.documentElement.classList.add("nav-locked");
     window.addEventListener("keydown", onKey);
+    wide.addEventListener("change", onWide);
     return () => {
       document.documentElement.classList.remove("nav-locked");
       window.removeEventListener("keydown", onKey);
+      wide.removeEventListener("change", onWide);
     };
   }, [open]);
 
@@ -62,6 +82,9 @@ export function LandingNav({ courseId, title, chapters }: { courseId: string; ti
             </li>
           ))}
         </ul>
+        <div className="lnav-search">
+          <SearchBox hits={hits} id="lnav-q" />
+        </div>
         <ResumeLink compact className="lbtn lbtn-sm lnav-cta" courseId={courseId} chapters={chapters} />
         <button
           type="button"
@@ -76,6 +99,9 @@ export function LandingNav({ courseId, title, chapters }: { courseId: string; ti
         </button>
       </nav>
       <div className="lnav-panel" id="lnav-panel" inert={!open}>
+        <div className="lnav-panel-search">
+          <SearchBox hits={hits} id="lnav-panel-q" />
+        </div>
         <ul>
           {LINKS.map((link, index) => (
             <li key={link.href} style={{ transitionDelay: `${Math.min(index * 60, 400)}ms` }}>

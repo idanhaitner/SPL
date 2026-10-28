@@ -38,7 +38,8 @@ export function Tagline({ lines }: { lines: string[] }) {
 
   let count = 0;
   return (
-    <p className="tagline" ref={root} aria-label={lines.join(" ")}>
+    <p className="tagline" ref={root}>
+      <span className="sr-only">{lines.join(" ")}</span>
       {words.map((line, row) => (
         <span className="tagline-line" key={row} aria-hidden="true">
           {line.map((word, i) => {

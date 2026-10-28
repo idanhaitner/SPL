@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Heebo, Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Heebo, Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { Ambient } from "@/components/Ambient";
 import { Rail } from "@/components/Rail";
 import { ReadingProgress } from "@/components/ReadingProgress";
@@ -24,18 +24,6 @@ const display = Plus_Jakarta_Sans({
   variable: "--font-display",
   display: "swap",
 });
-const geist = Geist({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-geist",
-  display: "swap",
-});
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-geist-mono",
-  display: "swap",
-});
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
@@ -57,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const course = loadCourse();
   return (
-    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${body.variable} ${display.variable} ${mono.variable} ${geist.variable} ${geistMono.variable}`}>
+    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${body.variable} ${display.variable} ${mono.variable}`}>
       <body>
         <Ambient />
         <ReadingProgress />
