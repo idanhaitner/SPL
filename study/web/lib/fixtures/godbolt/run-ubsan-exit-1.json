@@ -1,0 +1,65 @@
+{
+  "code": 1,
+  "okToCache": true,
+  "timedOut": false,
+  "stdout": [
+    {
+      "text": "-2147483648"
+    }
+  ],
+  "stderr": [
+    {
+      "text": "\u001b[1m/app/example.c:5:7:\u001b[1m\u001b[31m runtime error: \u001b[1m\u001b[0m\u001b[1msigned integer overflow: 2147483647 + 1 cannot be represented in type 'int'\u001b[1m\u001b[0m"
+    }
+  ],
+  "truncated": false,
+  "execTime": 38,
+  "processExecutionResultTime": 0.027082999236881733,
+  "didExecute": true,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 0,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [],
+    "truncated": false,
+    "execTime": 129,
+    "processExecutionResultTime": 0.0025509996339678764,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilerisDSx7/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "-fsanitize=address,undefined",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ],
+    "preparedLdPaths": [
+      "/opt/compiler-explorer/gcc-16.2.0/lib",
+      "/opt/compiler-explorer/gcc-16.2.0/lib32",
+      "/opt/compiler-explorer/gcc-16.2.0/lib64"
+    ],
+    "defaultExecOptions": {
+      "timeoutMs": 20000,
+      "maxErrorOutput": 5000,
+      "env": {
+        "LD_LIBRARY_PATH": "",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "HOME": "/home/ce"
+      }
+    },
+    "packageStoreTime": 36
+  },
+  "queueTime": 6
+}

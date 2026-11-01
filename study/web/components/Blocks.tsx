@@ -1,9 +1,11 @@
 import { Mixed } from "@/lib/bidi";
 import { CheckCard } from "@/components/CheckCard";
 import { CodeBlock } from "@/components/CodeBlock";
+import { Figure } from "@/components/Figure";
+import { Icon } from "@/components/home/Icon";
 import { PracticeCard } from "@/components/Practice";
 import { highlightTokens } from "@/lib/highlight";
-import { DisplayMath, Inline, Paragraph } from "@/lib/inline";
+import { DisplayMath, Inline, localFigure, Paragraph } from "@/lib/inline";
 import type { Block } from "@/lib/types";
 
 function ListBlock({ block }: { block: Extract<Block, { type: "list" }> }) {
@@ -174,7 +176,7 @@ async function Directive({ block, courseId }: { block: Extract<Block, { type: "d
   if (name === "trap") {
     return (
       <aside className="callout callout-trap">
-        <p className="kicker">Watch for this</p>
+        <h4><Icon name="warn" />Watch for this</h4>
         <Blocks blocks={children} courseId={courseId} />
       </aside>
     );
@@ -185,14 +187,13 @@ async function Directive({ block, courseId }: { block: Extract<Block, { type: "d
     const body = children.filter((child) => !(child.type === "directive" && child.name === "proof"));
     return (
       <section className="formal" id={attrs.id}>
-        <p className="kicker">{label}</p>
-        {attrs.title && <h3><Inline text={attrs.title} /></h3>}
+        <h3>{attrs.title ? <Inline text={attrs.title} /> : label}</h3>
         {name === "algorithm" && attrs.complexity && <p className="meta">Complexity. <Mixed text={attrs.complexity} /></p>}
         {name === "algorithm" && attrs.invariant && <p className="meta">Invariant. <Mixed text={attrs.invariant} /></p>}
         <Blocks blocks={body} courseId={courseId} />
         {proof.map((item, index) => (
           <div className="proof" key={index}>
-            <p className="kicker">Proof</p>
+            <h4>Proof</h4>
             <Blocks blocks={item.type === "directive" ? item.children : []} courseId={courseId} />
           </div>
         ))}
@@ -202,7 +203,7 @@ async function Directive({ block, courseId }: { block: Extract<Block, { type: "d
   if (name === "proof") {
     return (
       <div className="proof">
-        <p className="kicker">Proof</p>
+        <h4>Proof</h4>
         <Blocks blocks={children} courseId={courseId} />
       </div>
     );
@@ -216,6 +217,8 @@ export function Blocks({ blocks, courseId }: { blocks: Block[]; courseId: string
       {blocks.map((block, index) => {
         const key = `${block.type}-${index}`;
         if (block.type === "paragraph") {
+          const figure = localFigure(block.text);
+          if (figure) return <Figure key={key} src={figure.src} alt={figure.alt} />;
           return <Paragraph key={key} text={block.text} />;
         }
         if (block.type === "heading") {

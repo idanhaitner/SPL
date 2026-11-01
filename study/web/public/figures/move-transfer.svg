@@ -1,32 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250">
-  <style>
-    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
-    .d2 { animation-delay: 0.55s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="760" height="250" fill="#f6f8fb" />
-  <g class="draw">
-    <text x="180" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#1d4fa8" direction="ltr">before the move</text>
-    <rect x="48" y="56" width="250" height="70" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="173" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">source <tspan direction="ltr">Image</tspan></text>
-    <text x="173" y="108" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#4b5565">_bytes</text>
-    <line x1="173" y1="126" x2="173" y2="150" stroke="#1f63d2" stroke-width="2" />
-    <polygon points="173,158 167,146 179,146" fill="#1f63d2" />
-    <rect x="88" y="150" width="170" height="52" rx="10" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="173" y="182" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1b2333" direction="ltr">byte buffer</text>
+  <g>
+    <text x="180" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">before the move</text>
+    <rect x="48" y="56" width="250" height="70" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="173" y="86" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">source <tspan direction="ltr">Image</tspan></text>
+    <text x="173" y="108" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink-soft, currentColor)">_bytes</text>
+    <line x1="173" y1="126" x2="173" y2="150" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+    <polygon points="173,158 167,146 179,146" fill="var(--fig-accent, currentColor)" />
+    <rect x="88" y="150" width="170" height="52" rx="10" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="173" y="182" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink, currentColor)" direction="ltr">byte buffer</text>
   </g>
-  <g class="draw d2">
-    <text x="560" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#1d4fa8" direction="ltr">after the move</text>
-    <rect x="400" y="56" width="150" height="70" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="475" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333" direction="ltr">source</text>
-    <text x="475" y="108" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#4b5565">_bytes = nullptr</text>
-    <rect x="566" y="56" width="150" height="70" rx="12" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="641" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333" direction="ltr">target</text>
-    <text x="641" y="108" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#4b5565" direction="ltr">holds the buffer</text>
-    <rect x="556" y="150" width="170" height="52" rx="10" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="641" y="182" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1b2333" direction="ltr">same buffer</text>
-    <line x1="641" y1="126" x2="641" y2="150" stroke="#1f63d2" stroke-width="2" />
-    <polygon points="641,158 635,146 647,146" fill="#1f63d2" />
+  <g>
+    <text x="560" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">after the move</text>
+    <rect x="400" y="56" width="150" height="70" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="475" y="86" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">source</text>
+    <text x="475" y="108" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="13" fill="var(--fig-ink-soft, currentColor)">_bytes = nullptr</text>
+    <rect x="566" y="56" width="150" height="70" rx="12" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="641" y="86" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">target</text>
+    <text x="641" y="108" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">holds the buffer</text>
+    <rect x="556" y="150" width="170" height="52" rx="10" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="641" y="182" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink, currentColor)" direction="ltr">same buffer</text>
+    <line x1="641" y1="126" x2="641" y2="150" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+    <polygon points="641,158 635,146 647,146" fill="var(--fig-accent, currentColor)" />
   </g>
 </svg>

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -31,6 +32,69 @@ def practice_ids(blocks) -> list[str]:
         if kind in {"exercise", "exam"}:
             ids.append(str(block["attrs"].get("id") or ""))
     return [item for item in ids if item]
+
+
+EXCERPT_CHARS = 160
+HEBREW_TERM = re.compile(r"[֐-׿]+(?:[ \-־'\"׳״]+[֐-׿]+)*")
+BOLD_TERM = re.compile(r"\*\*(.+?)\*\*")
+
+
+def visible_text(blocks):
+    """Every string a student can read in these blocks, with its markup. Notes that never render are left out."""
+    for block in blocks:
+        kind = block["type"]
+        if kind == "directive":
+            if block["name"] == "examnote":
+                continue
+            yield str(block["attrs"].get("title") or "")
+            yield from visible_text(block["children"])
+        elif kind == "list":
+            for item in block["items"]:
+                yield item["text"]
+                yield from visible_text(item["children"])
+        elif kind == "table":
+            yield from block["header"]
+            for row in block["rows"]:
+                yield from row
+        else:
+            yield block.get("text", "")
+
+
+def excerpt(text: str) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= EXCERPT_CHARS else text[:EXCERPT_CHARS].rsplit(" ", 1)[0]
+
+
+def section_excerpts(blocks) -> list[str]:
+    """The start of the prose in each `##` section. Practice has search hits of its own, so it is skipped."""
+    sections = [[]]
+    for block in blocks:
+        if block["type"] == "heading" and block.get("level") == 2:
+            sections.append([])
+        elif block["type"] in {"paragraph", "quote", "list", "table"}:
+            sections[-1].append(block)
+    return [excerpt(studylib.blocks_plain(section)) for section in sections if section]
+
+
+def chapter_terms(blocks) -> list[str]:
+    """Hebrew terms, headings, definitions, and bold terms from the whole chapter, however deep they sit."""
+    terms = {}
+    for text in visible_text(blocks):
+        for term in HEBREW_TERM.findall(text):
+            terms[term] = True
+        for term in BOLD_TERM.findall(text):
+            terms[studylib.inline_plain(term).strip(" :.,")] = True
+    for block in blocks:
+        if block["type"] == "heading":
+            terms[studylib.inline_plain(block["text"])] = True
+    for _parent, block in studylib.walk_directives(blocks):
+        if block["name"] == "definition" and block["attrs"].get("title"):
+            terms[str(block["attrs"]["title"])] = True
+    return [term for term in terms if term]
+
+
+def chapter_text(blurb: str, blocks) -> str:
+    return " ".join(part for part in [blurb, *section_excerpts(blocks), *chapter_terms(blocks)] if part)
 
 
 def main() -> None:
@@ -62,7 +126,7 @@ def main() -> None:
         search.append({
             "kind": "Chapter",
             "title": title,
-            "text": blurb,
+            "text": chapter_text(blurb, topic["blocks"]),
             "href": f"/topics/{slug}",
         })
         for _parent, block in studylib.walk_directives(topic["blocks"]):
@@ -106,6 +170,14 @@ def main() -> None:
             "href": f"/glossary#{anchor}",
         })
 
+    exercises, harness = studylib.load_exercises(Path(args.root))
+    known = {topic["id"] for topic in topics}
+    for chapter in exercises:
+        if chapter not in known:
+            raise studylib.StudyError(f"An exercise names a chapter that does not exist: {chapter}")
+    for topic in topics:
+        topic["exercises"] = exercises.get(topic["id"], [])
+
     json.dump(
         {
             "id": course.get("id"),
@@ -116,6 +188,7 @@ def main() -> None:
             "topics": topics,
             "glossary": glossary,
             "search": search,
+            "harness": harness,
         },
         sys.stdout,
         ensure_ascii=False,

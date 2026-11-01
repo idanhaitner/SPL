@@ -1,0 +1,66 @@
+{
+  "code": -1,
+  "didExecute": false,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 1,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [
+      {
+        "text": "\u001b[01m\u001b[K<source>:\u001b[m\u001b[K In function '\u001b[01m\u001b[Kmain\u001b[m\u001b[K':"
+      },
+      {
+        "text": "\u001b[01m\u001b[K<source>:1:25:\u001b[m\u001b[K \u001b[01;31m\u001b[Kerror: \u001b[m\u001b[Kexpected '\u001b[01m\u001b[K;\u001b[m\u001b[K' before '\u001b[01m\u001b[K}\u001b[m\u001b[K' token",
+        "tag": {
+          "line": 1,
+          "column": 25,
+          "text": "error: expected ';' before '}' token",
+          "severity": 3,
+          "file": "example.c"
+        }
+      },
+      {
+        "text": "    1 | int main(void){ return 0\u001b[01;31m\u001b[K \u001b[m\u001b[K\u001b[32m\u001b[K}\u001b[m\u001b[K"
+      },
+      {
+        "text": "      |                         \u001b[01;31m\u001b[K^\u001b[m\u001b[K\u001b[32m\u001b[K~\u001b[m\u001b[K"
+      },
+      {
+        "text": "      |                         \u001b[32m\u001b[K;\u001b[m\u001b[K"
+      }
+    ],
+    "truncated": false,
+    "execTime": 34,
+    "processExecutionResultTime": 0.05189500004053116,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilerYdKULi/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ]
+  },
+  "stderr": [
+    {
+      "text": "Build failed"
+    }
+  ],
+  "stdout": [],
+  "timedOut": false,
+  "queueTime": 4,
+  "okToCache": false,
+  "execTime": 64
+}

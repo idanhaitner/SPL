@@ -1,31 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340">
-  <style>
-    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
-    .d2 { animation-delay: 0.4s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="760" height="340" fill="#f6f8fb" />
-  <text x="190" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr">inside <tspan direction="ltr">leaky</tspan></text>
-  <text x="570" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr">after <tspan direction="ltr">leaky</tspan> returns</text>
-  <g class="draw">
-    <rect x="28" y="64" width="324" height="100" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="44" y="96" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">stack</text>
-    <text x="44" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">box</text>
-    <text x="100" y="124" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">pointer to an <tspan direction="ltr">int</tspan> on the heap</text>
-    <text x="44" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">the only name</text>
-    <rect x="28" y="180" width="324" height="100" rx="12" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="44" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">heap</text>
-    <text x="44" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">int 9</text>
-    <text x="120" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">live, reachable</text>
+  <text x="190" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">inside <tspan direction="ltr">leaky</tspan></text>
+  <text x="570" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">after <tspan direction="ltr">leaky</tspan> returns</text>
+  <g>
+    <rect x="28" y="64" width="324" height="100" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="44" y="96" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">stack</text>
+    <text x="44" y="124" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">box</text>
+    <text x="100" y="124" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">pointer to an <tspan direction="ltr">int</tspan> on the heap</text>
+    <text x="44" y="146" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">the only name</text>
+    <rect x="28" y="180" width="324" height="100" rx="12" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="44" y="212" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">heap</text>
+    <text x="44" y="240" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">int 9</text>
+    <text x="120" y="240" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">live, reachable</text>
   </g>
-  <g class="draw d2">
-    <rect x="408" y="64" width="324" height="100" rx="12" fill="none" stroke="#a4afbe" stroke-width="1.5" stroke-dasharray="7 6" />
-    <text x="424" y="104" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">stack</text>
-    <text x="424" y="132" font-family="ui-monospace, monospace" font-size="15" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">box</tspan> is gone</text>
-    <rect x="408" y="180" width="324" height="100" rx="12" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5" />
-    <text x="424" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">heap</text>
-    <text x="424" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">int 9</text>
-    <text x="500" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">still allocated, no name</text>
+  <g>
+    <rect x="408" y="64" width="324" height="100" rx="12" fill="none" stroke="var(--fig-ink-soft, currentColor)" stroke-width="1.5" stroke-dasharray="7 6" />
+    <text x="424" y="104" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">stack</text>
+    <text x="424" y="132" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">box</tspan> is gone</text>
+    <rect x="408" y="180" width="324" height="100" rx="12" fill="var(--fig-danger-fill, none)" stroke="var(--fig-danger, currentColor)" stroke-width="1.5" />
+    <text x="424" y="212" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">heap</text>
+    <text x="424" y="240" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">int 9</text>
+    <text x="500" y="240" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">still allocated, no name</text>
   </g>
 </svg>

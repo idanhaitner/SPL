@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-01T21:17:51+00:00",
+  "title": "Design System: Systems Programming study site",
+  "extensions": {
+    "colorMeta": {
+      "canopy": {
+        "role": "primary",
+        "displayName": "Canopy",
+        "tonalRamp": [
+          "#0B2A20",
+          "#0F3D2E",
+          "#14503C",
+          "#1A6149",
+          "#27755A",
+          "#5FA07F",
+          "#BFD6C6",
+          "#F2F7EE"
+        ]
+      },
+      "new-leaf": {
+        "role": "primary",
+        "displayName": "New Leaf"
+      },
+      "bud": {
+        "role": "primary",
+        "displayName": "Bud"
+      },
+      "bloom": {
+        "role": "secondary",
+        "displayName": "Bloom"
+      },
+      "rust": {
+        "role": "tertiary",
+        "displayName": "Rust"
+      },
+      "sunroom": {
+        "role": "neutral",
+        "displayName": "Sunroom"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink"
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home headline and session finish only."
+      },
+      "chapter-title": {
+        "displayName": "Chapter title",
+        "purpose": "Top of chapter pages."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Code and program output only; ligatures off."
+      }
+    },
+    "shadows": [
+      {
+        "name": "resting-card",
+        "value": "0 1px 2px rgba(15,61,46,.06), 0 8px 24px -12px rgba(15,61,46,.18)",
+        "purpose": "Margin and check cards; dropped in dark theme."
+      },
+      {
+        "name": "floating",
+        "value": "0 4px 8px rgba(15,61,46,.08), 0 24px 56px -20px rgba(15,61,46,.35)",
+        "purpose": "Menus, course drawer, search panel."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "The one easing for all motion."
+      },
+      {
+        "name": "page-arrive",
+        "value": "140ms fade",
+        "purpose": "Route change, no travel."
+      },
+      {
+        "name": "step-rise",
+        "value": "200ms, 6px",
+        "purpose": "New session step."
+      },
+      {
+        "name": "press",
+        "value": "120ms, scale .97-.98",
+        "purpose": "Pressable controls."
+      },
+      {
+        "name": "stem-grow",
+        "value": "600ms",
+        "purpose": "Earned progress; the only slow motion."
+      },
+      {
+        "name": "bar-fill",
+        "value": "300ms",
+        "purpose": "Session mini bar."
+      },
+      {
+        "name": "leaf-unfurl",
+        "value": "420ms, 45ms stagger",
+        "purpose": "Home stem, once on arrival."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "100ms linear fade only",
+        "purpose": "Growth, unfurl, drift, reveals, pop, nudge, lift and press scale are off."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "640px"
+      },
+      {
+        "name": "stack",
+        "value": "900px"
+      },
+      {
+        "name": "tablet",
+        "value": "1024px"
+      },
+      {
+        "name": "wide",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one next action; coral pill with a darker edge on light grounds.",
+      "html": "<button class=\"ds-btn-primary\">Start chapter 1</button>",
+      "css": ".ds-btn-primary{background:var(--bloom,#FF6F59);color:var(--bloom-ink,#20100C);font:800 1.1875rem/1.2 Gabarito,system-ui,sans-serif;padding:14px 28px;min-height:52px;border:0;border-radius:999px;box-shadow:0 0 0 1px var(--bloom-edge,#A8341F);transition:background-color 120ms cubic-bezier(.23,1,.32,1),transform 120ms cubic-bezier(.23,1,.32,1)}.ds-btn-primary:hover{background:var(--bloom-hover,#FF8470)}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:2px solid var(--link,#1F6B4F);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Transparent pill with a control-edge outline.",
+      "html": "<button class=\"ds-btn-secondary\">Reread</button>",
+      "css": ".ds-btn-secondary{background:transparent;color:var(--ink,#12291F);font:800 1rem/1.2 Gabarito,system-ui,sans-serif;padding:10px 20px;min-height:44px;border:1px solid var(--edge,#6A8A79);border-radius:999px;transition:background-color 120ms cubic-bezier(.23,1,.32,1),transform 120ms cubic-bezier(.23,1,.32,1)}.ds-btn-secondary:hover{background:var(--wash,#E2EFD8)}.ds-btn-secondary:active{transform:scale(.98)}.ds-btn-secondary:focus-visible{outline:2px solid var(--link,#1F6B4F);outline-offset:2px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "",
+      "description": "Pill search field with control-edge outline.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search the course\">",
+      "css": ".ds-input{font:500 1rem Figtree,system-ui,sans-serif;color:var(--ink,#12291F);background:var(--raised,#FBFDF9);border:1px solid var(--edge,#6A8A79);border-radius:999px;padding:10px 20px;min-height:44px}.ds-input:focus-visible{outline:2px solid var(--link,#1F6B4F);outline-offset:2px}"
+    },
+    {
+      "name": "Answer Choice",
+      "kind": "chip",
+      "refersTo": "",
+      "description": "Check-card pill answer; states are resting, selected, correct, wrong.",
+      "html": "<label class=\"ds-answer\">Stack</label>",
+      "css": ".ds-answer{display:inline-block;background:var(--raised,#FBFDF9);color:var(--ink,#12291F);font:500 1rem Figtree,system-ui,sans-serif;padding:12px 20px;border:1px solid var(--edge,#6A8A79);border-radius:999px;transition:background-color 120ms cubic-bezier(.23,1,.32,1),transform 120ms cubic-bezier(.23,1,.32,1)}.ds-answer:hover{background:var(--wash,#E2EFD8)}.ds-answer:active{transform:scale(.98)}"
+    },
+    {
+      "name": "Check Card",
+      "kind": "card",
+      "refersTo": "",
+      "description": "Soft raised card holding a question.",
+      "html": "<div class=\"ds-card\"><h3>What does & give you?</h3></div>",
+      "css": ".ds-card{background:var(--raised,#FBFDF9);color:var(--ink,#12291F);border-radius:18px;padding:24px;box-shadow:0 1px 2px rgba(15,61,46,.06),0 8px 24px -12px rgba(15,61,46,.18)}.ds-card h3{margin:0;font:800 1.25rem/1.2 Gabarito,system-ui,sans-serif}"
+    },
+    {
+      "name": "Trap",
+      "kind": "card",
+      "refersTo": "",
+      "description": "Rust-wash card for traps; no side stripe.",
+      "html": "<div class=\"ds-trap\">Off-by-one: the last index is n - 1.</div>",
+      "css": ".ds-trap{background:var(--rust-wash,#FBEBDD);color:var(--rust-text,#8F3C14);font:500 1rem/1.5 Figtree,system-ui,sans-serif;border-radius:18px;padding:16px 20px}"
+    },
+    {
+      "name": "Code Panel",
+      "kind": "custom",
+      "refersTo": "code-panel",
+      "description": "Warm neutral panel, identical in both themes.",
+      "html": "<pre class=\"ds-code\">int *p = &x;</pre>",
+      "css": ".ds-code{margin:0;background:#2B2926;color:#EAE5DA;font:400 .9375rem/1.7 'JetBrains Mono',ui-monospace,monospace;border-radius:18px;padding:16px 20px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Greenhouse",
+    "overview": "The student arrives knowing nothing, and that is the seed. The course is one plant: its stem is the order of the course, its leaves are chapters and steps, and a leaf opens only when the student has done the work. The feeling is a bright glasshouse: alive, curved, generous, and welcoming to someone who has never seen a pointer.\n\nGreen fields frame the journey (home, chapter tops, session bars). Reading happens in pale, quiet rooms, because a chapter runs to thousands of words and the world must step back while it teaches. Code sits on warm potting-bench panels in both themes, so it always looks like the same material and the green never competes with what the student is reading.\n\nRejected by the user: anything nerdy or squarish, including technical-datasheet, debugger, terminal, and hard-edged poster looks, plus the previous cobalt design.",
+    "keyCharacteristics": [
+      "One continuous stem, in every surface, that shows real progress",
+      "Curves everywhere a corner would be unkind: pills, arches, soft panels",
+      "Lots of green, one coral action",
+      "Friendly, heavy Gabarito headings over calm Figtree prose",
+      "Code treated as the star of the page"
+    ],
+    "rules": [
+      {
+        "name": "The One Bloom Rule",
+        "body": "At most one coral element per screen, and it is always the next thing to do. Never decorate with it, and never use it for selection, errors, or progress.",
+        "section": "colors"
+      },
+      {
+        "name": "The Earned Green Rule",
+        "body": "Lime on a stem or leaf always reports something the student really did. Never fill it for decoration or to look encouraging.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Kicker Rule",
+        "body": "No small label above a heading. A heading carries its own weight; the chapter number lives on a leaf.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Mono Rule",
+        "body": "Monospace is only for code and program output, never for labels or decoration.",
+        "section": "typography"
+      },
+      {
+        "name": "The Growth Is Slow Rule",
+        "body": "Anything the student does repeatedly is fast or still. Only the stem and leaves reporting real progress may take longer than 300ms.",
+        "section": "motion"
+      }
+    ],
+    "dos": [
+      "**Do** keep every stem and leaf truthful: progress comes from `localStorage`. A first visit shows no lime at all, with chapter 1 marked as the place to start. Opening a chapter makes it read; only solving its practice makes it done.",
+      "**Do** keep the plant outside the prose. Teaching text, figures, and code stay clear of decoration.",
+      "**Do** theme selection, scrollbars, caret, and focus from the palette.",
+      "**Do** make animation optional: every state must read correctly under `prefers-reduced-motion`, and keep frequent actions fast (see Motion).",
+      "**Do** color figures only through the `--fig-*` roles in `greenhouse.css`. All 25 are inlined at build time and sit directly on a `--raised` panel with a `--rule` border in both themes, with no light plate."
+    ],
+    "donts": [
+      "**Don't** return to datasheet, debugger, terminal, or hard-edged poster looks.",
+      "**Don't** use more than one Bloom per screen.",
+      "**Don't** add garden wordplay to instructions. \"Start chapter 1\" is clearer than a plant pun wherever the student must act.",
+      "**Don't** use leaf or stem decoration on reading pages beyond the stems described above.",
+      "**Don't** use gradients on text, colored side stripes on cards, or glass effects.",
+      "**Don't** show exam years on questions."
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+/* Motion. Things used all day (links, nav, typing, Next) stay fast; growth is the only slow thing, and it is progress. */
+:root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+
+/* A page arrives with a short fade; no travel, so a click never feels delayed. */
+@keyframes gh-arrive { from { opacity: 0; } }
+.route-enter { animation: gh-arrive 140ms var(--ease-out); }
+
+/* A new step rises a few pixels into place. */
+@keyframes gh-rise { from { opacity: 0; transform: translateY(6px); } }
+.session-reading, .session-code { animation: gh-rise 200ms var(--ease-out); }
+.results-body > * { animation: gh-rise 180ms var(--ease-out); }
+
+/* Press feedback on everything pressable. */
+.gh-btn, .gh-pill, .session-quiet, .gh-quiet, .question-toggle, .choices label, .gh-answer, .step-leaf { transition-property: background-color, color, transform, box-shadow; transition-duration: 120ms; transition-timing-function: var(--ease-out); }
+.session-quiet:active:not(:disabled), .gh-quiet:active, .question-toggle:active, .choices label:active, .gh-answer:active { transform: scale(0.98); }
+.gh-btn:active, .gh-pill:active:not(:disabled) { transform: scale(0.97); }
+
+/* Progress grows: the stem lengthens, ticks fill in. */
+.gh-stem.is-grown { transition: stroke-dasharray 600ms var(--ease-out); }
+.step-mini-bar i { transition: width 300ms var(--ease-out); }
+.choice-mark { transition: box-shadow 140ms var(--ease-out); }
+
+/* Home: the stem's leaves unfurl one after another, once, on arrival. */
+@keyframes gh-unfurl { from { opacity: 0; transform: scale(0.6); } }
+.gh-stem-wide .gh-leaf-link, .gh-stem-narrow > g, .gh-stem-narrow > path:not(.gh-stem) { transform-box: fill-box; transform-origin: 50% 100%; animation: gh-unfurl 420ms var(--ease-out) backwards; }
+.gh-stem-wide .gh-leaf-link:nth-of-type(n) { animation-delay: calc(120ms + var(--i, 0) * 45ms); }
+.gh-stem-wide .gh-leaf-link:nth-of-type(1) { --i: 0; } .gh-stem-wide .gh-leaf-link:nth-of-type(2) { --i: 1; } .gh-stem-wide .gh-leaf-link:nth-of-type(3) { --i: 2; } .gh-stem-wide .gh-leaf-link:nth-of-type(4) { --i: 3; }
+.gh-stem-wide .gh-leaf-link:nth-of-type(5) { --i: 4; } .gh-stem-wide .gh-leaf-link:nth-of-type(6) { --i: 5; } .gh-stem-wide .gh-leaf-link:nth-of-type(7) { --i: 6; } .gh-stem-wide .gh-leaf-link:nth-of-type(8) { --i: 7; }
+.gh-stem-wide .gh-leaf-link:nth-of-type(9) { --i: 8; } .gh-stem-wide .gh-leaf-link:nth-of-type(10) { --i: 9; } .gh-stem-wide .gh-leaf-link:nth-of-type(11) { --i: 10; } .gh-stem-wide .gh-leaf-link:nth-of-type(12) { --i: 11; }
+.gh-stem-wide .gh-leaf-link:nth-of-type(13) { --i: 12; } .gh-stem-wide .gh-leaf-link:nth-of-type(14) { --i: 13; } .gh-stem-wide .gh-leaf-link:nth-of-type(15) { --i: 14; } .gh-stem-wide .gh-leaf-link:nth-of-type(16) { --i: 15; }
+
+/* A leaf lifts a little under the pointer (mouse only). */
+@media (hover: hover) and (pointer: fine) {
+  .gh-stem-wide .gh-leaf-link .gh-leaf { transition: transform 160ms var(--ease-out); transform-box: fill-box; transform-origin: 50% 100%; }
+  .gh-stem-wide .gh-leaf-link:hover .gh-leaf { transform: scale(1.08) rotate(-3deg); }
+}
+
+/* The hero's arches drift apart slowly; decoration, so it is slow and small. */
+@keyframes gh-drift { to { transform: translate3d(0, -10px, 0); } }
+.gh-hero .gh-arch-1 { animation: gh-drift 9s ease-in-out infinite alternate; }
+
+/* Home sections fade up as they scroll into view (browsers without scroll timelines just show them). */
+@supports (animation-timeline: view()) {
+  @keyframes gh-reveal { from { opacity: 0; transform: translateY(18px); } }
+  .home .gh-section, .home .gh-try, .home .gh-close { animation: gh-reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 45%; }
+}
+
+/* A correct answer pops its mark; a wrong one nudges once. */
+@keyframes gh-pop { 50% { transform: scale(1.25); } }
+@keyframes gh-nudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.choices .is-right .choice-mark { animation: gh-pop 280ms var(--ease-out); }
+.choices .is-wrong { animation: gh-nudge 220ms var(--ease-out); }
+
+.glossary-term dd, .question-section p, .question-section li { text-wrap: pretty; }
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter, .session-reading, .session-code, .results-body > * { animation: gh-arrive 100ms linear; }
+  .gh-stem.is-grown, .step-mini-bar i { transition: none; }
+  .gh-stem-wide .gh-leaf-link, .gh-stem-narrow > *, .gh-hero .gh-arch-1, .home .gh-section, .home .gh-try, .home .gh-close, .choices .is-right .choice-mark, .choices .is-wrong { animation: none; }
+  .gh-stem-wide .gh-leaf-link .gh-leaf { transition: none; }
+  .gh-btn:active, .gh-pill:active, .session-quiet:active, .gh-quiet:active, .question-toggle:active, .choices label:active, .gh-answer:active { transform: none; }
+}

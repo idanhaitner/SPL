@@ -1,0 +1,178 @@
+{
+  "inputFilename": "example.c",
+  "code": 0,
+  "okToCache": true,
+  "timedOut": false,
+  "stdout": [],
+  "stderr": [],
+  "truncated": false,
+  "execTime": 38,
+  "processExecutionResultTime": 0.0043510012328624725,
+  "instructionSet": "amd64",
+  "compilationOptions": [
+    "-g",
+    "-o",
+    "/app/output.s",
+    "-masm=intel",
+    "-fno-verbose-asm",
+    "-S",
+    "-fdiagnostics-color=always",
+    "-std=c17",
+    "-Wall",
+    "-Wextra",
+    "-O0",
+    "-g",
+    "/app/example.c"
+  ],
+  "downloads": [],
+  "tools": [],
+  "asmSize": 3597,
+  "asm": [
+    {
+      "text": "\"sq\":",
+      "source": null,
+      "labels": []
+    },
+    {
+      "text": "        push    rbp",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 14
+      },
+      "labels": []
+    },
+    {
+      "text": "        mov     rbp, rsp",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 14
+      },
+      "labels": []
+    },
+    {
+      "text": "        mov     DWORD PTR [rbp-4], edi",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 14
+      },
+      "labels": []
+    },
+    {
+      "text": "        mov     eax, DWORD PTR [rbp-4]",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 23
+      },
+      "labels": []
+    },
+    {
+      "text": "        imul    eax, eax",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 23
+      },
+      "labels": []
+    },
+    {
+      "text": "        pop     rbp",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 26
+      },
+      "labels": []
+    },
+    {
+      "text": "        ret",
+      "source": {
+        "file": null,
+        "line": 1,
+        "column": 26
+      },
+      "labels": []
+    },
+    {
+      "text": "\"main\":",
+      "source": null,
+      "labels": []
+    },
+    {
+      "text": "        push    rbp",
+      "source": {
+        "file": null,
+        "line": 2,
+        "column": 15
+      },
+      "labels": []
+    },
+    {
+      "text": "        mov     rbp, rsp",
+      "source": {
+        "file": null,
+        "line": 2,
+        "column": 15
+      },
+      "labels": []
+    },
+    {
+      "text": "        mov     edi, 3",
+      "source": {
+        "file": null,
+        "line": 2,
+        "column": 23
+      },
+      "labels": []
+    },
+    {
+      "text": "        call    \"sq\"",
+      "source": {
+        "file": null,
+        "line": 2,
+        "column": 23
+      },
+      "labels": [
+        {
+          "name": "\"sq\"",
+          "range": {
+            "startCol": 17,
+            "endCol": 21
+          }
+        }
+      ]
+    },
+    {
+      "text": "        pop     rbp",
+      "source": {
+        "file": null,
+        "line": 2,
+        "column": 29
+      },
+      "labels": []
+    },
+    {
+      "text": "        ret",
+      "source": {
+        "file": null,
+        "line": 2,
+        "column": 29
+      },
+      "labels": []
+    }
+  ],
+  "optOutput": [],
+  "labelDefinitions": {
+    "\"sq\"": 1,
+    "\"main\"": 9
+  },
+  "parsingTime": 2,
+  "filteredCount": 221,
+  "popularArguments": {},
+  "retreivedFromCacheTime": 31,
+  "retreivedFromCache": true,
+  "queueTime": 5
+}

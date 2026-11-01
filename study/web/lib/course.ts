@@ -14,6 +14,10 @@ function contentStamp(root: string) {
       if (name.endsWith(".md")) files.push(path.join(topics, name));
     }
   }
+  const exercises = path.join(content, "exercises");
+  if (fs.existsSync(exercises)) {
+    for (const name of fs.readdirSync(exercises)) files.push(path.join(exercises, name, "README.md"), path.join(exercises, name, "test.cpp"), path.join(exercises, name, "starter.cpp"), path.join(exercises, name, "solution.cpp"));
+  }
   return files
     .filter((file) => fs.existsSync(file))
     .map((file) => `${file}:${fs.statSync(file).mtimeMs}`)
@@ -35,30 +39,36 @@ export function loadCourse(): Course {
   return course;
 }
 
-function problemTitles(blocks: Block[], into: Map<string, string>) {
+function problemsById(blocks: Block[], into: Map<string, { title?: string; kind?: string }>) {
   for (const block of blocks) {
     if (block.type === "directive") {
-      if (block.name === "problem" && block.attrs.id && block.attrs.title) {
-        into.set(block.attrs.id, block.attrs.title);
+      if (block.name === "problem" && block.attrs.id) {
+        into.set(block.attrs.id, { title: block.attrs.title, kind: block.attrs.kind });
       }
-      problemTitles(block.children, into);
+      problemsById(block.children, into);
     }
     if (block.type === "list") {
-      for (const item of block.items) problemTitles(item.children, into);
+      for (const item of block.items) problemsById(item.children, into);
     }
   }
 }
 
-function withPracticeTitles(course: Course): Course {
-  const titles = new Map<string, string>();
-  for (const topic of course.topics) problemTitles(topic.blocks, titles);
+export function withPracticeTitles(course: Course): Course {
+  const problems = new Map<string, { title?: string; kind?: string }>();
+  for (const topic of course.topics) problemsById(topic.blocks, problems);
   return {
     ...course,
     search: course.search.map((hit) => {
       if (hit.kind !== "Practice") return hit;
       const id = decodeURIComponent(hit.href.split("#")[1] ?? "");
-      const title = titles.get(id);
-      return title ? { ...hit, title } : hit;
+      if (!id) return hit;
+      const problem = problems.get(id);
+      const title = problem?.title || hit.title;
+      const chapter = hit.href.split("#")[0].replace(/^\/topics\//, "").replace(/\/$/, "");
+      const anchor = encodeURIComponent(id);
+      // A worked example stays in the chapter; all other practice lives in the chapter's session.
+      if (problem?.kind === "worked") return { ...hit, kind: "Worked", title, href: `/topics/${chapter}/#${anchor}` };
+      return { ...hit, title, href: `/sessions/${chapter}/?step=${anchor}` };
     }),
   };
 }

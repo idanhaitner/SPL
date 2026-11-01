@@ -1,0 +1,69 @@
+{
+  "code": 0,
+  "okToCache": true,
+  "timedOut": false,
+  "stdout": [
+    {
+      "text": "arg0=./output.s"
+    },
+    {
+      "text": "arg1=3"
+    },
+    {
+      "text": "arg2=4"
+    },
+    {
+      "text": "stdin=hello"
+    }
+  ],
+  "stderr": [],
+  "truncated": false,
+  "execTime": 24,
+  "processExecutionResultTime": 0.025464000180363655,
+  "didExecute": true,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 0,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [],
+    "truncated": false,
+    "execTime": 65,
+    "processExecutionResultTime": 0.0013020001351833344,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilerhuYXhg/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ],
+    "preparedLdPaths": [
+      "/opt/compiler-explorer/gcc-16.2.0/lib",
+      "/opt/compiler-explorer/gcc-16.2.0/lib32",
+      "/opt/compiler-explorer/gcc-16.2.0/lib64"
+    ],
+    "defaultExecOptions": {
+      "timeoutMs": 20000,
+      "maxErrorOutput": 5000,
+      "env": {
+        "LD_LIBRARY_PATH": "",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "HOME": "/home/ce"
+      }
+    },
+    "packageStoreTime": 35
+  },
+  "queueTime": 5
+}

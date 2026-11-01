@@ -1,32 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340">
-  <rect width="760" height="340" fill="#f6f8fb" />
-  <text x="168" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8" direction="ltr">on the stack</text>
-  <rect x="28" y="56" width="280" height="252" rx="16" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-  <text x="168" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#1b2333">Image</text>
-  <rect x="48" y="116" width="240" height="48" rx="10" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-  <text x="64" y="146" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">_width</text>
-  <text x="272" y="146" text-anchor="end" font-family="ui-monospace, monospace" font-size="14" fill="#4b5565">int</text>
-  <rect x="48" y="176" width="240" height="48" rx="10" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-  <text x="64" y="206" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">_height</text>
-  <text x="272" y="206" text-anchor="end" font-family="ui-monospace, monospace" font-size="14" fill="#4b5565">int</text>
-  <rect x="48" y="236" width="240" height="48" rx="10" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-  <text x="64" y="266" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">_bytes</text>
-  <text x="272" y="266" text-anchor="end" font-family="ui-monospace, monospace" font-size="14" fill="#4b5565">char*</text>
-  <line x1="308" y1="260" x2="424" y2="196" stroke="#1f63d2" stroke-width="2" />
-  <polygon points="430,190 414,188 420,204" fill="#1f63d2" />
-  <text x="352" y="176" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1d4fa8" direction="ltr">pointer</text>
-  <text x="590" y="72" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8" direction="ltr">on the heap</text>
-  <rect x="440" y="88" width="292" height="188" rx="16" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-  <text x="586" y="128" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#1b2333" direction="ltr">byte buffer</text>
-  <rect x="464" y="152" width="244" height="52" rx="10" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-  <line x1="512" y1="152" x2="512" y2="204" stroke="#bcdccb" stroke-width="1.5" />
-  <line x1="560" y1="152" x2="560" y2="204" stroke="#bcdccb" stroke-width="1.5" />
-  <line x1="608" y1="152" x2="608" y2="204" stroke="#bcdccb" stroke-width="1.5" />
-  <line x1="656" y1="152" x2="656" y2="204" stroke="#bcdccb" stroke-width="1.5" />
-  <text x="488" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">0</text>
-  <text x="536" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">1</text>
-  <text x="584" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">2</text>
-  <text x="632" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#4b5565">...</text>
-  <text x="684" y="184" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">n</text>
-  <text x="586" y="244" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr"><tspan direction="ltr">width</tspan> times <tspan direction="ltr">height</tspan> bytes</text>
+  <text x="168" y="40" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">on the stack</text>
+  <rect x="28" y="56" width="280" height="252" rx="16" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="168" y="96" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="20" font-weight="650" fill="var(--fig-ink, currentColor)">Image</text>
+  <rect x="48" y="116" width="240" height="48" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+  <text x="64" y="146" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">_width</text>
+  <text x="272" y="146" text-anchor="end" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink-soft, currentColor)">int</text>
+  <rect x="48" y="176" width="240" height="48" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+  <text x="64" y="206" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">_height</text>
+  <text x="272" y="206" text-anchor="end" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink-soft, currentColor)">int</text>
+  <rect x="48" y="236" width="240" height="48" rx="10" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+  <text x="64" y="266" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">_bytes</text>
+  <text x="272" y="266" text-anchor="end" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink-soft, currentColor)">char*</text>
+  <line x1="308" y1="260" x2="424" y2="196" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+  <polygon points="430,190 414,188 420,204" fill="var(--fig-accent, currentColor)" />
+  <text x="352" y="176" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-accent, currentColor)" direction="ltr">pointer</text>
+  <text x="590" y="72" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">on the heap</text>
+  <rect x="440" y="88" width="292" height="188" rx="16" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="586" y="128" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="18" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">byte buffer</text>
+  <rect x="464" y="152" width="244" height="52" rx="10" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+  <line x1="512" y1="152" x2="512" y2="204" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+  <line x1="560" y1="152" x2="560" y2="204" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+  <line x1="608" y1="152" x2="608" y2="204" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+  <line x1="656" y1="152" x2="656" y2="204" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+  <text x="488" y="184" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">0</text>
+  <text x="536" y="184" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">1</text>
+  <text x="584" y="184" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">2</text>
+  <text x="632" y="184" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink-soft, currentColor)">...</text>
+  <text x="684" y="184" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">n</text>
+  <text x="586" y="244" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr"><tspan direction="ltr">width</tspan> times <tspan direction="ltr">height</tspan> bytes</text>
 </svg>

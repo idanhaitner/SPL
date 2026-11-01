@@ -1,6 +1,6 @@
 ---
 id: rule-of-five
-title: The rule of five and zero
+title: The rule of five and smart pointers
 blurb: "Moving from temporaries, the rule of five, smart pointers, and the rule of zero."
 sources:
   - "materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"

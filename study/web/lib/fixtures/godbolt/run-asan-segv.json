@@ -1,0 +1,115 @@
+{
+  "code": 1,
+  "okToCache": true,
+  "timedOut": false,
+  "stdout": [],
+  "stderr": [
+    {
+      "text": "\u001b[1m/app/example.c:4:6:\u001b[1m\u001b[31m runtime error: \u001b[1m\u001b[0m\u001b[1mstore to null pointer of type 'int'\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "AddressSanitizer:DEADLYSIGNAL"
+    },
+    {
+      "text": "================================================================="
+    },
+    {
+      "text": "\u001b[1m\u001b[31m==2==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x000000401253 bp 0x7ffe01619360 sp 0x7ffe01619300 T0)"
+    },
+    {
+      "text": "\u001b[1m\u001b[0m==2==The signal is caused by a WRITE memory access."
+    },
+    {
+      "text": "==2==Hint: address points to the zero page."
+    },
+    {
+      "text": "    #0 0x000000401253 in main /app/example.c:4"
+    },
+    {
+      "text": "    #1 0x731cfc82a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)"
+    },
+    {
+      "text": "    #2 0x731cfc82a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)"
+    },
+    {
+      "text": "    #3 0x0000004010c4 in _start (/app/output.s+0x4010c4) (BuildId: 0bcdef73a7f9ebe433722c7bd7f00eb14116fb37)"
+    },
+    {
+      "text": ""
+    },
+    {
+      "text": "==2==Register values:"
+    },
+    {
+      "text": "rax = 0x0000000000000000  rbx = 0x00006f1cfa0f0000  rcx = 0x0000000000000003  rdx = 0x0000000000000000  "
+    },
+    {
+      "text": "rdi = 0x000000000040121d  rsi = 0x00007ffe01619200  rbp = 0x00007ffe01619360  rsp = 0x00007ffe01619300  "
+    },
+    {
+      "text": " r8 = 0x00007ffe01618d17   r9 = 0x0000000000000068  r10 = 0x0000731cfd14d508  r11 = 0x0000000000000202  "
+    },
+    {
+      "text": "r12 = 0x00000de39f41e000  r13 = 0x0000000000000000  r14 = 0x00007ffe01619300  r15 = 0x0000731cfd88d000  "
+    },
+    {
+      "text": "AddressSanitizer can not provide additional info."
+    },
+    {
+      "text": "SUMMARY: AddressSanitizer: SEGV /app/example.c:4 in main"
+    },
+    {
+      "text": "==2==ABORTING"
+    }
+  ],
+  "truncated": false,
+  "execTime": 44,
+  "processExecutionResultTime": 0.02782300114631653,
+  "didExecute": true,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 0,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [],
+    "truncated": false,
+    "execTime": 100,
+    "processExecutionResultTime": 0.0016169995069503784,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilerTLQGFI/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "-fsanitize=address,undefined",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ],
+    "preparedLdPaths": [
+      "/opt/compiler-explorer/gcc-16.2.0/lib",
+      "/opt/compiler-explorer/gcc-16.2.0/lib32",
+      "/opt/compiler-explorer/gcc-16.2.0/lib64"
+    ],
+    "defaultExecOptions": {
+      "timeoutMs": 20000,
+      "maxErrorOutput": 5000,
+      "env": {
+        "LD_LIBRARY_PATH": "",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "HOME": "/home/ce"
+      }
+    },
+    "packageStoreTime": 63
+  },
+  "queueTime": 4
+}

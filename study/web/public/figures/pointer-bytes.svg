@@ -1,29 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280">
-  <style>
-    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
-    .d2 { animation-delay: 0.4s; }
-    .d3 { animation-delay: 0.8s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="720" height="280" fill="#f6f8fb" />
-  <g class="draw">
-    <rect x="36" y="64" width="250" height="150" rx="14" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="161" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#1b2333">short s</text>
-    <text x="161" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">17978</text>
-    <text x="161" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">address 0<tspan direction="ltr">x04</tspan></text>
-    <text x="161" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">two bytes</text>
+  <g>
+    <rect x="36" y="64" width="250" height="150" rx="14" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="161" y="104" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="18" font-weight="650" fill="var(--fig-ink, currentColor)">short s</text>
+    <text x="161" y="132" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">17978</text>
+    <text x="161" y="164" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" direction="ltr">address 0<tspan direction="ltr">x04</tspan></text>
+    <text x="161" y="188" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" direction="ltr">two bytes</text>
   </g>
-  <g class="draw d2">
-    <rect x="430" y="64" width="254" height="150" rx="14" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="557" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#1b2333">short* ps</text>
-    <text x="557" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">0x04</text>
-    <text x="557" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">pointer cell</text>
-    <text x="557" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">eight bytes</text>
+  <g>
+    <rect x="430" y="64" width="254" height="150" rx="14" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="557" y="104" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="18" font-weight="650" fill="var(--fig-ink, currentColor)">short* ps</text>
+    <text x="557" y="132" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">0x04</text>
+    <text x="557" y="164" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" direction="ltr">pointer cell</text>
+    <text x="557" y="188" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" direction="ltr">eight bytes</text>
   </g>
-  <g class="draw d3">
-    <line x1="414" y1="128" x2="302" y2="128" stroke="#1f63d2" stroke-width="2" />
-    <polygon points="294,128 308,122 308,134" fill="#1f63d2" />
-    <text x="354" y="112" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1d4fa8">*ps</text>
+  <g>
+    <line x1="414" y1="128" x2="302" y2="128" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+    <polygon points="294,128 308,122 308,134" fill="var(--fig-accent, currentColor)" />
+    <text x="354" y="112" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-accent, currentColor)">*ps</text>
   </g>
 </svg>
