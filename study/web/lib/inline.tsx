@@ -23,7 +23,7 @@ function hrefOf(url: string): string | null {
   if (url === "study:index" || url === "study:drill") return "/";
   if (url.startsWith("repo:")) return null;
   for (const root of FIGURE_ROOTS) {
-    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=ltr2`;
+    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=cobalt`;
   }
   return url;
 }
@@ -37,8 +37,11 @@ export function Paragraph({ text }: { text: string }) {
     if (src) {
       return (
         <figure className="figure">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={only[1]} />
+          <a className="figure-open" href={src} target="_blank" rel="noopener">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={only[1]} />
+            <span className="figure-zoom">Open the diagram full size</span>
+          </a>
           {only[1] ? <figcaption><Mixed text={only[1]} /></figcaption> : null}
         </figure>
       );

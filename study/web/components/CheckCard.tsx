@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Inline } from "@/lib/inline";
-import type { Block } from "@/lib/types";
+import type { Block, CodeToken } from "@/lib/types";
 
 type Choice = { correct: boolean; text: React.ReactNode };
 type Blank = { correct: string; options: string[] };
@@ -129,6 +129,40 @@ function fill(
   return { nodes, next: cursor };
 }
 
+function fillTokens(
+  lines: CodeToken[][],
+  start: number,
+  menus: string[][],
+  values: string[],
+  onChange: (index: number, value: string) => void,
+) {
+  const nodes: React.ReactNode[] = [];
+  let cursor = start;
+  lines.forEach((line, row) => {
+    line.forEach((token, column) => {
+      token.content.split(/(BLANKSLOT\d+X)/).forEach((piece, part) => {
+        if (!piece) return;
+        if (/^BLANKSLOT\d+X$/.test(piece)) {
+          nodes.push(
+            <BlankSelect
+              key={`b-${cursor}`}
+              index={cursor}
+              options={menus[cursor] ?? []}
+              value={values[cursor] ?? ""}
+              onChange={onChange}
+            />,
+          );
+          cursor += 1;
+        } else {
+          nodes.push(<span key={`t-${row}-${column}-${part}`} style={{ color: token.color }}>{piece}</span>);
+        }
+      });
+    });
+    if (row < lines.length - 1) nodes.push("\n");
+  });
+  return { nodes, next: cursor };
+}
+
 function PromptBlocks({
   blocks,
   menus,
@@ -162,7 +196,9 @@ function renderPrompt(
       return <p key={key}>{filled.nodes}</p>;
     }
     if (block.type === "code") {
-      const filled = fill(block.text, cursor.n, false, menus, values, onChange);
+      const filled = block.tokens
+        ? fillTokens(block.tokens, cursor.n, menus, values, onChange)
+        : fill(block.text, cursor.n, false, menus, values, onChange);
       cursor.n = filled.next;
       return (
         <div className="code-panel" data-lang={block.lang || "text"} key={key}>

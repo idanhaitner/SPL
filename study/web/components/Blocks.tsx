@@ -2,6 +2,7 @@ import { Mixed } from "@/lib/bidi";
 import { CheckCard } from "@/components/CheckCard";
 import { CodeBlock } from "@/components/CodeBlock";
 import { PracticeCard } from "@/components/Practice";
+import { highlightTokens } from "@/lib/highlight";
 import { DisplayMath, Inline, Paragraph } from "@/lib/inline";
 import type { Block } from "@/lib/types";
 
@@ -118,7 +119,27 @@ function splitCheck(children: Block[]) {
   return { mode, prompt: [] as Block[], question, choices, why };
 }
 
-function Directive({ block, courseId }: { block: Extract<Block, { type: "directive" }>; courseId: string }) {
+// Colors code that holds blanks. Each blank becomes a slot name so the grammar reads it as an identifier.
+async function withCodeTokens(blocks: Block[]): Promise<Block[]> {
+  return Promise.all(
+    blocks.map(async (block) => {
+      if (block.type === "code" && block.text.includes("{{=")) {
+        let slot = 0;
+        const masked = block.text.replace(/\{\{=[^{}]+\}\}/g, () => `BLANKSLOT${slot++}X`);
+        return { ...block, tokens: await highlightTokens(masked.replace(/\n$/, ""), block.lang) };
+      }
+      if (block.type === "list") {
+        const items = await Promise.all(
+          block.items.map(async (item) => ({ ...item, children: await withCodeTokens(item.children) })),
+        );
+        return { ...block, items };
+      }
+      return block;
+    }),
+  );
+}
+
+async function Directive({ block, courseId }: { block: Extract<Block, { type: "directive" }>; courseId: string }) {
   const { name, attrs, children } = block;
   if (name === "examnote") return null;
   if (name === "problem") {
@@ -144,7 +165,7 @@ function Directive({ block, courseId }: { block: Extract<Block, { type: "directi
       <CheckCard
         id={attrs.id || "check"}
         question={parts.mode === "blank" ? null : <Blocks blocks={parts.question} courseId={courseId} />}
-        prompt={parts.mode === "blank" ? parts.prompt : undefined}
+        prompt={parts.mode === "blank" ? await withCodeTokens(parts.prompt) : undefined}
         choices={parts.choices}
         why={<Blocks blocks={parts.why} courseId={courseId} />}
       />

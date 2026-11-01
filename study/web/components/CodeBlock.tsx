@@ -1,14 +1,9 @@
-import { codeToHtml } from "shiki";
-
-const SUPPORTED = new Set(["cpp", "c", "java", "sql", "text"]);
+import { grammarOf, highlight } from "@/lib/highlight";
 
 export async function CodeBlock({ lang, text }: { lang: string; text: string }) {
   const label = lang || "text";
-  const grammar = SUPPORTED.has(label) ? label : "text";
-  const html = await codeToHtml(text.replace(/\n$/, ""), {
-    lang: grammar,
-    theme: "github-dark",
-  });
+  const grammar = grammarOf(label);
+  const html = await highlight(text.replace(/\n$/, ""), grammar);
   return (
     <div className="code-panel" data-lang={grammar}>
       <span className="lang">{label}</span>

@@ -5,27 +5,27 @@
     @keyframes appear { to { opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
-  <rect width="760" height="340" fill="#f6f1e7" />
-  <text x="190" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2f5f8a" direction="ltr">inside <tspan direction="ltr">leaky</tspan></text>
-  <text x="570" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#2f5f8a" direction="ltr">after <tspan direction="ltr">leaky</tspan> returns</text>
+  <rect width="760" height="340" fill="#f6f8fb" />
+  <text x="190" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr">inside <tspan direction="ltr">leaky</tspan></text>
+  <text x="570" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr">after <tspan direction="ltr">leaky</tspan> returns</text>
   <g class="draw">
-    <rect x="28" y="64" width="324" height="100" rx="12" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
-    <text x="44" y="96" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">stack</text>
-    <text x="44" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">box</text>
-    <text x="100" y="124" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">pointer to an <tspan direction="ltr">int</tspan> on the heap</text>
-    <text x="44" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">the only name</text>
-    <rect x="28" y="180" width="324" height="100" rx="12" fill="#e7f0e4" stroke="#c9dcc4" stroke-width="1.5" />
-    <text x="44" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">heap</text>
-    <text x="44" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">int 9</text>
-    <text x="120" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">live, reachable</text>
+    <rect x="28" y="64" width="324" height="100" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
+    <text x="44" y="96" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">stack</text>
+    <text x="44" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">box</text>
+    <text x="100" y="124" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">pointer to an <tspan direction="ltr">int</tspan> on the heap</text>
+    <text x="44" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">the only name</text>
+    <rect x="28" y="180" width="324" height="100" rx="12" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
+    <text x="44" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">heap</text>
+    <text x="44" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">int 9</text>
+    <text x="120" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">live, reachable</text>
   </g>
   <g class="draw d2">
-    <rect x="408" y="64" width="324" height="100" rx="12" fill="none" stroke="#b7ab9c" stroke-width="1.5" stroke-dasharray="7 6" />
-    <text x="424" y="104" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">stack</text>
-    <text x="424" y="132" font-family="ui-monospace, monospace" font-size="15" fill="#5c5348" text-anchor="start" direction="ltr"><tspan direction="ltr">box</tspan> is gone</text>
+    <rect x="408" y="64" width="324" height="100" rx="12" fill="none" stroke="#a4afbe" stroke-width="1.5" stroke-dasharray="7 6" />
+    <text x="424" y="104" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">stack</text>
+    <text x="424" y="132" font-family="ui-monospace, monospace" font-size="15" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">box</tspan> is gone</text>
     <rect x="408" y="180" width="324" height="100" rx="12" fill="#f6e4dc" stroke="#e0b8a8" stroke-width="1.5" />
-    <text x="424" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#2a3142" text-anchor="start" direction="ltr">heap</text>
-    <text x="424" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142" text-anchor="start">int 9</text>
-    <text x="500" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#5c5348" text-anchor="start" direction="ltr">still allocated, no name</text>
+    <text x="424" y="212" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">heap</text>
+    <text x="424" y="240" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">int 9</text>
+    <text x="500" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">still allocated, no name</text>
   </g>
 </svg>

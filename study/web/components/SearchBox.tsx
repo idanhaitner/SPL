@@ -11,7 +11,7 @@ const KINDS: Record<string, string> = {
   Glossary: "Term",
 };
 
-export function SearchBox({ hits }: { hits: SearchHit[] }) {
+export function SearchBox({ hits, id = "q" }: { hits: SearchHit[]; id?: string }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -30,9 +30,9 @@ export function SearchBox({ hits }: { hits: SearchHit[] }) {
 
   return (
     <div className="search" ref={box}>
-      <label className="sr-only" htmlFor="q">Search the course</label>
+      <label className="sr-only" htmlFor={id}>Search the course</label>
       <input
-        id="q"
+        id={id}
         type="search"
         placeholder="Search"
         value={query}

@@ -1,8 +1,10 @@
+export type CodeToken = { content: string; color?: string };
+
 export type Block =
   | { type: "paragraph"; text: string; line?: number }
   | { type: "heading"; level: number; text: string; line?: number }
   | { type: "quote"; text: string; line?: number }
-  | { type: "code"; lang: string; text: string; line?: number }
+  | { type: "code"; lang: string; text: string; tokens?: CodeToken[][]; line?: number }
   | { type: "math"; text: string; line?: number }
   | { type: "table"; header: string[]; rows: string[][]; line?: number }
   | {

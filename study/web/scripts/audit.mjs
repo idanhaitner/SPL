@@ -122,7 +122,7 @@ async function checkView(page, where, failures, seenSvg) {
       if (drift > 1.5) problems.push(`${label} drift by ${drift.toFixed(1)}px`);
     };
     align(".chapters-nav .dot", "chapter numbers");
-    align(".chapter-list .num", "home chapter numbers");
+    align(".l-chapters .l-chapter-num", "home chapter numbers");
     for (const row of document.querySelectorAll(".actions, .card-head")) {
       const buttons = [...row.querySelectorAll("button")].map((button) => ({
         box: button.getBoundingClientRect(),
@@ -223,17 +223,26 @@ try {
   }
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(base + "/", { waitUntil: "networkidle" });
-  await page.locator("#q").fill("stack");
-  const hits = page.locator(".search-results a");
+  await page.locator(".search input:visible").fill("stack");
+  const hits = page.locator(".search-results:visible a");
   await hits.first().waitFor({ timeout: 3000 }).catch(() => {});
   if ((await hits.count()) === 0) failures.push("search for stack returned nothing");
+  const tagline = await page.locator(".l-tagline").ariaSnapshot();
+  if (!tagline.includes("Know where every byte lives")) failures.push("landing tagline has no text for screen readers");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator(".lnav-toggle").click();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForTimeout(100);
+  if (await page.evaluate(() => document.documentElement.classList.contains("nav-locked"))) {
+    failures.push("landing menu keeps the page from scrolling after the window widens");
+  }
   const reducedContext = await browser.newContext({
     reducedMotion: "reduce",
     viewport: { width: 1280, height: 900 },
   });
   const reduced = await reducedContext.newPage();
   await reduced.goto(base + "/", { waitUntil: "networkidle" });
-  const link = reduced.locator(".chapter-list a").first();
+  const link = reduced.locator(".l-chapter").first();
   await link.hover();
   const transform = await link.evaluate((node) => getComputedStyle(node).transform);
   if (transform !== "none") failures.push(`reduced motion still translates chapter links (${transform})`);

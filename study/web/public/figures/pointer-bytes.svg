@@ -6,24 +6,24 @@
     @keyframes appear { to { opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
   </style>
-  <rect width="720" height="280" fill="#f6f1e7" />
+  <rect width="720" height="280" fill="#f6f8fb" />
   <g class="draw">
-    <rect x="36" y="64" width="250" height="150" rx="14" fill="#e8f0f8" stroke="#c5d6e8" stroke-width="1.5" />
-    <text x="161" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142">short s</text>
-    <text x="161" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">17978</text>
-    <text x="161" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">address 0<tspan direction="ltr">x04</tspan></text>
-    <text x="161" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">two bytes</text>
+    <rect x="36" y="64" width="250" height="150" rx="14" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
+    <text x="161" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#1b2333">short s</text>
+    <text x="161" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">17978</text>
+    <text x="161" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">address 0<tspan direction="ltr">x04</tspan></text>
+    <text x="161" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">two bytes</text>
   </g>
   <g class="draw d2">
-    <rect x="430" y="64" width="254" height="150" rx="14" fill="#fffdf8" stroke="#e0d6c8" stroke-width="1.5" />
-    <text x="557" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#2a3142">short* ps</text>
-    <text x="557" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#2a3142">0x04</text>
-    <text x="557" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">pointer cell</text>
-    <text x="557" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#5c5348" direction="ltr">eight bytes</text>
+    <rect x="430" y="64" width="254" height="150" rx="14" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
+    <text x="557" y="104" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="650" fill="#1b2333">short* ps</text>
+    <text x="557" y="132" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">0x04</text>
+    <text x="557" y="164" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">pointer cell</text>
+    <text x="557" y="188" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">eight bytes</text>
   </g>
   <g class="draw d3">
-    <line x1="414" y1="128" x2="302" y2="128" stroke="#3d7eb8" stroke-width="2" />
-    <polygon points="294,128 308,122 308,134" fill="#3d7eb8" />
-    <text x="354" y="112" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#2f5f8a">*ps</text>
+    <line x1="414" y1="128" x2="302" y2="128" stroke="#1f63d2" stroke-width="2" />
+    <polygon points="294,128 308,122 308,134" fill="#1f63d2" />
+    <text x="354" y="112" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1d4fa8">*ps</text>
   </g>
 </svg>

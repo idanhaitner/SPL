@@ -1,33 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Heebo, Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
-import { Ambient } from "@/components/Ambient";
+import { Familjen_Grotesk, IBM_Plex_Sans, IBM_Plex_Sans_Hebrew, JetBrains_Mono } from "next/font/google";
 import { Rail } from "@/components/Rail";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { loadCourse } from "@/lib/course";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
-const sans = Heebo({
-  subsets: ["latin", "hebrew"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-sans",
+const display = Familjen_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-familjen",
   display: "swap",
 });
-const body = Inter({
+const body = IBM_Plex_Sans({
   subsets: ["latin"],
-  variable: "--font-body",
+  weight: ["400", "500", "600"],
+  variable: "--font-plex",
   display: "swap",
 });
-const display = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-display",
+const hebrew = IBM_Plex_Sans_Hebrew({
+  subsets: ["hebrew"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-hebrew",
   display: "swap",
 });
 const mono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
+  weight: ["400", "500"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -45,9 +45,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const course = loadCourse();
   return (
-    <html lang={course.lang} dir={course.dir} className={`${sans.variable} ${body.variable} ${display.variable} ${mono.variable}`}>
+    <html lang={course.lang} dir={course.dir} className={`${display.variable} ${body.variable} ${hebrew.variable} ${mono.variable}`}>
       <body>
-        <Ambient />
         <ReadingProgress />
         <a className="skip" href="#content">Skip to content</a>
         <div className="shell">
