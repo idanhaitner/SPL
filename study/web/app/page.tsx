@@ -1,25 +1,27 @@
 import Link from "next/link";
-import { codeToHtml } from "shiki";
+import { Blocks } from "@/components/Blocks";
 import { ChapterProgress } from "@/components/ChapterProgress";
+import { ByteField } from "@/components/landing/ByteField";
 import { LandingNav } from "@/components/landing/LandingNav";
+import { PointerTrace } from "@/components/landing/PointerTrace";
 import { ResumeLink } from "@/components/landing/ResumeLink";
-import { Reveal } from "@/components/landing/Reveal";
 import { Showcase, type ShowcasePanel } from "@/components/landing/Showcase";
-import { Tagline } from "@/components/landing/Tagline";
 import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
+import { highlight } from "@/lib/highlight";
+import type { Block } from "@/lib/types";
 
 const PARTS = [
   {
-    title: "Memory in C++",
+    title: "Memory",
     lang: "C++",
-    summary: "Where a program lives while it runs, what a pointer really holds, and how an object that owns memory is copied, moved, and destroyed.",
+    summary: "Where a program lives, what a pointer holds, and how an object that owns memory is copied and destroyed.",
     ids: ["run-time-environment", "memory-model", "pointers", "classes-and-objects", "rule-of-three", "rule-of-five", "inheritance"],
   },
   {
-    title: "Concurrency in Java",
+    title: "Concurrency",
     lang: "Java",
-    summary: "Threads and tasks, which results count as correct, locks and visibility, and how to wait without starving or deadlocking.",
+    summary: "Threads, correct results, locks, and how to wait without starving or deadlocking.",
     ids: ["concurrency", "design-by-contract", "synchronization", "waiting-and-liveness"],
   },
   {
@@ -36,13 +38,16 @@ const PARTS = [
   },
 ];
 
+const TRACE_LINES = ["int x = 5;", "int* p = &x;", "*p = 7;", "int& r = x;", "r = 9;"];
+
 const SNIPPETS = [
   {
     key: "memory",
     part: "Memory",
     file: "buffer.cpp",
     lang: "cpp",
-    note: "freeing the old buffer before the new copy exists.",
+    mark: 6,
+    note: "Freeing the old buffer before the new copy exists.",
     code: `// Copy assignment that survives self assignment
 Buffer& Buffer::operator=(const Buffer& other) {
     if (this != &other) {
@@ -60,7 +65,8 @@ Buffer& Buffer::operator=(const Buffer& other) {
     part: "Threads",
     file: "BlockingQueue.java",
     lang: "java",
-    note: "an if around wait() instead of a while.",
+    mark: 3,
+    note: "An if around wait() instead of a while.",
     code: `// A guarded wait on a shared queue
 public synchronized T take() throws InterruptedException {
     while (items.isEmpty()) {
@@ -76,7 +82,8 @@ public synchronized T take() throws InterruptedException {
     part: "Servers",
     file: "Reactor.java",
     lang: "java",
-    note: "a heavy call on the selector thread.",
+    mark: 8,
+    note: "A heavy call on the selector thread.",
     code: `// The selector thread reads, the pool does the work
 while (!Thread.currentThread().isInterrupted()) {
     selector.select();
@@ -95,7 +102,8 @@ while (!Thread.currentThread().isInterrupted()) {
     part: "Databases",
     file: "enrollments.sql",
     lang: "sql",
-    note: "a join with no condition, which returns every pair.",
+    mark: 4,
+    note: "A join with no condition, which returns every pair.",
     code: `-- Many to many goes through a junction table
 SELECT s.name, c.title
 FROM students AS s
@@ -109,25 +117,54 @@ ORDER BY s.name;`,
 const STEPS = [
   {
     title: "Read one lecture at a time",
-    text: "Each chapter follows one of Adler's lectures, with a diagram of the idea and a worked example in real code.",
+    text: "Each chapter follows one lecture, with a diagram and a worked example.",
   },
   {
     title: "Answer real exam questions",
-    text: "Practice cards come from the 2015 to 2024 exams. Open a hint first, then compare your answer with the solution.",
+    text: "Practice includes questions from the 2015 to 2024 exams.",
   },
   {
     title: "Pick up where you stopped",
-    text: "Solved questions and your last chapter are saved in this browser, so the guide reopens on the right page.",
+    text: "Your progress stays in this browser.",
   },
 ];
+
+const SAMPLE_QUESTION = "exam-18a-q2";
+
+function findProblems(blocks: Block[]): Extract<Block, { type: "directive" }>[] {
+  const found: Extract<Block, { type: "directive" }>[] = [];
+  for (const block of blocks) {
+    if (block.type === "directive") {
+      if (block.name === "problem") found.push(block);
+      found.push(...findProblems(block.children));
+    }
+    if (block.type === "list") {
+      for (const item of block.items) found.push(...findProblems(item.children));
+    }
+  }
+  return found;
+}
 
 export default async function HomePage() {
   const course = loadCourse();
   const chapters = course.topics.map((topic) => ({ id: topic.id, title: topic.title }));
   const position = new Map(course.topics.map((topic, index) => [topic.id, index]));
   const practiceCount = course.topics.reduce((sum, topic) => sum + topic.practiceIds.length, 0);
+  const problems = course.topics.flatMap((topic) => findProblems(topic.blocks));
+  const examCount = problems.filter((problem) => problem.attrs.kind === "exam").length;
+  const sample = problems.find((problem) => problem.attrs.id === SAMPLE_QUESTION);
+  const sampleTopic = course.topics.find((topic) => topic.practiceIds.includes(SAMPLE_QUESTION));
+  // The first part of the question: its setup and its first check.
+  const samplePart = (sample?.children ?? []).filter(
+    (block, index, all) =>
+      block.type !== "directive" || index === all.findIndex((item) => item.type === "directive" && item.name === "check"),
+  );
   const mapped = new Set(PARTS.flatMap((part) => part.ids));
   const finale = course.topics.filter((topic) => !mapped.has(topic.id));
+
+  const traceLines = (await Promise.all(TRACE_LINES.map((line) => highlight(line, "cpp")))).map((html) =>
+    html.replace(' tabindex="0"', ""),
+  );
 
   const panels: ShowcasePanel[] = await Promise.all(
     SNIPPETS.map(async (snippet) => ({
@@ -135,7 +172,7 @@ export default async function HomePage() {
       part: snippet.part,
       file: snippet.file,
       note: snippet.note,
-      html: await codeToHtml(snippet.code, { lang: snippet.lang, theme: "github-dark" }),
+      html: await highlight(snippet.code, snippet.lang, snippet.mark),
     })),
   );
 
@@ -146,7 +183,7 @@ export default async function HomePage() {
     },
     {
       q: "Where do the practice questions come from?",
-      a: `All ${practiceCount} come from exams written between 2015 and 2024. The year is hidden, so you judge each question by what it asks and not by when it was set.`,
+      a: `${examCount} of the ${practiceCount} come from exams written between 2015 and 2024. The rest come from the lectures and exercise sessions. The year is hidden, so you judge each question by what it asks and not by when it was set.`,
     },
     {
       q: "Do I have to read the chapters in order?",
@@ -168,61 +205,38 @@ export default async function HomePage() {
 
   return (
     <div className="landing">
-      <Reveal />
       <LandingNav courseId={course.id} title={course.title} chapters={chapters} hits={course.search} />
 
       <section className="l-hero" aria-labelledby="hero-title">
-        <div className="l-wrap l-hero-grid">
+        <ByteField source={TRACE_LINES.join("\n")} weight="hero" />
+        <div className="container l-hero-grid">
           <div className="l-hero-copy">
-            <p className="l-eyebrow">Systems Programming study guide · {course.topics.length} chapters</p>
-            <h1 id="hero-title" className="l-title">
-              From a raw pointer<br />
-              to a running server
-            </h1>
-            <p className="l-sub">
-              Every lecture of the course in one place, from C++ memory to Java threads, sockets, and SQL.
-              Each chapter ends with questions taken from ten years of past exams.
-            </p>
+            <h1 id="hero-title">From raw pointer to running server</h1>
+            <p className="lead">Every lecture of the course, with ten years of exam questions.</p>
             <div className="l-cta-row">
-              <ResumeLink className="lbtn" courseId={course.id} chapters={chapters} />
-              <span className="l-reassure">Free, no account, progress stays on your device</span>
+              <ResumeLink className="key key--primary" courseId={course.id} chapters={chapters} />
+              <a className="key" href="#map">See the course map</a>
             </div>
-            <dl className="l-stats">
-              <div><dt>Chapters</dt><dd>{course.topics.length}</dd></div>
-              <div><dt>Exam questions</dt><dd>{practiceCount}</dd></div>
-              <div><dt>Glossary terms</dt><dd>{course.glossary.length}</dd></div>
-              <div><dt>Exam years</dt><dd>2015 to 2024</dd></div>
-            </dl>
           </div>
-          <div className="l-hero-visual">
-            <Showcase panels={panels} />
-          </div>
+          <PointerTrace lines={traceLines} />
         </div>
       </section>
 
-      <section className="l-tagline" aria-label="What the course teaches">
-        <div className="l-wrap">
-          <Tagline lines={["Know where every byte lives,", "who owns it, and which thread", "touches it next."]} />
-        </div>
-      </section>
-
-      <section className="l-section" id="map" aria-labelledby="map-title">
-        <div className="l-wrap">
-          <header className="l-head" data-reveal>
-            <p className="l-eyebrow">Course map</p>
+      <section className="l-section l-map" id="map" aria-labelledby="map-title">
+        <div className="container">
+          <header className="l-head">
             <h2 id="map-title">Four parts, one route</h2>
-            <p>The course climbs from a single process in memory to many processes sharing data. Follow it top to bottom.</p>
+            <p className="lead">
+              {course.topics.length} chapters and {practiceCount} practice questions, from a single process in memory to many processes sharing data.
+            </p>
           </header>
           <ol className="l-parts">
-            {PARTS.map((part, partIndex) => (
-              <li className="l-part" key={part.title} data-reveal>
+            {PARTS.map((part) => (
+              <li className="l-part" key={part.title}>
                 <div className="l-part-info">
-                  <span className="l-part-num" aria-hidden="true">{String(partIndex + 1).padStart(2, "0")}</span>
-                  <div>
-                    <p className="l-part-meta">Part {partIndex + 1} · {part.lang}</p>
-                    <h3>{part.title}</h3>
-                    <p>{part.summary}</p>
-                  </div>
+                  <h3>{part.title}</h3>
+                  <p className="l-part-lang">{part.lang}</p>
+                  <p>{part.summary}</p>
                 </div>
                 <ol className="l-chapters">
                   {part.ids
@@ -232,11 +246,8 @@ export default async function HomePage() {
                       <li key={topic.id}>
                         <Link className="l-chapter" href={`/topics/${topic.id}`}>
                           <span className="l-chapter-num">{String((position.get(topic.id) ?? 0) + 1).padStart(2, "0")}</span>
-                          <span className="l-chapter-body">
-                            <strong><Mixed text={topic.title} /></strong>
-                            {topic.blurb && <span><Mixed text={topic.blurb} /></span>}
-                            <ChapterProgress courseId={course.id} practiceIds={topic.practiceIds} />
-                          </span>
+                          <strong><Mixed text={topic.title} /></strong>
+                          <ChapterProgress courseId={course.id} practiceIds={topic.practiceIds} />
                         </Link>
                       </li>
                     ))}
@@ -245,43 +256,61 @@ export default async function HomePage() {
             ))}
           </ol>
           {finale.map((topic) => (
-            <Link className="l-finale" href={`/topics/${topic.id}`} key={topic.id} data-reveal>
+            <Link className="l-finale" href={`/topics/${topic.id}`} key={topic.id}>
               <span className="l-chapter-num">{String((position.get(topic.id) ?? 0) + 1).padStart(2, "0")}</span>
-              <span className="l-chapter-body">
-                <strong><Mixed text={topic.title} /></strong>
-                {topic.blurb && <span><Mixed text={topic.blurb} /></span>}
-              </span>
+              <strong><Mixed text={topic.title} /></strong>
               <span className="l-finale-tag">Before the exam</span>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="l-section" id="how" aria-labelledby="how-title">
-        <div className="l-wrap">
-          <header className="l-head" data-reveal>
-            <p className="l-eyebrow">How it works</p>
-            <h2 id="how-title">Read, answer, come back</h2>
-          </header>
-          <ol className="l-steps">
-            {STEPS.map((step, index) => (
-              <li key={step.title} data-reveal style={{ transitionDelay: `${index * 80}ms` }}>
-                <span className="l-step-num">{String(index + 1).padStart(2, "0")}</span>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-              </li>
-            ))}
-          </ol>
+      <section className="l-tagline" aria-label="What the course teaches">
+        <div className="container">
+          <p>Know where every byte lives, who owns it, and which thread touches it next.</p>
         </div>
       </section>
 
-      <section className="l-section" id="faq" aria-labelledby="faq-title">
-        <div className="l-wrap l-faq-grid">
-          <header className="l-head" data-reveal>
-            <p className="l-eyebrow">Questions</p>
-            <h2 id="faq-title">Before you start</h2>
-          </header>
-          <div className="l-faq" data-reveal>
+      <section className="l-traps" aria-labelledby="traps-title">
+        <div className="container">
+          <h2 id="traps-title">Exam traps, and what avoids them</h2>
+          <Showcase panels={panels} />
+        </div>
+      </section>
+
+      <section className="l-section l-how" id="how" aria-labelledby="how-title">
+        <div className="container">
+          <h2 id="how-title">Read, answer, come back</h2>
+          <div className="l-how-grid">
+            <ol className="l-steps">
+              {STEPS.map((step) => (
+                <li key={step.title}>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          {sample && (
+            <figure className="l-sample">
+              <div className="card practice">
+                <h3 className="practice-title"><Mixed text={sample.attrs.title} /></h3>
+                <div className="statement"><Blocks blocks={samplePart} courseId={course.id} /></div>
+              </div>
+              {sampleTopic && (
+                <figcaption>
+                  <Link href={`/topics/${sampleTopic.id}#${SAMPLE_QUESTION}`}>Open the full exam question</Link>
+                </figcaption>
+              )}
+            </figure>
+          )}
+          </div>
+        </div>
+      </section>
+
+      <section className="l-section l-faq-section" id="faq" aria-labelledby="faq-title">
+        <div className="container l-faq-grid">
+          <h2 id="faq-title">Questions</h2>
+          <div className="l-faq">
             {faq.map((item) => (
               <details key={item.q}>
                 <summary>
@@ -296,21 +325,18 @@ export default async function HomePage() {
       </section>
 
       <section className="l-final" aria-labelledby="final-title">
-        <div className="l-wrap" data-reveal>
-          <h2 id="final-title" className="l-title">
-            The exam is closer<br />
-            than it looks
-          </h2>
-          <p className="l-sub">The guide remembers where you stop, so your next session opens on the right page.</p>
+        <ByteField source={SNIPPETS[1].code} weight="band" />
+        <div className="container">
+          <h2 id="final-title">Open the next chapter</h2>
           <div className="l-cta-row">
-            <ResumeLink className="lbtn" courseId={course.id} chapters={chapters} />
-            <span className="l-reassure">Free, no account, progress stays on your device</span>
+            <ResumeLink className="key key--primary" courseId={course.id} chapters={chapters} />
+            <p className="l-reassure">Free, no account, progress stays on your device</p>
           </div>
         </div>
       </section>
 
       <footer className="l-footer">
-        <div className="l-wrap">
+        <div className="container">
           <span>{course.title} study guide, {new Date().getFullYear()}</span>
           <nav aria-label="Footer">
             <a href="#map">Course map</a>

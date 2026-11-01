@@ -18,9 +18,8 @@ export default function GlossaryPage() {
   return (
     <article className="page glossary">
       <header className="masthead">
-        <p className="kicker">Glossary</p>
         <h1>Glossary</h1>
-        <span className="masthead-num" aria-hidden="true">{String(course.glossary.length).padStart(2, "0")}</span>
+        <span className="masthead-num">{course.glossary.length} terms</span>
       </header>
       <p className="lead">The terms the lessons keep, grouped by the chapter that defines them.</p>
       {groups.length > 0 && (

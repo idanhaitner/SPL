@@ -69,13 +69,10 @@ function Folds({
 }
 
 function DirectionMark({ way }: { way: "back" | "forward" }) {
-  const ltr = way === "back" ? "←" : "→";
-  const rtl = way === "back" ? "→" : "←";
   return (
-    <span aria-hidden="true">
-      <span className="rtl:hidden">{ltr}</span>
-      <span className="hidden rtl:inline">{rtl}</span>
-    </span>
+    <svg className={`direction-mark is-${way}`} aria-hidden="true" viewBox="0 0 256 256" width="16" height="16">
+      <path d="M221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32Z" fill="currentColor" />
+    </svg>
   );
 }
 
@@ -253,7 +250,7 @@ export function SectionSwitch({
   function show(next: number) {
     setIndex(next);
     setGroupIndex(0);
-    scrollToId(parts.length > 1 ? "chapter-sections" : "chapter-part");
+    scrollToId("chapter-part");
   }
 
   function step(next: number) {
@@ -271,12 +268,6 @@ export function SectionSwitch({
 
   return (
     <>
-      {intro && (
-        <div className="chapter-lead">
-          <p className="chapter-lead-kicker">Chapter overview</p>
-          {intro}
-        </div>
-      )}
       {hasPartsNav && (
         <nav className="parts" id="chapter-sections" aria-label="Sections">
           {parts.map((part, item) => (
@@ -293,6 +284,11 @@ export function SectionSwitch({
             </button>
           ))}
         </nav>
+      )}
+      {intro && (
+        <div className="chapter-lead">
+          {intro}
+        </div>
       )}
       <section className="part-panel" id="chapter-part">
         <h2><Inline text={current.title} /></h2>

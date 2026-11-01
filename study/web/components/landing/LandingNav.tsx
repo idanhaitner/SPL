@@ -85,7 +85,7 @@ export function LandingNav({
         <div className="lnav-search">
           <SearchBox hits={hits} id="lnav-q" />
         </div>
-        <ResumeLink compact className="lbtn lbtn-sm lnav-cta" courseId={courseId} chapters={chapters} />
+        <ResumeLink compact className="key lnav-cta" courseId={courseId} chapters={chapters} />
         <button
           type="button"
           className="lnav-toggle"
@@ -109,7 +109,7 @@ export function LandingNav({
             </li>
           ))}
           <li style={{ transitionDelay: `${Math.min(LINKS.length * 60, 400)}ms` }}>
-            <ResumeLink className="lbtn" courseId={courseId} chapters={chapters} />
+            <ResumeLink className="key key--primary" courseId={courseId} chapters={chapters} />
           </li>
         </ul>
       </div>

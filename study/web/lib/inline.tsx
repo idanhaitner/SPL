@@ -23,7 +23,7 @@ function hrefOf(url: string): string | null {
   if (url === "study:index" || url === "study:drill") return "/";
   if (url.startsWith("repo:")) return null;
   for (const root of FIGURE_ROOTS) {
-    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=ltr2`;
+    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=cobalt`;
   }
   return url;
 }
