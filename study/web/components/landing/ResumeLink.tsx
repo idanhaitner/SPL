@@ -30,7 +30,7 @@ export function ResumeLink({
   if (!first) return null;
   return (
     <Link className={className} href={`/topics/${(target ?? first).id}`}>
-      <span>{target ? (compact ? "Continue" : <>Continue with <Mixed text={target.title} /></>) : "Start reading"}</span>
+      <span>{target ? (compact ? "Continue" : <>Continue<span className="resume-title"> with <Mixed text={target.title} /></span></>) : "Start reading"}</span>
     </Link>
   );
 }

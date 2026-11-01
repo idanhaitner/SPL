@@ -37,8 +37,11 @@ export function Paragraph({ text }: { text: string }) {
     if (src) {
       return (
         <figure className="figure">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={only[1]} />
+          <a className="figure-open" href={src} target="_blank" rel="noopener">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={only[1]} />
+            <span className="figure-zoom">Open the diagram full size</span>
+          </a>
           {only[1] ? <figcaption><Mixed text={only[1]} /></figcaption> : null}
         </figure>
       );
