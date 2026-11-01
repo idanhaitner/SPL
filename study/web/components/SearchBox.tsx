@@ -45,7 +45,7 @@ export function SearchBox({ hits, id = "q" }: { hits: SearchHit[]; id?: string }
       />
       {open && needle && (
         <div className="search-results">
-          {matches.length === 0 && <p>No results.</p>}
+          {matches.length === 0 && <p>No results. Try a shorter word, or browse the course below.</p>}
           {matches.map((hit) => (
             <Link key={hit.href + hit.title} href={hit.href} onClick={() => setOpen(false)}>
               <span>{KINDS[hit.kind] ?? hit.kind}</span>

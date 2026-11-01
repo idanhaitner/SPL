@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/design/sample.html"
+        ],
+        "createdAt": "2026-11-01T12:11:24.758Z",
+        "reason": "Code lines and panel bars sit flush with their panel by design; their text is inset by the line and bar padding"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "docs/design/sample.html"
+        ],
+        "createdAt": "2026-11-01T12:11:24.775Z",
+        "reason": "Only used as the opaque stop in a mask gradient, which never paints a color"
+      }
+    ]
+  }
+}
