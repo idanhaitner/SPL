@@ -57,6 +57,41 @@
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 
+/* Figure roles: the only colors the SVGs in public/figures use. Most follow the theme through the tokens they mix. */
+:root {
+  --fig-ink: var(--ink);
+  --fig-ink-soft: var(--ink-soft);
+  --fig-on-solid: var(--raised);
+  --fig-rule: color-mix(in oklab, var(--edge) 55%, var(--raised));
+  --fig-fill: var(--ground);
+  --fig-fill-2: color-mix(in oklab, var(--leaf) 38%, var(--raised));
+  --fig-fill-2-rule: color-mix(in oklab, var(--leaf) 80%, var(--ink));
+  --fig-accent: var(--link);
+  --fig-accent-rule: color-mix(in oklab, var(--link) 55%, var(--raised));
+  --fig-accent-fill: color-mix(in oklab, var(--bud) 18%, var(--raised));
+  --fig-accent-fill-2: color-mix(in oklab, var(--bud) 34%, var(--raised));
+  --fig-danger: var(--rust-text);
+  --fig-danger-fill: var(--rust-wash);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fig-ink-soft: var(--canopy-ink-soft);
+    --fig-accent-rule: color-mix(in oklab, var(--link) 34%, var(--raised));
+    --fig-fill-2: color-mix(in oklab, var(--leaf) 20%, var(--raised));
+    --fig-fill-2-rule: color-mix(in oklab, var(--leaf) 60%, var(--raised));
+    --fig-accent-fill: var(--wash);
+    --fig-accent-fill-2: var(--canopy-high);
+  }
+}
+:root[data-theme="dark"] {
+  --fig-ink-soft: var(--canopy-ink-soft);
+  --fig-accent-rule: color-mix(in oklab, var(--link) 34%, var(--raised));
+  --fig-fill-2: color-mix(in oklab, var(--leaf) 20%, var(--raised));
+  --fig-fill-2-rule: color-mix(in oklab, var(--leaf) 60%, var(--raised));
+  --fig-accent-fill: var(--wash);
+  --fig-accent-fill-2: var(--canopy-high);
+}
+
 html { scrollbar-color: var(--edge) var(--ground); scroll-padding-top: var(--space-xl); }
 body { background: var(--ground); color: var(--ink); caret-color: var(--link); font-family: var(--gh-body); }
 body ::selection { background: color-mix(in oklab, var(--leaf) 55%, transparent); color: inherit; }

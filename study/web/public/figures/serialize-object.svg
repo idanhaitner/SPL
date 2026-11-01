@@ -1,32 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250">
-  <style>
-    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
-    .d2 { animation-delay: 0.4s; }
-    .d3 { animation-delay: 0.8s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="760" height="250" fill="#f6f8fb" />
-  <g class="draw">
-    <rect x="24" y="48" width="200" height="150" rx="14" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="124" y="84" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr"><tspan direction="ltr">Pet</tspan> on the heap</text>
-    <text x="124" y="114" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">name = "A"</text>
-    <text x="124" y="140" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">age = 3</text>
-    <text x="124" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1d4fa8">hash cached</text>
+  <g>
+    <rect x="24" y="48" width="200" height="150" rx="14" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="124" y="84" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr"><tspan direction="ltr">Pet</tspan> on the heap</text>
+    <text x="124" y="114" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">name = "A"</text>
+    <text x="124" y="140" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">age = 3</text>
+    <text x="124" y="166" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-accent, currentColor)">hash cached</text>
   </g>
-  <g class="draw d2">
-    <rect x="280" y="72" width="200" height="100" rx="14" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="380" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">byte stream</text>
-    <text x="380" y="136" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr"><tspan direction="ltr">name</tspan> and <tspan direction="ltr">age</tspan></text>
-    <text x="380" y="154" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr"><tspan direction="ltr">hash</tspan> not written</text>
-    <polygon points="268,122 254,116 254,128" fill="#1f63d2" />
+  <g>
+    <rect x="280" y="72" width="200" height="100" rx="14" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="380" y="110" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">byte stream</text>
+    <text x="380" y="136" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr"><tspan direction="ltr">name</tspan> and <tspan direction="ltr">age</tspan></text>
+    <text x="380" y="154" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr"><tspan direction="ltr">hash</tspan> not written</text>
+    <polygon points="268,122 254,116 254,128" fill="var(--fig-accent, currentColor)" />
   </g>
-  <g class="draw d3">
-    <rect x="536" y="48" width="200" height="150" rx="14" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="636" y="84" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">new <tspan direction="ltr">Pet</tspan></text>
-    <text x="636" y="114" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">name = "A"</text>
-    <text x="636" y="140" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1b2333">age = 3</text>
-    <text x="636" y="166" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#1d4fa8" direction="ltr"><tspan direction="ltr">hash</tspan> is <tspan direction="ltr">null</tspan></text>
-    <polygon points="524,122 510,116 510,128" fill="#1f63d2" />
+  <g>
+    <rect x="536" y="48" width="200" height="150" rx="14" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="636" y="84" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">new <tspan direction="ltr">Pet</tspan></text>
+    <text x="636" y="114" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">name = "A"</text>
+    <text x="636" y="140" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-ink, currentColor)">age = 3</text>
+    <text x="636" y="166" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="14" fill="var(--fig-accent, currentColor)" direction="ltr"><tspan direction="ltr">hash</tspan> is <tspan direction="ltr">null</tspan></text>
+    <polygon points="524,122 510,116 510,128" fill="var(--fig-accent, currentColor)" />
   </g>
 </svg>

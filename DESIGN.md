@@ -314,7 +314,7 @@ Pill search field; `control-edge` outline; focus uses the standard ring. The edi
 - **Do** keep the plant outside the prose. Teaching text, figures, and code stay clear of decoration.
 - **Do** theme selection, scrollbars, caret, and focus from the palette.
 - **Do** make animation optional: every state must read correctly under `prefers-reduced-motion`.
-- **Do** put existing figures on a light plate in dark theme until they are redrawn. All 25 still use the old blue palette, and recoloring them is planned work.
+- **Do** color figures only through the `--fig-*` roles in `greenhouse.css`. All 25 are inlined at build time and sit directly on a `--raised` panel with a `--rule` border in both themes, with no light plate.
 
 ### Don't:
 - **Don't** return to datasheet, debugger, terminal, or hard-edged poster looks.

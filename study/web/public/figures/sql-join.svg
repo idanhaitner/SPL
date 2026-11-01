@@ -1,54 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" width="920" height="300">
-  <style>
-    text { font-family: Heebo, "Segoe UI", sans-serif; }
-  </style>
-
   <g>
-    <rect x="16" y="12" width="288" height="168" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5"/>
-    <text x="160" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">Students</text>
-    <rect x="32" y="54" width="256" height="26" rx="6" fill="#243044"/>
-    <text x="96" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f6f8fb">id</text>
-    <text x="208" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f6f8fb">name</text>
-    <rect x="32" y="86" width="256" height="32" rx="6" fill="#e7f4ec"/>
-    <text x="96" y="107" text-anchor="middle" font-size="14" fill="#1e2430">1</text>
-    <text x="208" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">Alice</text>
-    <rect x="32" y="124" width="256" height="32" rx="6" fill="#f8e8e4"/>
-    <text x="96" y="145" text-anchor="middle" font-size="14" fill="#a33d32">2</text>
-    <text x="208" y="145" text-anchor="middle" font-size="14" fill="#a33d32">Bob</text>
-    <line x1="184" y1="140" x2="234" y2="140" stroke="#a33d32" stroke-width="1.4"/>
+    <rect x="16" y="12" width="288" height="168" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5"/>
+    <text font-family="var(--gh-body, sans-serif)" x="160" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fig-ink, currentColor)">Students</text>
+    <rect x="32" y="54" width="256" height="26" rx="6" fill="var(--fig-ink, currentColor)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="96" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fig-on-solid, white)">id</text>
+    <text font-family="var(--gh-body, sans-serif)" x="208" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fig-on-solid, white)">name</text>
+    <rect x="32" y="86" width="256" height="32" rx="6" fill="var(--fig-fill-2, none)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="96" y="107" text-anchor="middle" font-size="14" fill="var(--fig-ink, currentColor)">1</text>
+    <text font-family="var(--gh-body, sans-serif)" x="208" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)">Alice</text>
+    <rect x="32" y="124" width="256" height="32" rx="6" fill="var(--fig-danger-fill, none)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="96" y="145" text-anchor="middle" font-size="14" fill="var(--fig-danger, currentColor)">2</text>
+    <text font-family="var(--gh-body, sans-serif)" x="208" y="145" text-anchor="middle" font-size="14" fill="var(--fig-danger, currentColor)">Bob</text>
+    <line x1="184" y1="140" x2="234" y2="140" stroke="var(--fig-danger, currentColor)" stroke-width="1.4"/>
   </g>
 
   <g>
-    <rect x="316" y="12" width="288" height="168" rx="12" fill="#fdfeff" stroke="#9dbdec" stroke-width="1.5"/>
-    <text x="460" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">StudentsCourses</text>
-    <rect x="332" y="54" width="256" height="26" rx="6" fill="#243044"/>
-    <text x="396" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f6f8fb">student_id</text>
-    <text x="524" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f6f8fb">course_id</text>
-    <rect x="332" y="86" width="256" height="32" rx="6" fill="#e7f4ec"/>
-    <text x="396" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">1</text>
-    <text x="524" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">10</text>
+    <rect x="316" y="12" width="288" height="168" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5"/>
+    <text font-family="var(--gh-body, sans-serif)" x="460" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fig-ink, currentColor)">StudentsCourses</text>
+    <rect x="332" y="54" width="256" height="26" rx="6" fill="var(--fig-ink, currentColor)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="396" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fig-on-solid, white)">student_id</text>
+    <text font-family="var(--gh-body, sans-serif)" x="524" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fig-on-solid, white)">course_id</text>
+    <rect x="332" y="86" width="256" height="32" rx="6" fill="var(--fig-fill-2, none)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="396" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)">1</text>
+    <text font-family="var(--gh-body, sans-serif)" x="524" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)">10</text>
   </g>
 
   <g>
-    <rect x="616" y="12" width="288" height="168" rx="12" fill="#f7fafc" stroke="#bcd0f0" stroke-width="1.5"/>
-    <text x="760" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="#1e2430">Courses</text>
-    <rect x="632" y="54" width="256" height="26" rx="6" fill="#243044"/>
-    <text x="696" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f6f8fb">id</text>
-    <text x="808" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="#f6f8fb">name</text>
-    <rect x="632" y="86" width="256" height="32" rx="6" fill="#e7f4ec"/>
-    <text x="696" y="107" text-anchor="middle" font-size="14" fill="#1e2430">10</text>
-    <text x="808" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="#1f7a4d">prog</text>
-    <rect x="632" y="124" width="256" height="32" rx="6" fill="#f8e8e4"/>
-    <text x="696" y="145" text-anchor="middle" font-size="14" fill="#a33d32">20</text>
-    <text x="808" y="145" text-anchor="middle" font-size="14" fill="#a33d32">systems</text>
-    <line x1="768" y1="140" x2="848" y2="140" stroke="#a33d32" stroke-width="1.4"/>
+    <rect x="616" y="12" width="288" height="168" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5"/>
+    <text font-family="var(--gh-body, sans-serif)" x="760" y="40" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fig-ink, currentColor)">Courses</text>
+    <rect x="632" y="54" width="256" height="26" rx="6" fill="var(--fig-ink, currentColor)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="696" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fig-on-solid, white)">id</text>
+    <text font-family="var(--gh-body, sans-serif)" x="808" y="72" text-anchor="middle" font-size="12" font-weight="650" fill="var(--fig-on-solid, white)">name</text>
+    <rect x="632" y="86" width="256" height="32" rx="6" fill="var(--fig-fill-2, none)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="696" y="107" text-anchor="middle" font-size="14" fill="var(--fig-ink, currentColor)">10</text>
+    <text font-family="var(--gh-body, sans-serif)" x="808" y="107" text-anchor="middle" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)">prog</text>
+    <rect x="632" y="124" width="256" height="32" rx="6" fill="var(--fig-danger-fill, none)"/>
+    <text font-family="var(--gh-body, sans-serif)" x="696" y="145" text-anchor="middle" font-size="14" fill="var(--fig-danger, currentColor)">20</text>
+    <text font-family="var(--gh-body, sans-serif)" x="808" y="145" text-anchor="middle" font-size="14" fill="var(--fig-danger, currentColor)">systems</text>
+    <line x1="768" y1="140" x2="848" y2="140" stroke="var(--fig-danger, currentColor)" stroke-width="1.4"/>
   </g>
 
-  <text x="460" y="214" text-anchor="middle" font-size="13" font-weight="700" fill="#1e2430">INNER JOIN  ·  SELECT S.name, C.name</text>
-  <rect x="270" y="228" width="380" height="28" rx="6" fill="#243044"/>
-  <text x="370" y="247" text-anchor="middle" font-size="13" font-weight="650" fill="#f6f8fb">S.name</text>
-  <text x="550" y="247" text-anchor="middle" font-size="13" font-weight="650" fill="#f6f8fb">C.name</text>
-  <rect x="270" y="262" width="380" height="32" rx="6" fill="#e7f4ec"/>
-  <text x="370" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="#1f7a4d">Alice</text>
-  <text x="550" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="#1f7a4d">prog</text>
+  <text font-family="var(--gh-body, sans-serif)" x="460" y="214" text-anchor="middle" font-size="13" font-weight="700" fill="var(--fig-ink, currentColor)">INNER JOIN  ·  SELECT S.name, C.name</text>
+  <rect x="270" y="228" width="380" height="28" rx="6" fill="var(--fig-ink, currentColor)"/>
+  <text font-family="var(--gh-body, sans-serif)" x="370" y="247" text-anchor="middle" font-size="13" font-weight="650" fill="var(--fig-on-solid, white)">S.name</text>
+  <text font-family="var(--gh-body, sans-serif)" x="550" y="247" text-anchor="middle" font-size="13" font-weight="650" fill="var(--fig-on-solid, white)">C.name</text>
+  <rect x="270" y="262" width="380" height="32" rx="6" fill="var(--fig-fill-2, none)"/>
+  <text font-family="var(--gh-body, sans-serif)" x="370" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fig-accent, currentColor)">Alice</text>
+  <text font-family="var(--gh-body, sans-serif)" x="550" y="283" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fig-accent, currentColor)">prog</text>
 </svg>

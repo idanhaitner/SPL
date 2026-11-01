@@ -1,32 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280">
-  <style>
-    .draw { opacity: 0; animation: appear 0.35s ease forwards; }
-    .d2 { animation-delay: 0.3s; }
-    .d3 { animation-delay: 0.6s; }
-    .d4 { animation-delay: 0.9s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="720" height="280" fill="#f6f8fb" />
-  <text x="190" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">thread 1</text>
-  <text x="520" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">thread 2</text>
-  <g class="draw">
-    <rect x="48" y="60" width="280" height="44" rx="10" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="188" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#1b2333" direction="ltr">reads <tspan direction="ltr">count</tspan>, sees 0</text>
-    <rect x="380" y="60" width="280" height="44" rx="10" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="520" y="88" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#1b2333" direction="ltr">reads <tspan direction="ltr">count</tspan>, sees 0</text>
+  <text x="190" y="40" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">thread 1</text>
+  <text x="520" y="40" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">thread 2</text>
+  <g>
+    <rect x="48" y="60" width="280" height="44" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="188" y="88" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink, currentColor)" direction="ltr">reads <tspan direction="ltr">count</tspan>, sees 0</text>
+    <rect x="380" y="60" width="280" height="44" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="520" y="88" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink, currentColor)" direction="ltr">reads <tspan direction="ltr">count</tspan>, sees 0</text>
   </g>
-  <g class="draw d2">
-    <rect x="48" y="118" width="280" height="44" rx="10" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="188" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#1b2333" direction="ltr">adds 1, holds 1</text>
-    <rect x="380" y="118" width="280" height="44" rx="10" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="520" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#1b2333" direction="ltr">adds 1, holds 1</text>
+  <g>
+    <rect x="48" y="118" width="280" height="44" rx="10" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="188" y="146" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink, currentColor)" direction="ltr">adds 1, holds 1</text>
+    <rect x="380" y="118" width="280" height="44" rx="10" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="520" y="146" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink, currentColor)" direction="ltr">adds 1, holds 1</text>
   </g>
-  <g class="draw d3">
-    <rect x="48" y="176" width="280" height="44" rx="10" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="188" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#1b2333" direction="ltr">writes 1</text>
-    <rect x="380" y="176" width="280" height="44" rx="10" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="520" y="204" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#1b2333" direction="ltr">writes 1</text>
+  <g>
+    <rect x="48" y="176" width="280" height="44" rx="10" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="188" y="204" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink, currentColor)" direction="ltr">writes 1</text>
+    <rect x="380" y="176" width="280" height="44" rx="10" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="520" y="204" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink, currentColor)" direction="ltr">writes 1</text>
   </g>
-  <text class="draw d4" x="360" y="256" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr"><tspan direction="ltr">count</tspan> is 1, not 2</text>
+  <text x="360" y="256" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr"><tspan direction="ltr">count</tspan> is 1, not 2</text>
 </svg>

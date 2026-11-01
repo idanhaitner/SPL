@@ -1,39 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320">
-  <style>
-    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
-    .d2 { animation-delay: 0.4s; }
-    .d3 { animation-delay: 0.75s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="760" height="320" fill="#f6f8fb" />
-  <g class="draw">
-    <text x="130" y="40" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#1d4fa8" direction="ltr">stack, <tspan direction="ltr">main</tspan>'s frame</text>
-    <rect x="36" y="56" width="190" height="70" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="131" y="86" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">int[] a</text>
-    <text x="131" y="108" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">reference</text>
-    <rect x="36" y="142" width="190" height="70" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="131" y="172" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333">String[] b</text>
-    <text x="131" y="194" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">reference</text>
+  <g>
+    <text x="130" y="40" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">stack, <tspan direction="ltr">main</tspan>'s frame</text>
+    <rect x="36" y="56" width="190" height="70" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="131" y="86" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">int[] a</text>
+    <text x="131" y="108" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">reference</text>
+    <rect x="36" y="142" width="190" height="70" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="131" y="172" text-anchor="middle" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)">String[] b</text>
+    <text x="131" y="194" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">reference</text>
   </g>
-  <g class="draw d2">
-    <text x="470" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="650" fill="#1d4fa8" direction="ltr">heap</text>
-    <rect x="300" y="52" width="200" height="88" rx="12" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="400" y="86" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333" direction="ltr"><tspan direction="ltr">int</tspan> array</text>
-    <text x="400" y="110" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr"><tspan direction="ltr">length</tspan> 10, one block</text>
+  <g>
+    <text x="470" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">heap</text>
+    <rect x="300" y="52" width="200" height="88" rx="12" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="400" y="86" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr"><tspan direction="ltr">int</tspan> array</text>
+    <text x="400" y="110" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr"><tspan direction="ltr">length</tspan> 10, one block</text>
   </g>
-  <g class="draw d3">
-    <rect x="300" y="176" width="200" height="88" rx="12" fill="#e8f0fc" stroke="#c6d3e6" stroke-width="1.5" />
-    <text x="400" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333" direction="ltr">array of references</text>
-    <text x="400" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">ten pointers, start as <tspan direction="ltr">null</tspan></text>
-    <rect x="540" y="176" width="184" height="88" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="632" y="210" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333">a String</text>
-    <text x="632" y="234" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">its own block</text>
-    <line x1="226" y1="96" x2="300" y2="96" stroke="#1f63d2" stroke-width="2" />
-    <polygon points="300,96 288,90 288,102" fill="#1f63d2" />
-    <line x1="226" y1="176" x2="300" y2="220" stroke="#1f63d2" stroke-width="2" />
-    <polygon points="300,220 286,214 290,202" fill="#1f63d2" />
-    <line x1="500" y1="220" x2="540" y2="220" stroke="#1f63d2" stroke-width="2" />
-    <polygon points="540,220 528,214 528,226" fill="#1f63d2" />
+  <g>
+    <rect x="300" y="176" width="200" height="88" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="400" y="210" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">array of references</text>
+    <text x="400" y="234" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">ten pointers, start as <tspan direction="ltr">null</tspan></text>
+    <rect x="540" y="176" width="184" height="88" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="632" y="210" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)">a String</text>
+    <text x="632" y="234" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">its own block</text>
+    <line x1="226" y1="96" x2="300" y2="96" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+    <polygon points="300,96 288,90 288,102" fill="var(--fig-accent, currentColor)" />
+    <line x1="226" y1="176" x2="300" y2="220" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+    <polygon points="300,220 286,214 290,202" fill="var(--fig-accent, currentColor)" />
+    <line x1="500" y1="220" x2="540" y2="220" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+    <polygon points="540,220 528,214 528,226" fill="var(--fig-accent, currentColor)" />
   </g>
 </svg>
