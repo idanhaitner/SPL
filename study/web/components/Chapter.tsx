@@ -1,7 +1,8 @@
 import { Blocks } from "@/components/Blocks";
 import type { Hop } from "@/components/chapter/FinishReading";
 import { SectionSwitch } from "@/components/SectionSwitch";
-import type { Block } from "@/lib/types";
+import { stepsOf } from "@/lib/steps";
+import type { Block, Topic } from "@/lib/types";
 
 function walk(blocks: Block[], visit: (block: Block) => void) {
   for (const block of blocks) {
@@ -29,7 +30,8 @@ function withoutPractice(blocks: Block[]): Block[] {
   return blocks.filter((block) => !(block.type === "directive" && block.name === "problem" && block.attrs.kind !== "worked"));
 }
 
-export function Chapter({ blocks, courseId, chapterId, session, next }: { blocks: Block[]; courseId: string; chapterId: string; session: Hop | null; next: Hop | null }) {
+export function Chapter({ topic, courseId, session, next }: { topic: Topic; courseId: string; session: Hop | null; next: Hop | null }) {
+  const { blocks, id: chapterId } = topic;
   const intro: Block[] = [];
   const slices: { title: string; blocks: Block[] }[] = [];
   for (const block of withoutPractice(blocks)) {
@@ -48,6 +50,7 @@ export function Chapter({ blocks, courseId, chapterId, session, next }: { blocks
     <SectionSwitch
       courseId={courseId}
       chapterId={chapterId}
+      stepIds={stepsOf(topic).map((step) => step.id)}
       intro={kept.length > 0 && intro.length > 0 ? <Blocks blocks={intro} courseId={courseId} /> : null}
       parts={parts}
       session={session}

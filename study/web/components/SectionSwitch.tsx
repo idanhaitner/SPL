@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FinishReading, type Hop } from "@/components/chapter/FinishReading";
 import { Icon } from "@/components/home/Icon";
@@ -20,7 +21,8 @@ function Node({ state }: { state: "done" | "now" | "ahead" }) {
   );
 }
 
-export function SectionSwitch({ courseId, chapterId, intro, parts, session, next }: { courseId: string; chapterId: string; intro: ReactNode; parts: SectionPart[]; session: Hop | null; next: Hop | null }) {
+export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, session, next }: { courseId: string; chapterId: string; stepIds: string[]; intro: ReactNode; parts: SectionPart[]; session: Hop | null; next: Hop | null }) {
+  const router = useRouter();
   const [index, setIndex] = useState(0);
   const menu = useRef<HTMLDetailsElement>(null);
   const progress = useProgress(courseId);
@@ -30,6 +32,11 @@ export function SectionSwitch({ courseId, chapterId, intro, parts, session, next
     const apply = () => {
       const id = hashId();
       if (!id) return;
+      // Older links point at a question inside the chapter; it lives in the session now.
+      if (stepIds.includes(id)) {
+        router.replace(`/sessions/${chapterId}/?step=${encodeURIComponent(id)}`);
+        return;
+      }
       const hit = parts.findIndex((part) => part.slug === id || part.ids.includes(id));
       if (hit < 0) return;
       setIndex(hit);
@@ -40,7 +47,7 @@ export function SectionSwitch({ courseId, chapterId, intro, parts, session, next
     apply();
     window.addEventListener("hashchange", apply);
     return () => window.removeEventListener("hashchange", apply);
-  }, [parts]);
+  }, [parts, stepIds, chapterId, router]);
 
   function show(target: number) {
     setIndex(target);

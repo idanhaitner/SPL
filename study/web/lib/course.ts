@@ -58,7 +58,10 @@ function withPracticeTitles(course: Course): Course {
       if (hit.kind !== "Practice") return hit;
       const id = decodeURIComponent(hit.href.split("#")[1] ?? "");
       const title = titles.get(id);
-      return title ? { ...hit, title } : hit;
+      // Practice lives in the chapter's session now.
+      const chapter = hit.href.split("#")[0].replace(/^\/topics\//, "").replace(/\/$/, "");
+      const href = id ? `/sessions/${chapter}/?step=${encodeURIComponent(id)}` : hit.href;
+      return { ...hit, href, title: title ?? hit.title };
     }),
   };
 }

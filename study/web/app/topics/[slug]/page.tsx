@@ -40,10 +40,9 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         <CourseStrip courseId={course.id} chapters={nav.chapters} currentId={topic.id} />
       </header>
       <Chapter
-        blocks={topic.blocks}
+        topic={topic}
         courseId={course.id}
-        chapterId={topic.id}
-        session={topic.practiceIds.length > 0 ? { href: `/sessions/${topic.id}/`, title: `Guided session: ${topic.title}` } : null}
+        session={nav.chapters[index].stepIds.length > 0 ? { href: `/sessions/${topic.id}/`, title: `Guided session: ${topic.title}` } : null}
         next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
       />
     </div>

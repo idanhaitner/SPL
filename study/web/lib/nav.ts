@@ -1,5 +1,6 @@
 import { PARTS } from "./parts";
 import type { ChapterInfo } from "./progress";
+import { stepsOf } from "./steps";
 import type { Course } from "./types";
 
 export type NavPart = { title: string; lang: string; summary: string; chapters: ChapterInfo[] };
@@ -10,7 +11,7 @@ export function courseNav(course: Course): CourseNav {
     id: topic.id,
     title: topic.title,
     num: index + 1,
-    stepIds: topic.practiceIds,
+    stepIds: stepsOf(topic).map((step) => step.id),
   }));
   const byId = new Map(chapters.map((chapter) => [chapter.id, chapter]));
   const parts = PARTS.map(({ title, lang, summary, ids }) => ({

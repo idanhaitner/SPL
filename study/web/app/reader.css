@@ -151,6 +151,39 @@ input[type="checkbox"] + .choice-mark { border-radius: 7px; }
 .gh-quiet:hover { color: var(--ink); text-decoration-color: currentColor; }
 button.gh-btn { color: var(--bloom-ink); cursor: pointer; }
 
+/* Guided session */
+.session-page { min-height: 100dvh; }
+.session-loading { min-height: 60dvh; }
+.session-bar { background: var(--canopy-mid); color: var(--canopy-ink); padding-inline: var(--gh-gutter); }
+.session-bar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; max-width: 1360px; margin-inline: auto; padding-block: 10px 2px; font-size: 0.9375rem; font-weight: 500; }
+a.session-back { display: inline-flex; align-items: center; min-height: 44px; color: var(--canopy-ink); text-underline-offset: 0.18em; }
+.session-count { color: var(--canopy-ink-soft); }
+.session-quiet { min-height: 44px; padding: 0 10px; border: 0; background: none; color: var(--canopy-ink); cursor: pointer; font: 500 0.9375rem var(--gh-body); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.2em; }
+.session-quiet:hover { text-decoration-color: currentColor; }
+.session-quiet:disabled { color: var(--canopy-ink-soft); cursor: default; text-decoration: none; }
+.session-bar :focus-visible { outline-color: var(--leaf); }
+.session-bar .gh-pill:disabled { color: var(--canopy-ink-soft); }
+.gh-btn.is-compact { min-height: 44px; padding: 8px 22px; font-size: 1.0625rem; }
+.step-stem { display: flex; align-items: center; max-width: 1360px; margin: 0 auto; padding: 0 0 6px; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.step-stem li { position: relative; flex: 1 0 36px; display: flex; justify-content: center; }
+.step-stem li::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; background: #5FA886; }
+.step-stem li.is-grown::before { background: var(--leaf); }
+.step-leaf { position: relative; display: grid; place-items: center; width: 36px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
+.step-shape { width: 28px; height: 28px; }
+.step-shape.is-done path { fill: var(--leaf); }
+.step-shape.is-skipped path { fill: var(--canopy-mid); stroke: var(--canopy-ink-soft); stroke-width: 2; stroke-dasharray: 4 3; }
+.step-shape.is-current circle { fill: var(--canopy-mid); stroke: var(--canopy-ink); stroke-width: 4; }
+.step-shape.is-upcoming circle { fill: var(--canopy-mid); stroke: var(--canopy-ink-soft); stroke-width: 2; }
+.step-mini { display: none; }
+.session-reading { max-width: 760px; margin-inline: auto; padding: 40px var(--gh-gutter) 88px; font: 400 1.125rem/1.65 var(--gh-body); }
+.session-reading > .card.practice { margin-top: 0; }
+.session-reading h1 { max-width: 20ch; margin: 0 0 20px; font: 800 clamp(2.5rem, 3vw + 1rem, 4rem)/1.04 var(--gh-display); letter-spacing: -0.02em; outline: none; }
+.session-reading > p { margin-bottom: 16px; }
+.session-intro .gh-btn, .session-finish .gh-btn { margin-top: 16px; }
+.session-reread { margin-top: 16px; font-size: 1rem; }
+.session-open { margin-bottom: 16px; list-style: none !important; padding: 0 !important; }
+a.gh-btn { max-width: 100%; }
+
 @media (max-width: 79.99rem) {
   .reader { grid-template-columns: 200px minmax(0, 680px); column-gap: 40px; }
 }
@@ -169,6 +202,19 @@ button.gh-btn { color: var(--bloom-ink); cursor: pointer; }
   .masthead .gh-arch-2 { width: 56%; right: -18%; }
 }
 @media (max-width: 40rem) {
+  .step-stem { display: none; }
+  .step-mini { display: block; padding-bottom: 8px; }
+  .step-mini-toggle { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: var(--canopy-ink); cursor: pointer; font: 500 0.9375rem var(--gh-body); }
+  .step-mini-toggle .gh-icon { flex: none; }
+  .step-mini-toggle[aria-expanded="true"] .gh-icon { transform: rotate(180deg); }
+  .step-mini-bar { flex: 1; height: 6px; overflow: hidden; border-radius: 999px; background: #5FA886; }
+  .step-mini-bar i { display: block; height: 100%; border-radius: 999px; background: var(--leaf); }
+  .step-list { max-height: 50dvh; margin: 4px 0 0; padding: 0; overflow-y: auto; list-style: none; }
+  .step-list button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; border: 0; background: none; color: var(--canopy-ink); cursor: pointer; font: 400 1rem/1.25 var(--gh-body); text-align: left; }
+  .step-list button[aria-current] { font-weight: 600; }
+  .session-reading { padding-top: 24px; font-size: 1.0625rem; }
+  .card.practice { padding: 18px; }
+  .card.check { padding: 16px; }
   .reader { font-size: 1.0625rem; }
   .masthead-inner { grid-template-columns: minmax(0, 1fr); row-gap: 14px; padding-bottom: 28px; }
   .masthead-leaf { width: 68px; height: 68px; }

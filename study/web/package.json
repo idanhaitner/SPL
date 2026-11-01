@@ -8,7 +8,8 @@
     "audit": "node scripts/audit.mjs",
     "test": "vitest run",
     "check:shell": "node scripts/check-shell.mjs",
-    "check:chapter": "node scripts/check-chapter.mjs"
+    "check:chapter": "node scripts/check-chapter.mjs",
+    "check:session": "node scripts/check-session.mjs"
   },
   "dependencies": {
     "katex": "^0.16.22",
