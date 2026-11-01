@@ -187,14 +187,14 @@
       "name": "Code Panel",
       "kind": "custom",
       "refersTo": "code-panel",
-      "description": "Deep green panel, identical in both themes.",
+      "description": "Warm neutral panel, identical in both themes.",
       "html": "<pre class=\"ds-code\">int *p = &x;</pre>",
-      "css": ".ds-code{margin:0;background:#0A2C21;color:#E6F0E6;font:400 .9375rem/1.7 'JetBrains Mono',ui-monospace,monospace;border-radius:18px;padding:16px 20px}"
+      "css": ".ds-code{margin:0;background:#2B2926;color:#EAE5DA;font:400 .9375rem/1.7 'JetBrains Mono',ui-monospace,monospace;border-radius:18px;padding:16px 20px}"
     }
   ],
   "narrative": {
     "northStar": "The Greenhouse",
-    "overview": "The student arrives knowing nothing, and that is the seed. The course is one plant: its stem is the order of the course, its leaves are chapters and steps, and a leaf opens only when the student has done the work. The feeling is a bright glasshouse: alive, curved, generous, and welcoming to someone who has never seen a pointer.\n\nGreen fields frame the journey (home, chapter tops, session bars). Reading happens in pale, quiet rooms, because a chapter runs to thousands of words and the world must step back while it teaches. Code sits in deep green panels in both themes, so it always looks like the same material.\n\nRejected by the user: anything nerdy or squarish, including technical-datasheet, debugger, terminal, and hard-edged poster looks, plus the previous cobalt design.",
+    "overview": "The student arrives knowing nothing, and that is the seed. The course is one plant: its stem is the order of the course, its leaves are chapters and steps, and a leaf opens only when the student has done the work. The feeling is a bright glasshouse: alive, curved, generous, and welcoming to someone who has never seen a pointer.\n\nGreen fields frame the journey (home, chapter tops, session bars). Reading happens in pale, quiet rooms, because a chapter runs to thousands of words and the world must step back while it teaches. Code sits on warm potting-bench panels in both themes, so it always looks like the same material and the green never competes with what the student is reading.\n\nRejected by the user: anything nerdy or squarish, including technical-datasheet, debugger, terminal, and hard-edged poster looks, plus the previous cobalt design.",
     "keyCharacteristics": [
       "One continuous stem, in every surface, that shows real progress",
       "Curves everywhere a corner would be unkind: pills, arches, soft panels",

@@ -36,18 +36,20 @@ colors:
   night-control-edge: "#6F9483"
   night-rust: "#F2A36F"
   night-rust-wash: "#3A2A1C"
-  code-ground: "#0A2C21"
-  code-bar: "#0F3D2E"
-  code-mark: "#123D2E"
-  code-text: "#E6F0E6"
-  code-keyword: "#B7E36B"
-  code-number: "#FFC48A"
-  code-string: "#F4D58D"
-  code-function: "#8FE3CF"
-  code-type: "#9FD6FF"
-  code-comment: "#8DAD9D"
-  code-punctuation: "#C8D8CD"
-  code-line-number: "#8DAD9D"
+  code-ground: "#2B2926"
+  code-bar: "#35322E"
+  code-mark: "#3D3A35"
+  code-text: "#EAE5DA"
+  code-keyword: "#C9B8E8"
+  code-number: "#EDB48C"
+  code-string: "#E3CC8F"
+  code-function: "#A9C7EA"
+  code-type: "#8FD0CC"
+  code-comment: "#AAA496"
+  code-punctuation: "#CFC9BC"
+  code-line-number: "#A09A8C"
+  code-plate: "#F1EEE7"
+  code-chip: "#E8E4DA"
 typography:
   display:
     fontFamily: "Gabarito, system-ui, sans-serif"
@@ -149,7 +151,7 @@ components:
     typography: "{typography.code}"
     rounded: "{rounded.md}"
   inline-code:
-    backgroundColor: "{colors.sunroom-wash}"
+    backgroundColor: "{colors.code-chip}"
     textColor: "{colors.ink}"
     rounded: "{rounded.xs}"
     padding: "1px 6px"
@@ -163,7 +165,7 @@ components:
 
 The student arrives knowing nothing, and that is the seed. The course is one plant: its stem is the order of the course, its leaves are chapters and steps, and a leaf opens only when the student has done the work. The feeling is a bright glasshouse: alive, curved, generous, and welcoming to someone who has never seen a pointer.
 
-Green fields frame the journey (home, chapter tops, session bars). Reading happens in pale, quiet rooms, because a chapter runs to thousands of words and the world must step back while it teaches. Code sits in deep green panels in both themes, so it always looks like the same material.
+Green fields frame the journey (home, chapter tops, session bars). Reading happens in pale, quiet rooms, because a chapter runs to thousands of words and the world must step back while it teaches. Code sits on warm potting-bench panels in both themes, so it always looks like the same material and the green never competes with what the student is reading.
 
 Rejected by the user: anything nerdy or squarish, including technical-datasheet, debugger, terminal, and hard-edged poster looks, plus the previous cobalt design.
 
@@ -196,7 +198,7 @@ A saturated botanical palette: deep bottle greens carry the frame, fresh lime me
 - **Rules** (`rule`, `night-rule`): dividers only. Control boundaries use `control-edge` and `night-control-edge`, which reach 3:1.
 
 ### Code
-The syntax palette (`code-*`) is one set for both themes and maps onto Shiki's `--code-*` variables: keywords in new leaf, numbers in peach, strings in pollen, functions in aqua, types in sky.
+The syntax palette (`code-*`) is one set for both themes and maps onto Shiki's `--code-*` variables: keywords in wisteria, numbers in apricot, strings in honey, functions in sky, types in aqua. Green stays out of syntax, so it keeps meaning growth: the only green on code is the leaf that marks a line and the color of a pass.
 
 **The One Bloom Rule.** At most one coral element per screen, and it is always the next thing to do. Never decorate with it, and never use it for selection, errors, or progress.
 
@@ -291,7 +293,7 @@ Things used all day stay fast or do not animate; growth is the only slow motion,
 Green top with nested arches, the chapter number on a leaf, title, one-line summary, and the course stem. Then the three-zone layout. It ends by handing off: the next section, then the chapter's session.
 
 ### Guided Session Steps
-- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the Bloom once the step is done. Before that nothing in the bar is coral; on code steps Submit holds the Bloom, and on question steps Check stays a quiet pill, because one step can hold several checks.
+- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the Bloom once the step is done. Before that nothing in the bar is coral; on code steps Submit is a warm cream pill (`code-text` on `code-ground`) rather than a Bloom, so the workspace stays calm, and on question steps Check stays a quiet pill, because one step can hold several checks.
 - **Learn:** one section in the reading column. It counts as done when the student presses Next, not when it loads.
 - **Check:** one question with large pill-shaped answers. A wrong answer explains itself in rust and can be retried; a right answer opens a leaf and unlocks Next.
 - **Code:** the split workspace, with only Run, Submit, and Reset as code actions; hints and solution live in the question panel.
@@ -307,15 +309,15 @@ Soft raised card, title-weight question, pill answers with a radio mark. States:
 
 ### Code Blocks
 The most important component on the site.
-- **Frame:** deep green panel, 18px corners, identical in both themes.
+- **Frame:** warm neutral panel, 18px corners, identical in both themes.
 - **Bar:** language name, optional file name, and a Copy button that confirms in place.
 - **Lines:** line numbers that are not selected when copying, with tabular figures.
 - **Marked lines:** a tone change plus a small leaf in the gutter, for the line being discussed.
 - **Long lines:** wrap above 640px, because a beginner must not lose the end of a comment. At phone width they scroll sideways inside the panel, never the page, with a fade at the edge while more is hidden. The panel is keyboard focusable.
 - **Edge:** in dark theme the panel gets a 1px `night-rule` outline so it does not melt into the ground.
 - **Output:** joined to the bottom of its code panel in the same material, labeled, and separated by a rule.
-- **Selection:** `new-leaf` at 30% over code.
-- **Inline code:** a `sunroom-wash` chip in the text's own color.
+- **Selection:** wisteria at 30% over code.
+- **Inline code:** a `code-chip` in the text's own color. Examples and hints that hold code sit on `code-plate`. Both are warm neutrals, and in dark theme they follow the code panel's tones (`#3D3A35`, `#2B2926`).
 
 ### Inputs
 Pill search field; `control-edge` outline; focus uses the standard ring. The editor uses the code panel's colors, and its errors use `night-rust`.

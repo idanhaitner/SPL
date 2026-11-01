@@ -28,9 +28,41 @@
   --panel-edge: transparent;
   --shadow-card: 0 1px 2px rgba(15, 61, 46, 0.06), 0 8px 24px -12px rgba(15, 61, 46, 0.18);
   --shadow-float: 0 4px 8px rgba(15, 61, 46, 0.08), 0 24px 56px -20px rgba(15, 61, 46, 0.35);
-  --code: #0A2C21;
-  --code-bar: #0F3D2E;
-  --code-mark: #123D2E;
+  /* Code sits on warm potting-bench neutrals, one set for both themes. The only green left is the leaf that marks a line and a pass. */
+  --code: #2B2926;
+  --code-bar: #35322E;
+  --code-mark: #3D3A35;
+  --code-raised: #46423C;
+  --code-rule: #4A463F;
+  --code-text: #EAE5DA;
+  --code-text-soft: #C9C3B6;
+  --code-gutter: #A09A8C;
+  --code-selection: rgb(201 184 232 / 0.3);
+  /* Code inside a reading room: a warm plate, and a chip that holds up on it. */
+  --code-plate: #F1EEE7;
+  --code-chip: #E8E4DA;
+  /* Shiki's variables, read by .code-panel and .gh-code. */
+  --code-foreground: var(--code-text);
+  --code-background: var(--code);
+  --code-token-keyword: #C9B8E8;
+  --code-token-constant: #EDB48C;
+  --code-token-string: #E3CC8F;
+  --code-token-string-expression: #E3CC8F;
+  --code-token-comment: #AAA496;
+  --code-token-function: #A9C7EA;
+  --code-token-parameter: var(--code-text);
+  --code-token-punctuation: #CFC9BC;
+  --code-token-link: #A9C7EA;
+  /* The editor's variables, read by components/session/Editor.tsx. */
+  --code-ink: var(--code-text);
+  --code-key: var(--code-token-keyword);
+  --code-num: var(--code-token-constant);
+  --code-str: var(--code-token-string);
+  --code-fn: var(--code-token-function);
+  --code-type: #8FD0CC;
+  --code-var: var(--code-text);
+  --code-comment: var(--code-token-comment);
+  --code-macro: var(--code-token-punctuation);
   --gh-display: var(--font-gabarito), "Gabarito", system-ui, sans-serif;
   --gh-body: var(--font-figtree), var(--font-heebo), "Figtree", system-ui, sans-serif;
   --gh-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
@@ -44,7 +76,7 @@
   :root:not([data-theme="light"]) {
     --ground: #0B2A20; --raised: #103428; --wash: #174736; --ink: #E8F1E6; --ink-soft: #A9C2B3; --muted: #8BA898;
     --link: #B7E36B; --rule: #24503F; --edge: #6F9483; --rust: #F2A36F; --rust-text: #F2A36F; --rust-wash: #3A2A1C;
-    --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --bloom-edge: #FF6F59;
+    --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --bloom-edge: #FF6F59; --code-plate: #2B2926; --code-chip: #3D3A35;
     --shadow-float: 0 24px 56px -20px rgba(0, 0, 0, 0.6);
   }
   :root:not([data-theme="light"]) { color-scheme: dark; }
@@ -52,7 +84,7 @@
 :root[data-theme="dark"] {
   --ground: #0B2A20; --raised: #103428; --wash: #174736; --ink: #E8F1E6; --ink-soft: #A9C2B3; --muted: #8BA898;
   --link: #B7E36B; --rule: #24503F; --edge: #6F9483; --rust: #F2A36F; --rust-text: #F2A36F; --rust-wash: #3A2A1C;
-  --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --bloom-edge: #FF6F59;
+  --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --bloom-edge: #FF6F59; --code-plate: #2B2926; --code-chip: #3D3A35;
   --shadow-float: 0 24px 56px -20px rgba(0, 0, 0, 0.6);
 }
 :root[data-theme="dark"] { color-scheme: dark; }
@@ -95,6 +127,7 @@
 html { scrollbar-color: var(--edge) var(--ground); scroll-padding-top: var(--space-xl); }
 body { background: var(--ground); color: var(--ink); caret-color: var(--link); font-family: var(--gh-body); }
 body ::selection { background: color-mix(in oklab, var(--leaf) 55%, transparent); color: inherit; }
+body .code-panel ::selection, body .gh-code ::selection { background: var(--code-selection); }
 body :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
 body .gh-hero :focus-visible, body .gh-close :focus-visible, body .gh-topbar :focus-visible, body .code-panel :focus-visible, body .gh-code :focus-visible { outline-color: var(--leaf); }
 
@@ -106,7 +139,7 @@ body .gh-hero :focus-visible, body .gh-close :focus-visible, body .gh-topbar :fo
 .home p { max-width: 68ch; }
 .home a { color: var(--link); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
 .home code { font-family: var(--gh-mono); }
-.home :not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--wash); color: inherit; font-size: 0.9em; white-space: nowrap; }
+.home :not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--code-chip); color: inherit; font-size: 0.9em; white-space: nowrap; }
 .gh-icon { width: 18px; height: 18px; flex: none; }
 
 /* Controls */
@@ -261,7 +294,7 @@ a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
 .gh-try-copy p { margin-top: 16px; color: var(--ink-soft); }
 .gh-try { padding: 28px; border: 1px solid var(--rule); border-radius: 28px; background: var(--raised); box-shadow: var(--shadow-card); }
 .gh-try h3 { margin-bottom: 16px; }
-.gh-code { border-radius: 18px; background: var(--code); box-shadow: 0 0 0 1px var(--panel-edge); overflow: hidden; --code-foreground: #E6F0E6; --code-background: var(--code); --code-token-keyword: #B7E36B; --code-token-constant: #FFC48A; --code-token-string: #F4D58D; --code-token-string-expression: #F4D58D; --code-token-comment: #8DAD9D; --code-token-function: #8FE3CF; --code-token-parameter: #E6F0E6; --code-token-punctuation: #C8D8CD; --code-token-link: #8FE3CF; }
+.gh-code { border-radius: 18px; background: var(--code); box-shadow: 0 0 0 1px var(--panel-edge); overflow: hidden; }
 .gh-code pre { margin: 0; padding: 14px 20px; overflow-x: auto; background: transparent !important; font: 400 0.9375rem/1.7 var(--gh-mono); font-variant-ligatures: none; }
 .gh-code code { display: block; white-space: normal; background: none; padding: 0; }
 .gh-code .line { display: block; white-space: pre; }
