@@ -1,68 +1,99 @@
 import Link from "next/link";
+import { Icon } from "@/components/home/Icon";
 import { TopBar } from "@/components/shell/TopBar";
 import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
 import { courseNav } from "@/lib/nav";
+import type { ChapterInfo } from "@/lib/progress";
+import type { GlossaryEntry } from "@/lib/types";
+
+function Term({ entry, chapterTitle }: { entry: GlossaryEntry; chapterTitle?: string }) {
+  return (
+    <div className="glossary-term" id={entry.anchor}>
+      <dt>
+        {chapterTitle ? (
+          <Link href={`/topics/${entry.topic}/`} prefetch={false} aria-label={`${entry.term}, open the chapter ${chapterTitle}`}>
+            <Mixed text={entry.term} />
+          </Link>
+        ) : (
+          <Mixed text={entry.term} />
+        )}
+      </dt>
+      <dd><Mixed text={entry.definition} /></dd>
+    </div>
+  );
+}
 
 export default function GlossaryPage() {
   const course = loadCourse();
-  const known = new Set(course.topics.map((topic) => topic.id));
-  const groups = course.topics
-    .map((topic, index) => ({
-      id: topic.id,
-      title: topic.title,
-      number: String(index + 1).padStart(2, "0"),
-      entries: course.glossary.filter((entry) => entry.topic === topic.id),
-    }))
-    .filter((group) => group.entries.length > 0);
+  const nav = courseNav(course);
+  const known = new Set(nav.chapters.map((chapter) => chapter.id));
+  const withTerms = (chapters: ChapterInfo[]) =>
+    chapters
+      .map((chapter) => ({ ...chapter, entries: course.glossary.filter((entry) => entry.topic === chapter.id) }))
+      .filter((chapter) => chapter.entries.length > 0);
+  const parts = [
+    ...nav.parts.map((part) => ({ title: part.title, lang: part.lang, chapters: withTerms(part.chapters) })),
+    { title: "Before the exam", lang: "", chapters: withTerms(nav.finale) },
+  ].filter((part) => part.chapters.length > 0);
   const loose = course.glossary.filter((entry) => !known.has(entry.topic));
+  const count = course.glossary.length;
+  // A pinned rail on wide screens; on narrow ones the same links fold away so the terms come first.
+  const jumpLinks = parts.map((part) => (
+    <div className="glossary-jump-part" key={part.title}>
+      <p>{part.title}</p>
+      <ul>
+        {part.chapters.map((chapter) => (
+          <li key={chapter.id}>
+            <a href={`#glossary-${chapter.id}`}><Mixed text={chapter.title} /></a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ));
 
   return (
-    <>
-    <TopBar courseId={course.id} title={course.title} hits={course.search} nav={courseNav(course)} />
-    <article className="page glossary">
+    <div className="glossary-page">
+      <TopBar courseId={course.id} title={course.title} hits={course.search} nav={nav} />
       <header className="masthead">
-        <h1>Glossary</h1>
-        <span className="masthead-num">{course.glossary.length} terms</span>
+        <div className="gh-arch gh-arch-1" />
+        <div className="gh-arch gh-arch-2" />
+        <div className="masthead-inner">
+          <h1>Glossary</h1>
+          <p className="masthead-lede">{count} {count === 1 ? "term" : "terms"}, grouped by the chapter that teaches them. Select a term to open its chapter.</p>
+        </div>
       </header>
-      <p className="lead">The terms the lessons keep, grouped by the chapter that defines them.</p>
-      {groups.length > 0 && (
-        <nav className="glossary-jump" aria-label="Chapters in the glossary">
-          {groups.map((group) => (
-            <a key={group.id} href={`#glossary-${group.id}`}><Mixed text={group.title} /></a>
+      <div className="glossary-layout">
+        <nav className="glossary-jump glossary-rail" aria-label="Chapters in the glossary">{jumpLinks}</nav>
+        <details className="glossary-menu">
+          <summary>Jump to a chapter <Icon name="down" /></summary>
+          <nav className="glossary-jump" aria-label="Chapters in the glossary">{jumpLinks}</nav>
+        </details>
+        <div className="glossary-list">
+          {parts.map((part) => (
+            <section className="glossary-part" key={part.title}>
+              <h2>{part.title}</h2>
+              {part.lang && <p className="glossary-lang">{part.lang}</p>}
+              {part.chapters.map((chapter) => (
+                <section className="glossary-chapter" id={`glossary-${chapter.id}`} key={chapter.id}>
+                  <h3><span className="glossary-num">{chapter.num}</span> <Mixed text={chapter.title} /></h3>
+                  <dl>
+                    {chapter.entries.map((entry) => <Term key={entry.anchor} entry={entry} chapterTitle={chapter.title} />)}
+                  </dl>
+                </section>
+              ))}
+            </section>
           ))}
-        </nav>
-      )}
-      {groups.map((group) => (
-        <section className="glossary-group" id={`glossary-${group.id}`} key={group.id}>
-          <h2>
-            <span className="num">{group.number}</span>
-            <Mixed text={group.title} />
-          </h2>
-          <div className="glossary-grid">
-            {group.entries.map((entry) => (
-              <article className="glossary-card" id={entry.anchor} key={entry.anchor}>
-                <h3><Mixed text={entry.term} /></h3>
-                <p><Mixed text={entry.definition} /></p>
-                <Link href={`/topics/${entry.topic}`}>Open the chapter</Link>
-              </article>
-            ))}
-          </div>
-        </section>
-      ))}
-      {loose.length > 0 && (
-        <section className="glossary-group">
-          <div className="glossary-grid">
-            {loose.map((entry) => (
-              <article className="glossary-card" id={entry.anchor} key={entry.anchor}>
-                <h3><Mixed text={entry.term} /></h3>
-                <p><Mixed text={entry.definition} /></p>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-    </article>
-    </>
+          {loose.length > 0 && (
+            <section className="glossary-part">
+              <h2>Other terms</h2>
+              <dl>
+                {loose.map((entry) => <Term key={entry.anchor} entry={entry} />)}
+              </dl>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
