@@ -271,6 +271,36 @@ a.gh-btn { max-width: 100%; }
   .question-panel { padding: 20px var(--gh-gutter) 32px; }
 }
 
+/* Glossary */
+.glossary-page .masthead-inner { display: block; padding-block: 40px 56px; }
+.glossary-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 64px; align-items: start; max-width: 1440px; margin-inline: auto; padding: 56px var(--gh-gutter) 104px; font: 400 1.125rem/1.65 var(--gh-body); }
+.glossary-jump { display: grid; gap: 16px; }
+.glossary-rail { position: sticky; top: 100px; max-height: calc(100dvh - 116px); margin: -4px; padding: 4px; overflow-y: auto; }
+.glossary-menu { display: none; }
+.glossary-jump-part p { font: 800 1.125rem/1.2 var(--gh-display); }
+.glossary-jump ul { margin: 4px 0 0; padding: 0; list-style: none; }
+.glossary-jump a { display: flex; align-items: center; min-height: 44px; color: var(--ink-soft); font-size: 0.9375rem; font-weight: 500; line-height: 1.25; text-decoration: underline transparent 1px; text-underline-offset: 0.18em; }
+.glossary-jump a:hover { color: var(--ink); text-decoration-color: currentColor; }
+.glossary-part + .glossary-part { margin-top: 64px; }
+.glossary-part h2 { max-width: none; font: 800 clamp(1.875rem, 1.5vw + 1.4rem, 2.5rem)/1.1 var(--gh-display); letter-spacing: -0.015em; }
+.glossary-lang { margin-top: 4px; color: var(--link); font-size: 0.9375rem; font-weight: 500; line-height: 1.35; }
+.glossary-chapter { margin-top: 40px; scroll-margin-top: 100px; }
+.glossary-part h3 { max-width: none; font: 800 1.375rem/1.2 var(--gh-display); letter-spacing: 0; }
+.glossary-num { color: var(--muted); font-variant-numeric: tabular-nums; }
+.glossary-part dl { margin: 12px 0 0; }
+.glossary-term { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 9fr); column-gap: 32px; align-items: baseline; padding-block: 10px; border-top: 1px solid var(--rule); scroll-margin-top: 100px; }
+.glossary-term:target { border-top-color: transparent; border-radius: 10px; background: var(--wash); box-shadow: 0 0 0 8px var(--wash); }
+.glossary-term dt { min-width: 0; font: 800 1.25rem/1.2 var(--gh-display); overflow-wrap: anywhere; }
+.glossary-term dt a { display: inline-flex; align-items: center; min-height: 44px; color: var(--link); text-decoration: underline transparent 1px; text-underline-offset: 0.18em; }
+.glossary-term dt a:hover { text-decoration-color: currentColor; }
+.glossary-term dd { min-width: 0; max-width: 68ch; margin: 0; }
+
+/* Not found */
+.not-found { display: flex; align-items: center; min-height: 100svh; }
+.not-found .masthead-inner { display: block; width: 100%; padding-block: 56px; }
+.not-found .gh-btn { margin-top: 32px; }
+body .not-found :focus-visible { outline-color: var(--leaf); }
+
 @media (max-width: 79.99rem) {
   .reader { grid-template-columns: 200px minmax(0, 680px); column-gap: 40px; }
 }
@@ -287,6 +317,16 @@ a.gh-btn { max-width: 100%; }
   .section-menu-list { max-height: 60dvh; overflow-y: auto; padding: 4px var(--gh-gutter) 16px; }
   .masthead .gh-arch-1 { width: 80%; right: -30%; }
   .masthead .gh-arch-2 { width: 56%; right: -18%; }
+  .glossary-layout { grid-template-columns: minmax(0, 1fr); row-gap: 40px; padding-top: 32px; }
+  .glossary-rail { display: none; }
+  .glossary-menu { display: block; }
+  .glossary-menu summary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border: 1.5px solid var(--edge); border-radius: 999px; cursor: pointer; font-size: 0.9375rem; font-weight: 500; line-height: 1.25; list-style: none; }
+  .glossary-menu summary::-webkit-details-marker { display: none; }
+  .glossary-menu[open] summary .gh-icon { transform: rotate(180deg); }
+  .glossary-menu .glossary-jump { margin-top: 16px; }
+  .glossary-jump ul { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .glossary-jump a { padding: 8px 16px; border: 1.5px solid var(--edge); border-radius: 999px; }
+  .glossary-chapter, .glossary-term { scroll-margin-top: 24px; }
 }
 @media (max-width: 40rem) {
   .step-stem { display: none; }
@@ -314,4 +354,7 @@ a.gh-btn { max-width: 100%; }
   .handoff-go { flex-direction: column; align-items: stretch; margin-left: 0; }
   .reader-body .handoff-go p { text-align: left; }
   .handoff .gh-btn { width: 100%; }
+  .glossary-layout { padding-bottom: 64px; font-size: 1.0625rem; }
+  .glossary-term { grid-template-columns: minmax(0, 1fr); padding-block: 8px 16px; }
+  .not-found .gh-btn { width: 100%; }
 }
