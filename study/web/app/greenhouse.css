@@ -328,38 +328,40 @@ a.gh-row:hover { background: var(--wash); }
 a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
 .gh-row-note { font-size: 0.875rem; font-weight: 500; color: var(--muted); white-space: nowrap; }
 
-/* The course as a glasshouse: arches on one sill, as tall as their parts are long. The heading fills the sky above the shorter ones. */
-.gh-course { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto; column-gap: 16px; align-items: end; }
-.gh-course .gh-head { grid-column: 2 / -1; grid-row: 1; display: block; margin: 0; padding: 0 0 36px 28px; align-self: start; }
+/* The course as one plant: a single vine runs down a single bed, and each part's name stays beside its stretch of it. */
+.gh-course .gh-head { display: block; margin-bottom: 36px; }
 .gh-course .gh-head h2 { font-size: clamp(2.25rem, 2.6vw + 1.2rem, 3.75rem); line-height: 1.02; letter-spacing: -0.025em; }
 .gh-course .gh-head p { margin-top: 14px; font-size: 1.125rem; }
-.gh-legend { grid-column: 2 / -1; grid-row: 1; align-self: end; justify-self: start; display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0 0 32px 28px !important; padding: 10px 24px !important; border-radius: 999px; background: var(--canopy); color: var(--canopy-ink); font-size: 0.9375rem; font-weight: 500; }
+.gh-bed { --bed-line: rgb(242 247 238 / 0.12); border-radius: 28px; background: var(--canopy); color: var(--canopy-ink); }
+.gh-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 24px; margin: 0 !important; padding: 16px 32px !important; border-bottom: 1px solid var(--bed-line); color: var(--canopy-ink-soft); font-size: 0.875rem; font-weight: 500; }
 .gh-legend li { display: flex; align-items: center; gap: 6px; }
 .gh-legend svg { width: 36px; height: 24px; overflow: visible; }
 .gh-legend .gh-blade-edge { vector-effect: non-scaling-stroke; }
-.gh-bay { position: relative; isolation: isolate; overflow: clip; padding: 60px 12px 16px; border-radius: 999px 999px 0 0; background: var(--canopy); color: var(--canopy-ink); }
-.gh-bay::before { content: ""; position: absolute; z-index: -1; inset: 12px 12px 0; border-radius: 999px 999px 0 0; background: var(--canopy-mid); }
-.gh-bay:nth-of-type(1) { grid-column: 1; grid-row: 1 / 3; }
-.gh-bay:nth-of-type(n + 2) { grid-row: 2; }
-.gh-bay-head { padding: 0 26px 14px; text-align: center; }
-.home .gh-bay h3 { max-width: 18ch; margin-inline: auto; font-size: 1.5rem; line-height: 1.12; }
-.home .gh-bay-lang { margin-top: 6px; color: var(--leaf); font-size: 0.9375rem; font-weight: 600; }
-.home .gh-bay-summary { margin-top: 8px; color: var(--canopy-ink-soft); font-size: 0.9375rem; line-height: 1.4; }
-a.gh-bay-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; align-items: center; column-gap: 4px; height: 80px; padding-right: 12px; border-radius: 20px; color: var(--canopy-ink); text-decoration: none; transition: background-color 140ms; }
-.gh-bay-vine { width: 84px; height: 80px; overflow: visible; }
-.gh-bay-stem { fill: none; stroke: var(--stem); stroke-width: 4; }
-.gh-bay-stem.is-grown { stroke: var(--leaf); }
-.gh-bay-text { display: grid; gap: 1px; min-width: 0; }
-.gh-bay-title { font: 500 1rem/1.25 var(--gh-body); }
-.gh-bay-note { color: var(--canopy-ink-soft); font-size: 0.8125rem; font-weight: 500; line-height: 1.25; }
-a.gh-bay-row.is-here { background: rgb(242 247 238 / 0.09); }
-.gh-bay-row.is-here .gh-bay-title { font-weight: 600; }
-.gh-bay-row.is-here .gh-bay-note { color: var(--leaf); font-weight: 600; }
-.gh-bay-row .gh-icon { color: var(--leaf); }
-.gh-sill { grid-column: 1 / -1; position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 16px; align-items: center; padding: 14px 12px; border-radius: 0 0 28px 28px; background: var(--canopy-high); color: var(--canopy-ink); }
-.gh-sill h3 { padding-left: 28px; }
-.gh-sill ol { grid-column: 2 / span 2; }
-.home .gh-sill h3 { font-size: 1.5rem; }
+.gh-bed-part { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: 32px; padding-inline: 32px 16px; }
+.gh-bed-part + .gh-bed-part { border-top: 1px solid var(--bed-line); }
+.gh-bed-head { position: sticky; top: 24px; align-self: start; padding-block: 32px; }
+.home .gh-bed-head h3 { font-size: clamp(1.5rem, 0.8vw + 1.2rem, 2rem); line-height: 1.1; letter-spacing: -0.01em; }
+.home .gh-bed-lang { margin-top: 8px; color: var(--leaf); font-size: 0.9375rem; font-weight: 600; }
+.home .gh-bed-summary { max-width: 36ch; margin-top: 10px; color: var(--canopy-ink-soft); font-size: 0.9375rem; line-height: 1.45; text-wrap: pretty; }
+.gh-bed-rows { display: flex; flex-direction: column; padding-block: 12px; }
+.gh-bed-part + .gh-bed-part .gh-bed-rows { padding-top: 0; }
+.gh-bed-part:has(.is-tail) .gh-bed-rows { padding-bottom: 0; }
+.gh-bed-gap { width: 3px; height: 24px; margin-left: 50.5px; background: var(--stem); }
+.gh-bed-gap.is-tail { flex: 1 0 24px; }
+.gh-bed-gap.is-grown { background: var(--leaf); }
+.gh-bed-rows li { position: relative; }
+.gh-bed-rows li + li::before { content: ""; position: absolute; left: 112px; right: 16px; top: 0; height: 1px; background: var(--bed-line); }
+a.gh-bed-row { display: grid; grid-template-columns: 104px minmax(0, 1fr) 20px; align-items: center; column-gap: 8px; height: 72px; padding-right: 16px; border-radius: 16px; color: var(--canopy-ink); text-decoration: none; transition: background-color 140ms; }
+.gh-bed-vine { width: 104px; height: 72px; overflow: visible; }
+.gh-bed-stem { fill: none; stroke: var(--stem); stroke-width: 3; }
+.gh-bed-stem.is-grown { stroke: var(--leaf); }
+.gh-bed-text { display: flex; align-items: center; justify-content: space-between; gap: 2px 24px; min-width: 0; }
+.gh-bed-title { font: 500 1.0625rem/1.25 var(--gh-body); }
+.gh-bed-note { flex: none; color: var(--canopy-ink-soft); font-size: 0.875rem; font-weight: 500; line-height: 1.25; font-variant-numeric: tabular-nums; }
+a.gh-bed-row.is-here { background: rgb(242 247 238 / 0.08); }
+.gh-bed-row.is-here .gh-bed-title { font-weight: 600; }
+.gh-bed-row.is-here .gh-bed-note { color: var(--leaf); font-weight: 600; }
+.gh-bed-row .gh-icon { color: var(--leaf); }
 
 /* Try a question */
 .gh-trysection { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 32px 64px; align-items: start; }
@@ -407,13 +409,6 @@ a.gh-bay-row.is-here { background: rgb(242 247 238 / 0.09); }
 
 @media (max-width: 77.5rem) {
   .gh-part { grid-template-columns: 260px minmax(0, 1fr); gap: 16px 32px; }
-  .gh-course { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; row-gap: 16px; align-items: end; }
-  .gh-course .gh-head { grid-column: 1 / -1; grid-row: auto; padding: 0; }
-  .gh-legend { grid-column: 1 / -1; grid-row: auto; margin: 0 !important; border-radius: 28px; }
-  .gh-bay, .gh-bay:nth-of-type(1), .gh-bay:nth-of-type(n + 2) { grid-column: auto; grid-row: auto; border-radius: 999px 999px 28px 28px; }
-  .gh-bay::before { inset: 12px; border-radius: 999px 999px 20px 20px; }
-  .gh-sill { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-radius: 28px; }
-  .gh-sill ol { grid-column: 2; }
 }
 
 @media (max-width: 56.25rem) {
@@ -431,13 +426,16 @@ a.gh-bay-row.is-here { background: rgb(242 247 238 / 0.09); }
   .gh-arch-2 { top: 44%; right: -20%; width: 62%; }
   .gh-section { padding-top: 64px; }
   .gh-head { grid-template-columns: minmax(0, 1fr); align-items: start; margin-bottom: 24px; }
-  .gh-course { grid-template-columns: minmax(0, 1fr); }
-  .gh-bay { padding-top: 72px; }
-  .gh-bay-head { padding-inline: 48px; }
-  .gh-sill { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
-  .gh-sill ol { grid-column: 1; }
-  .gh-sill h3 { padding: 8px 0 0 14px; }
-  .gh-legend { justify-self: stretch; justify-content: center; }
+  .gh-legend { justify-content: flex-start; padding: 14px 20px !important; }
+  .gh-bed-part { grid-template-columns: minmax(0, 1fr); padding-inline: 4px; }
+  .gh-bed-head { position: static; padding: 24px 16px 12px; }
+  .gh-bed-part + .gh-bed-part .gh-bed-rows { padding-top: 0; }
+  .gh-bed-gap { height: 12px; }
+  .gh-bed-gap.is-tail { flex: none; height: 24px; }
+  a.gh-bed-row { padding-right: 8px; }
+  .gh-bed-text { flex-direction: column; align-items: flex-start; }
+  .gh-bed-title { font-size: 1rem; }
+  .gh-bed-note { font-size: 0.8125rem; }
   .gh-head-search { display: block; margin-top: 8px; }
   .gh-part { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .gh-part-info { padding-bottom: 12px; }

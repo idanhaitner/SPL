@@ -4,7 +4,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { CloseSprig } from "@/components/home/CloseSprig";
 import { CloseHeading, ContinueButton } from "@/components/home/ContinueButton";
 import { HeroAir } from "@/components/home/HeroAir";
-import { CourseBays } from "@/components/home/CourseBays";
+import { CourseBed } from "@/components/home/CourseBed";
 import { CourseStem } from "@/components/home/CourseStem";
 import { TopBar } from "@/components/shell/TopBar";
 import { TryQuestion } from "@/components/home/TryQuestion";
@@ -83,7 +83,7 @@ export default async function HomePage() {
             <p>{chapters.length} chapters and {practiceCount} practice questions, {examCount} of them from past exams.</p>
             <div className="gh-head-search"><SearchBox id="course-q" /></div>
           </div>
-          <CourseBays courseId={course.id} parts={parts} finale={finale} chapters={chapters} />
+          <CourseBed courseId={course.id} parts={parts} finale={finale} chapters={chapters} />
         </section>
 
         <section className="gh-section gh-trysection" aria-labelledby="try-title">

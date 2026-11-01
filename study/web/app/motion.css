@@ -55,7 +55,7 @@
 @keyframes gh-sway { from { rotate: -1.6deg; } to { rotate: 1.8deg; } }
 @keyframes gh-breathe { from { opacity: 0.72; scale: 0.94; } to { opacity: 1; scale: 1.05; } }
 .gh-hero .gh-leaf-body { animation: gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
-.gh-hero .gh-leaf-halo, .masthead .gh-leaf-halo, .gh-bay .gh-leaf-halo { animation: gh-breathe 4.5s ease-in-out infinite alternate; }
+.gh-hero .gh-leaf-halo, .masthead .gh-leaf-halo, .gh-bed .gh-leaf-halo { animation: gh-breathe 4.5s ease-in-out infinite alternate; }
 .is-away .gh-leaf-body, .is-away .gh-leaf-halo, .is-away .gh-sap, .is-away.gh-hero .gh-arch-1 { animation-play-state: paused; }
 
 /* Sap: a point of light runs up the stem from the button to the leaf to open next, and runs at once when the button is hovered. */
@@ -96,13 +96,13 @@
   a.gh-row:hover .gh-row-mark { rotate: -10deg; scale: 1.18; }
   a.gh-row .gh-row-title { transition: translate 180ms var(--ease-out); }
   a.gh-row:hover .gh-row-title { translate: 3px 0; }
-  a.gh-bay-row:hover { background: rgb(242 247 238 / 0.09); }
-  a.gh-bay-row.is-here:hover { background: rgb(242 247 238 / 0.15); }
-  a.gh-bay-row:hover .gh-leaf-body { scale: 1.16; }
-  .gh-bay-title { transition: translate 180ms var(--ease-out); }
-  a.gh-bay-row:hover .gh-bay-title { translate: 3px 0; }
-  .gh-bay-row .gh-icon { transition: translate 180ms var(--ease-out); }
-  a.gh-bay-row:hover .gh-icon { translate: 4px 0; }
+  a.gh-bed-row:hover { background: rgb(242 247 238 / 0.09); }
+  a.gh-bed-row.is-here:hover { background: rgb(242 247 238 / 0.15); }
+  a.gh-bed-row:hover .gh-leaf-body { scale: 1.16; }
+  .gh-bed-title { transition: translate 180ms var(--ease-out); }
+  a.gh-bed-row:hover .gh-bed-title { translate: 3px 0; }
+  .gh-bed-row .gh-icon { transition: translate 180ms var(--ease-out); }
+  a.gh-bed-row:hover .gh-icon { translate: 4px 0; }
 }
 
 /* A right answer throws up a few small leaves. */
@@ -130,13 +130,15 @@
   .gh-hero .gh-arch-2 { animation: gh-arch-rise linear both; animation-timeline: scroll(root); animation-range: 0 900px; }
   .gh-hero .gh-arch-1 { animation: gh-drift 9s ease-in-out infinite alternate, gh-arch-rise-far linear both; animation-timeline: auto, scroll(root); animation-range: normal, 0 900px; }
 
-  /* The windows rise from the sill, and each vine draws down and opens its leaves as it scrolls in. */
-  @keyframes gh-bay-rise { from { opacity: 0; transform: translateY(56px); } }
-  .gh-bay, .gh-legend, .gh-course .gh-head { animation: gh-bay-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 30%; }
-  .gh-bay-vine { view-timeline: --vine; }
-  .gh-bay-stem { animation: gh-draw linear both; animation-timeline: --vine; animation-range: entry 10% entry 90%; }
-  .gh-bay-vine .gh-leaf-body { animation: gh-unfurl linear both; animation-timeline: --vine; animation-range: entry 30% entry 100%; }
-  .gh-bay-vine .gh-leaf-num { animation: gh-fade linear both; animation-timeline: --vine; animation-range: entry 70% entry 100%; }
+  /* The heading rises, and the vine draws down and opens its leaves as it scrolls in. */
+  @keyframes gh-bed-rise { from { opacity: 0; transform: translateY(32px); } }
+  @keyframes gh-bed-grow { from { transform: scaleY(0); } }
+  .gh-course .gh-head { animation: gh-bed-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+  .gh-bed-gap { transform-origin: top; animation: gh-bed-grow linear both; animation-timeline: view(); animation-range: entry 10% entry 90%; }
+  .gh-bed-vine { view-timeline: --vine; }
+  .gh-bed-stem { animation: gh-draw linear both; animation-timeline: --vine; animation-range: entry 10% entry 90%; }
+  .gh-bed-vine .gh-leaf-body { animation: gh-unfurl linear both; animation-timeline: --vine; animation-range: entry 30% entry 100%; }
+  .gh-bed-vine .gh-leaf-num { animation: gh-fade linear both; animation-timeline: --vine; animation-range: entry 70% entry 100%; }
 
   /* The closing sprig climbs and opens with the scroll, the last thing the page does. */
   @keyframes gh-sprig-stem { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
@@ -156,9 +158,9 @@
 @media (prefers-reduced-motion: reduce) {
   .route-enter, .session-reading, .session-code, .results-body > * { animation: gh-arrive 100ms linear; }
   .gh-stem-grown-line, .step-mini-bar i, .gh-leaf-body, .gh-leaf-brush, .gh-row-mark, a.gh-row .gh-row-title, .gh-btn .gh-icon { transition: none !important; }
-  .gh-leaf-body, .gh-leaf-num, .gh-leaf-halo, .gh-tendril, .gh-part-label, .gh-stem-reveal, .gh-stem-lead, .gh-stem-tip-bud, .masthead-leaf-open, .masthead-leaf text, .gh-word > span, .gh-hero h1 em, .gh-lede, .gh-facts, .gh-hero-action, .gh-hero .gh-arch-1, .gh-hero .gh-arch-2, .home .gh-section, .home .gh-try, .gh-bay, .gh-legend, .gh-course .gh-head, .gh-bay-stem, .gh-sprig-stem, .gh-sprig-leaf, .choices .is-right .choice-mark, .choices .is-wrong { animation: none !important; }
+  .gh-leaf-body, .gh-leaf-num, .gh-leaf-halo, .gh-tendril, .gh-part-label, .gh-stem-reveal, .gh-stem-lead, .gh-stem-tip-bud, .masthead-leaf-open, .masthead-leaf text, .gh-word > span, .gh-hero h1 em, .gh-lede, .gh-facts, .gh-hero-action, .gh-hero .gh-arch-1, .gh-hero .gh-arch-2, .home .gh-section, .home .gh-try, .gh-course .gh-head, .gh-bed-gap, .gh-bed-stem, .gh-sprig-stem, .gh-sprig-leaf, .choices .is-right .choice-mark, .choices .is-wrong { animation: none !important; }
   .gh-sap, .gh-burst, .gh-sun, .gh-air { display: none; }
-  .gh-leaf-link:hover .gh-leaf-body, a.gh-row:hover .gh-row-mark, a.gh-row:hover .gh-row-title, a.gh-bay-row:hover .gh-leaf-body, a.gh-bay-row:hover .gh-bay-title, a.gh-bay-row:hover .gh-icon, .gh-hero:has(.gh-hero-action .gh-btn:hover) .gh-leaf.is-here .gh-leaf-brush { scale: none; rotate: none; translate: none; }
+  .gh-leaf-link:hover .gh-leaf-body, a.gh-row:hover .gh-row-mark, a.gh-row:hover .gh-row-title, a.gh-bed-row:hover .gh-leaf-body, a.gh-bed-row:hover .gh-bed-title, a.gh-bed-row:hover .gh-icon, .gh-hero:has(.gh-hero-action .gh-btn:hover) .gh-leaf.is-here .gh-leaf-brush { scale: none; rotate: none; translate: none; }
   .gh-btn:hover .gh-icon, .gh-hero .gh-btn:hover, .gh-close .gh-btn:hover { transform: none; }
   .gh-btn:active, .gh-pill:active, .session-quiet:active, .gh-quiet:active, .question-toggle:active, .choices label:active, .gh-answer:active { transform: none; }
 }
