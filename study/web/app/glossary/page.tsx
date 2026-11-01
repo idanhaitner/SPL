@@ -54,7 +54,7 @@ export default function GlossaryPage() {
 
   return (
     <div className="glossary-page">
-      <TopBar courseId={course.id} title={course.title} hits={course.search} nav={nav} />
+      <TopBar courseId={course.id} title={course.title} nav={nav} />
       <header className="masthead">
         <div className="gh-arch gh-arch-1" />
         <div className="gh-arch gh-arch-2" />

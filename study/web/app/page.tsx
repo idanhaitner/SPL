@@ -52,7 +52,7 @@ export default async function HomePage() {
         <div className="gh-arch gh-arch-1" />
         <div className="gh-arch gh-arch-2" />
         <div className="gh-frame">
-          <TopBar courseId={course.id} title={course.title} hits={course.search} nav={nav} tone="flat" />
+          <TopBar courseId={course.id} title={course.title} nav={nav} tone="flat" />
           <div className="gh-hero-copy">
             <h1>Start from a seed. <em>Grow</em> a whole server.</h1>
             <p className="gh-lede">{course.title} from zero, one chapter at a time, with questions from the course&rsquo;s own past exams.</p>
@@ -70,7 +70,7 @@ export default async function HomePage() {
           <div className="gh-head">
             <h2 id="course-title">The whole course, in order</h2>
             <p>{chapters.length} chapters and {practiceCount} practice questions, {examCount} of them from past exams.</p>
-            <div className="gh-head-search"><SearchBox hits={course.search} id="course-q" /></div>
+            <div className="gh-head-search"><SearchBox id="course-q" /></div>
           </div>
           <CourseMap courseId={course.id} parts={parts} finale={finale} chapters={chapters} />
         </section>

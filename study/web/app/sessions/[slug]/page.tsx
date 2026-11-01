@@ -46,7 +46,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="session-page">
       <Visit courseId={course.id} slug={topic.id} />
-      <TopBar courseId={course.id} title={course.title} hits={course.search} nav={nav} where={part ? `${part.title} · ${part.lang}` : undefined} />
+      <TopBar courseId={course.id} title={course.title} nav={nav} where={part ? `${part.title} · ${part.lang}` : undefined} />
       <Stepper
         courseId={course.id}
         chapter={nav.chapters[index]}

@@ -6,10 +6,9 @@ import { CourseMap } from "@/components/home/CourseMap";
 import { Icon } from "@/components/home/Icon";
 import { SearchBox } from "@/components/SearchBox";
 import type { CourseNav } from "@/lib/nav";
-import type { SearchHit } from "@/lib/types";
 
 // A native dialog: it keeps focus inside, closes on Esc, and hands focus back to the button that opened it.
-export function CourseDrawer({ open, onClose, courseId, nav, hits }: { open: boolean; onClose: () => void; courseId: string; nav: CourseNav; hits: SearchHit[] }) {
+export function CourseDrawer({ open, onClose, courseId, nav }: { open: boolean; onClose: () => void; courseId: string; nav: CourseNav }) {
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -39,7 +38,7 @@ export function CourseDrawer({ open, onClose, courseId, nav, hits }: { open: boo
             </button>
           </div>
           <div className="gh-drawer-body">
-            <SearchBox hits={hits} id="drawer-q" />
+            <SearchBox id="drawer-q" />
             <div className="gh-drawer-links">
               <Link href="/">Home</Link>
               <Link href="/glossary">Glossary</Link>
