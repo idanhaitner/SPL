@@ -161,6 +161,9 @@ button.gh-btn { color: var(--bloom-ink); cursor: pointer; }
 
 /* Guided session */
 .session-page { min-height: 100dvh; }
+/* One primary action color for the whole session: a brighter step of the session bar's green, on every ground. */
+.session-page .gh-btn { background: var(--bud); border-color: var(--bud); color: #FFFFFF; }
+.session-page .gh-btn:hover { background: #2C8265; border-color: #2C8265; }
 .session-loading { min-height: 60dvh; }
 .session-bar { background: var(--canopy-mid); color: var(--canopy-ink); padding-inline: var(--gh-gutter); }
 .session-bar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; max-width: 1360px; margin-inline: auto; padding-block: 10px 2px; font-size: 0.9375rem; font-weight: 500; }
@@ -257,8 +260,6 @@ a.gh-btn { max-width: 100%; }
 .workspace-actions { flex: none; display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 8px 16px; background: var(--code-bar); color: var(--code-text); }
 .workspace-actions .gh-pill { color: var(--code-text); }
 .workspace-actions .gh-pill:disabled { color: var(--code-text-soft); }
-.workspace-actions .gh-btn { background: var(--code-text); border-color: var(--code-text); color: var(--code); }
-.workspace-actions .gh-btn:hover { background: #F7F3EA; border-color: #F7F3EA; }
 .workspace-actions .gh-btn:disabled { background: var(--code-raised); border-color: var(--code-raised); color: var(--code-text-soft); cursor: default; }
 .workspace-note { flex: 1; color: var(--code-text-soft); font-size: 0.875rem; line-height: 1.3; }
 .code-confirm { display: flex; flex: 1; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }

@@ -64,6 +64,7 @@ describe("loadSearchIndex", () => {
   });
 
   it("fetches once and keeps the result for the session", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_PATH", "");
     const fetchMock = vi.fn(async () => ok([hit("Chapter", "Pointers")]));
     vi.stubGlobal("fetch", fetchMock);
     const { loadSearchIndex: load } = await import("./search");

@@ -293,7 +293,7 @@ Things used all day stay fast or do not animate; growth is the only slow motion,
 Green top with nested arches, the chapter number on a leaf, title, one-line summary, and the course stem. Then the three-zone layout. It ends by handing off: the next section, then the chapter's session.
 
 ### Guided Session Steps
-- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the Bloom once the step is done. Before that nothing in the bar is coral; on code steps Submit is a warm cream pill (`code-text` on `code-ground`) rather than a Bloom, so the workspace stays calm, and on question steps Check stays a quiet pill, because one step can hold several checks.
+- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the primary action once the step is done. Sessions have no coral: every primary action (Start step 1, Next, Submit, Next chapter) is a `bud` pill with white text, a brighter step of the session bar's green that holds on the pale ground, the bar, and the code bar alike. Hover uses `#2C8265`. On question steps Check stays a quiet pill, because one step can hold several checks.
 - **Learn:** one section in the reading column. It counts as done when the student presses Next, not when it loads.
 - **Check:** one question with large pill-shaped answers. A wrong answer explains itself in rust and can be retried; a right answer opens a leaf and unlocks Next.
 - **Code:** the split workspace, with only Run, Submit, and Reset as code actions; hints and solution live in the question panel.
