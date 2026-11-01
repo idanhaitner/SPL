@@ -8,10 +8,10 @@
   --leaf: #B7E36B;
   --leaf-ink: #0F3D2E;
   --bud: #27755A;
-  --bloom: #FF6F59;
-  --bloom-hover: #FF8470;
-  --bloom-ink: #20100C;
-  --bloom-edge: #A8341F;
+  --stem: #5FA886;
+  --cta: var(--canopy);
+  --cta-hover: var(--canopy-mid);
+  --cta-ink: var(--canopy-ink);
   --ground: #F2F7EE;
   --raised: #FBFDF9;
   --wash: #E2EFD8;
@@ -76,7 +76,7 @@
   :root:not([data-theme="light"]) {
     --ground: #0B2A20; --raised: #103428; --wash: #174736; --ink: #E8F1E6; --ink-soft: #A9C2B3; --muted: #8BA898;
     --link: #B7E36B; --rule: #24503F; --edge: #6F9483; --rust: #F2A36F; --rust-text: #F2A36F; --rust-wash: #3A2A1C;
-    --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --bloom-edge: #FF6F59; --code-plate: #2B2926; --code-chip: #3D3A35;
+    --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --cta: #B7E36B; --cta-hover: #C9EE85; --cta-ink: #0F3D2E; --code-plate: #2B2926; --code-chip: #3D3A35;
     --shadow-float: 0 24px 56px -20px rgba(0, 0, 0, 0.6);
   }
   :root:not([data-theme="light"]) { color-scheme: dark; }
@@ -84,7 +84,7 @@
 :root[data-theme="dark"] {
   --ground: #0B2A20; --raised: #103428; --wash: #174736; --ink: #E8F1E6; --ink-soft: #A9C2B3; --muted: #8BA898;
   --link: #B7E36B; --rule: #24503F; --edge: #6F9483; --rust: #F2A36F; --rust-text: #F2A36F; --rust-wash: #3A2A1C;
-  --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --bloom-edge: #FF6F59; --code-plate: #2B2926; --code-chip: #3D3A35;
+  --done: #B7E36B; --panel-edge: #24503F; --shadow-card: none; --cta: #B7E36B; --cta-hover: #C9EE85; --cta-ink: #0F3D2E; --code-plate: #2B2926; --code-chip: #3D3A35;
   --shadow-float: 0 24px 56px -20px rgba(0, 0, 0, 0.6);
 }
 :root[data-theme="dark"] { color-scheme: dark; }
@@ -146,12 +146,16 @@ body .gh-hero :focus-visible, body .gh-close :focus-visible, body .gh-topbar :fo
 .gh-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   min-height: 56px; padding: 12px 32px; border-radius: 999px;
-  background: var(--bloom); border: 1.5px solid var(--bloom-edge);
+  background: var(--cta); border: 0; color: var(--cta-ink);
   font: 800 1.1875rem/1.2 var(--gh-display); transition: background-color 120ms;
 }
-a.gh-btn { color: var(--bloom-ink); text-decoration: none; }
-.gh-btn:hover { background: var(--bloom-hover); }
+a.gh-btn { color: var(--cta-ink); text-decoration: none; }
+.gh-btn:hover { background: var(--cta-hover); }
 .gh-btn:active { transform: scale(0.98); }
+/* On a green field the one action is lime, and it casts a soft shadow so it sits above the arches. */
+.gh-hero, .gh-close, .masthead { --cta: var(--leaf); --cta-hover: #C9EE85; --cta-ink: var(--leaf-ink); }
+.gh-hero .gh-btn, .gh-close .gh-btn, .masthead .gh-btn { box-shadow: 0 2px 4px rgb(5 25 18 / 0.2), 0 14px 32px -12px rgb(5 25 18 / 0.55); }
+.gh-hero .gh-btn:hover, .gh-close .gh-btn:hover, .masthead .gh-btn:hover { box-shadow: 0 3px 6px rgb(5 25 18 / 0.22), 0 20px 40px -12px rgb(5 25 18 / 0.65); }
 .gh-pill {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 18px;
   border: 1.5px solid currentColor; border-radius: 999px; background: none; color: inherit; cursor: pointer; font: 500 0.9375rem var(--gh-body); transition: background-color 120ms;
@@ -186,6 +190,10 @@ a.gh-btn { color: var(--bloom-ink); text-decoration: none; }
 .gh-topbar .search input { border-color: var(--canopy-ink-soft); }
 .gh-topbar .search input::placeholder { color: var(--canopy-ink-soft); }
 .gh-topbar .search input:focus-visible { outline-color: var(--leaf); }
+/* The drawer lives inside the green bar in the markup, but it is a pale room. */
+.gh-drawer .search input { border-color: var(--edge); }
+.gh-drawer .search input::placeholder { color: var(--muted); }
+.gh-drawer .search input:focus-visible, body .gh-drawer :focus-visible { outline-color: var(--link); }
 
 /* Top bar and course drawer */
 .gh-topbar { position: relative; z-index: 30; background: var(--canopy); color: var(--canopy-ink); padding-inline: var(--gh-gutter); }
@@ -236,23 +244,52 @@ a.gh-brand { display: flex; align-items: center; min-height: 44px; white-space: 
 .gh-stem-wide { position: absolute; inset: 0 0 0 calc(var(--gh-gutter) + 48px); overflow: hidden; }
 .gh-stem-wide svg { position: absolute; right: 0; bottom: 0; height: 100%; width: auto; aspect-ratio: 16 / 10; overflow: visible; }
 .gh-stem-narrow { display: none; }
-.gh-stem { fill: none; stroke: #5FA886; stroke-width: 9; stroke-linecap: round; }
-.gh-stem.is-grown { stroke: var(--leaf); }
-.gh-leaf path { fill: var(--bud); transition: fill 120ms; }
-.gh-leaf text { fill: var(--canopy-ink); font-family: var(--gh-display); font-weight: 800; }
-.gh-leaf.is-done path { fill: var(--leaf); }
-.gh-leaf.is-done text { fill: var(--leaf-ink); }
-.gh-leaf.is-here path { fill: var(--canopy-ink); }
-.gh-leaf.is-here text { fill: var(--leaf-ink); }
-.gh-leaf.is-read path { fill: var(--canopy); stroke: var(--leaf); stroke-width: 3; }
-.gh-leaf.is-read text { fill: var(--leaf); }
-.gh-leaf.is-ahead path { stroke: var(--canopy-ink-soft); stroke-width: 1.5; }
-.gh-leaf-link:hover .gh-leaf.is-ahead path { fill: #3A9171; }
+.gh-stem-body { fill: var(--stem); }
+.gh-stem-body.is-grown { fill: var(--leaf); }
+.gh-stem-lead { fill: none; stroke: var(--stem); stroke-linecap: round; }
+.gh-sap { fill: none; stroke: #F6FBE3; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0.035 2; opacity: 0; pointer-events: none; }
+.gh-stem-tip .gh-blade-light { fill: #7FC5A2; }
+.gh-stem-tip .gh-blade-shade { fill: var(--stem); }
+.gh-stem-tip .gh-blade-veins { display: none; }
+
+/* One leaf, in one of four tones: the same plant ripening from deep teal to lime, so a color only ever means how far along a chapter is. */
+.gh-leaf { --blade-light: #36957A; --blade-shade: #2A7A5F; --blade-vein: rgb(190 235 210 / 0.38); --blade-edge: #86CBA9; --blade-ink: var(--canopy-ink); }
+.gh-leaf.is-read { --blade-light: #93D8A6; --blade-shade: #73C08A; --blade-vein: rgb(15 61 46 / 0.3); --blade-edge: transparent; --blade-ink: var(--leaf-ink); }
+.gh-leaf.is-done { --blade-light: #CDF086; --blade-shade: #A9D95C; --blade-vein: rgb(15 61 46 / 0.32); --blade-edge: transparent; --blade-ink: var(--leaf-ink); }
+.gh-leaf.is-here { --blade-light: #FDFEF6; --blade-shade: #E2EFC8; --blade-vein: rgb(15 61 46 / 0.2); --blade-edge: transparent; --blade-ink: var(--leaf-ink); }
+.gh-blade-light { fill: var(--blade-light); transition: fill 160ms; }
+.gh-blade-shade { fill: var(--blade-shade); transition: fill 160ms; }
+.gh-blade-veins { fill: none; stroke: var(--blade-vein); stroke-width: 1; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.gh-blade-edge { fill: none; stroke: var(--blade-edge, transparent); stroke-width: 1.1; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.gh-leaf-stalk { stroke: var(--stem); stroke-linecap: round; }
+.gh-leaf.is-done .gh-leaf-stalk { stroke: var(--leaf); }
+.gh-leaf-num { fill: var(--blade-ink); font-family: var(--gh-display); font-weight: 800; paint-order: stroke; stroke: var(--blade-shade); stroke-width: 3.5px; stroke-linejoin: round; font-variant-numeric: tabular-nums; pointer-events: none; }
+.gh-leaf-halo { pointer-events: none; }
+.gh-leaf-link:hover .gh-leaf.is-ahead { --blade-light: #46AE8D; --blade-shade: #378F71; }
 body .gh-leaf-link:focus-visible { outline: none; }
-.gh-leaf-link:focus-visible .gh-leaf path { stroke: var(--leaf); stroke-width: 5; }
-.gh-part-node { fill: var(--canopy); stroke: var(--canopy-ink); stroke-width: 4; }
-.gh-part-label { fill: var(--canopy-ink); font: 800 22px var(--gh-display); }
-.gh-leaf-title { fill: var(--canopy-ink); font: 500 22px var(--gh-body); paint-order: stroke; stroke: var(--canopy); stroke-width: 8px; stroke-linejoin: round; pointer-events: none; }
+.gh-leaf-link:focus-visible .gh-blade-edge { stroke: var(--leaf); stroke-width: 3; }
+.gh-tendril { fill: none; stroke: var(--canopy-ink-soft); stroke-width: 1.5; stroke-linecap: round; opacity: 0.75; }
+.gh-part-label { fill: var(--canopy-ink); font: 800 22px var(--gh-display); pointer-events: none; }
+.gh-leaf-title { pointer-events: none; }
+.gh-leaf-title rect { fill: var(--canopy); stroke: var(--canopy-ink-soft); stroke-width: 1; }
+.gh-leaf-title text { fill: var(--canopy-ink); font: 600 20px var(--gh-body); }
+
+/* The air in the glasshouse. */
+.gh-air { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
+.gh-sun { position: absolute; left: 0; top: 0; z-index: -1; width: 760px; height: 760px; background: radial-gradient(closest-side, rgb(217 240 163 / 0.13), rgb(217 240 163 / 0.04) 55%, transparent); pointer-events: none; will-change: transform; transform: translate3d(72vw, 30vh, 0) translate(-50%, -50%); }
+
+/* The headline's words lift out of their own baselines. */
+.gh-word { display: inline-block; overflow: clip; padding: 0.06em 0.05em 0.16em; margin: -0.06em -0.05em -0.16em; vertical-align: top; }
+.gh-word > span { display: inline-block; }
+
+/* The closing sprig. */
+.gh-sprig { position: absolute; z-index: -1; right: max(40px, calc(50% - 660px)); bottom: 0; height: 92%; width: auto; aspect-ratio: 520 / 620; overflow: visible; pointer-events: none; }
+.gh-sprig .gh-blade-light { fill: #24785C; }
+.gh-sprig .gh-blade-shade { fill: #1F6C53; }
+.gh-sprig .gh-blade-veins { stroke: rgb(190 235 210 / 0.22); }
+.gh-sprig-stem, .gh-sprig-stalk { fill: none; stroke: #24785C; stroke-linecap: round; }
+.gh-sprig-stem { stroke-width: 10; }
+.gh-sprig-stalk { stroke-width: 5; }
 
 /* Sections */
 .gh-section { max-width: 1440px; margin-inline: auto; padding: 88px var(--gh-gutter) 0; }
@@ -279,15 +316,50 @@ body .gh-leaf-link:focus-visible { outline: none; }
 a.gh-row { position: relative; display: grid; grid-template-columns: 24px 26px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px 6px 8px; border-radius: 10px; color: var(--ink); text-decoration: none; line-height: 1.25; transition: background-color 120ms; }
 a.gh-row:hover { background: var(--wash); }
 .gh-row-mark { width: 24px; height: 24px; }
-.gh-row-mark circle { fill: var(--ground); }
+.gh-row-mark { overflow: visible; }
 .gh-row-mark.is-done path { fill: var(--done); }
-.gh-row-mark.is-read path { fill: var(--ground); stroke: var(--done); stroke-width: 2.5; }
-.gh-row-mark.is-here circle { stroke: var(--ink); stroke-width: 3.5; }
-.gh-row-mark.is-ahead circle { stroke: var(--edge); stroke-width: 2.5; }
+.gh-row-mark.is-done .leaf-mark-rib, .stem-node.is-done .leaf-mark-rib { fill: none; stroke: var(--ground); stroke-width: 1.5; stroke-linecap: round; }
+.gh-row-mark.is-read path { fill: var(--ground); stroke: var(--done); stroke-width: 2.25; stroke-linejoin: round; }
+.gh-row-mark.is-read .leaf-mark-rib { fill: none; stroke-width: 1.5; stroke-linecap: round; }
+.gh-row-mark.is-here path { fill: var(--ink); stroke: var(--ground); stroke-width: 2; paint-order: stroke; }
+.gh-row-mark.is-ahead path { fill: var(--ground); stroke: var(--edge); stroke-width: 2; stroke-linejoin: round; }
 .gh-row-num { font: 800 1rem var(--gh-display); color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; padding-right: 2px; }
 .gh-row-title { font-weight: 500; font-size: 1.125rem; }
 a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
 .gh-row-note { font-size: 0.875rem; font-weight: 500; color: var(--muted); white-space: nowrap; }
+
+/* The course as a glasshouse: arches on one sill, as tall as their parts are long. The heading fills the sky above the shorter ones. */
+.gh-course { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto; column-gap: 16px; align-items: end; }
+.gh-course .gh-head { grid-column: 2 / -1; grid-row: 1; display: block; margin: 0; padding: 0 0 36px 28px; align-self: start; }
+.gh-course .gh-head h2 { font-size: clamp(2.25rem, 2.6vw + 1.2rem, 3.75rem); line-height: 1.02; letter-spacing: -0.025em; }
+.gh-course .gh-head p { margin-top: 14px; font-size: 1.125rem; }
+.gh-legend { grid-column: 2 / -1; grid-row: 1; align-self: end; justify-self: start; display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0 0 32px 28px !important; padding: 10px 24px !important; border-radius: 999px; background: var(--canopy); color: var(--canopy-ink); font-size: 0.9375rem; font-weight: 500; }
+.gh-legend li { display: flex; align-items: center; gap: 6px; }
+.gh-legend svg { width: 36px; height: 24px; overflow: visible; }
+.gh-legend .gh-blade-edge { vector-effect: non-scaling-stroke; }
+.gh-bay { position: relative; isolation: isolate; overflow: clip; padding: 60px 12px 16px; border-radius: 999px 999px 0 0; background: var(--canopy); color: var(--canopy-ink); }
+.gh-bay::before { content: ""; position: absolute; z-index: -1; inset: 12px 12px 0; border-radius: 999px 999px 0 0; background: var(--canopy-mid); }
+.gh-bay:nth-of-type(1) { grid-column: 1; grid-row: 1 / 3; }
+.gh-bay:nth-of-type(n + 2) { grid-row: 2; }
+.gh-bay-head { padding: 0 26px 14px; text-align: center; }
+.home .gh-bay h3 { max-width: 18ch; margin-inline: auto; font-size: 1.5rem; line-height: 1.12; }
+.home .gh-bay-lang { margin-top: 6px; color: var(--leaf); font-size: 0.9375rem; font-weight: 600; }
+.home .gh-bay-summary { margin-top: 8px; color: var(--canopy-ink-soft); font-size: 0.9375rem; line-height: 1.4; }
+a.gh-bay-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; align-items: center; column-gap: 4px; height: 80px; padding-right: 12px; border-radius: 20px; color: var(--canopy-ink); text-decoration: none; transition: background-color 140ms; }
+.gh-bay-vine { width: 84px; height: 80px; overflow: visible; }
+.gh-bay-stem { fill: none; stroke: var(--stem); stroke-width: 4; }
+.gh-bay-stem.is-grown { stroke: var(--leaf); }
+.gh-bay-text { display: grid; gap: 1px; min-width: 0; }
+.gh-bay-title { font: 500 1rem/1.25 var(--gh-body); }
+.gh-bay-note { color: var(--canopy-ink-soft); font-size: 0.8125rem; font-weight: 500; line-height: 1.25; }
+a.gh-bay-row.is-here { background: rgb(242 247 238 / 0.09); }
+.gh-bay-row.is-here .gh-bay-title { font-weight: 600; }
+.gh-bay-row.is-here .gh-bay-note { color: var(--leaf); font-weight: 600; }
+.gh-bay-row .gh-icon { color: var(--leaf); }
+.gh-sill { grid-column: 1 / -1; position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 16px; align-items: center; padding: 14px 12px; border-radius: 0 0 28px 28px; background: var(--canopy-high); color: var(--canopy-ink); }
+.gh-sill h3 { padding-left: 28px; }
+.gh-sill ol { grid-column: 2 / span 2; }
+.home .gh-sill h3 { font-size: 1.5rem; }
 
 /* Try a question */
 .gh-trysection { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 32px 64px; align-items: start; }
@@ -303,6 +375,10 @@ a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
 .gh-answer:hover { background: var(--wash); }
 .gh-answer:active { transform: scale(0.99); }
 .gh-answer-mark { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--edge); }
+.gh-answer-mark { position: relative; }
+.gh-burst { position: absolute; inset: 50% auto auto 50%; width: 0; height: 0; pointer-events: none; }
+.gh-burst svg { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; }
+.gh-burst path { fill: var(--done); }
 .gh-answer-mark .gh-icon { width: 14px; height: 14px; stroke-width: 3.2; }
 .gh-answer.right { background: var(--wash); border-color: var(--done); }
 .gh-answer.right .gh-answer-mark { background: var(--done); box-shadow: none; color: var(--ground); }
@@ -329,8 +405,15 @@ a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
 .gh-foot nav { display: flex; flex: none; gap: 20px; }
 .home .gh-foot a { color: var(--canopy-ink); display: inline-flex; align-items: center; min-height: 44px; }
 
-@media (max-width: 75rem) {
+@media (max-width: 77.5rem) {
   .gh-part { grid-template-columns: 260px minmax(0, 1fr); gap: 16px 32px; }
+  .gh-course { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; row-gap: 16px; align-items: end; }
+  .gh-course .gh-head { grid-column: 1 / -1; grid-row: auto; padding: 0; }
+  .gh-legend { grid-column: 1 / -1; grid-row: auto; margin: 0 !important; border-radius: 28px; }
+  .gh-bay, .gh-bay:nth-of-type(1), .gh-bay:nth-of-type(n + 2) { grid-column: auto; grid-row: auto; border-radius: 999px 999px 28px 28px; }
+  .gh-bay::before { inset: 12px; border-radius: 999px 999px 20px 20px; }
+  .gh-sill { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-radius: 28px; }
+  .gh-sill ol { grid-column: 2; }
 }
 
 @media (max-width: 56.25rem) {
@@ -343,11 +426,18 @@ a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
   .gh-hero-action { width: auto; margin-top: 24px; padding-block: 0; }
   .gh-hero-action .gh-btn, .gh-close .gh-btn { width: 100%; max-width: 420px; align-self: auto; }
   .home .gh-action-note { position: static; width: auto; margin-top: 10px; text-align: left; }
-  .gh-stem-narrow { display: block; width: 100%; max-width: 520px; height: auto; margin: 20px auto 8px; overflow: visible; }
+  .gh-stem-narrow { display: block; width: 100%; max-width: 520px; height: auto; margin: 20px auto 36px; overflow: visible; }
   .gh-arch-1 { top: 22%; right: -35%; width: 90%; }
   .gh-arch-2 { top: 44%; right: -20%; width: 62%; }
   .gh-section { padding-top: 64px; }
   .gh-head { grid-template-columns: minmax(0, 1fr); align-items: start; margin-bottom: 24px; }
+  .gh-course { grid-template-columns: minmax(0, 1fr); }
+  .gh-bay { padding-top: 72px; }
+  .gh-bay-head { padding-inline: 48px; }
+  .gh-sill { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  .gh-sill ol { grid-column: 1; }
+  .gh-sill h3 { padding: 8px 0 0 14px; }
+  .gh-legend { justify-self: stretch; justify-content: center; }
   .gh-head-search { display: block; margin-top: 8px; }
   .gh-part { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .gh-part-info { padding-bottom: 12px; }
@@ -359,6 +449,7 @@ a.gh-row[aria-current] .gh-row-title { font-weight: 600; }
   .gh-expect { padding-bottom: 72px; }
   .gh-foot { flex-direction: column; align-items: flex-start; margin-top: 56px; }
   .gh-close .gh-arch-1 { width: 70%; right: -25%; }
+  .gh-sprig { display: none; }
   .gh-try { padding: 20px; }
 }
 

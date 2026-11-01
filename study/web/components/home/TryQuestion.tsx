@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "./Icon";
+import { LeafBurst } from "./LeafMark";
 
 type Answer = { text: string; right?: boolean; why?: string };
 
@@ -24,7 +25,7 @@ export function TryQuestion({ code }: { code: string }) {
           const result = isPicked ? (item.right ? "right" : "wrong") : "";
           return (
             <button key={item.text} type="button" className={`gh-answer ${result}`} aria-pressed={isPicked} onClick={() => setPicked(index)}>
-              <span className="gh-answer-mark">{result === "right" && <Icon name="check" />}{result === "wrong" && <Icon name="x" />}</span>
+              <span className="gh-answer-mark">{result === "right" && <><Icon name="check" /><LeafBurst /></>}{result === "wrong" && <Icon name="x" />}</span>
               {item.text}
             </button>
           );

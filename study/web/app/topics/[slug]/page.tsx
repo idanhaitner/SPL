@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Chapter } from "@/components/Chapter";
 import { CourseStrip } from "@/components/chapter/CourseStrip";
+import { LeafBlade } from "@/components/home/LeafShape";
 import { TopBar } from "@/components/shell/TopBar";
 import { Visit } from "@/components/Visit";
 import { Mixed } from "@/lib/bidi";
@@ -29,8 +30,10 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         <div className="gh-arch gh-arch-2" />
         <div className="masthead-inner">
           <svg className="masthead-leaf" viewBox="0 0 112 112" role="img" aria-label={`Chapter ${index + 1} of ${course.topics.length}`}>
-            <path d="M8 104C2 50 40 6 106 6c5 62-36 104-98 98Z" />
-            <text x="58" y="72" textAnchor="middle" fontSize="40">{index + 1}</text>
+            <g transform="translate(6 106) rotate(-45)">
+              <g className="masthead-leaf-open"><LeafBlade size={138} /></g>
+            </g>
+            <text x="57" y="67" textAnchor="middle" fontSize="36">{index + 1}</text>
           </svg>
           <div>
             <h1><Mixed text={topic.title} /></h1>

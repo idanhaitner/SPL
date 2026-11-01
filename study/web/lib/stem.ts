@@ -2,7 +2,8 @@
 
 type Point = { x: number; y: number };
 type Curve = [Point, Point, Point, Point];
-export type Leaf = { x: number; y: number; angle: number; along: number };
+export type StemCurves = Curve[];
+export type Leaf = { x: number; y: number; angle: number; along: number; side: 1 | -1 };
 
 function at([a, b, c, d]: Curve, t: number): Point {
   const u = 1 - t;
@@ -38,10 +39,42 @@ export function spacedLeaves(curves: Curve[], count: number, from = 0.04, to = 0
     const here = samples[Math.max(0, position)];
     const ahead = samples[Math.min(samples.length - 1, Math.max(0, position) + 3)];
     const base = (Math.atan2(ahead.point.y - here.point.y, ahead.point.x - here.point.x) * 180) / Math.PI;
-    return { x: tidy(here.point.x), y: tidy(here.point.y), angle: tidy(base + (index % 2 ? 54 : -54)), along: tidy(along) };
+    const side = index % 2 ? 1 : -1;
+    // Leaves alternate sides, each a few degrees off the last, because a plant is never ruled.
+    const lean = 50 + ((index * 7) % 5) * 2 - 4;
+    return { x: tidy(here.point.x), y: tidy(here.point.y), angle: tidy(base + side * lean), along: tidy(along), side } as const;
   });
   return { leaves, length: tidy(length) };
 }
+
+// The stem as a filled outline, thick at the root and thin at the growing tip.
+export function taperedPath(curves: Curve[], root: number, tip: number) {
+  const spine = curves.flatMap((curve, index) => Array.from({ length: 41 }, (_, step) => at(curve, step / 40)).slice(index ? 1 : 0));
+  const left: string[] = [];
+  const right: string[] = [];
+  spine.forEach((point, index) => {
+    const before = spine[Math.max(0, index - 1)];
+    const after = spine[Math.min(spine.length - 1, index + 1)];
+    const run = Math.hypot(after.x - before.x, after.y - before.y) || 1;
+    const half = (root + (tip - root) * (index / (spine.length - 1))) / 2;
+    const [nx, ny] = [(-(after.y - before.y) / run) * half, ((after.x - before.x) / run) * half];
+    left.push(`${tidy(point.x + nx)} ${tidy(point.y + ny)}`);
+    right.unshift(`${tidy(point.x - nx)} ${tidy(point.y - ny)}`);
+  });
+  return `M${left.join("L")}L${right.join("L")}Z`;
+}
+
+// Where the stem ends, and which way it is heading there.
+export function stemTip(curves: Curve[]) {
+  const [, , c, d] = curves[curves.length - 1];
+  return { x: d.x, y: d.y, angle: tidy((Math.atan2(d.y - c.y, d.x - c.x) * 180) / Math.PI) };
+}
+
+// The stem grows with a quick start that slows (STEM_EASE); this is when its tip reaches a given share of its length.
+export const STEM_EASE = "cubic-bezier(0.333, 0.667, 0.667, 1)";
+export const STEM_START = 420;
+export const STEM_GROW = 2000;
+export const growthDelay = (share: number) => Math.round(STEM_START + STEM_GROW * (1 - Math.sqrt(Math.max(0, 1 - share))));
 
 export const WIDE_STEM: Curve[] = [
   [{ x: 420, y: 790 }, { x: 700, y: 800 }, { x: 860, y: 720 }, { x: 900, y: 590 }],

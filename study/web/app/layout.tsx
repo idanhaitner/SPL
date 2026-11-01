@@ -30,8 +30,8 @@ const heebo = Heebo({
   display: "swap",
 });
 
-// Runs before the first paint, so a chosen theme never flashes the other one.
-const THEME_SCRIPT = `try{var t=localStorage.getItem("study:theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}`;
+// Runs before the first paint, so a chosen theme never flashes the other one, and the plant grows only once a session.
+const THEME_SCRIPT = `try{var t=localStorage.getItem("study:theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;if(sessionStorage.getItem("study:grown"))document.documentElement.dataset.grown="1"}catch(e){}`;
 
 export const viewport: Viewport = {
   width: "device-width",

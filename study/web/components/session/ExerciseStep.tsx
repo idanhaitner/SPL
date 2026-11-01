@@ -290,7 +290,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
                   <button type="button" className="session-quiet code-reset" ref={resetRef} onClick={() => setConfirmReset(true)}>Reset</button>
                   <p className="workspace-note">Your code is sent to godbolt.org to compile and run.</p>
                   <button type="button" className="gh-pill" onClick={() => act("run")} disabled={locked} title="Run (Ctrl+Enter or Cmd+Enter)">Run</button>
-                  {/* Once the step is solved, Next in the bar is the one coral action. */}
+                  {/* Once the step is solved, Next in the bar is the one primary action. */}
                   <button type="button" className={done ? "gh-pill" : "gh-btn is-compact"} onClick={() => act("test")} disabled={locked} title="Submit (Ctrl+Shift+Enter or Cmd+Shift+Enter)">Submit</button>
                 </>
               )}

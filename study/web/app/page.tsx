@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { Fragment, type CSSProperties } from "react";
 import { SearchBox } from "@/components/SearchBox";
+import { CloseSprig } from "@/components/home/CloseSprig";
 import { CloseHeading, ContinueButton } from "@/components/home/ContinueButton";
-import { CourseMap } from "@/components/home/CourseMap";
+import { HeroAir } from "@/components/home/HeroAir";
+import { CourseBays } from "@/components/home/CourseBays";
 import { CourseStem } from "@/components/home/CourseStem";
 import { TopBar } from "@/components/shell/TopBar";
 import { TryQuestion } from "@/components/home/TryQuestion";
@@ -20,6 +23,7 @@ int main() {
 }`;
 
 const STEM_LABELS = ["Memory", "Concurrency", "Communication", "Databases"];
+const HEADLINE = ["Start", "from", "a", "seed.", "Grow", "a", "whole", "server."];
 
 function countProblems(blocks: Block[], kind: string): number {
   let count = 0;
@@ -51,10 +55,17 @@ export default async function HomePage() {
       <header className="gh-hero">
         <div className="gh-arch gh-arch-1" />
         <div className="gh-arch gh-arch-2" />
+        <HeroAir />
         <div className="gh-frame">
           <TopBar courseId={course.id} title={course.title} nav={nav} tone="flat" />
           <div className="gh-hero-copy">
-            <h1>Start from a seed. <em>Grow</em> a whole server.</h1>
+            <h1>
+              {HEADLINE.map((word, index) => (
+                <Fragment key={index}>
+                  <span className="gh-word"><span style={{ "--w": index } as CSSProperties}>{word === "Grow" ? <em>{word}</em> : word}</span></span>{" "}
+                </Fragment>
+              ))}
+            </h1>
             <p className="gh-lede">{course.title} from zero, one chapter at a time, with questions from the course&rsquo;s own past exams.</p>
             <p className="gh-facts">{chapters.length} chapters in {PARTS.length} parts, in the course&rsquo;s order</p>
           </div>
@@ -66,13 +77,13 @@ export default async function HomePage() {
       </header>
 
       <div>
-        <section className="gh-section" id="course" aria-labelledby="course-title">
+        <section className="gh-section gh-course" id="course" aria-labelledby="course-title">
           <div className="gh-head">
             <h2 id="course-title">The whole course, in order</h2>
             <p>{chapters.length} chapters and {practiceCount} practice questions, {examCount} of them from past exams.</p>
             <div className="gh-head-search"><SearchBox id="course-q" /></div>
           </div>
-          <CourseMap courseId={course.id} parts={parts} finale={finale} chapters={chapters} />
+          <CourseBays courseId={course.id} parts={parts} finale={finale} chapters={chapters} />
         </section>
 
         <section className="gh-section gh-trysection" aria-labelledby="try-title">
@@ -96,6 +107,7 @@ export default async function HomePage() {
 
       <footer className="gh-close">
         <div className="gh-arch gh-arch-1" />
+        <CloseSprig />
         <div className="gh-frame">
           <CloseHeading courseId={course.id} chapters={chapters} />
           <ContinueButton courseId={course.id} chapters={chapters} />

@@ -1,18 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import { LeafShape } from "@/components/home/LeafShape";
+import { Stem } from "@/components/home/Stem";
+import { useLeafBrush } from "@/components/home/useLeafBrush";
 import { isDone, isRead, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
-import { curvePath, spacedLeaves, STRIP_STEM } from "@/lib/stem";
+import { spacedLeaves, STRIP_STEM } from "@/lib/stem";
 
-const strip = spacedLeaves(STRIP_STEM, 16, 0.03, 0.98);
+const strip = spacedLeaves(STRIP_STEM, 16, 0.03, 0.97);
+const SIZE: Record<ChapterState, number> = { done: 60, read: 60, here: 78, ahead: 54 };
 
 // This chapter's place on the one course stem.
 export function CourseStrip({ courseId, chapters, currentId }: { courseId: string; chapters: ChapterInfo[]; currentId: string }) {
   const progress = useProgress(courseId);
+  const plant = useRef<SVGSVGElement>(null);
+  useLeafBrush(plant);
   const stateOf = (chapter: ChapterInfo): ChapterState => {
-    if (isDone(chapter, progress)) return "done";
     if (chapter.id === currentId) return "here";
+    if (isDone(chapter, progress)) return "done";
     return isRead(chapter, progress) ? "read" : "ahead";
   };
   const states = chapters.map(stateOf);
@@ -21,15 +27,14 @@ export function CourseStrip({ courseId, chapters, currentId }: { courseId: strin
   const grown = run === 0 ? 0 : strip.leaves[run - 1].along;
   return (
     <nav className="course-strip" aria-label="Your place in the course">
-      <svg viewBox="0 0 1360 176" role="group" aria-label="The 16 chapters of the course">
-        <path className="gh-stem is-thin" d={curvePath(STRIP_STEM)} />
-        {grown > 0 && <path className="gh-stem is-thin is-grown" d={curvePath(STRIP_STEM)} strokeDasharray={`${grown} 9999`} />}
+      <svg ref={plant} viewBox="0 0 1360 176" role="group" aria-label="The 16 chapters of the course">
+        <Stem id="stem-strip" curves={STRIP_STEM} root={7} tip={3} grown={grown} tipSize={28} />
         {chapters.map((chapter, index) => {
           const state = states[index];
           return (
             <Link key={chapter.id} className="gh-leaf-link" href={`/topics/${chapter.id}/`} aria-label={`Chapter ${chapter.num}: ${chapter.title}`} aria-current={chapter.id === currentId ? "page" : undefined}>
               <title>{`${chapter.num}. ${chapter.title}`}</title>
-              <LeafShape leaf={strip.leaves[index]} size={state === "ahead" ? 44 : 60} state={state} num={chapter.num} numSize={state === "ahead" ? 13 : 16} />
+              <LeafShape leaf={strip.leaves[index]} size={SIZE[state]} state={state} num={chapter.num} numSize={state === "here" ? 18 : 14} index={index} delay={0} halo="gh-halo-strip" />
             </Link>
           );
         })}
