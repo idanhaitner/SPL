@@ -19,7 +19,7 @@ export default function GlossaryPage() {
 
   return (
     <>
-    <TopBar courseId={course.id} title={course.title} hits={course.search} nav={courseNav(course)} />
+    <TopBar courseId={course.id} title={course.title} nav={courseNav(course)} />
     <article className="page glossary">
       <header className="masthead">
         <h1>Glossary</h1>

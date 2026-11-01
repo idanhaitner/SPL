@@ -23,7 +23,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
   return (
     <div className="chapter-page">
       <Visit courseId={course.id} slug={topic.id} />
-      <TopBar courseId={course.id} title={course.title} hits={course.search} nav={nav} where={part ? `${part.title} · ${part.lang}` : undefined} />
+      <TopBar courseId={course.id} title={course.title} nav={nav} where={part ? `${part.title} · ${part.lang}` : undefined} />
       <header className="masthead">
         <div className="gh-arch gh-arch-1" />
         <div className="gh-arch gh-arch-2" />
