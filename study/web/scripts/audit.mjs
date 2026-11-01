@@ -255,7 +255,7 @@ try {
   });
   const reduced = await reducedContext.newPage();
   await reduced.goto(base + "/", { waitUntil: "networkidle" });
-  const link = reduced.locator(".gh-bay-row").first();
+  const link = reduced.locator(".gh-bed-row").first();
   await link.hover();
   const transform = await link.evaluate((node) => getComputedStyle(node).transform);
   if (transform !== "none") failures.push(`reduced motion still translates chapter links (${transform})`);
