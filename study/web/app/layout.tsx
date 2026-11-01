@@ -1,27 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Familjen_Grotesk, Figtree, Gabarito, Heebo, IBM_Plex_Sans, IBM_Plex_Sans_Hebrew, JetBrains_Mono } from "next/font/google";
+import { Figtree, Gabarito, Heebo, JetBrains_Mono } from "next/font/google";
 import { loadCourse } from "@/lib/course";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
-const display = Familjen_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-familjen",
-  display: "swap",
-});
-const body = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex",
-  display: "swap",
-});
-const hebrew = IBM_Plex_Sans_Hebrew({
-  subsets: ["hebrew"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-hebrew",
-  display: "swap",
-});
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
@@ -65,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const course = loadCourse();
   return (
-    <html lang={course.lang} dir={course.dir} className={`${display.variable} ${body.variable} ${hebrew.variable} ${mono.variable} ${gabarito.variable} ${figtree.variable} ${heebo.variable}`} suppressHydrationWarning>
+    <html lang={course.lang} dir={course.dir} className={`${mono.variable} ${gabarito.variable} ${figtree.variable} ${heebo.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

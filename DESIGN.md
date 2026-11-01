@@ -208,7 +208,7 @@ The syntax palette (`code-*`) is one set for both themes and maps onto Shiki's `
 **Body Font:** Figtree (with Heebo for Hebrew terms, then system-ui)
 **Code Font:** JetBrains Mono (with ui-monospace)
 
-**Character:** Gabarito is round, heavy, and friendly without being childish, which suits a course that must not intimidate. Figtree stays out of the way across long reading. JetBrains Mono stays from the old design on purpose: it keeps `*`, `&`, `0`, `O`, `l`, and `1` clearly apart, which matters more here than novelty. Ligatures stay off, because a beginner must see the real characters.
+**Character:** Gabarito is round, heavy, and friendly without being childish, which suits a course that must not intimidate. Figtree stays out of the way across long reading. JetBrains Mono is kept from the first design on purpose: it keeps `*`, `&`, `0`, `O`, `l`, and `1` clearly apart, which matters more here than novelty. Ligatures stay off, because a beginner must see the real characters.
 
 All are served through `next/font`, so builds never depend on a font host. (The sample page loads them from Google Fonts only because it is a standalone file.)
 

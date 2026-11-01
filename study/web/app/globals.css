@@ -1,14 +1,4 @@
-/* Hallmark · shape: Index-First · genre: modern-minimal · theme: Cobalt (deal 3/3, seed study-guide-teaching-university-4c7e·b3b34289·2026-11-01·r0) · job: try · draw: 2fb7dc
- * hero: Stage · nav: search-led bar · footer: colophon · imagery: the product · signature: a C++ pointer trace stepped line by line over its own bytes */
-/* Hallmark · dismissed 77 · the home page has eight sections, the linter stops at the route wrapper and counts one */
-/* Hallmark · hero-review: fix · 5 findings · 3 resolved 2 partial (phone fold, field meaning) */
-/* Hallmark · finish-review: subagent · 8 findings · 7 resolved 1 unresolved · gap: no before screenshots; phone diagrams stay small */
-/* Hallmark · dismissed 3 · the side border is the arrowhead on the trace's pointer link, not a card stripe */
-/* Hallmark · dismissed 23 · the reading progress bar is two pixels tall, not a viewport fill */
-/* Hallmark · answered F4 · the selected section and tab are selection states, the only filled primary is the resume key */
-/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4 · weakest: P, the home page argues only by showing; the trace and the live exam question carry the argument instead of copy */
 @import "tailwindcss";
-@import "./tokens.css";
 @import "./base.css";
 @import "./greenhouse.css";
 
