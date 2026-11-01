@@ -270,6 +270,230 @@ Java guarantees that everything a thread did before calling `start` is visible t
 
 :::
 
+:::problem id=prac-threads-run-start title="Calling run or calling start" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+`Printer` is a task that prints one short message.
+
+```java
+class Printer implements Runnable {
+    private final String msg;
+
+    Printer(String msg) { this.msg = msg; }
+
+    public void run() { System.out.print(msg); }
+}
+```
+
+:::check id=prac-threads-run-start-q1
+`main` runs these lines. What does the program print?
+
+```java
+Runnable a = new Printer("A");
+Runnable b = new Printer("B");
+a.run();
+b.run();
+```
+
+- [x] Always `AB`, with both tasks running on `main`'s thread
+- [ ] `AB` or `BA`, because the scheduler picks the order
+- [ ] Nothing, because no thread was started
+
+- **Why always `AB`:** `run` is an ordinary method here. `main`'s thread calls `a.run()`, finishes it, and only then calls `b.run()`.
+- **Why the scheduler has no choice:** there is only one thread, so the two tasks run serially.
+- **Why it still prints:** a task does not need a new thread. `main`'s thread can run it like any other method.
+:::
+
+:::check id=prac-threads-run-start-q2
+Now `main` runs these lines instead. Which outputs are possible?
+
+```java
+Runnable a = new Printer("A");
+Runnable b = new Printer("B");
+new Thread(a).start();
+new Thread(b).start();
+```
+
+- [x] `AB`
+- [x] `BA`
+- [ ] `AA`
+- [ ] `A`
+
+- **`AB` and `BA`:** each task runs on its own thread, and the order depends on the scheduling policies of the environment. Starting `a` first does not mean it runs first.
+- **Why not `AA`:** each task prints its own message once, and only one task holds `A`.
+- **Why not `A` alone:** both threads were started, and each one runs its task to the end.
+:::
+
+:::check id=prac-threads-run-start-q3
+Calling `a.run()` yourself runs the task on {{=the thread that made the call|a new thread|the operating system}}. To run it on a new thread, you create a `Thread` with the task and call {{=start|run|join}}.
+
+`run` only defines what the task does. `start` is the request to the run-time environment to create a thread, and that new thread then runs the task's `run` method.
+:::
+:::
+
+:::problem id=prac-threads-memory title="Who shares what" source="materials/lectures/Chapter 8 - Concurrency.pptx" kind=exercise solution_origin=derived
+Two threads run tasks that were given the same `Counter`. These questions are only about where each variable lives. What `shared.value` ends up holding is a question for the next chapters.
+
+```java
+class Counter {
+    int value = 0;
+}
+
+class Task implements Runnable {
+    private final Counter shared;
+
+    Task(Counter shared) { this.shared = shared; }
+
+    public void run() {
+        int local = 0;
+        for (int i = 0; i < 1000; i++) {
+            local++;
+            shared.value++;
+        }
+        System.out.println(local);
+    }
+}
+
+public class Shared {
+    public static void main(String[] args) {
+        Counter c = new Counter();
+        Thread t1 = new Thread(new Task(c));
+        Thread t2 = new Thread(new Task(c));
+        t1.start();
+        t2.start();
+    }
+}
+```
+
+:::check id=prac-threads-memory-q1
+While both threads run, which statements are true?
+
+- [x] Each thread has its own `local`, on its own stack
+- [x] Both threads reach the same `Counter` object on the heap
+- [ ] Each thread has its own `Counter`, because each one has its own `Task`
+- [ ] Both threads share one `local`, because they run the same `run` method
+
+- **`local`:** it is a local variable, and each thread has its own stack. Each thread's call to `run` gets its own `local`.
+- **The `Counter`:** there is one `new Counter()`, and both tasks received its address. All the threads of a process share the heap.
+- **Two tasks, one `Counter`:** there are two `Task` objects, but each only holds a reference to that same `Counter`.
+- **The same code is not the same variable:** both threads run the same method, but each one runs it on its own stack.
+:::
+
+:::check id=prac-threads-memory-q2
+Each thread always prints 1000. Why?
+
+- [x] `local` lives on its own thread's stack, so no other thread can reach it
+- [ ] The threads run one after the other, with no switch between them
+- [ ] `shared` is `final`, and that protects everything inside `run`
+- [ ] `println` makes the loop before it atomic
+
+- **The reason:** this is thread confinement. No other thread can touch this `local`, so switching threads cannot change the count.
+- **Why not "one after the other":** the run may move to the other thread between any two atomic operations.
+- **Why not `final`:** it says only that the field `shared` keeps referring to the same `Counter`. It does nothing for `local`, which is safe for its own reason.
+- **Why not `println`:** it runs after the loop, and it has no effect on how the loop runs.
+:::
+
+:::check id=prac-threads-memory-q3
+If these two tasks ran in two separate processes instead, they {{=would not share a Counter|would still share one Counter|would share only local}}, because each process has {{=its own private address space|one stack for both|the same physical memory for all its objects}}.
+
+Threads of one process share the heap. Two processes share no memory, unless a shared-memory mapping is set up explicitly, so each would need its own `Counter`.
+:::
+:::
+
+:::problem id=prac-threads-join title="Waiting for a result" source="materials/sessions/PS6-2026-1.pptx" kind=exercise solution_origin=derived
+A task writes its result into an array that `main` created.
+
+```java
+class Filler implements Runnable {
+    private final int[] result;
+
+    Filler(int[] result) { this.result = result; }
+
+    public void run() { result[0] = 42; }
+}
+
+public class Join {
+    public static void main(String[] args) throws InterruptedException {
+        int[] result = new int[1];
+        Thread t = new Thread(new Filler(result));
+        t.start();
+        t.join();
+        System.out.println(result[0]);
+    }
+}
+```
+
+:::check id=prac-threads-join-q1
+What does this program print?
+
+- [x] Always `42`
+- [ ] Always `0`, because `Filler` writes to its own copy of the array
+- [ ] `0` or `42`, depending on the scheduler
+- [ ] Nothing, because `main` is blocked forever
+
+- **Why always `42`:** `join` keeps `main`'s thread Blocked until the `run` method of `t` ends, so the write has already happened when `main` prints.
+- **Why there is no copy:** `new int[1]` runs once. `main` and `Filler` each hold a reference to that same array on the heap.
+- **Why the scheduler does not matter:** whichever thread runs first, the print comes after `join`, and `join` waits for the task.
+- **Why `main` is not stuck:** `run` ends after one assignment, and then `join` returns.
+:::
+
+:::check id=prac-threads-join-q2
+Now delete the line `t.join();`. What can the program print?
+
+- [x] `0` or `42`, depending on what the scheduler runs first
+- [ ] Always `42`, because `t.start()` comes before the print
+- [ ] Always `0`, because `main`'s thread must finish before `t` can run
+- [ ] Nothing, because `main` ends before `t` finishes
+
+- **Two possible orders:** if the print runs first, the array still holds its first value, 0. If `t` runs first, it holds 42.
+- **Why `start` is not enough:** it only asks for a new thread. It does not wait for the task to run.
+- **Why `main` need not finish first:** between any two atomic operations, the run may move from one thread to the other.
+- **Why it still prints:** `main`'s thread reaches the print whatever `t` is doing, because nothing blocks it now.
+:::
+
+:::check id=prac-threads-join-q3
+`t.join()` moves {{=the thread that called it|the thread t|every thread in the process}} to the Blocked state, until {{=the run method of t ends|t has started|main ends}}.
+
+The caller is the one that waits. Here that is `main`'s thread, and `t` keeps running its task as usual.
+:::
+:::
+
+:::problem id=prac-threads-design title="When threads are worth it" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+Threads are not free: they can be heavy, and they make a program harder to design and to debug. So each design needs a reason.
+
+:::check id=prac-threads-design-q1
+Which of these programs fit a scenario that calls for threads?
+
+- [x] A server where each connected client is handled as its own task
+- [x] A heavy computation on a computer with eight processors
+- [x] A program that reads thousands of files, and is often Blocked on I/O
+- [ ] A small program that reads two numbers once and prints their sum
+
+- **The server:** a task per client gives fair and equal service to every client.
+- **The computation:** several tasks on different threads make use of the processors.
+- **The file reader:** when one task is Blocked on I/O, the processor can move to another task.
+- **The small program:** it fits none of the three scenarios. Threads do not make every program better, and the rule is not to use them unless you need to.
+:::
+
+:::check id=prac-threads-design-q2
+A video player reads, decodes, and plays one film. Why are three tasks in one process usually better than three processes?
+
+- [x] The tasks share the film in one memory, and switching between them is much simpler
+- [ ] Three processes would share all their memory automatically, so threads add nothing new
+- [ ] Threads never move to the Blocked state, so the processor never waits for I/O
+- [ ] Threads are guaranteed to run at the same moment, each on its own processor
+
+- **The reason:** switching threads swaps only the program counter, the registers, and the stack. A switch between processes is a full context switch, and these tasks share the same data anyway.
+- **Why not automatic sharing:** each process has its own address space, which no other process can see.
+- **Why not "never Blocked":** a thread does get stuck on I/O. The gain is that the processor can then move to another task.
+- **Why not "guaranteed":** threads may share one core, with the scheduler switching between them.
+:::
+
+:::check id=prac-threads-design-q3
+Switching between threads of one process swaps only {{=the program counter, the registers, and the stack|the whole heap|the code of the program}}. The heap stays where it is, because {{=all the threads share it|each thread has its own copy|threads do not use the heap}}.
+
+That is why a thread switch is easy compared with the heavy switch from one process to another, which saves and restores much more.
+:::
+:::
+
 To sum up, a thread is a program counter, registers, and a stack, and the threads of one process share its heap. Java defines a task as a `Runnable`, and runs it on a new thread with `Thread.start`.
 
 - **Next:** [Safety and correctness](topic:design-by-contract) asks which results of a concurrent run are legal, and defines safety and correctness formally.

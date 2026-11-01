@@ -381,6 +381,279 @@ Creating, copying, and destroying objects is handled by four special member func
 
 The versions the compiler writes copy each member one by one. That is correct for the small `Student` with a `std::string` and an `int`, whose members manage their own memory. It is wrong for the full `Student`, which holds a `Bag*` and pointers to books. The next chapter shows why.
 
+## Practice
+
+:::problem id=prac-classes-layout title="The cells of a Reader" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+`Reader` has three fields. Count cells the way this chapter does: an `int` or a pointer takes one cell, and a `string` takes two. These questions look only at where things live.
+
+```cpp
+class Bag { };
+
+class Reader {
+    int _id;
+    std::string _name;
+    Bag* _bag;
+public:
+    Reader(int id, const std::string& name, Bag* bag)
+        : _id(id), _name(name), _bag(bag) { }
+};
+
+void open() {
+    Reader* pr = new Reader(7, "Avi", new Bag());
+}
+```
+
+:::check id=prac-classes-layout-q1
+Which cell of the `Reader` object holds `_bag`?
+
+- [ ] Cell 2, because pointers are placed before objects
+- [ ] Cell 3, because `_name` is one field, so it takes one cell
+- [x] Cell 4
+- [ ] None, because the `Bag` is stored directly in the `Reader`
+
+- **Why cell 4:** the fields go in the order they are declared. `_id` is cell 1, `_name` is cells 2 and 3, and `_bag` is cell 4.
+- **Why not cell 2:** the type of a field does not change its place. Only the order of declaration does.
+- **Why not cell 3:** a `string` is an object with two fields of its own, and they are laid out in its place.
+- **Why not "none":** `_bag` is one cell holding an address. The `Bag` it points at is a separate object.
+:::
+
+:::check id=prac-classes-layout-q2
+While `open` runs, which of these are on the heap?
+
+- [ ] The variable `pr`
+- [x] The four cells of the `Reader`
+- [x] The characters of `_name`
+- [x] The `Bag`
+
+- **`pr` is on the stack:** it is a local variable, one cell in the frame of `open`. Only what `new` created is on the heap.
+- **The `Reader` is on the heap:** it was created with `new`, so all of its cells are there, including the cell of `_bag`.
+- **The characters are on the heap too:** `_name` keeps only their address and the length in its two cells, and the `string` owns the characters.
+- **The `Bag` is on the heap:** it has its own `new`, so it is a separate object, and `_bag` only holds its address.
+:::
+
+:::check id=prac-classes-layout-q3
+To reach `pr->_bag`, the compiler uses {{=a fixed position from the start of the object|a search through the fields at run time|the field's name stored in the object}}. That works because the fields are placed {{=in the order they are declared|in alphabetical order|wherever memory is free}}.
+
+The layout follows a fixed rule, so the compiler always knows where each field is, relative to the start of the object. It never searches for a field, and no names are kept in the cells.
+:::
+:::
+
+:::problem id=prac-classes-seat title="A constructor for Seat" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=exercise solution_origin=derived
+This constructor assigns both fields in its body.
+
+```cpp
+class Seat {
+    const int _number;
+    std::string _owner;
+public:
+    Seat(int number, const std::string& owner) {
+        _number = number;
+        _owner = owner;
+    }
+};
+```
+
+:::check id=prac-classes-seat-q1
+What happens when you compile this class?
+
+- [ ] It compiles, because the first assignment to a `const` member counts as its first value
+- [ ] It fails, because `_owner = owner` assigns from a `const` reference
+- [x] It fails, because `_number` is `const`, and it already exists by the time the body runs
+- [ ] It compiles, but `_number` holds garbage when the program runs
+
+- **Why it fails:** the body runs after every member already exists, so `_number = number` is an assignment to a `const` member. That is a compile error.
+- **Why the first assignment does not count:** a `const` member gets its value in the initializer list, the only place it can be initialized.
+- **Why `_owner` is not the problem:** `const` on `owner` only promises not to change the caller's string. Reading it is fine, so `_owner = owner` works, only wastefully.
+- **Why it is not a run-time problem:** the compiler rejects the class, so the program never runs.
+:::
+
+:::check id=prac-classes-seat-q2
+Here is the repaired constructor. Which statements about it are true?
+
+```cpp
+class Seat {
+    const int _number;
+    std::string _owner;
+public:
+    Seat(int number, const std::string& owner)
+        : _number(number), _owner(owner) { }
+};
+```
+
+- [x] `_number` now gets its value in the only place a `const` member can get it
+- [x] `_owner` is built once, instead of being built empty and then assigned
+- [ ] The `const` in `const std::string& owner` means `_owner` can never change later
+- [ ] The initializer list runs after the constructor body
+
+- **`_number`:** the initializer list comes before the body, while the member is being created.
+- **`_owner`:** in the old version it was first built as an empty string and then assigned, which did the work twice.
+- **The `const` on the parameter:** it is a promise about the caller's string during the call. It says nothing about the member `_owner`, which is not `const`.
+- **The order:** the list comes first, and the body runs once every member exists.
+:::
+
+:::check id=prac-classes-seat-q3
+A reference member such as `const University& _univ` must get its value in {{=the initializer list|the constructor body|the destructor}}. An ordinary member such as `int _year` is {{=also best initialized there|only allowed in the body|never initialized at all}}.
+
+`const` members and reference members cannot be assigned after they exist, so the list is the only place for them. Other members may be assigned in the body, but the list gives each one its value directly, so it is the better habit.
+:::
+:::
+
+:::problem id=prac-classes-const-calls title="Calls on a const object" source="materials/lectures/Chapter 3 - Classes and Objects.pptx" kind=exercise solution_origin=derived
+This `Student` has a `const` member function, an ordinary one, and a `static` one. The object `a` is `const`.
+
+```cpp
+class Student {
+    std::string _name;
+    int _year;
+public:
+    Student(const std::string& name, int year) : _name(name), _year(year) { }
+    void print() const { std::cout << _name; }
+    void setYear(int year) { _year = year; }
+    static int passingGrade() { return 56; }
+};
+
+const Student a("Avi", 2000);
+```
+
+:::check id=prac-classes-const-calls-q1
+Inside a function that can see `a`, which of these lines compile?
+
+- [x] `a.print();`
+- [ ] `a.setYear(2001);`
+- [x] `Student::passingGrade();`
+- [ ] `Student::print();`
+
+- **`a.print()`:** `print` is a `const` member function, so a `const` object may call it.
+- **`a.setYear(2001)`:** a `const` object may call only `const` member functions, and `setYear` is not one. It changes the object.
+- **`Student::passingGrade()`:** a `static` function belongs to the class, so it needs no object.
+- **`Student::print()`:** `print` is not `static`, so it needs an object to work on. Here there is none for `this` to point at.
+:::
+
+:::check id=prac-classes-const-calls-q2
+Someone adds `static int getYear() { return _year; }` to the class. The compiler rejects it. Why?
+
+- [x] A `static` function has no `this`, so it cannot reach the non-static member `_year`
+- [ ] `_year` is `private`, and a `static` function cannot reach `private` members
+- [ ] A `static` function must also be marked `const`
+
+- **The reason:** each object has its own `_year`. A `static` function has no object, so it cannot tell which `_year` you mean.
+- **Why `private` is not the problem:** a `static` function is still part of the class. The factory's `create` calls a `private` constructor in just this way.
+- **Why `const` does not help:** `const` on a member function is a promise about the object in `this`, and a `static` function has no `this`.
+:::
+
+:::check id=prac-classes-const-calls-q3
+In the call `a.print()`, the hidden pointer `this` holds {{=the address of a|a copy of a|the address of print}}, and inside `print` its type is {{=const Student*|Student*|Student&}}.
+
+There is only one copy of `print`, shared by all the objects, so `this` is how it knows which object to print. In a `const` member function, `this` is a pointer to a `const` object, which is why the function cannot change the members.
+:::
+:::
+
+:::problem id=prac-classes-factory title="Creating through a factory" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+This `Student` uses the factory pattern.
+
+```cpp
+class Student {
+    std::string _name;
+    Student(const std::string& name) : _name(name) { }
+public:
+    static Student* create(const std::string& name) {
+        Student* ret = new Student(name);
+        return ret;
+    }
+};
+```
+
+:::check id=prac-classes-factory-q1
+Which line compiles in a function outside the class?
+
+- [ ] `Student a("Avi");`
+- [ ] `Student* b = new Student("Benni");`
+- [x] `Student* c = Student::create("Gadi");`
+
+- **The constructor is `private`:** in a `class`, members are `private` unless you say otherwise, and the constructor comes before `public:`. So nobody outside the class can call it.
+- **The first two lines:** both call the constructor directly. Using `new` does not change that.
+- **The third line:** `create` is `public` and `static`, so it needs no object. It is inside the class, so it may call the `private` constructor.
+:::
+
+:::check id=prac-classes-factory-q2
+After `Student* c = Student::create("Gadi");`, which statements are true?
+
+- [x] The `Student` that `c` points at is on the heap
+- [ ] `create` deletes the `Student` when it returns
+- [x] Whoever holds `c` must call `delete c`
+- [ ] Other code can get a `Student` on the stack by calling `create` differently
+
+- **It is on the heap:** `create` uses `new` and returns the address.
+- **`create` does not delete it:** only the local variable `ret` goes away when `create` returns. The object stays, and the caller now has its address.
+- **Who deletes:** whoever holds the variable with the object's address must call `delete` on it.
+- **No stack version:** this is the pattern's drawback. Every instance must be created on the heap.
+:::
+
+:::check id=prac-classes-factory-q3
+Registering a student with the university server belongs in {{=create, after the constructor has finished|the constructor body|the destructor}}, so the server is never sent {{=a student whose constructor has not finished|a student on the stack|a copy of the factory}}.
+
+That is one of the reasons for the pattern. `create` first builds the object completely, then does the extra initialization, and only then returns the address.
+:::
+:::
+
+:::problem id=prac-classes-destructor title="Which destructor prints first" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+Each destructor prints its own name. `_tag` is an object field, and `_bag` holds the address of a `Bag` on the heap.
+
+```cpp
+struct Bag { ~Bag() { std::cout << "Bag "; } };
+struct Tag { ~Tag() { std::cout << "Tag "; } };
+
+class Student {
+    Tag _tag;
+    Bag* _bag;
+public:
+    Student() : _bag(new Bag()) { }
+    ~Student() {
+        std::cout << "Student ";
+        delete _bag;
+    }
+};
+
+int main() {
+    Student* ps = new Student();
+    delete ps;
+}
+```
+
+:::check id=prac-classes-destructor-q1
+What does the program print?
+
+- [ ] `Tag Bag Student`
+- [x] `Student Bag Tag`
+- [ ] `Student Tag Bag`
+- [ ] `Bag Tag Student`
+
+- **`Student` comes first:** `delete ps` runs the object's destructor first, while every field still exists.
+- **`Bag` comes next:** the body of `~Student` prints its name and then runs `delete _bag`, so `~Bag` runs inside that body.
+- **`Tag` comes last:** after the body ends, the destruction mechanism runs on every field that is itself an object. Then the memory is released.
+- **Why not the fields first:** if they went first, the destructor could no longer use them to release what they point at.
+:::
+
+:::check id=prac-classes-destructor-q2
+Now remove the line `delete _bag;`. What happens?
+
+- [x] It prints `Student Tag`, and the `Bag` stays on the heap and is never released
+- [ ] It prints `Student Bag Tag`, because the destruction mechanism follows the pointer
+- [ ] It prints `Student Tag Bag`, because the `Bag` is released when the program ends
+- [ ] It no longer compiles, because a class with a pointer field must delete it
+
+- **Why no `Bag`:** the mechanism runs only on fields that are themselves objects. `_bag` is one cell holding an address, so releasing that cell does nothing to the `Bag`.
+- **The result is a leak:** nothing calls `~Bag`, and nothing has the address anymore.
+- **Why it still compiles:** the compiler does not check that you deleted your pointers. That is your job, in the destructor.
+:::
+
+:::check id=prac-classes-destructor-q3
+If `main` used `Student s;` in a block instead, you would write {{=no delete at all|one delete for s|one delete for the block}}. The same destructors would run {{=when the block ends|when the program ends|only if you call them}}.
+
+An object on the stack is removed when the block it was defined in ends. It goes through the same steps, and then its cells are popped. So you never delete a variable on the stack, but its destructor still releases the `Bag`.
+:::
+:::
+
 To sum up, an object's fields are laid out one after another, the initializer list is how a constructor gives them their first values, and the destructor releases what the object is responsible for before its memory goes.
 
 - **Next:** [The rule of three](topic:rule-of-three) shows what must change when an object like `Student` is copied or assigned, since it holds pointers to memory it owns.
