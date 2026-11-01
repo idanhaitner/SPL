@@ -10,10 +10,8 @@ colors:
   new-leaf: "#B7E36B"
   new-leaf-ink: "#0F3D2E"
   bud: "#27755A"
-  bloom: "#FF6F59"
-  bloom-hover: "#FF8470"
-  bloom-ink: "#20100C"
-  bloom-edge: "#A8341F"
+  new-leaf-hover: "#C9EE85"
+  stem: "#5FA886"
   sunroom: "#F2F7EE"
   sunroom-raised: "#FBFDF9"
   sunroom-wash: "#E2EFD8"
@@ -131,14 +129,14 @@ spacing:
   3xl: "104px"
 components:
   button-primary:
-    backgroundColor: "{colors.bloom}"
-    textColor: "{colors.bloom-ink}"
+    backgroundColor: "{colors.new-leaf}"
+    textColor: "{colors.new-leaf-ink}"
     typography: "{typography.button}"
     rounded: "{rounded.pill}"
     padding: "14px 28px"
     height: "52px"
   button-primary-hover:
-    backgroundColor: "{colors.bloom-hover}"
+    backgroundColor: "{colors.new-leaf-hover}"
   button-secondary:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
@@ -172,24 +170,24 @@ Rejected by the user: anything nerdy or squarish, including technical-datasheet,
 **Key Characteristics:**
 - One continuous stem, in every surface, that shows real progress
 - Curves everywhere a corner would be unkind: pills, arches, soft panels
-- Lots of green, one coral action
+- All green: one lime action on the green fields, and a palette with no second hue except rust for errors
 - Friendly, heavy Gabarito headings over calm Figtree prose
 - Code treated as the star of the page
 
 ## Colors
 
-A saturated botanical palette: deep bottle greens carry the frame, fresh lime means growth, and a single coral means "do this next".
+A saturated botanical palette: deep bottle greens carry the frame, and fresh lime means growth and "do this next". Coral was tried for the action and removed: it fought the world instead of belonging to it.
 
 ### Primary
 - **Canopy** (`canopy`, with `canopy-mid` and `canopy-high` for nested arches): the green fields of home, chapter tops, and session bars.
 - **New Leaf** (`new-leaf`): anything grown or correct. Stems, open leaves, passed tests, links on dark grounds. Its text color is `new-leaf-ink`.
-- **Bud** (`bud`): leaves not yet opened.
+- **Bud** (`bud`): the session primary action, and the family of the leaves not yet opened.
 
-### Secondary
-- **Bloom** (`bloom`, text `bloom-ink`, edge `bloom-edge`): the one next action on a screen. Coral on pale ground is only 2.5:1, so light-theme buttons carry the darker edge to keep a visible boundary.
+### The primary action
+One filled pill per screen. On green fields (home hero, close, mastheads, the 404) it is `new-leaf` with `new-leaf-ink` and a soft shadow. In reading rooms it is `canopy` with `canopy-ink` in light theme and `new-leaf` in dark (`--cta`). In sessions it is `bud` with white.
 
 ### Tertiary
-- **Rust** (`rust`, `rust-deep`, `rust-wash`; `night-rust`, `night-rust-wash` in dark): wrong answers, failing tests, and traps, named after the plant disease. It is deliberately not coral, so errors never look like the action to take.
+- **Rust** (`rust`, `rust-deep`, `rust-wash`; `night-rust`, `night-rust-wash` in dark): wrong answers, failing tests, and traps, named after the plant disease. It is the only warm color on the site, so an error is never mistaken for anything else.
 
 ### Neutral
 - **Sunroom** (`sunroom`, `sunroom-raised`, `sunroom-wash`): light reading grounds, tinted green rather than cream or gray.
@@ -200,9 +198,9 @@ A saturated botanical palette: deep bottle greens carry the frame, fresh lime me
 ### Code
 The syntax palette (`code-*`) is one set for both themes and maps onto Shiki's `--code-*` variables: keywords in wisteria, numbers in apricot, strings in honey, functions in sky, types in aqua. Green stays out of syntax, so it keeps meaning growth: the only green on code is the leaf that marks a line and the color of a pass.
 
-**The One Bloom Rule.** At most one coral element per screen, and it is always the next thing to do. Never decorate with it, and never use it for selection, errors, or progress.
+**The One Action Rule.** At most one filled primary pill per screen, and it is always the next thing to do.
 
-**The Earned Green Rule.** Lime on a stem or leaf always reports something the student really did. Never fill it for decoration or to look encouraging.
+**The Earned Green Rule.** Lime on a stem or leaf always reports something the student really did. Never fill it for decoration or to look encouraging. Decorative leaves, like the closing sprig, stay tone on tone.
 
 ## Typography
 
@@ -252,16 +250,18 @@ In dark theme, cards drop their shadow and rise through `night-raised` instead.
 
 ## Motion
 
-Things used all day stay fast or do not animate; growth is the only slow motion, because growth is progress. One easing throughout: `cubic-bezier(0.23, 1, 0.32, 1)` (`--ease-out`), a quick start that settles.
+Things used all day stay fast or do not animate; growth is the only slow motion, because growth is progress. One UI easing: `cubic-bezier(0.23, 1, 0.32, 1)` (`--ease-out`), with `--gh-ease` for the larger home entrances.
 
-- **Frequent actions (fast, no travel):** page arrival is a 140ms fade with no movement; press feedback on buttons, pills, answers, and quiet links is 120ms with a scale of 0.97 to 0.98; a new session step rises 6px over 200ms. Links, navigation, typing, and Next never wait on an animation.
-- **Growth (the only slow motion):** the stem lengthens over 600ms and the session mini bar fills over 300ms when progress is earned. Home leaves unfurl once on arrival, 420ms each, staggered 45ms apart.
-- **Feedback:** a correct answer pops its mark (280ms); a wrong one nudges once sideways 4px (220ms). Leaves lift 1.08 and tilt 3 degrees under a mouse pointer only.
-- **Decoration (slow and small):** the home hero's first arch drifts 10px over 9s. Home sections fade up as they scroll into view, only where scroll timelines exist; elsewhere they simply show.
+- **The focal moment (home, once per browser session):** the headline's words lift out of their baselines. The shoot leaves the action button, the stem climbs over 2s with a quick start that slows, and each leaf unfurls exactly as the tip passes it (`growthDelay` in `lib/stem.ts`). Tendrils draw to the part names, the next leaf lights up, and "Grow" turns lime. Everything is visible and clickable afterwards without any of this running, and a later home visit in the session skips it (`data-grown`).
+- **Life (home hero):** a slow breeze travels up the plant, the next leaf breathes light, a point of sap runs from the button to that leaf every 8s (at once while the button is hovered), and pollen drifts in the arches. Moving the pointer through the plant pushes the leaves it passes, on a spring, and stirs the pollen; a soft light follows the pointer. The chapter strip has the push and the breathing light only. All of it pauses off screen.
+- **Scroll (home):** the arches part at different speeds, sections fade up, each chapter's mark opens as it arrives, and the closing sprig climbs and opens with the scroll. Only where scroll timelines exist; elsewhere everything simply shows.
+- **Frequent actions (fast, no travel):** page arrival is a 140ms fade with no movement; press feedback is 120ms with a scale of 0.97 to 0.98; a new session step rises 6px over 200ms. Links, navigation, typing, and Next never wait on an animation.
+- **Growth:** the grown part of the stem lengthens over 600ms and the session mini bar fills over 300ms when progress is earned. A chapter's own leaf opens in 460ms on arrival.
+- **Feedback:** a correct answer pops its mark (280ms), and on home throws up small leaves (760ms); a wrong one nudges once sideways 4px (220ms). Leaves lift 1.14 under a mouse pointer only.
 
-**The Growth Is Slow Rule.** Anything the student does repeatedly is fast or still. Only the stem and leaves reporting real progress may take longer than 300ms.
+**The Growth Is Slow Rule.** Anything the student does repeatedly is fast or still. Only the plant may take longer than 300ms, and it never blocks a click.
 
-**Reduced motion.** Page, step, and results arrivals shrink to a 100ms linear fade. Stem growth and bar fills switch off, as do unfurl, drift, scroll reveals, pop, nudge, leaf lift, and press scaling. Every state still reads through shape and color alone.
+**Reduced motion.** Page, step, and results arrivals shrink to a 100ms linear fade. Everything else above switches off, including pollen, light, and sap. Every state still reads through shape and color alone.
 
 ## Shapes
 
@@ -269,7 +269,8 @@ Things used all day stay fast or do not animate; growth is the only slow motion,
 - **Pills** (`pill`): every button, chip, and search field.
 - **Arches** (`arch`): the signature silhouette, nested in green fields as depth. Use in the green fields only: home, chapter tops, the glossary top, and the 404.
 - **Soft panels** (`md`, `lg`): cards at 18px, code panels at 18px, large fields at 28px.
-- **Leaves**: drawn as SVG paths from the stem, never as rotated rectangles.
+- **Leaves**: one drawing everywhere (`LeafBlade`): a stalk from the stem, two tones split by a curved midrib, fine veins, a pointed tip. Never a rotated rectangle.
+- **Stems**: tapered, thick at the root and thin at the tip, ending in a small furled leaf. No circles or dots on a stem, anywhere: a part begins where a thin tendril ties its name to the stem, and list marks are buds that open into leaves.
 - **Square corners** are not used on anything the student can see, apart from tables' inner cells.
 
 ## Components
@@ -279,21 +280,27 @@ Things used all day stay fast or do not animate; growth is the only slow motion,
 - **Course drawer:** the whole plant, grouped by the four parts, with every chapter listed and the next one offered. This replaces the permanent 16-item sidebar.
 
 ### Buttons
-- **Primary:** Bloom pill, arrow icon, 52px tall (44px in compact bars). Hover uses `bloom-hover`; press scales to 0.98.
+- **Primary:** filled pill in the color for its ground (see Colors), arrow icon, 56px tall (44px in compact bars). Hover lightens it and its arrow leans 4px ahead; press scales to 0.97.
 - **Secondary:** transparent pill with a `control-edge` outline.
 - **Quiet:** text with an underline on hover, for Skip, Back, and Reread.
 - **Focus, everywhere:** a 2px ring with 2px offset, `moss` on light, `new-leaf` on dark and on code.
 
 ### Stem (signature)
-- **Course stem:** a curved line with one leaf for each chapter, at the top of home and each chapter. Leaves are links above 900px and carry the four part names. Below that they are too small to tap, so the stem only shows progress, and the chapter list and Course drawer do the navigating. **Done** is a lime leaf, **read** an outlined leaf (opened, practice unfinished), **here** a pale leaf, and **ahead** a small dark leaf.
-- **Section stem:** a vertical stem with one node per `##` section. Nodes become leaves once the section has been read. The current node is ringed in the text color.
-- **Session stem:** one leaf per step, and each is a button. **Done** is a lime leaf, **skipped** a dashed outline ("dormant"), **current** is ringed, and **upcoming** is a small bud. Each state differs in shape as well as color, and each carries a full `aria-label`. Below 640px it shows "Step 7 of 26" with a stem that fills, and tapping opens the step list, because 26 leaves cannot be tappable at phone width.
+- **Course stem:** a curved line with one leaf for each chapter, at the top of home and each chapter. Leaves are links above 900px and carry the four part names. Below that they are too small to tap, so the stem only shows progress, and the chapter list and Course drawer do the navigating. Color only ever means how far along a chapter is, on one ripening scale: **ahead** is deep teal with a fine rim, **read** is mint (opened, practice unfinished), **done** is lime, and **here** is the largest, a pale leaf with soft light around it. A chapter's name appears on a plate past the leaf's tip on hover or focus.
+- **Section stem:** a vertical stem with one bud per `##` section. Buds become leaves once the section has been read. The current one is a larger solid bud in the text color.
+- **Session stem:** one leaf per step, and each is a button. **Done** is a lime leaf, **skipped** a dashed outline ("dormant"), **current** is a large pale bud, and **upcoming** is a small outlined bud. Each state differs in shape as well as color, and each carries a full `aria-label`. Below 640px it shows "Step 7 of 26" with a stem that fills, and tapping opens the step list, because 26 leaves cannot be tappable at phone width.
+
+### Course Windows (home)
+"The whole course, in order" is a glasshouse elevation: one arch per part, standing on a shared sill, each as tall as its part is long, so the course's shape is the skyline. The heading and a leaf-color legend fill the sky above the shorter arches. Each arch holds the part's name, language, and summary, then a vine with one numbered leaf per chapter, using the same leaves and colors as the hero. The next chapter's row sits on a lighter plate with an arrow. "Before the exam" is the sill itself. Below 1240px the arches pair up; below 900px they stack. The Course drawer keeps a plain list with bud marks, since it is for quick navigation.
+
+### Glossary
+A green masthead with a sprig, then a sticky bar with a live filter over terms and definitions, jump links to the parts, and a count. Each part opens with a green banner. Each chapter has its numbered leaf and title, pinned while its terms scroll, beside a grid of term cards with leaf-like corners and a faint leaf watermark. Term names link to their chapter; a term arrived at through search flashes lime and keeps a ring.
 
 ### Lecture Page
 Green top with nested arches, the chapter number on a leaf, title, one-line summary, and the course stem. Then the three-zone layout. It ends by handing off: the next section, then the chapter's session.
 
 ### Guided Session Steps
-- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the primary action once the step is done. Sessions have no coral: every primary action (Start step 1, Next, Submit, Next chapter) is a `bud` pill with white text, a brighter step of the session bar's green that holds on the pale ground, the bar, and the code bar alike. Hover uses `#2C8265`. On question steps Check stays a quiet pill, because one step can hold several checks.
+- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the primary action once the step is done. Every primary action (Start step 1, Next, Submit, Next chapter) is a `bud` pill with white text, a brighter step of the session bar's green that holds on the pale ground, the bar, and the code bar alike. Hover uses `#2C8265`. On question steps Check stays a quiet pill, because one step can hold several checks.
 - **Learn:** one section in the reading column. It counts as done when the student presses Next, not when it loads.
 - **Check:** one question with large pill-shaped answers. A wrong answer explains itself in rust and can be retried; a right answer opens a leaf and unlocks Next.
 - **Code:** the split workspace, with only Run, Submit, and Reset as code actions; hints and solution live in the question panel.
@@ -333,8 +340,9 @@ Pill search field; `control-edge` outline; focus uses the standard ring. The edi
 
 ### Don't:
 - **Don't** return to datasheet, debugger, terminal, or hard-edged poster looks.
-- **Don't** use more than one Bloom per screen.
+- **Don't** use more than one filled primary action per screen.
 - **Don't** add garden wordplay to instructions. "Start chapter 1" is clearer than a plant pun wherever the student must act.
 - **Don't** use leaf or stem decoration on reading pages beyond the stems described above.
+- **Don't** bring coral or another warm accent back for actions.
 - **Don't** use gradients on text, colored side stripes on cards, or glass effects.
 - **Don't** show exam years on questions.

@@ -1,20 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { LeafMark } from "./LeafMark";
 import { Mixed } from "@/lib/bidi";
 import { chapterState, hasStarted, nextChapter, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 
 type Part = { title: string; lang: string; summary: string; chapters: ChapterInfo[] };
 
-function Mark({ state }: { state: ChapterState }) {
-  return (
-    <svg className={`gh-row-mark is-${state}`} viewBox="0 0 24 24" aria-hidden="true">
-      {state === "done" || state === "read" ? <path d="M3 21C2 10 9 3 21 3c1 12-6 19-18 18Z" /> : <circle cx="12" cy="12" r={state === "here" ? 8 : 5} />}
-    </svg>
-  );
-}
-
-function rowNote(state: ChapterState, started: boolean, solved: number, total: number) {
+export function rowNote(state: ChapterState, started: boolean, solved: number, total: number) {
   const tally = solved > 0 && state !== "done" ? `${solved} of ${total} solved` : "";
   if (state === "done") return "Done";
   if (state === "here") return tally || (started ? "Continue here" : "Start here");
@@ -27,7 +20,7 @@ function Row({ chapter, state, started, solved }: { chapter: ChapterInfo; state:
   return (
     <li className={state === "done" || state === "read" ? "is-grown" : undefined}>
       <Link className="gh-row" href={`/topics/${chapter.id}`} aria-current={state === "here" ? "step" : undefined}>
-        <Mark state={state} />
+        <LeafMark className="gh-row-mark" state={state} />
         <span className="gh-row-num">{chapter.num}</span>
         <span className="gh-row-title"><Mixed text={chapter.title} /></span>
         {note && <span className="gh-row-note">{note}</span>}

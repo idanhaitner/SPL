@@ -1,19 +1,64 @@
+import type { CSSProperties } from "react";
 import type { ChapterState } from "@/lib/progress";
 import type { Leaf } from "@/lib/stem";
 
-const leafPath = (size: number) => {
-  const [near, far, bulge, slim] = [0.35, 0.8, 0.42, 0.34].map((share) => Math.round(size * share * 100) / 100);
-  return `M0 0C${near} ${-bulge} ${far} ${-slim} ${size} 0C${far} ${slim} ${near} ${bulge} 0 0Z`;
-};
+// One leaf, drawn along +x from where its stalk meets the stem. Every number is a share of its length.
+const UPPER = [[0.14, 0, 0.2, -0.25, 0.44, -0.34, 0.65, -0.23], [0.8, -0.15, 0.92, -0.06, 1, -0.02]];
+const LOWER = [[0.14, 0, 0.17, 0.2, 0.38, 0.31, 0.59, 0.22], [0.76, 0.15, 0.9, 0.04, 1, -0.02]];
+const MIDRIB = [0.74, -0.04, 0.42, 0.02, 0.14, 0];
+const VEINS = [
+  [0.28, 0, 0.35, -0.13, 0.46, -0.215], [0.43, 0, 0.52, -0.12, 0.64, -0.19], [0.58, -0.01, 0.67, -0.08, 0.78, -0.12],
+  [0.28, 0, 0.34, 0.11, 0.43, 0.2], [0.43, 0, 0.51, 0.11, 0.6, 0.18], [0.58, -0.01, 0.66, 0.06, 0.76, 0.1],
+];
 
-export function LeafShape({ leaf, size, state, num, numSize }: { leaf: Leaf; size: number; state: ChapterState; num: number; numSize: number }) {
-  const radians = (leaf.angle * Math.PI) / 180;
-  const textX = Math.round((leaf.x + Math.cos(radians) * size * 0.55) * 100) / 100;
-  const textY = Math.round((leaf.y + Math.sin(radians) * size * 0.55 + numSize * 0.34) * 100) / 100;
+const scaled = (values: number[], size: number) => values.map((value) => Math.round(value * size * 100) / 100).join(" ");
+
+function half([first, second]: number[][], size: number) {
+  return `M${scaled(first.slice(0, 2), size)}C${scaled(first.slice(2), size)}C${scaled(second, size)}C${scaled(MIDRIB, size)}Z`;
+}
+
+function outline(size: number) {
+  const back = (curve: number[], from: number[]) => [curve[2], curve[3], curve[0], curve[1], from[0], from[1]];
+  return `M${scaled(UPPER[0].slice(0, 2), size)}C${scaled(UPPER[0].slice(2), size)}C${scaled(UPPER[1], size)}C${scaled(back(LOWER[1], LOWER[0].slice(6)), size)}C${scaled(back(LOWER[0].slice(2), LOWER[0]), size)}Z`;
+}
+
+// The blade alone: two tones split by a curved midrib, with fine veins. `flip` mirrors it across the midrib.
+export function LeafBlade({ size, flip = false }: { size: number; flip?: boolean }) {
   return (
-    <g className={`gh-leaf is-${state}`}>
-      <path d={leafPath(size)} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.angle})`} />
-      <text x={textX} y={textY} textAnchor="middle" fontSize={numSize}>{num}</text>
+    <g transform={flip ? "scale(1 -1)" : undefined}>
+      <path className="gh-blade-shade" d={half(LOWER, size)} />
+      <path className="gh-blade-light" d={half(UPPER, size)} />
+      <path className="gh-blade-veins" d={`M${scaled(UPPER[1].slice(4), size)}C${scaled(MIDRIB, size)}${VEINS.map((vein) => `M${scaled(vein.slice(0, 2), size)}Q${scaled(vein.slice(2), size)}`).join("")}`} />
+      <path className="gh-blade-edge" d={outline(size)} />
+    </g>
+  );
+}
+
+const STALK = 0.15;
+
+export function LeafShape({ leaf, size, state, num, numSize, index, delay, halo }: { leaf: Leaf; size: number; state: ChapterState; num: number; numSize: number; index: number; delay: number; halo: string }) {
+  const textX = Math.round(size * 0.52 * 100) / 100;
+  const textY = Math.round(numSize * 0.35 * 100) / 100;
+  const style = { "--i": index, "--d": `${delay}ms`, "--side": leaf.side } as CSSProperties;
+  return (
+    <g className={`gh-leaf is-${state}`} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.angle})`} style={style} data-x={leaf.x} data-y={leaf.y} data-angle={leaf.angle}>
+      {state === "here" && (
+        <>
+          <radialGradient id={halo}>
+            <stop offset="0" stopColor="#F4FBD9" stopOpacity="0.5" />
+            <stop offset="0.55" stopColor="#D9F0A3" stopOpacity="0.14" />
+            <stop offset="1" stopColor="#D9F0A3" stopOpacity="0" />
+          </radialGradient>
+          <ellipse className="gh-leaf-halo" cx={size * 0.55} cy="0" rx={size * 1.15} ry={size} fill={`url(#${halo})`} />
+        </>
+      )}
+      <g className="gh-leaf-brush">
+        <g className="gh-leaf-body">
+          <path className="gh-leaf-stalk" d={`M0 0L${Math.round(size * STALK * 100) / 100} 0`} strokeWidth={Math.max(2, size * 0.035)} />
+          <LeafBlade size={size} flip={leaf.side < 0} />
+          <text className="gh-leaf-num" x={textX} y={textY} textAnchor="middle" fontSize={numSize} transform={`rotate(${-leaf.angle} ${textX} 0)`}>{num}</text>
+        </g>
+      </g>
     </g>
   );
 }

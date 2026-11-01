@@ -12,7 +12,7 @@ const KIND = { question: "Question", exercise: "Coding exercise" };
 function Shape({ status }: { status: StepStatus }) {
   return (
     <svg className={`step-shape is-${status}`} viewBox="0 0 30 30" aria-hidden="true">
-      {status === "done" || status === "skipped" ? <path d="M4 26C3 13 11 4 26 4c1 14-8 23-22 22Z" /> : <circle cx="15" cy="15" r={status === "current" ? 11 : 6} />}
+      {status === "done" || status === "skipped" ? <path d="M4 26C3 13 11 4 26 4c1 14-8 23-22 22Z" /> : status === "current" ? <path d="M15 2C24 8 24 22 15 28 6 22 6 8 15 2Z" /> : <path d="M15 8C20 12 20 18 15 22 10 18 10 12 15 8Z" />}
     </svg>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FinishReading, type Hop } from "@/components/chapter/FinishReading";
 import { Icon } from "@/components/home/Icon";
+import { LeafMark } from "@/components/home/LeafMark";
 import { Inline } from "@/lib/inline";
 import { markSection, useProgress } from "@/lib/progress";
 
@@ -11,14 +12,6 @@ export type SectionPart = { title: string; slug: string; ids: string[]; body: Re
 
 function hashId() {
   return decodeURIComponent(window.location.hash.replace(/^#/, ""));
-}
-
-function Node({ state }: { state: "done" | "now" | "ahead" }) {
-  return (
-    <svg className={`stem-node is-${state}`} viewBox="0 0 24 24" aria-hidden="true">
-      {state === "done" ? <path d="M3 21C2 10 9 3 21 3c1 12-6 19-18 18Z" /> : <circle cx="12" cy="12" r={state === "now" ? 8 : 5} />}
-    </svg>
-  );
 }
 
 export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, session, next }: { courseId: string; chapterId: string; stepIds: string[]; intro: ReactNode; parts: SectionPart[]; session: Hop | null; next: Hop | null }) {
@@ -59,13 +52,13 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
   const current = parts[index] ?? parts[0];
   const previous = parts[index - 1];
   const upcoming = parts[index + 1];
-  const nodeState = (item: number) => (item === index ? "now" : done.includes(parts[item].title) ? "done" : "ahead");
+  const nodeState = (item: number) => (item === index ? "here" : done.includes(parts[item].title) ? "done" : "ahead");
   const list = (
     <ol>
       {parts.map((part, item) => (
         <li key={part.slug} className={done.includes(part.title) ? "is-grown" : undefined}>
           <button type="button" aria-current={item === index ? "location" : undefined} onClick={() => show(item)}>
-            <Node state={nodeState(item)} />
+            <LeafMark className="stem-node" state={nodeState(item)} />
             <span><Inline text={part.title} /></span>
           </button>
         </li>

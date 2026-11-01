@@ -14,14 +14,14 @@ async function checkPages(width, theme) {
   const page = await context.newPage();
   const where = `at ${width} in ${theme}`;
   const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-  const blooms = () => page.locator("main").evaluate((main) => [...main.querySelectorAll("*")].filter((el) => getComputedStyle(el).backgroundColor === "rgb(255, 111, 89)").length);
+  const limes = () => page.locator("main").evaluate((main) => [...main.querySelectorAll("*")].filter((el) => getComputedStyle(el).backgroundColor === "rgb(183, 227, 107)").length);
 
   await page.goto(base + "/glossary/", { waitUntil: "networkidle" });
   const ground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   if (ground !== GROUND[theme]) fail(`glossary ${where}: page ground is ${ground}`);
   const sideways = await overflow();
   if (sideways > 0) fail(`glossary ${where}: page overflows sideways by ${sideways}px`);
-  if ((await blooms()) > 0) fail(`glossary ${where}: has a coral element`);
+  if ((await limes()) > 0) fail(`glossary ${where}: has a primary action`);
   // Wide screens pin the jump links; narrow ones fold them behind one control.
   const menu = page.locator(".glossary-menu summary");
   if (await menu.isVisible()) await menu.click();
@@ -81,8 +81,8 @@ async function checkPages(width, theme) {
   if (stray > 0) fail(`404 ${where}: page overflows sideways by ${stray}px`);
   const arches = await page.locator(".not-found .gh-arch").count();
   if (arches !== 2) fail(`404 ${where}: shows ${arches} arches`);
-  const actions = await blooms();
-  if (actions !== 1) fail(`404 ${where}: has ${actions} coral elements, not 1`);
+  const actions = await limes();
+  if (actions !== 1) fail(`404 ${where}: has ${actions} primary actions, not 1`);
   const action = page.locator("a.gh-btn");
   if ((await action.boundingBox()).height < 44) fail(`404 ${where}: the action is shorter than 44px`);
   await action.click();
