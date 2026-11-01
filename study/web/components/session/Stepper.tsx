@@ -4,13 +4,16 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
-import { isRead, useProgress, type ChapterInfo } from "@/lib/progress";
+import { isRead, readProgress, useProgress, writeProgress, type ChapterInfo } from "@/lib/progress";
 import { openStep, readSession, writeSession } from "@/lib/session-store";
+import type { Exercise } from "@/lib/types";
+import { ExerciseStep } from "./ExerciseStep";
+import type { RenderedStep } from "./rendered";
 import { StepStem, type StepMeta, type StepStatus } from "./StepStem";
 
 type Hop = { href: string; title: string };
 
-export function Stepper({ courseId, chapter, steps, rendered, next }: { courseId: string; chapter: ChapterInfo; steps: StepMeta[]; rendered: Record<string, ReactNode>; next: Hop | null }) {
+export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces, harness, next }: { courseId: string; chapter: ChapterInfo; steps: StepMeta[]; rendered: Record<string, ReactNode>; exercises: Record<string, Exercise>; pieces: Record<string, RenderedStep>; harness: string; next: Hop | null }) {
   const ids = useMemo(() => steps.map((step) => step.id), [steps]);
   const progress = useProgress(courseId);
   const solved = progress.solved;
@@ -51,9 +54,10 @@ export function Stepper({ courseId, chapter, steps, rendered, next }: { courseId
   const statusOf = (id: string, at: number): StepStatus => (solved.includes(id) ? "done" : at === index ? "current" : skipped.includes(id) ? "skipped" : "upcoming");
   const doneCount = ids.filter((id) => solved.includes(id)).length;
   const open = steps.filter((step) => !solved.includes(step.id));
+  const reread = <Link href={`/topics/${chapter.id}/`}>Reread: <Mixed text={chapter.title} /></Link>;
 
   return (
-    <div className="session">
+    <div className={`session${current?.kind === "exercise" ? " is-coding" : ""}`}>
       <div className="session-bar">
         <div className="session-bar-row">
           <Link className="session-back" href={`/topics/${chapter.id}/`}>Chapter {chapter.num}</Link>
@@ -100,9 +104,25 @@ export function Stepper({ courseId, chapter, steps, rendered, next }: { courseId
       {current && (
         <div key={current.id} className={current.kind === "exercise" ? "session-code" : "session-reading"}>
           <h2 className="sr-only" ref={heading} tabIndex={-1}>Step {index + 1} of {ids.length}</h2>
-          {rendered[current.id]}
-          {current.kind === "question" && (
-            <p className="session-reread"><Link href={`/topics/${chapter.id}/`}>Reread: <Mixed text={chapter.title} /></Link></p>
+          {current.kind === "question" ? (
+            <>
+              {rendered[current.id]}
+              <p className="session-reread">{reread}</p>
+            </>
+          ) : (
+            <ExerciseStep
+              exercise={exercises[current.id]}
+              courseId={courseId}
+              done={isSolved}
+              onComplete={() => {
+                const saved = readProgress(courseId);
+                if (!saved.solved.includes(current.id)) writeProgress(courseId, { ...saved, solved: [...saved.solved, current.id] });
+              }}
+              harness={harness}
+              rendered={pieces[current.id] ?? {}}
+              moved={moved.current}
+              reread={reread}
+            />
           )}
         </div>
       )}

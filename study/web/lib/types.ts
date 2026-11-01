@@ -75,4 +75,5 @@ export type Course = {
   topics: Topic[];
   glossary: GlossaryEntry[];
   search: SearchHit[];
+  harness: string;
 };

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
 import { openStep, readSession, resumeStep, writeSession } from "./session-store";
 import { stepsOf } from "./steps";

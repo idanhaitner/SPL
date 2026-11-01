@@ -106,6 +106,14 @@ def main() -> None:
             "href": f"/glossary#{anchor}",
         })
 
+    exercises, harness = studylib.load_exercises(Path(args.root))
+    known = {topic["id"] for topic in topics}
+    for chapter in exercises:
+        if chapter not in known:
+            raise studylib.StudyError(f"An exercise names a chapter that does not exist: {chapter}")
+    for topic in topics:
+        topic["exercises"] = exercises.get(topic["id"], [])
+
     json.dump(
         {
             "id": course.get("id"),
@@ -116,6 +124,7 @@ def main() -> None:
             "topics": topics,
             "glossary": glossary,
             "search": search,
+            "harness": harness,
         },
         sys.stdout,
         ensure_ascii=False,

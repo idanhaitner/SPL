@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Blocks } from "@/components/Blocks";
+import type { RenderedStep } from "@/components/session/rendered";
 import { Stepper } from "@/components/session/Stepper";
 import { TopBar } from "@/components/shell/TopBar";
 import { Visit } from "@/components/Visit";
 import { loadCourse } from "@/lib/course";
 import { courseNav, partOf } from "@/lib/nav";
 import { stepsOf } from "@/lib/steps";
+import type { Block, Exercise } from "@/lib/types";
 
 export function generateStaticParams() {
   return loadCourse().topics.filter((topic) => stepsOf(topic).length > 0).map((topic) => ({ slug: topic.id }));
@@ -23,9 +25,23 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   const nav = courseNav(course);
   const part = partOf(nav, topic.id);
   const nextTopic = course.topics[index + 1];
+  const render = (blocks: Block[], key?: string | number) => <Blocks key={key} blocks={blocks} courseId={course.id} />;
   const rendered: Record<string, ReactNode> = {};
+  const exercises: Record<string, Exercise> = {};
+  const pieces: Record<string, RenderedStep> = {};
   for (const step of steps) {
-    if (step.kind === "question") rendered[step.id] = <Blocks blocks={[step.block]} courseId={course.id} />;
+    if (step.kind === "question") {
+      rendered[step.id] = render([step.block]);
+    } else {
+      const { exercise } = step;
+      exercises[step.id] = exercise;
+      pieces[step.id] = {
+        content: render(exercise.statement),
+        hints: exercise.hints.map((blocks, item) => render(blocks, item)),
+        examples: exercise.examples.map((blocks, item) => render(blocks, item)),
+        caseHints: Object.fromEntries(Object.entries(exercise.caseHints).map(([name, blocks]) => [name, render(blocks)])),
+      };
+    }
   }
   return (
     <div className="session-page">
@@ -36,6 +52,9 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
         chapter={nav.chapters[index]}
         steps={steps.map(({ id, kind, title }) => ({ id, kind, title }))}
         rendered={rendered}
+        exercises={exercises}
+        pieces={pieces}
+        harness={course.harness}
         next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
       />
     </div>

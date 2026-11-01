@@ -1,0 +1,217 @@
+{
+  "code": 1,
+  "okToCache": true,
+  "timedOut": false,
+  "stdout": [],
+  "stderr": [
+    {
+      "text": "\u001b[1m/app/example.c:5:40:\u001b[1m\u001b[31m runtime error: \u001b[1m\u001b[0m\u001b[1mindex 4 out of bounds for type 'int [4]'\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "\u001b[1m/app/example.c:5:40:\u001b[1m\u001b[31m runtime error: \u001b[1m\u001b[0m\u001b[1mload of address 0x75e55e6f0030 with insufficient space for an object of type 'int'\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "\u001b[1m0x75e55e6f0030:\u001b[1m\u001b[30m note: \u001b[1m\u001b[0mpointer points here\u001b[1m\u001b[0m"
+    },
+    {
+      "text": " 04 00 00 00  00 00 00 00 00 00 00 00  00 80 6e 5e e5 75 00 00  00 00 00 00 00 00 00 00  00 00 00 00"
+    },
+    {
+      "text": "\u001b[1m\u001b[32m              ^ \u001b[1m\u001b[0m"
+    },
+    {
+      "text": "================================================================="
+    },
+    {
+      "text": "\u001b[1m\u001b[31m==2==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x75e55e6f0030 at pc 0x000000401430 bp 0x7ffff604d6d0 sp 0x7ffff604d6c8"
+    },
+    {
+      "text": "\u001b[1m\u001b[0m\u001b[1m\u001b[34mREAD of size 4 at 0x75e55e6f0030 thread T0\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "    #0 0x00000040142f in main /app/example.c:5"
+    },
+    {
+      "text": "    #1 0x79e560e2a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)"
+    },
+    {
+      "text": "    #2 0x79e560e2a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: a4a7992a8e66555c8141ab2a08a8465ff6e0ea65)"
+    },
+    {
+      "text": "    #3 0x000000401114 in _start (/app/output.s+0x401114) (BuildId: de9256ae741e3a718d24bdb062236b805ea2fe9a)"
+    },
+    {
+      "text": ""
+    },
+    {
+      "text": "\u001b[1m\u001b[32mAddress 0x75e55e6f0030 is located in stack of thread T0 at offset 48 in frame\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "\u001b[1m\u001b[0m    #0 0x0000004011e5 in main /app/example.c:2"
+    },
+    {
+      "text": ""
+    },
+    {
+      "text": "  This frame has 1 object(s):"
+    },
+    {
+      "text": "    [32, 48) 'a' (line 3)\u001b[1m\u001b[32m <== Memory access at offset 48 overflows this variable\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "HINT: this may be a false positive if your program uses some custom stack unwind mechanism, swapcontext or vfork"
+    },
+    {
+      "text": "      (longjmp and C++ exceptions *are* supported)"
+    },
+    {
+      "text": "SUMMARY: AddressSanitizer: stack-buffer-overflow /app/example.c:5 in main"
+    },
+    {
+      "text": "Shadow bytes around the buggy address:"
+    },
+    {
+      "text": "  0x75e55e6efd80: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6efe00: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6efe80: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6eff00: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6eff80: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "=>0x75e55e6f0000: \u001b[1m\u001b[31mf1\u001b[1m\u001b[0m \u001b[1m\u001b[31mf1\u001b[1m\u001b[0m \u001b[1m\u001b[31mf1\u001b[1m\u001b[0m \u001b[1m\u001b[31mf1\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m[\u001b[1m\u001b[31mf3\u001b[1m\u001b[0m]\u001b[1m\u001b[31mf3\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6f0080: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6f0100: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6f0180: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6f0200: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  0x75e55e6f0280: \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "Shadow byte legend (one shadow byte represents 8 application bytes):"
+    },
+    {
+      "text": "  Addressable:           \u001b[1m\u001b[0m00\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Partially addressable: \u001b[1m\u001b[0m01\u001b[1m\u001b[0m \u001b[1m\u001b[0m02\u001b[1m\u001b[0m \u001b[1m\u001b[0m03\u001b[1m\u001b[0m \u001b[1m\u001b[0m04\u001b[1m\u001b[0m \u001b[1m\u001b[0m05\u001b[1m\u001b[0m \u001b[1m\u001b[0m06\u001b[1m\u001b[0m \u001b[1m\u001b[0m07\u001b[1m\u001b[0m "
+    },
+    {
+      "text": "  Heap left redzone:       \u001b[1m\u001b[31mfa\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Freed heap region:       \u001b[1m\u001b[35mfd\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Stack left redzone:      \u001b[1m\u001b[31mf1\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Stack mid redzone:       \u001b[1m\u001b[31mf2\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Stack right redzone:     \u001b[1m\u001b[31mf3\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Stack after return:      \u001b[1m\u001b[35mf5\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Stack use after scope:   \u001b[1m\u001b[35mf8\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Global redzone:          \u001b[1m\u001b[31mf9\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Global init order:       \u001b[1m\u001b[36mf6\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Poisoned by user:        \u001b[1m\u001b[34mf7\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Container overflow:      \u001b[1m\u001b[34mfc\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Array cookie:            \u001b[1m\u001b[31mac\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Intra object redzone:    \u001b[1m\u001b[33mbb\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  ASan internal:           \u001b[1m\u001b[33mfe\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Left alloca redzone:     \u001b[1m\u001b[34mca\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "  Right alloca redzone:    \u001b[1m\u001b[34mcb\u001b[1m\u001b[0m"
+    },
+    {
+      "text": "==2==ABORTING"
+    }
+  ],
+  "truncated": false,
+  "execTime": 42,
+  "processExecutionResultTime": 0.13831499963998795,
+  "didExecute": true,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 0,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [],
+    "truncated": false,
+    "execTime": 123,
+    "processExecutionResultTime": 0.004131000488996506,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilerqszUfa/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "-fsanitize=address,undefined",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ],
+    "preparedLdPaths": [
+      "/opt/compiler-explorer/gcc-16.2.0/lib",
+      "/opt/compiler-explorer/gcc-16.2.0/lib32",
+      "/opt/compiler-explorer/gcc-16.2.0/lib64"
+    ],
+    "defaultExecOptions": {
+      "timeoutMs": 20000,
+      "maxErrorOutput": 5000,
+      "env": {
+        "LD_LIBRARY_PATH": "",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "HOME": "/home/ce"
+      }
+    },
+    "packageStoreTime": 42
+  },
+  "queueTime": 14
+}

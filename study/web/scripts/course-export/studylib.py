@@ -36,6 +36,8 @@ WEIGHTS = {"core", "tested", "taught"}
 KINDS = {"worked", "exercise", "exam"}
 ORIGINS = {"source", "derived"}
 KNOWN_DIRECTIVES = {
+    "example",
+    "case",
     "definition",
     "theorem",
     "algorithm",
@@ -1582,3 +1584,58 @@ def coverage_errors(model) -> list[str]:
     for path in sorted(set(ledger) - on_disk):
         errors.append(f"ledger path not found: {path}")
     return errors
+
+
+def load_exercise(directory: Path) -> dict:
+    """Reads one exercise folder. A problem with its files stops the build, so a broken exercise never ships."""
+    rel = f"study/content/exercises/{directory.name}"
+
+    def need(name: str) -> str:
+        path = directory / name
+        if not path.exists():
+            raise StudyError(f"{rel}: missing {name}")
+        return path.read_text(encoding="utf-8")
+
+    meta, blocks = parse_topic(need("README.md"))
+    meta = meta if isinstance(meta, dict) else {}
+    for key in ("title", "chapter", "order"):
+        if meta.get(key) in (None, ""):
+            raise StudyError(f"{rel}/README.md: frontmatter needs {key}")
+    statement, hints, examples, case_hints = [], [], [], {}
+    for block in blocks:
+        name = block["name"] if block["type"] == "directive" else ""
+        if name == "hint":
+            hints.append(block["children"])
+        elif name == "example":
+            examples.append(block["children"])
+        elif name == "case":
+            case_hints[str(block["attrs"].get("name") or "")] = block["children"]
+        else:
+            statement.append(block)
+    test = need("test.cpp")
+    case_names = re.findall(r'CHECK\(\s*"([^"]*)"', test)
+    if not case_names:
+        raise StudyError(f'{rel}/test.cpp: no CHECK("name", ...) calls found')
+    for name in case_hints:
+        if name not in case_names:
+            raise StudyError(f"{rel}/README.md: case hint {name!r} is not a test of this exercise")
+    return {
+        "id": directory.name, "title": str(meta["title"]).strip(), "chapter": str(meta["chapter"]).strip(), "order": int(meta["order"]),
+        "mode": "function", "statement": statement, "hints": hints, "examples": examples, "caseHints": case_hints,
+        "starter": need("starter.cpp"), "solution": need("solution.cpp"), "test": test, "caseNames": case_names, "cases": [],
+    }
+
+
+def load_exercises(root: Path) -> tuple[dict, str]:
+    """Returns exercises grouped by chapter id and in their order, and the shared test harness."""
+    base = root / "study" / "content" / "exercises"
+    grouped: dict = {}
+    if base.is_dir():
+        for directory in sorted(base.iterdir()):
+            if directory.is_dir() and not directory.name.startswith("."):
+                item = load_exercise(directory)
+                grouped.setdefault(item["chapter"], []).append(item)
+    for items in grouped.values():
+        items.sort(key=lambda item: (item["order"], item["id"]))
+    harness = base / "harness.h"
+    return grouped, harness.read_text(encoding="utf-8") if harness.is_file() else ""

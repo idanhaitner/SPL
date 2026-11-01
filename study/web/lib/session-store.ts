@@ -38,3 +38,32 @@ export function openStep(stepIds: string[], state: SessionState, solved: string[
   }
   return resumeStep(stepIds, solved, state.skipped);
 }
+
+function read(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function write(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage can be blocked or full; the work just won't be saved.
+  }
+}
+
+export const readCode = (courseId: string, exerciseId: string) => read(`${storageKey(courseId)}:code:${exerciseId}`);
+export const writeCode = (courseId: string, exerciseId: string, code: string) => write(`${storageKey(courseId)}:code:${exerciseId}`, code);
+export const readSplit = (courseId: string, name: string) => read(`${storageKey(courseId)}:split:${name}`);
+export const writeSplit = (courseId: string, name: string, fraction: number) => write(`${storageKey(courseId)}:split:${name}`, String(fraction));
+
+export function clearCode(courseId: string, exerciseId: string) {
+  try {
+    localStorage.removeItem(`${storageKey(courseId)}:code:${exerciseId}`);
+  } catch {
+    // Nothing to do.
+  }
+}

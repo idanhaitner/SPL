@@ -1,0 +1,66 @@
+{
+  "code": 143,
+  "okToCache": false,
+  "timedOut": true,
+  "stdout": [],
+  "stderr": [
+    {
+      "text": ""
+    },
+    {
+      "text": "Killed - processing time exceeded"
+    },
+    {
+      "text": "Program terminated with signal: SIGKILL"
+    }
+  ],
+  "truncated": false,
+  "execTime": 20100,
+  "processExecutionResultTime": 0.021100999787449837,
+  "didExecute": true,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 0,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [],
+    "truncated": false,
+    "execTime": 69,
+    "processExecutionResultTime": 0.0025899987667798996,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilern7onfz/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ],
+    "preparedLdPaths": [
+      "/opt/compiler-explorer/gcc-16.2.0/lib",
+      "/opt/compiler-explorer/gcc-16.2.0/lib32",
+      "/opt/compiler-explorer/gcc-16.2.0/lib64"
+    ],
+    "defaultExecOptions": {
+      "timeoutMs": 20000,
+      "maxErrorOutput": 5000,
+      "env": {
+        "LD_LIBRARY_PATH": "",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin",
+        "HOME": "/home/ce"
+      }
+    },
+    "packageStoreTime": 34
+  },
+  "queueTime": 4
+}

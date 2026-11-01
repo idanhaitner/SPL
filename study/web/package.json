@@ -7,11 +7,21 @@
     "start": "next start",
     "audit": "node scripts/audit.mjs",
     "test": "vitest run",
+    "check:exercises": "tsx scripts/check-exercises.ts",
     "check:shell": "node scripts/check-shell.mjs",
     "check:chapter": "node scripts/check-chapter.mjs",
     "check:session": "node scripts/check-session.mjs"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-cpp": "^6.0.3",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
+    "@wasm-fmt/clang-format": "^23.1.1",
+    "codemirror": "^6.0.2",
     "katex": "^0.16.22",
     "next": "^15.5.4",
     "react": "^19.1.1",
@@ -28,6 +38,7 @@
     "playwright": "^1.64.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.13",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.2",
     "vitest": "^3.2.7"
   }

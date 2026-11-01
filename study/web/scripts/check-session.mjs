@@ -108,6 +108,67 @@ try {
   const overflow = await small.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (overflow > 0) fail(`The session overflows sideways by ${overflow}px on a phone`);
 
+  // The coding workspace, with the compiler answered by this script.
+  const coding = await browser.newContext({ viewport: { width: 1024, height: 768 } });
+  const desk = await coding.newPage();
+  let reply = "pass";
+  await desk.route("**/godbolt.org/**", async (route) => {
+    if (reply === "offline") return route.abort();
+    if (reply === "busy") return route.fulfill({ status: 429, headers: { "Retry-After": "2", "access-control-allow-origin": "*", "access-control-expose-headers": "Retry-After" }, body: "" });
+    if (reply === "loop") return route.fulfill({ json: { didExecute: true, code: 143, timedOut: true, stdout: [], stderr: [], buildResult: { stderr: [] } }, headers: { "access-control-allow-origin": "*" } });
+    return route.fulfill({ json: { didExecute: true, code: 0, stdout: ["two positives", "negative and positive", "same value"].map((name) => ({ text: `PASS ${name}` })), stderr: [], buildResult: { stderr: [] } }, headers: { "access-control-allow-origin": "*" } });
+  });
+  await desk.goto(`${base}/sessions/pointers/?step=ex-swap-values`, { waitUntil: "networkidle" });
+  const submit = desk.getByRole("button", { name: "Submit" });
+  await submit.waitFor();
+  await desk.locator(".cm-content").waitFor();
+  const box = await submit.boundingBox();
+  if (!box || box.y + box.height > 768) fail("Submit is below the fold at 1024x768");
+  if ((await desk.locator(".question-title").boundingBox())?.y > 768) fail("The question is below the fold at 1024x768");
+  await desk.locator(".cm-content").click();
+  await desk.keyboard.press("ControlOrMeta+a");
+  await desk.keyboard.insertText("int keepThis = 1;\n");
+  await desk.waitForTimeout(700);
+  for (const [state, text] of [["offline", "can't be reached"], ["busy", "Too many runs"], ["loop", "ran too long"]]) {
+    reply = state;
+    await desk.waitForTimeout(3200);
+    await desk.locator(".results-body").waitFor();
+    await desk.getByRole("button", { name: "Run", exact: true }).click();
+    await desk.getByText(text).first().waitFor({ timeout: 6000 }).catch(() => fail(`No message for: ${state}`));
+    if (!(await desk.locator(".cm-content").innerText()).includes("keepThis")) fail(`Code was lost after: ${state}`);
+    await desk.waitForTimeout(state === "busy" ? 2600 : 0);
+  }
+  await desk.reload({ waitUntil: "networkidle" });
+  await desk.locator(".cm-content").waitFor();
+  if (!(await desk.locator(".cm-content").innerText()).includes("keepThis")) fail("Code was lost on reload");
+  reply = "pass";
+  await desk.waitForTimeout(100);
+  await desk.getByRole("button", { name: "Submit" }).click();
+  await desk.getByText("All tests pass.").waitFor({ timeout: 6000 }).catch(() => fail("A passing Submit shows no success"));
+  if (await desk.getByRole("button", { name: /^(Next|Finish)$/ }).isDisabled()) fail("A passing Submit did not unlock Next");
+
+  // The keyboard can leave the editor: Esc, then Tab.
+  await desk.locator(".cm-content").click();
+  await desk.keyboard.press("Escape");
+  await desk.keyboard.press("Tab");
+  if (await desk.evaluate(() => document.activeElement?.classList.contains("cm-content"))) fail("Esc then Tab stays in the editor");
+
+  // The divider moves by keyboard, and the phone layout has Question and Code tabs.
+  const divider = desk.getByRole("separator", { name: "Resize the question and code panels" });
+  const before = await divider.getAttribute("aria-valuenow");
+  await divider.focus();
+  await desk.keyboard.press("ArrowRight");
+  if ((await divider.getAttribute("aria-valuenow")) === before) fail("The divider does not move by keyboard");
+  const tiny = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const hand = await tiny.newPage();
+  await hand.goto(`${base}/sessions/pointers/?step=ex-swap-values`, { waitUntil: "networkidle" });
+  await hand.getByRole("tab", { name: "Code" }).click();
+  const handSubmit = await hand.getByRole("button", { name: "Submit" }).boundingBox();
+  if (!handSubmit || handSubmit.y + handSubmit.height > 844) fail("Submit is below the fold on a phone");
+  await hand.getByRole("tab", { name: "Question" }).click();
+  if (!(await hand.locator(".question-title").isVisible())) fail("The question tab is empty on a phone");
+  if ((await hand.evaluate(() => document.documentElement.scrollWidth - innerWidth)) > 0) fail("The workspace overflows on a phone");
+
   if (errors.length) fail(`Console: ${errors[0].slice(0, 160)}`);
   const sessions = fs.readdirSync(path.resolve("out/sessions")).length;
   if (sessions < 10) fail(`Only ${sessions} sessions were built`);

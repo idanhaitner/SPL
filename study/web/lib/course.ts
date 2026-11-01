@@ -14,6 +14,10 @@ function contentStamp(root: string) {
       if (name.endsWith(".md")) files.push(path.join(topics, name));
     }
   }
+  const exercises = path.join(content, "exercises");
+  if (fs.existsSync(exercises)) {
+    for (const name of fs.readdirSync(exercises)) files.push(path.join(exercises, name, "README.md"), path.join(exercises, name, "test.cpp"), path.join(exercises, name, "starter.cpp"), path.join(exercises, name, "solution.cpp"));
+  }
   return files
     .filter((file) => fs.existsSync(file))
     .map((file) => `${file}:${fs.statSync(file).mtimeMs}`)

@@ -1,0 +1,76 @@
+{
+  "code": -1,
+  "didExecute": false,
+  "buildResult": {
+    "inputFilename": "example.c",
+    "code": 1,
+    "okToCache": true,
+    "timedOut": false,
+    "stdout": [],
+    "stderr": [
+      {
+        "text": "\u001b[01m\u001b[K<source>:2:5:\u001b[m\u001b[K \u001b[01;31m\u001b[Kerror: \u001b[m\u001b[Kredefinition of '\u001b[01m\u001b[Kmain\u001b[m\u001b[K'",
+        "tag": {
+          "line": 2,
+          "column": 5,
+          "text": "error: redefinition of 'main'",
+          "severity": 3,
+          "file": "example.c"
+        }
+      },
+      {
+        "text": "    2 | int \u001b[01;31m\u001b[Kmain\u001b[m\u001b[K(void){return 1;}"
+      },
+      {
+        "text": "      |     \u001b[01;31m\u001b[K^~~~\u001b[m\u001b[K"
+      },
+      {
+        "text": "\u001b[01m\u001b[K<source>:1:5:\u001b[m\u001b[K \u001b[01;36m\u001b[Knote: \u001b[m\u001b[Kprevious definition of '\u001b[01m\u001b[Kmain\u001b[m\u001b[K' with type '\u001b[01m\u001b[Kint(void)\u001b[m\u001b[K'",
+        "tag": {
+          "line": 1,
+          "column": 5,
+          "text": "note: previous definition of 'main' with type 'int(void)'",
+          "severity": 1,
+          "file": "example.c"
+        }
+      },
+      {
+        "text": "    1 | int \u001b[01;36m\u001b[Kmain\u001b[m\u001b[K(void){return 0;}"
+      },
+      {
+        "text": "      |     \u001b[01;36m\u001b[K^~~~\u001b[m\u001b[K"
+      }
+    ],
+    "truncated": false,
+    "execTime": 55,
+    "processExecutionResultTime": 0.09763100743293762,
+    "instructionSet": "amd64",
+    "downloads": [],
+    "executableFilename": "/nosym/tmp/compiler-explorer-compilerSBMMnN/output.s",
+    "compilationOptions": [
+      "-g",
+      "-o",
+      "/app/output.s",
+      "-fno-verbose-asm",
+      "-fdiagnostics-color=always",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-O0",
+      "-g",
+      "/app/example.c",
+      "-L./lib",
+      "-Wl,-rpath,./lib"
+    ]
+  },
+  "stderr": [
+    {
+      "text": "Build failed"
+    }
+  ],
+  "stdout": [],
+  "timedOut": false,
+  "queueTime": 5,
+  "okToCache": false,
+  "execTime": 66
+}
