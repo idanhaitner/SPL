@@ -248,6 +248,19 @@ Depth comes mostly from nested tones of green. Pale rooms are flat with soft sha
 
 In dark theme, cards drop their shadow and rise through `night-raised` instead.
 
+## Motion
+
+Things used all day stay fast or do not animate; growth is the only slow motion, because growth is progress. One easing throughout: `cubic-bezier(0.23, 1, 0.32, 1)` (`--ease-out`), a quick start that settles.
+
+- **Frequent actions (fast, no travel):** page arrival is a 140ms fade with no movement; press feedback on buttons, pills, answers, and quiet links is 120ms with a scale of 0.97 to 0.98; a new session step rises 6px over 200ms. Links, navigation, typing, and Next never wait on an animation.
+- **Growth (the only slow motion):** the stem lengthens over 600ms and the session mini bar fills over 300ms when progress is earned. Home leaves unfurl once on arrival, 420ms each, staggered 45ms apart.
+- **Feedback:** a correct answer pops its mark (280ms); a wrong one nudges once sideways 4px (220ms). Leaves lift 1.08 and tilt 3 degrees under a mouse pointer only.
+- **Decoration (slow and small):** the home hero's first arch drifts 10px over 9s. Home sections fade up as they scroll into view, only where scroll timelines exist; elsewhere they simply show.
+
+**The Growth Is Slow Rule.** Anything the student does repeatedly is fast or still. Only the stem and leaves reporting real progress may take longer than 300ms.
+
+**Reduced motion.** Page, step, and results arrivals shrink to a 100ms linear fade. Stem growth and bar fills switch off, as do unfurl, drift, scroll reveals, pop, nudge, leaf lift, and press scaling. Every state still reads through shape and color alone.
+
 ## Shapes
 
 - **Small corners** (`xs`, `sm`): inline code chips and editor tabs.
@@ -313,7 +326,7 @@ Pill search field; `control-edge` outline; focus uses the standard ring. The edi
 - **Do** keep every stem and leaf truthful: progress comes from `localStorage`. A first visit shows no lime at all, with chapter 1 marked as the place to start. Opening a chapter makes it read; only solving its practice makes it done.
 - **Do** keep the plant outside the prose. Teaching text, figures, and code stay clear of decoration.
 - **Do** theme selection, scrollbars, caret, and focus from the palette.
-- **Do** make animation optional: every state must read correctly under `prefers-reduced-motion`.
+- **Do** make animation optional: every state must read correctly under `prefers-reduced-motion`, and keep frequent actions fast (see Motion).
 - **Do** color figures only through the `--fig-*` roles in `greenhouse.css`. All 25 are inlined at build time and sit directly on a `--raised` panel with a `--rule` border in both themes, with no light plate.
 
 ### Don't:
