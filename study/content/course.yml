@@ -74,12 +74,12 @@ sources:
     type: lecture
     status: incorporated
     note: "Addresses, pointer arithmetic, references, and lvalues."
-    problems: [worked-pointer-trace, worked-pointer-step]
+    problems: [worked-pointer-trace, worked-pointer-step, worked-pass-eight, worked-return-five]
   - path: "materials/lectures/Chapter 3 - Classes and Objects.pptx"
     type: lecture
     status: incorporated
     note: "Class layout, constructors, and initializer lists."
-    problems: [worked-initializer]
+    problems: [worked-initializer, prac-classes-layout, prac-classes-seat, prac-classes-const-calls, prac-classes-factory, prac-classes-destructor]
   - path: "materials/lectures/Chapter 4 - Rule of Thee.pptx"
     type: lecture
     status: incorporated
@@ -104,6 +104,7 @@ sources:
     type: lecture
     status: incorporated
     note: "Threads, races, locks, and synchronization failures."
+    problems: [prac-threads-run-start, prac-threads-memory, prac-threads-join, prac-threads-design]
   - path: "materials/lectures/Chapter 9 - Design by Contract.pptx"
     type: lecture
     status: incorporated
@@ -122,7 +123,7 @@ sources:
     type: lecture
     status: incorporated
     note: "Java Serializable, transient fields, and serialVersionUID."
-    problems: [worked-transient-hash]
+    problems: [worked-transient-hash, prac-ser-fields, prac-ser-thread-field, prac-ser-version, prac-ser-frame, prac-ser-command]
   - path: "materials/lectures/Chapter 13 - Persistance.pptx"
     type: lecture
     status: incorporated
@@ -576,6 +577,7 @@ topics:
     file: topics/serialization.md
     title: The command-invocation server
     exam_weight: core
+    exam_shape: "A class must travel over a socket. Write the fields, the version id, and the write and read order. The trap is a transient or static field that silently vanishes, or a thread field that makes the write fail."
     prerequisites: [reactor]
     unlocks: [persistence]
   - id: persistence
