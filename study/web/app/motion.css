@@ -1,0 +1,27 @@
+/* Motion. Things used all day (links, nav, typing, Next) stay fast; growth is the only slow thing, and it is progress. */
+:root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+
+/* A page arrives with a short fade; no travel, so a click never feels delayed. */
+@keyframes gh-arrive { from { opacity: 0; } }
+.route-enter { animation: gh-arrive 140ms var(--ease-out); }
+
+/* A new step rises a few pixels into place. */
+@keyframes gh-rise { from { opacity: 0; transform: translateY(6px); } }
+.session-reading, .session-code { animation: gh-rise 200ms var(--ease-out); }
+.results-body > * { animation: gh-rise 180ms var(--ease-out); }
+
+/* Press feedback on everything pressable. */
+.gh-btn, .gh-pill, .session-quiet, .gh-quiet, .question-toggle, .choices label, .gh-answer, .step-leaf { transition-property: background-color, color, transform, box-shadow; transition-duration: 120ms; transition-timing-function: var(--ease-out); }
+.session-quiet:active:not(:disabled), .gh-quiet:active, .question-toggle:active, .choices label:active, .gh-answer:active { transform: scale(0.98); }
+.gh-btn:active, .gh-pill:active:not(:disabled) { transform: scale(0.97); }
+
+/* Progress grows: the stem lengthens, ticks fill in. */
+.gh-stem.is-grown { transition: stroke-dasharray 600ms var(--ease-out); }
+.step-mini-bar i { transition: width 300ms var(--ease-out); }
+.choice-mark { transition: box-shadow 140ms var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter, .session-reading, .session-code, .results-body > * { animation: gh-arrive 100ms linear; }
+  .gh-stem.is-grown, .step-mini-bar i { transition: none; }
+  .gh-btn:active, .gh-pill:active, .session-quiet:active, .gh-quiet:active, .question-toggle:active, .choices label:active, .gh-answer:active { transform: none; }
+}

@@ -3,6 +3,7 @@
 @import "./greenhouse.css";
 
 @import "./reader.css";
+@import "./motion.css";
 
 code, pre, kbd, samp { font-family: var(--gh-mono); }
 
