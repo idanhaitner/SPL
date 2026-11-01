@@ -1,41 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" width="760" height="220">
-  <style>
-    .draw { opacity: 0; animation: appear 0.35s ease forwards; }
-    .d2 { animation-delay: 0.28s; }
-    .d3 { animation-delay: 0.56s; }
-    .d4 { animation-delay: 0.84s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="760" height="220" fill="#f6f8fb" />
-  <g class="draw">
-    <rect x="20" y="48" width="150" height="110" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="95" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">preprocessor</text>
-    <text x="95" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565">#include, macros</text>
+  <g>
+    <rect x="20" y="48" width="150" height="110" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="95" y="96" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">preprocessor</text>
+    <text x="95" y="122" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)">#include, macros</text>
   </g>
-  <g class="draw d2">
-    <rect x="206" y="48" width="150" height="110" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="281" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">compiler</text>
-    <text x="281" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">one <tspan direction="ltr">.cpp</tspan> file to <tspan direction="ltr">asm</tspan></text>
+  <g>
+    <rect x="206" y="48" width="150" height="110" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="281" y="96" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">compiler</text>
+    <text x="281" y="122" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">one <tspan direction="ltr">.cpp</tspan> file to <tspan direction="ltr">asm</tspan></text>
   </g>
-  <g class="draw d3">
-    <rect x="392" y="48" width="150" height="110" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="467" y="96" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">assembler</text>
-    <text x="467" y="122" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">writes a <tspan direction="ltr">.o</tspan> file</text>
+  <g>
+    <rect x="392" y="48" width="150" height="110" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="467" y="96" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">assembler</text>
+    <text x="467" y="122" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">writes a <tspan direction="ltr">.o</tspan> file</text>
   </g>
-  <g class="draw d4">
-    <rect x="578" y="48" width="160" height="110" rx="12" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="658" y="90" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" direction="ltr">linker</text>
-    <text x="658" y="114" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">finds <tspan direction="ltr">main</tspan></text>
-    <text x="658" y="134" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" direction="ltr">one executable</text>
+  <g>
+    <rect x="578" y="48" width="160" height="110" rx="12" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="658" y="90" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" direction="ltr">linker</text>
+    <text x="658" y="114" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">finds <tspan direction="ltr">main</tspan></text>
+    <text x="658" y="134" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" direction="ltr">one executable</text>
   </g>
-  <g class="draw d2">
-    <polygon points="198,103 184,96 184,110" fill="#1f63d2" />
+  <g>
+    <polygon points="198,103 184,96 184,110" fill="var(--fig-accent, currentColor)" />
   </g>
-  <g class="draw d3">
-    <polygon points="384,103 370,96 370,110" fill="#1f63d2" />
+  <g>
+    <polygon points="384,103 370,96 370,110" fill="var(--fig-accent, currentColor)" />
   </g>
-  <g class="draw d4">
-    <polygon points="570,103 556,96 556,110" fill="#1f63d2" />
+  <g>
+    <polygon points="570,103 556,96 556,110" fill="var(--fig-accent, currentColor)" />
   </g>
 </svg>

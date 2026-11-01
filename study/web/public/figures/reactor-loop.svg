@@ -1,36 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" width="760" height="420">
-  <rect width="760" height="420" fill="#f6f8fb" />
-  <rect x="24" y="24" width="328" height="372" rx="16" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-  <text x="40" y="56" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">selector thread</text>
-  <text x="40" y="84" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#1b2333" text-anchor="start">Selector</text>
-  <circle cx="312" cy="128" r="14" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-  <text x="312" y="133" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1b2333">1</text>
-  <text x="40" y="124" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">select()</text>
-  <text x="40" y="146" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">waits until a key is ready</text>
-  <circle cx="312" cy="196" r="14" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-  <text x="312" y="201" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1b2333">2</text>
-  <text x="40" y="192" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">ready keys</text>
-  <text x="40" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">takes each key from the set</text>
-  <circle cx="312" cy="264" r="14" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-  <text x="312" y="269" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1b2333">3</text>
-  <text x="40" y="260" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">handles the key</text>
-  <text x="40" y="282" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">accept, read</tspan>, or <tspan direction="ltr">write</tspan></text>
-  <rect x="242" y="324" width="90" height="40" rx="10" fill="#e8f0fc" stroke="#c6d3e6" stroke-width="1.5" />
-  <text x="287" y="349" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1b2333">accept</text>
-  <rect x="142" y="324" width="90" height="40" rx="10" fill="#e8f0fc" stroke="#c6d3e6" stroke-width="1.5" />
-  <text x="187" y="349" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1b2333">read</text>
-  <rect x="42" y="324" width="90" height="40" rx="10" fill="#e8f0fc" stroke="#c6d3e6" stroke-width="1.5" />
-  <text x="87" y="349" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1b2333">write</text>
-  <line x1="368" y1="168" x2="448" y2="168" stroke="#1f63d2" stroke-width="2" />
-  <polygon points="456,168 442,162 442,174" fill="#1f63d2" />
-  <text x="412" y="152" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#1d4fa8" direction="ltr">full message</text>
-  <line x1="456" y1="300" x2="376" y2="300" stroke="#1f63d2" stroke-width="2" />
-  <polygon points="368,300 382,294 382,306" fill="#1f63d2" />
-  <text x="412" y="284" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#1d4fa8" direction="ltr">queued bytes</text>
-  <rect x="472" y="72" width="264" height="200" rx="16" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-  <text x="488" y="112" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">outside this thread</text>
-  <text x="488" y="144" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">worker pool</text>
-  <text x="488" y="180" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#363f50" text-anchor="start" direction="ltr">a task per client</text>
-  <text x="488" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#363f50" text-anchor="start" direction="ltr"><tspan direction="ltr">protocol</tspan> work only</text>
-  <text x="488" y="240" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">selector</tspan> stays free</text>
+  <rect x="24" y="24" width="328" height="372" rx="16" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="40" y="56" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">selector thread</text>
+  <text x="40" y="84" font-family="var(--gh-body, sans-serif)" font-size="20" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start">Selector</text>
+  <circle cx="312" cy="128" r="14" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+  <text x="312" y="133" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-ink, currentColor)">1</text>
+  <text x="40" y="124" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">select()</text>
+  <text x="40" y="146" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">waits until a key is ready</text>
+  <circle cx="312" cy="196" r="14" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+  <text x="312" y="201" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-ink, currentColor)">2</text>
+  <text x="40" y="192" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">ready keys</text>
+  <text x="40" y="214" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">takes each key from the set</text>
+  <circle cx="312" cy="264" r="14" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+  <text x="312" y="269" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-ink, currentColor)">3</text>
+  <text x="40" y="260" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">handles the key</text>
+  <text x="40" y="282" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">accept, read</tspan>, or <tspan direction="ltr">write</tspan></text>
+  <rect x="242" y="324" width="90" height="40" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="287" y="349" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-ink, currentColor)">accept</text>
+  <rect x="142" y="324" width="90" height="40" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="187" y="349" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-ink, currentColor)">read</text>
+  <rect x="42" y="324" width="90" height="40" rx="10" fill="var(--fig-accent-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="87" y="349" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-ink, currentColor)">write</text>
+  <line x1="368" y1="168" x2="448" y2="168" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+  <polygon points="456,168 442,162 442,174" fill="var(--fig-accent, currentColor)" />
+  <text x="412" y="152" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-accent, currentColor)" direction="ltr">full message</text>
+  <line x1="456" y1="300" x2="376" y2="300" stroke="var(--fig-accent, currentColor)" stroke-width="2" />
+  <polygon points="368,300 382,294 382,306" fill="var(--fig-accent, currentColor)" />
+  <text x="412" y="284" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-accent, currentColor)" direction="ltr">queued bytes</text>
+  <rect x="472" y="72" width="264" height="200" rx="16" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+  <text x="488" y="112" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">outside this thread</text>
+  <text x="488" y="144" font-family="var(--gh-body, sans-serif)" font-size="20" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">worker pool</text>
+  <text x="488" y="180" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">a task per client</text>
+  <text x="488" y="208" font-family="var(--gh-body, sans-serif)" font-size="15" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">protocol</tspan> work only</text>
+  <text x="488" y="240" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">selector</tspan> stays free</text>
 </svg>

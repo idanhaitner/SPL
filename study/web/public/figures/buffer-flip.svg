@@ -1,27 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" width="760" height="300">
-  <style>
-    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
-    .d2 { animation-delay: 0.45s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="760" height="300" fill="#f6f8fb" />
-  <g class="draw">
-    <text x="36" y="36" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">after reading 5 bytes</text>
-    <text x="36" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start">position 5, limit 16, capacity 16</text>
-    <rect x="36" y="76" width="688" height="48" rx="8" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <rect x="36" y="76" width="215" height="48" rx="8" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="143" y="106" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1b2333" direction="ltr">5 bytes already read</text>
-    <text x="470" y="106" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">empty tail, not for writing</text>
-    <text x="251" y="146" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8">position</text>
-    <text x="724" y="146" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8">limit</text>
+  <g>
+    <text x="36" y="36" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">after reading 5 bytes</text>
+    <text x="36" y="58" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start">position 5, limit 16, capacity 16</text>
+    <rect x="36" y="76" width="688" height="48" rx="8" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <rect x="36" y="76" width="215" height="48" rx="8" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="143" y="106" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink, currentColor)" direction="ltr">5 bytes already read</text>
+    <text x="470" y="106" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" direction="ltr">empty tail, not for writing</text>
+    <text x="251" y="146" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)">position</text>
+    <text x="724" y="146" text-anchor="end" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)">limit</text>
   </g>
-  <g class="draw d2">
-    <text x="36" y="186" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">after <tspan direction="ltr">flip</tspan></text>
-    <text x="36" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">position</tspan> 0, <tspan direction="ltr">limit</tspan> 5, <tspan direction="ltr">capacity</tspan> still 16</text>
-    <rect x="36" y="224" width="215" height="48" rx="8" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="143" y="254" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#1b2333" direction="ltr">5 bytes a write sends</text>
-    <text x="36" y="292" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8">position</text>
-    <text x="251" y="292" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8">limit</text>
+  <g>
+    <text x="36" y="186" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">after <tspan direction="ltr">flip</tspan></text>
+    <text x="36" y="208" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">position</tspan> 0, <tspan direction="ltr">limit</tspan> 5, <tspan direction="ltr">capacity</tspan> still 16</text>
+    <rect x="36" y="224" width="215" height="48" rx="8" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="143" y="254" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink, currentColor)" direction="ltr">5 bytes a write sends</text>
+    <text x="36" y="292" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)">position</text>
+    <text x="251" y="292" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)">limit</text>
   </g>
 </svg>

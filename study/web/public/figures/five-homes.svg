@@ -1,48 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 640" width="720" height="640">
-  <style>
-    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
-    .d2 { animation-delay: 0.25s; }
-    .d3 { animation-delay: 0.5s; }
-    .d4 { animation-delay: 0.75s; }
-    .d5 { animation-delay: 1s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="720" height="640" fill="#f6f8fb" />
-  <text x="32" y="32" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8" direction="ltr">high addresses</text>
-  <g class="draw">
-    <rect x="32" y="48" width="656" height="128" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="48" y="76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">stack, second call to <tspan direction="ltr">note</tspan></text>
-    <text x="48" y="104" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
-    <text x="48" y="130" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">x = 1</text>
-    <text x="160" y="130" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">local, gone on return</text>
-    <text x="48" y="156" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">box</text>
-    <text x="160" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">pointer, gone too</text>
+  <text x="32" y="32" text-anchor="start" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">high addresses</text>
+  <g>
+    <rect x="32" y="48" width="656" height="128" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="48" y="76" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">stack, second call to <tspan direction="ltr">note</tspan></text>
+    <text x="48" y="104" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
+    <text x="48" y="130" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">x = 1</text>
+    <text x="160" y="130" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">local, gone on return</text>
+    <text x="48" y="156" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">box</text>
+    <text x="160" y="156" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">pointer, gone too</text>
   </g>
-  <g class="draw d2">
-    <rect x="32" y="188" width="656" height="88" rx="12" fill="#e6f3ec" stroke="#bcdccb" stroke-width="1.5" />
-    <text x="48" y="220" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">heap</text>
-    <text x="48" y="248" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">int 1</text>
-    <text x="160" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">the block <tspan direction="ltr">new</tspan> returned; only <tspan direction="ltr">box</tspan> points to it</text>
+  <g>
+    <rect x="32" y="188" width="656" height="88" rx="12" fill="var(--fig-fill-2, none)" stroke="var(--fig-fill-2-rule, currentColor)" stroke-width="1.5" />
+    <text x="48" y="220" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">heap</text>
+    <text x="48" y="248" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">int 1</text>
+    <text x="160" y="248" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">the block <tspan direction="ltr">new</tspan> returned; only <tspan direction="ltr">box</tspan> points to it</text>
   </g>
-  <g class="draw d3">
-    <rect x="32" y="288" width="656" height="72" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="48" y="318" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">uninitialized variables</text>
-    <text x="48" y="342" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">scratch</text>
+  <g>
+    <rect x="32" y="288" width="656" height="72" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="48" y="318" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">uninitialized variables</text>
+    <text x="48" y="342" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">scratch</text>
   </g>
-  <g class="draw d4">
-    <rect x="32" y="372" width="656" height="112" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="48" y="402" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">initialized variables</text>
-    <text x="48" y="430" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">ready = 1</text>
-    <text x="180" y="430" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">global, for the whole run</text>
-    <text x="48" y="458" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">calls = 1</text>
-    <text x="180" y="458" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">function <tspan direction="ltr">static</tspan>, survives return</text>
+  <g>
+    <rect x="32" y="372" width="656" height="112" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="48" y="402" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">initialized variables</text>
+    <text x="48" y="430" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">ready = 1</text>
+    <text x="180" y="430" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">global, for the whole run</text>
+    <text x="48" y="458" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">calls = 1</text>
+    <text x="180" y="458" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">function <tspan direction="ltr">static</tspan>, survives return</text>
   </g>
-  <g class="draw d5">
-    <rect x="32" y="496" width="656" height="88" rx="12" fill="#e8f0fc" stroke="#c6d3e6" stroke-width="1.5" />
-    <text x="48" y="528" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">code</text>
-    <text x="48" y="556" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">main, note</text>
-    <text x="180" y="556" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">instructions, read only</text>
+  <g>
+    <rect x="32" y="496" width="656" height="88" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="48" y="528" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">code</text>
+    <text x="48" y="556" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">main, note</text>
+    <text x="180" y="556" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">instructions, read only</text>
   </g>
-  <text x="32" y="620" text-anchor="start" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="650" fill="#1d4fa8" direction="ltr">low addresses</text>
+  <text x="32" y="620" text-anchor="start" font-family="var(--gh-body, sans-serif)" font-size="13" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">low addresses</text>
 </svg>

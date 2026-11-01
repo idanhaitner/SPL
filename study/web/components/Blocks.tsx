@@ -1,10 +1,11 @@
 import { Mixed } from "@/lib/bidi";
 import { CheckCard } from "@/components/CheckCard";
 import { CodeBlock } from "@/components/CodeBlock";
+import { Figure } from "@/components/Figure";
 import { Icon } from "@/components/home/Icon";
 import { PracticeCard } from "@/components/Practice";
 import { highlightTokens } from "@/lib/highlight";
-import { DisplayMath, Inline, Paragraph } from "@/lib/inline";
+import { DisplayMath, Inline, localFigure, Paragraph } from "@/lib/inline";
 import type { Block } from "@/lib/types";
 
 function ListBlock({ block }: { block: Extract<Block, { type: "list" }> }) {
@@ -216,6 +217,8 @@ export function Blocks({ blocks, courseId }: { blocks: Block[]; courseId: string
       {blocks.map((block, index) => {
         const key = `${block.type}-${index}`;
         if (block.type === "paragraph") {
+          const figure = localFigure(block.text);
+          if (figure) return <Figure key={key} src={figure.src} alt={figure.alt} />;
           return <Paragraph key={key} text={block.text} />;
         }
         if (block.type === "heading") {

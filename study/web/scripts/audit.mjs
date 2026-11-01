@@ -4,33 +4,7 @@ const base = process.env.AUDIT_URL || "http://127.0.0.1:8732";
 const widths = [1280, 390];
 const colored = new Set(["cpp", "java", "sql"]);
 
-function textBoxes(svg) {
-  const boxes = [];
-  const pattern = /<text\b([^>]*)>([\s\S]*?)<\/text>/g;
-  let match;
-  while ((match = pattern.exec(svg))) {
-    const attrs = match[1];
-    const text = match[2].replace(/<[^>]+>/g, "").replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "").trim();
-    if (!text) continue;
-    const attr = (name, fallback) => {
-      const found = attrs.match(new RegExp(`${name}="([^"]*)"`));
-      return found ? found[1] : fallback;
-    };
-    const size = Number(attr("font-size", "16"));
-    const x = Number(attr("x", "0"));
-    const y = Number(attr("y", "0"));
-    const anchor = attr("text-anchor", "start");
-    const width = text.length * size * 0.62;
-    const height = size * 1.15;
-    const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x;
-    const top = y - size * 0.82;
-    boxes.push({ text, left, top, right: left + width, bottom: top + height });
-  }
-  return boxes;
-}
-
-function overlaps(svg) {
-  const boxes = textBoxes(svg);
+function overlaps(boxes) {
   const hits = [];
   for (let i = 0; i < boxes.length; i++) {
     for (let j = i + 1; j < boxes.length; j++) {
@@ -105,9 +79,12 @@ async function checkView(page, where, failures, seenSvg) {
         const left = box.left - column.left;
         const right = column.right - box.right;
         if (Math.abs(left - right) > 3) problems.push(`figure is off center by ${Math.abs(left - right).toFixed(1)}px`);
-        const img = figure.querySelector("img");
-        if (!img) continue;
-        const image = img.getBoundingClientRect();
+        const panel = figure.querySelector(".figure-panel");
+        // A diagram that scrolls inside its panel on a phone fills it edge to edge by design.
+        if (panel && panel.scrollWidth > panel.clientWidth + 1) continue;
+        const drawn = figure.querySelector("svg, img");
+        if (!drawn) continue;
+        const image = drawn.getBoundingClientRect();
         const imageLeft = image.left - box.left;
         const imageRight = box.right - image.right;
         if (Math.abs(imageLeft - imageRight) > 8) {
@@ -156,14 +133,64 @@ async function checkView(page, where, failures, seenSvg) {
       complete: img.complete,
       width: img.naturalWidth,
     }));
+    const diagrams = [...document.querySelectorAll("figure.figure[data-figure]")].map((figure) => {
+      const name = figure.getAttribute("data-figure");
+      const svg = figure.querySelector("svg");
+      const panel = figure.querySelector(".figure-panel");
+      if (!svg) return { name, issues: ["has no inlined svg"], boxes: [] };
+      const issues = [];
+      if (!svg.getAttribute("aria-label")) issues.push("has no accessible name");
+      const view = svg.viewBox.baseVal;
+      const shown = svg.getBoundingClientRect();
+      if (!view.width || !shown.width || !shown.height) issues.push("renders with no size");
+      const scale = shown.width / view.width;
+      if (panel.scrollWidth > panel.clientWidth + 1 && (panel.getAttribute("tabindex") !== "0" || panel.getAttribute("role") !== "region")) {
+        issues.push("scrolls in a box that is not focusable");
+      }
+      // Fills that are black here mean a --fig-* variable did not resolve, or a color was hard-coded.
+      for (const shape of svg.querySelectorAll("rect, circle, polygon, path, line, text")) {
+        const style = getComputedStyle(shape);
+        for (const paint of [style.fill, style.stroke]) {
+          if (paint === "rgb(0, 0, 0)" && shape.getAttribute("fill") !== "none" && (shape.getAttribute("fill") || shape.getAttribute("stroke"))) {
+            if (paint === style.fill ? shape.hasAttribute("fill") : shape.hasAttribute("stroke")) {
+              issues.push(`<${shape.tagName}> paints an unresolved color`);
+            }
+          }
+        }
+        if (Number(style.opacity) === 0) issues.push(`<${shape.tagName}> starts hidden`);
+      }
+      const boxes = [];
+      for (const node of svg.querySelectorAll("text")) {
+        const text = node.textContent.replace(/[‎‏‪-‮⁦-⁩]/g, "").trim();
+        if (!text) continue;
+        const size = parseFloat(getComputedStyle(node).fontSize);
+        // Phones scroll a figure rather than shrink it past 11px. Wider screens fit the column, but never down to unreadable.
+        const floor = innerWidth <= 640 ? 10.95 : 8;
+        if (size * scale < floor) issues.push(`text “${text}” renders at ${(size * scale).toFixed(1)}px`);
+        const bounds = node.getBBox();
+        const y = Number(node.getAttribute("y") || 0);
+        if (bounds.x < view.x - 0.5 || bounds.x + bounds.width > view.x + view.width + 0.5) issues.push(`text “${text}” runs off the canvas`);
+        const top = y - size * 0.82;
+        boxes.push({ text, left: bounds.x, right: bounds.x + bounds.width, top, bottom: top + size * 1.15 });
+      }
+      return { name, issues, boxes };
+    });
     const langs = [...document.querySelectorAll(".code-panel")].map((panel) => ({
       lang: panel.getAttribute("data-lang"),
       colors: panel.querySelectorAll("span[style*='color']").length,
     }));
-    return { problems, images, langs };
+    return { problems, images, diagrams, langs };
   });
 
   for (const problem of layout.problems) failures.push(`${where}: ${problem}`);
+  for (const diagram of layout.diagrams) {
+    for (const issue of diagram.issues) failures.push(`${where}: diagram ${diagram.name} ${issue}`);
+    const key = `${diagram.name}`;
+    if (!seenSvg.has(key)) {
+      seenSvg.add(key);
+      for (const hit of overlaps(diagram.boxes)) failures.push(`diagram ${diagram.name}: ${hit}`);
+    }
+  }
   for (const image of layout.images) {
     if (!image.complete || image.width === 0) {
       failures.push(`${where}: broken image ${image.src}`);
@@ -190,11 +217,6 @@ async function checkView(page, where, failures, seenSvg) {
       return "";
     }, image.src);
     if (flat) failures.push(`${where}: image ${image.src} looks ${flat}`);
-    if (image.src?.endsWith(".svg") && !seenSvg.has(image.src)) {
-      seenSvg.add(image.src);
-      const svg = await (await fetch(new URL(image.src, base))).text();
-      for (const hit of overlaps(svg)) failures.push(`diagram ${image.src}: ${hit}`);
-    }
   }
   for (const panel of layout.langs) {
     if (colored.has(panel.lang) && panel.colors < 2) {

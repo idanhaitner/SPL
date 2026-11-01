@@ -23,12 +23,25 @@ function hrefOf(url: string): string | null {
   if (url === "study:index" || url === "study:drill") return "/";
   if (url.startsWith("repo:")) return null;
   for (const root of FIGURE_ROOTS) {
-    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=cobalt`;
+    if (url.startsWith(root)) return `${assetBase}/figures/${url.slice(root.length)}?v=greenhouse`;
   }
   return url;
 }
 
 const FIGURE = /^!\[([^\]]*)\]\(([^)]+)\)$/;
+
+// A paragraph that is only a local SVG diagram. Blocks inlines these on the server through
+// components/Figure, which reads files, so this module stays safe to import from client code.
+export function localFigure(text: string): { src: string; alt: string } | null {
+  const only = text.trim().match(FIGURE);
+  if (!only) return null;
+  for (const root of FIGURE_ROOTS) {
+    if (only[2].startsWith(root) && only[2].endsWith(".svg")) {
+      return { src: only[2].slice(root.length), alt: only[1] };
+    }
+  }
+  return null;
+}
 
 export function Paragraph({ text }: { text: string }) {
   const only = text.trim().match(FIGURE);
@@ -37,11 +50,10 @@ export function Paragraph({ text }: { text: string }) {
     if (src) {
       return (
         <figure className="figure">
-          <a className="figure-open" href={src} target="_blank" rel="noopener">
+          <div className="figure-panel">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={only[1]} />
-            <span className="figure-zoom">Open the diagram full size</span>
-          </a>
+          </div>
           {only[1] ? <figcaption><Mixed text={only[1]} /></figcaption> : null}
         </figure>
       );

@@ -82,9 +82,17 @@
 
 /* Figures and tables */
 .figure { margin: 24px 0; }
-.figure-open { display: block; padding: 16px; border: 1px solid var(--rule); border-radius: 18px; background: #FBFDF9; }
-.figure img { display: block; width: 100%; height: auto; }
-.figure-zoom { display: block; margin-top: 8px; color: #1F6B4F; font-size: 0.875rem; font-weight: 500; }
+.figure-panel { padding: 16px; overflow-x: auto; overscroll-behavior-x: contain; border: 1px solid var(--rule); border-radius: 18px; background: var(--raised); }
+.figure-panel svg, .figure-panel img { display: block; width: 100%; height: auto; }
+.figure-panel svg text { font-variant-numeric: tabular-nums; }
+/* A diagram that reaches an <img> (a check prompt renders on the client) cannot read the theme, so it draws in plain black: keep it on a light ground. */
+img[src*="/figures/"] { padding: 8px; border-radius: 10px; background: var(--canopy-ink); }
+.figure-panel svg { min-width: var(--figure-min, 0); }
+@media (max-width: 40rem) { .figure-panel { padding: 12px; } }
+/* A definition holding a diagram stays in the reading column: the 300px margin would shrink its text out of reach. */
+@media (min-width: 80rem) {
+  .part-panel > .formal:has(.figure), .chapter-lead > .formal:has(.figure) { float: none !important; width: auto !important; margin: 24px 0 !important; }
+}
 .figure figcaption { margin-top: 8px; color: var(--muted); font-size: 0.9375rem; line-height: 1.4; }
 .table-wrap { margin-block: 24px; overflow-x: auto; border: 1px solid var(--rule); border-radius: 18px; }
 .table-wrap table { width: 100%; border-collapse: collapse; font-size: 1rem; line-height: 1.45; }

@@ -1,25 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 300" width="680" height="300">
-  <style>
-    .draw { opacity: 0; animation: appear 0.4s ease forwards; }
-    .d2 { animation-delay: 0.35s; }
-    .d3 { animation-delay: 0.7s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="680" height="300" fill="#f6f8fb" />
-  <g class="draw">
-    <rect x="36" y="28" width="608" height="72" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="52" y="58" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">precondition</text>
-    <text x="52" y="82" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" text-anchor="start" direction="ltr">crop rectangle is inside the image</text>
+  <g>
+    <rect x="36" y="28" width="608" height="72" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="52" y="58" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">precondition</text>
+    <text x="52" y="82" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">crop rectangle is inside the image</text>
   </g>
-  <g class="draw d2">
-    <rect x="36" y="112" width="608" height="72" rx="12" fill="#fdfeff" stroke="#d2dae5" stroke-width="1.5" />
-    <text x="52" y="142" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">invariant</text>
-    <text x="52" y="166" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">width</tspan> and <tspan direction="ltr">height</tspan> are positive, bytes match</text>
+  <g>
+    <rect x="36" y="112" width="608" height="72" rx="12" fill="var(--fig-fill, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="52" y="142" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">invariant</text>
+    <text x="52" y="166" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">width</tspan> and <tspan direction="ltr">height</tspan> are positive, bytes match</text>
   </g>
-  <g class="draw d3">
-    <rect x="36" y="196" width="608" height="72" rx="12" fill="#e6f3ec" stroke="#c6d3e6" stroke-width="1.5" />
-    <text x="52" y="226" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr">postcondition</text>
-    <text x="52" y="250" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" text-anchor="start" direction="ltr">size is the crop, buffer holds the pixels</text>
+  <g>
+    <rect x="36" y="196" width="608" height="72" rx="12" fill="var(--fig-fill-2, none)" stroke="var(--fig-rule, currentColor)" stroke-width="1.5" />
+    <text x="52" y="226" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">postcondition</text>
+    <text x="52" y="250" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">size is the crop, buffer holds the pixels</text>
   </g>
 </svg>

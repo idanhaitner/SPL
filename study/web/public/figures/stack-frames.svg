@@ -1,42 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 460" width="780" height="460">
-  <style>
-    .draw { opacity: 0; animation: appear 0.45s ease forwards; }
-    .d2 { animation-delay: 0.35s; }
-    .d3 { animation-delay: 0.7s; }
-    @keyframes appear { to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .draw { animation: none; opacity: 1; } }
-  </style>
-  <rect width="780" height="460" fill="#f6f8fb" />
-  <text x="200" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr">while <tspan direction="ltr">foo</tspan> runs</text>
-  <text x="580" y="36" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="650" fill="#1d4fa8" direction="ltr">after <tspan direction="ltr">foo</tspan> returns</text>
-  <g class="draw">
-    <text x="36" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">high addresses</text>
-    <rect x="36" y="80" width="328" height="92" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="52" y="110" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
-    <text x="52" y="136" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">a = 4</text>
-    <text x="52" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">stays for the call</text>
-    <rect x="36" y="184" width="328" height="168" rx="12" fill="#d0e0f8" stroke="#9dbdec" stroke-width="1.5" />
-    <text x="52" y="214" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr"><tspan direction="ltr">foo</tspan>'s frame</text>
-    <text x="52" y="242" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start" direction="ltr">return address</text>
-    <text x="52" y="268" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">n = 4</text>
-    <text x="140" y="268" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">parameter</text>
-    <text x="52" y="294" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">x = 8</text>
-    <text x="140" y="294" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">local</text>
-    <text x="52" y="328" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">pushed on call <tspan direction="ltr">foo(a)</tspan></text>
-    <text x="36" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">low addresses</text>
+  <text x="200" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">while <tspan direction="ltr">foo</tspan> runs</text>
+  <text x="580" y="36" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="15" font-weight="650" fill="var(--fig-accent, currentColor)" direction="ltr">after <tspan direction="ltr">foo</tspan> returns</text>
+  <g>
+    <text x="36" y="68" font-family="var(--gh-body, sans-serif)" font-size="12" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">high addresses</text>
+    <rect x="36" y="80" width="328" height="92" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="52" y="110" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
+    <text x="52" y="136" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">a = 4</text>
+    <text x="52" y="156" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">stays for the call</text>
+    <rect x="36" y="184" width="328" height="168" rx="12" fill="var(--fig-accent-fill-2, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="52" y="214" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">foo</tspan>'s frame</text>
+    <text x="52" y="242" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr">return address</text>
+    <text x="52" y="268" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">n = 4</text>
+    <text x="140" y="268" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">parameter</text>
+    <text x="52" y="294" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">x = 8</text>
+    <text x="140" y="294" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">local</text>
+    <text x="52" y="328" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">pushed on call <tspan direction="ltr">foo(a)</tspan></text>
+    <text x="36" y="376" font-family="var(--gh-body, sans-serif)" font-size="12" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">low addresses</text>
   </g>
-  <g class="draw d2">
-    <text x="416" y="68" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">high addresses</text>
-    <rect x="416" y="80" width="328" height="92" rx="12" fill="#e8f0fc" stroke="#bcd0f0" stroke-width="1.5" />
-    <text x="432" y="110" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
-    <text x="432" y="136" font-family="ui-monospace, monospace" font-size="15" fill="#1b2333" text-anchor="start">a = 4</text>
-    <text x="432" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">still here</text>
-    <rect x="416" y="184" width="328" height="168" rx="12" fill="none" stroke="#a4afbe" stroke-width="1.5" stroke-dasharray="7 6" />
-    <text x="432" y="228" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="650" fill="#1b2333" text-anchor="start" direction="ltr"><tspan direction="ltr">foo</tspan>'s frame is gone</text>
-    <text x="432" y="258" font-family="ui-monospace, monospace" font-size="15" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">n</tspan> does not exist</text>
-    <text x="432" y="284" font-family="ui-monospace, monospace" font-size="15" fill="#4b5565" text-anchor="start" direction="ltr"><tspan direction="ltr">x</tspan> does not exist</text>
-    <text x="432" y="320" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#4b5565" text-anchor="start" direction="ltr">return popped the frame</text>
-    <text x="416" y="376" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="650" fill="#1d4fa8" text-anchor="start" direction="ltr">low addresses</text>
+  <g>
+    <text x="416" y="68" font-family="var(--gh-body, sans-serif)" font-size="12" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">high addresses</text>
+    <rect x="416" y="80" width="328" height="92" rx="12" fill="var(--fig-accent-fill, none)" stroke="var(--fig-accent-rule, currentColor)" stroke-width="1.5" />
+    <text x="432" y="110" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">main</tspan>'s frame</text>
+    <text x="432" y="136" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink, currentColor)" text-anchor="start">a = 4</text>
+    <text x="432" y="156" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">still here</text>
+    <rect x="416" y="184" width="328" height="168" rx="12" fill="none" stroke="var(--fig-ink-soft, currentColor)" stroke-width="1.5" stroke-dasharray="7 6" />
+    <text x="432" y="228" font-family="var(--gh-body, sans-serif)" font-size="16" font-weight="650" fill="var(--fig-ink, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">foo</tspan>'s frame is gone</text>
+    <text x="432" y="258" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">n</tspan> does not exist</text>
+    <text x="432" y="284" font-family="var(--gh-mono, monospace)" font-size="15" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr"><tspan direction="ltr">x</tspan> does not exist</text>
+    <text x="432" y="320" font-family="var(--gh-body, sans-serif)" font-size="13" fill="var(--fig-ink-soft, currentColor)" text-anchor="start" direction="ltr">return popped the frame</text>
+    <text x="416" y="376" font-family="var(--gh-body, sans-serif)" font-size="12" font-weight="650" fill="var(--fig-accent, currentColor)" text-anchor="start" direction="ltr">low addresses</text>
   </g>
-  <text class="draw d3" x="390" y="428" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#4b5565" direction="ltr">A <tspan direction="ltr">new</tspan> inside <tspan direction="ltr">foo</tspan> would leave the block on the heap. The pointer to it would not remain in the frame.</text>
+  <text x="390" y="428" text-anchor="middle" font-family="var(--gh-body, sans-serif)" font-size="14" fill="var(--fig-ink-soft, currentColor)" direction="ltr">A <tspan direction="ltr">new</tspan> inside <tspan direction="ltr">foo</tspan> would leave the block on the heap. The pointer to it would not remain in the frame.</text>
 </svg>
