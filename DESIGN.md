@@ -252,7 +252,7 @@ In dark theme, cards drop their shadow and rise through `night-raised` instead.
 
 - **Small corners** (`xs`, `sm`): inline code chips and editor tabs.
 - **Pills** (`pill`): every button, chip, and search field.
-- **Arches** (`arch`): the signature silhouette, nested in green fields as depth. Use on home and at chapter tops only.
+- **Arches** (`arch`): the signature silhouette, nested in green fields as depth. Use in the green fields only: home, chapter tops, the glossary top, and the 404.
 - **Soft panels** (`md`, `lg`): cards at 18px, code panels at 18px, large fields at 28px.
 - **Leaves**: drawn as SVG paths from the stem, never as rotated rectangles.
 - **Square corners** are not used on anything the student can see, apart from tables' inner cells.
