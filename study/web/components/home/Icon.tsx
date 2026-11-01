@@ -4,6 +4,10 @@ const PATHS = {
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></>,
   check: <path d="m5 13 4 4 10-11" />,
   x: <path d="M6 6l12 12M18 6 6 18" />,
+  back: <path d="M20 12H5M11 6l-6 6 6 6" />,
+  copy: <><rect x="9" y="9" width="11" height="11" rx="3" /><path d="M5 15a2 2 0 0 1-1-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 1" /></>,
+  warn: <><path d="M12 4 2.8 20h18.4L12 4Z" /><path d="M12 10v4M12 17.5v.01" /></>,
+  down: <path d="m6 9 6 6 6-6" />,
 };
 
 export function Icon({ name }: { name: keyof typeof PATHS }) {

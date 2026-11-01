@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LeafShape } from "./LeafShape";
 import { useState } from "react";
 import { chapterState, isDone, nextChapter, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 import { curvePath, NARROW_STEM, spacedLeaves, WIDE_STEM, type Leaf } from "@/lib/stem";
@@ -9,24 +10,7 @@ const LEAD = { x: -900, y: 790 };
 const wide = spacedLeaves(WIDE_STEM, 16);
 const narrow = spacedLeaves(NARROW_STEM, 16, 0.05, 0.98);
 
-const leafPath = (size: number) => {
-  const [near, far, bulge, slim] = [0.35, 0.8, 0.42, 0.34].map((share) => Math.round(size * share * 100) / 100);
-  return `M0 0C${near} ${-bulge} ${far} ${-slim} ${size} 0C${far} ${slim} ${near} ${bulge} 0 0Z`;
-};
-
 const STATE_WORDS: Record<ChapterState, string> = { done: ", done", read: ", read", here: ", you are here", ahead: "" };
-
-function LeafShape({ leaf, size, state, num, numSize }: { leaf: Leaf; size: number; state: ChapterState; num: number; numSize: number }) {
-  const radians = (leaf.angle * Math.PI) / 180;
-  const textX = Math.round((leaf.x + Math.cos(radians) * size * 0.55) * 100) / 100;
-  const textY = Math.round((leaf.y + Math.sin(radians) * size * 0.55 + numSize * 0.34) * 100) / 100;
-  return (
-    <g className={`gh-leaf is-${state}`}>
-      <path d={leafPath(size)} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.angle})`} />
-      <text x={textX} y={textY} textAnchor="middle" fontSize={numSize}>{num}</text>
-    </g>
-  );
-}
 
 // The length of stem that has grown: up to the last chapter in an unbroken run of read or finished ones.
 function grown(chapters: ChapterInfo[], states: ChapterState[], leaves: Leaf[]) {

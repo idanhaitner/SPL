@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Icon } from "@/components/home/Icon";
 import { Inline } from "@/lib/inline";
 import type { Block, CodeToken } from "@/lib/types";
 
@@ -303,7 +304,7 @@ export function CheckCard({
           {choices.map((choice, index) => {
             const on = multi ? pickedMany.includes(index) : picked === index;
             return (
-              <label key={index} className={on ? "is-picked" : ""}>
+              <label key={index} className={`${on ? "is-picked" : ""}${graded && on ? (choice.correct ? " is-right" : " is-wrong") : ""}`}>
                 <input
                   type={multi ? "checkbox" : "radio"}
                   name={id}
@@ -320,6 +321,7 @@ export function CheckCard({
                     reportCheck(id, false);
                   }}
                 />
+                <span className="choice-mark" aria-hidden="true">{graded && on && <Icon name={choice.correct ? "check" : "x"} />}</span>
                 <span>{choice.text}</span>
               </label>
             );
@@ -327,11 +329,11 @@ export function CheckCard({
         </div>
       )}
       <div className="actions">
-        <button type="submit">Check</button>
+        <button type="submit" className="gh-pill">Check</button>
       </div>
       {graded && !hasAnswer && <p className="check-result">Choose an answer first.</p>}
-      {graded && hasAnswer && correct && <p className="check-result is-yes">Yes. That is the answer.</p>}
-      {graded && hasAnswer && !correct && <p className="check-result is-no">That is not it. The reason is below.</p>}
+      {graded && hasAnswer && correct && <p className="check-result is-yes"><Icon name="check" />Right.</p>}
+      {graded && hasAnswer && !correct && <p className="check-result is-no"><Icon name="x" />Not quite. Here\u2019s why, and you can try again.</p>}
       {graded && hasAnswer && <div className="check-why">{why}</div>}
     </form>
   );

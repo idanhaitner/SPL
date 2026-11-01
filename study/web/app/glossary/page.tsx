@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { TopBar } from "@/components/shell/TopBar";
 import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
+import { courseNav } from "@/lib/nav";
 
 export default function GlossaryPage() {
   const course = loadCourse();
@@ -16,6 +18,8 @@ export default function GlossaryPage() {
   const loose = course.glossary.filter((entry) => !known.has(entry.topic));
 
   return (
+    <>
+    <TopBar courseId={course.id} title={course.title} hits={course.search} nav={courseNav(course)} />
     <article className="page glossary">
       <header className="masthead">
         <h1>Glossary</h1>
@@ -59,5 +63,6 @@ export default function GlossaryPage() {
         </section>
       )}
     </article>
+    </>
   );
 }

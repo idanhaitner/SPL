@@ -9,7 +9,7 @@ const theme = createCssVariablesTheme({
   fontStyle: true,
 });
 
-const SUPPORTED = new Set(["cpp", "c", "java", "sql", "text"]);
+const SUPPORTED = new Set(["cpp", "c", "java", "sql", "python", "bash", "text"]);
 
 export function grammarOf(lang: string) {
   return SUPPORTED.has(lang) ? lang : "text";

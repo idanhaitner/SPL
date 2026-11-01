@@ -260,7 +260,7 @@ In dark theme, cards drop their shadow and rise through `night-raised` instead.
 ## Components
 
 ### Navigation
-- **Top bar:** one bar only: the plant mark, part and chapter, search, theme toggle, and a Course button. On green at the chapter top; it stays pinned as a raised bar on the reading ground once scrolled.
+- **Top bar:** one bar only: the plant mark, part and chapter, search, theme toggle, and a Course button. Green everywhere, and pinned to the top of the window from 1024px up, so the course stays one click away while reading.
 - **Course drawer:** the whole plant, grouped by the four parts, with every chapter listed and the next one offered. This replaces the permanent 16-item sidebar.
 
 ### Buttons
@@ -278,7 +278,7 @@ In dark theme, cards drop their shadow and rise through `night-raised` instead.
 Green top with nested arches, the chapter number on a leaf, title, one-line summary, and the course stem. Then the three-zone layout. It ends by handing off: the next section, then the chapter's session.
 
 ### Guided Session Steps
-- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the Bloom only after the step is done; before that, the step's own action holds the Bloom.
+- **Bar:** back to chapter, step count, session stem, and Back, Skip for now, and Next. Next is the Bloom once the step is done. Before that nothing in the bar is coral; on code steps Submit holds the Bloom, and on question steps Check stays a quiet pill, because one step can hold several checks.
 - **Learn:** one section in the reading column. It counts as done when the student presses Next, not when it loads.
 - **Check:** one question with large pill-shaped answers. A wrong answer explains itself in rust and can be retried; a right answer opens a leaf and unlocks Next.
 - **Code:** the split workspace, with only Run, Submit, and Reset as code actions; hints and solution live in the question panel.

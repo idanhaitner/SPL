@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Mixed } from "@/lib/bidi";
-import { readProgress, writeProgress } from "@/lib/progress";
+import { readProgress, useProgress, writeProgress } from "@/lib/progress";
 
 type Props = {
   id: string;
@@ -19,23 +19,10 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
   const worked = kind === "worked";
   const quiz = checkIds.length > 0;
   const quizKey = checkIds.join("|");
-  const [open, setOpen] = useState(worked);
   const [openHints, setOpenHints] = useState(0);
   const [showSolution, setShowSolution] = useState(worked);
-  const [solved, setSolved] = useState(false);
   const [results, setResults] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const wanted = decodeURIComponent(window.location.hash.replace(/^#/, ""));
-    if (wanted === id) setOpen(true);
-  }, [id]);
-
-  useEffect(() => {
-    const sync = () => setSolved(readProgress(courseId).solved.includes(id));
-    sync();
-    window.addEventListener("study-progress", sync);
-    return () => window.removeEventListener("study-progress", sync);
-  }, [courseId, id]);
+  const solved = useProgress(courseId).solved.includes(id);
 
   useEffect(() => {
     if (!quiz) return;
@@ -48,93 +35,54 @@ export function PracticeCard({ id, courseId, kind, summary, statement, hints, so
     return () => window.removeEventListener("study-check", onCheck);
   }, [quiz, quizKey]);
 
+  // Once every check has been answered correctly the problem stays solved, even if an answer is changed later.
   useEffect(() => {
-    if (!quiz) return;
+    if (!quiz || worked) return;
     const ids = quizKey.split("|").filter(Boolean);
-    const anyWrong = ids.some((item) => results[item] === false);
-    const allCorrect = ids.every((item) => results[item] === true);
-    if (!anyWrong && !allCorrect) return;
+    if (!ids.every((item) => results[item] === true)) return;
     const progress = readProgress(courseId);
-    const has = progress.solved.includes(id);
-    if (allCorrect === has) return;
-    const solvedIds = allCorrect ? [...progress.solved, id] : progress.solved.filter((item) => item !== id);
-    writeProgress(courseId, { ...progress, solved: solvedIds });
-  }, [results, quiz, quizKey, courseId, id]);
+    if (!progress.solved.includes(id)) writeProgress(courseId, { ...progress, solved: [...progress.solved, id] });
+  }, [results, quiz, worked, quizKey, courseId, id]);
 
   function toggleSolved() {
     const progress = readProgress(courseId);
-    const next = progress.solved.includes(id)
-      ? progress.solved.filter((item) => item !== id)
-      : [...progress.solved, id];
+    const next = progress.solved.includes(id) ? progress.solved.filter((item) => item !== id) : [...progress.solved, id];
     writeProgress(courseId, { ...progress, solved: next });
   }
 
-  const hintLabel =
-    openHints === 0
-      ? `Show hint (1 of ${hints.length})`
-      : openHints < hints.length
-        ? `Next hint (${openHints + 1} of ${hints.length})`
-        : "Hints are open";
-
-  if (!worked && !open) {
-    return (
-      <article className={`card practice is-folded${solved ? " is-solved" : ""}`} id={id}>
-        <button type="button" className="fold-row" aria-expanded={false} onClick={() => setOpen(true)}>
-          <span className="kicker">Practice</span>
-          <span className="fold-line"><Mixed text={summary} /></span>
-          <span className="fold-open">Open</span>
-        </button>
-      </article>
-    );
-  }
-
   return (
-    <article className={`card practice${solved ? " is-solved" : ""}`} id={id}>
-      <header className="card-head">
-        <p className="kicker">{worked ? "Example" : "Practice"}</p>
-        {!worked && (
-          <div className="card-tools">
-            <button type="button" onClick={() => setOpen(false)}>Close</button>
-            {quiz ? (
-              solved ? <span className="solved-flag">Solved</span> : null
-            ) : (
-              <button type="button" className={solved ? "is-on" : ""} onClick={toggleSolved} aria-pressed={solved}>
-                {solved ? "Solved" : "Mark solved"}
-              </button>
-            )}
-          </div>
-        )}
-      </header>
-      <h3 className="practice-title"><Mixed text={summary} /></h3>
+    <article className={`card practice${worked ? " is-worked" : ""}`} id={id}>
+      <h3 className="practice-title">{worked && "Worked example: "}<Mixed text={summary} /></h3>
       <div className="statement">{statement}</div>
       {hints.slice(0, openHints).map((hint, index) => (
-        <div className="reveal" key={index}>
-          <div className="hint">
-            <p className="kicker">Hint {index + 1} of {hints.length}</p>
-            {hint}
-          </div>
+        <div className="hint" key={index}>
+          <h4>Hint {index + 1} of {hints.length}</h4>
+          {hint}
         </div>
       ))}
-      {!quiz && (hints.length > 0 || solution) && !worked && (
+      {!worked && (hints.length > 0 || solution || !quiz) && (
         <div className="actions">
           {hints.length > 0 && (
-            <button type="button" onClick={() => setOpenHints((count) => Math.min(hints.length, count + 1))} disabled={openHints >= hints.length}>
-              {hintLabel}
+            <button type="button" className="gh-pill" onClick={() => setOpenHints((count) => Math.min(hints.length, count + 1))} disabled={openHints >= hints.length}>
+              {openHints === 0 ? "Show a hint" : openHints < hints.length ? "Next hint" : "All hints are open"}
             </button>
           )}
-          {solution && (
-            <button type="button" onClick={() => setShowSolution((open) => !open)} aria-expanded={showSolution}>
-              {showSolution ? "Hide solution" : "Show solution"}
+          {solution && !quiz && (
+            <button type="button" className="gh-pill" onClick={() => setShowSolution((open) => !open)} aria-expanded={showSolution}>
+              {showSolution ? "Hide the solution" : "Show the solution"}
+            </button>
+          )}
+          {!quiz && (
+            <button type="button" className="gh-pill" onClick={toggleSolved} aria-pressed={solved}>
+              {solved ? "Marked as done" : "Mark as done"}
             </button>
           )}
         </div>
       )}
-      {!quiz && solution && showSolution && (
-        <div className="reveal">
-          <div className="solution">
-            <p className="kicker">Solution</p>
-            {solution}
-          </div>
+      {solution && showSolution && (
+        <div className="solution">
+          {!worked && <h4>Solution</h4>}
+          {solution}
         </div>
       )}
     </article>

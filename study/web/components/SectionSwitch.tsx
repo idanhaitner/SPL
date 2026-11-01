@@ -1,312 +1,119 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
+import { FinishReading, type Hop } from "@/components/chapter/FinishReading";
+import { Icon } from "@/components/home/Icon";
 import { Inline } from "@/lib/inline";
+import { markSection, useProgress } from "@/lib/progress";
 
-type Group = { title: string; ids: string[]; body: ReactNode };
-type Part = { title: string; ids: string[]; intro: ReactNode; groups: Group[] };
-export type ChapterHop = { href: string; title: string; num: string };
+export type SectionPart = { title: string; slug: string; ids: string[]; body: ReactNode };
 
 function hashId() {
   return decodeURIComponent(window.location.hash.replace(/^#/, ""));
 }
 
-function prefersReducedMotion() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function scrollToId(id: string) {
-  requestAnimationFrame(() => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "start",
-    });
-  });
-}
-
-function Folds({
-  groups,
-  active,
-  onOpen,
-}: {
-  groups: Group[];
-  active: number;
-  onOpen: (index: number) => void;
-}) {
-  const [open, setOpen] = useState<boolean[]>(() => groups.map((_, index) => index === 0 || index === active));
-
-  useEffect(() => {
-    setOpen((current) => (current[active] ? current : current.map((value, index) => (index === active ? true : value))));
-  }, [active]);
-
+function Node({ state }: { state: "done" | "now" | "ahead" }) {
   return (
-    <>
-      {groups.map((group, index) => (
-        <section
-          className={`fold${open[index] ? " is-open" : ""}`}
-          id={`chapter-group-${index}`}
-          key={`${group.title}-${index}`}
-        >
-          <button
-            type="button"
-            className="fold-toggle"
-            aria-expanded={open[index]}
-            onClick={() => {
-              onOpen(index);
-              setOpen((current) => current.map((value, item) => (item === index ? !value : value)));
-            }}
-          >
-            <span className="fold-toggle-label">
-              <Inline text={group.title} />
-            </span>
-          </button>
-          {open[index] && <div className="fold-body">{group.body}</div>}
-        </section>
-      ))}
-    </>
-  );
-}
-
-function DirectionMark({ way }: { way: "back" | "forward" }) {
-  return (
-    <svg className={`direction-mark is-${way}`} aria-hidden="true" viewBox="0 0 256 256" width="16" height="16">
-      <path d="M221.66 133.66l-72 72a8 8 0 0 1-11.32-11.32L196.69 136H40a8 8 0 0 1 0-16h156.69l-58.35-58.34a8 8 0 0 1 11.32-11.32l72 72a8 8 0 0 1 0 11.32Z" fill="currentColor" />
+    <svg className={`stem-node is-${state}`} viewBox="0 0 24 24" aria-hidden="true">
+      {state === "done" ? <path d="M3 21C2 10 9 3 21 3c1 12-6 19-18 18Z" /> : <circle cx="12" cy="12" r={state === "now" ? 8 : 5} />}
     </svg>
   );
 }
 
-function SectionPop({
-  title,
-  side,
-  onClick,
-}: {
-  title: string;
-  side: "prev" | "next";
-  onClick: () => void;
-}) {
-  const isPrev = side === "prev";
-  return (
-    <button type="button" className={`section-pop is-${side}`} onClick={onClick}>
-      <span className="section-pop-go">
-        <DirectionMark way={isPrev ? "back" : "forward"} />
-      </span>
-      <span className="section-pop-copy">
-        <span className="section-pop-kicker">{isPrev ? "Previous section" : "Next section"}</span>
-        <span className="section-pop-title">
-          <Inline text={title} />
-        </span>
-      </span>
-    </button>
-  );
-}
-
-function ChapterCard({ chapter, side }: { chapter: ChapterHop; side: "prev" | "next" }) {
-  const isPrev = side === "prev";
-  const copy = (
-    <span className="chapter-hop-copy">
-      <span className="chapter-hop-kicker">{isPrev ? "Previous chapter" : "Next chapter"}</span>
-      <span className="chapter-hop-title">
-        <Inline text={chapter.title} />
-      </span>
-    </span>
-  );
-  const go = (
-    <span className="chapter-hop-go">
-      {isPrev ? (
-        <>
-          <DirectionMark way="back" />
-          Chapter {chapter.num}
-        </>
-      ) : (
-        <>
-          Chapter {chapter.num}
-          <DirectionMark way="forward" />
-        </>
-      )}
-    </span>
-  );
-  return (
-    <Link className={`chapter-hop is-${side}`} href={chapter.href}>
-      {isPrev ? (
-        <>
-          {go}
-          {copy}
-        </>
-      ) : (
-        <>
-          {copy}
-          {go}
-        </>
-      )}
-    </Link>
-  );
-}
-
-export function ReadingFooter({
-  sectionIndex,
-  sectionCount,
-  previousSection,
-  nextSection,
-  onPreviousSection,
-  onNextSection,
-  previousChapter,
-  nextChapter,
-}: {
-  sectionIndex?: number | null;
-  sectionCount?: number;
-  previousSection?: string | null;
-  nextSection?: string | null;
-  onPreviousSection?: () => void;
-  onNextSection?: () => void;
-  previousChapter?: ChapterHop | null;
-  nextChapter: ChapterHop | null;
-}) {
-  const anchorRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
-  const hasPrevSection = Boolean(previousSection && onPreviousSection);
-  const hasNextSection = Boolean(nextSection && onNextSection);
-  const hasSectionNav = hasPrevSection || hasNextSection;
-  const showChapters = Boolean((previousChapter || nextChapter) && !hasNextSection);
-
-  useEffect(() => {
-    const node = anchorRef.current;
-    if (!node || !hasSectionNav) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setReady(entry.isIntersecting),
-      { rootMargin: "0px 0px -72px 0px", threshold: 0 },
-    );
-    observer.observe(node);
-    return () => {
-      observer.disconnect();
-      setReady(false);
-    };
-  }, [hasSectionNav, previousSection, nextSection, sectionIndex]);
-
-  if (!hasSectionNav && !showChapters) return null;
-
-  const showCount = sectionCount != null && sectionCount > 1 && sectionIndex != null;
-
-  return (
-    <nav className="chapter-foot" aria-label="Continue reading">
-      {hasSectionNav && <div ref={anchorRef} className="chapter-foot-anchor" />}
-      {hasSectionNav && (
-        <div className={`section-pops${ready ? " is-ready" : ""}`}>
-          {hasPrevSection && (
-            <SectionPop title={previousSection!} side="prev" onClick={onPreviousSection!} />
-          )}
-          {hasNextSection && (
-            <SectionPop title={nextSection!} side="next" onClick={onNextSection!} />
-          )}
-        </div>
-      )}
-      {showChapters && (
-        <>
-          {showCount && (
-            <div className="foot-meta">
-              <span>Section {sectionIndex! + 1} of {sectionCount}</span>
-              <span className="foot-done">End of chapter</span>
-            </div>
-          )}
-          <div className="chapter-hops">
-            {previousChapter && <ChapterCard chapter={previousChapter} side="prev" />}
-            {nextChapter && <ChapterCard chapter={nextChapter} side="next" />}
-          </div>
-        </>
-      )}
-    </nav>
-  );
-}
-
-export function SectionSwitch({
-  intro,
-  parts,
-  previousChapter,
-  nextChapter,
-}: {
-  intro: ReactNode;
-  parts: Part[];
-  previousChapter: ChapterHop | null;
-  nextChapter: ChapterHop | null;
-}) {
+export function SectionSwitch({ courseId, chapterId, intro, parts, session, next }: { courseId: string; chapterId: string; intro: ReactNode; parts: SectionPart[]; session: Hop | null; next: Hop | null }) {
   const [index, setIndex] = useState(0);
-  const [groupIndex, setGroupIndex] = useState(0);
+  const menu = useRef<HTMLDetailsElement>(null);
+  const progress = useProgress(courseId);
+  const done = progress.sections?.[chapterId] ?? [];
 
   useEffect(() => {
     const apply = () => {
       const id = hashId();
       if (!id) return;
-      const hit = parts.findIndex((part) => part.ids.includes(id) || part.groups.some((group) => group.ids.includes(id)));
+      const hit = parts.findIndex((part) => part.slug === id || part.ids.includes(id));
       if (hit < 0) return;
       setIndex(hit);
-      const groupHit = parts[hit].groups.findIndex((group) => group.ids.includes(id));
-      if (groupHit >= 0) setGroupIndex(groupHit);
+      requestAnimationFrame(() => {
+        if (id !== parts[hit].slug) document.getElementById(id)?.scrollIntoView({ block: "start" });
+      });
     };
     apply();
     window.addEventListener("hashchange", apply);
     return () => window.removeEventListener("hashchange", apply);
   }, [parts]);
 
-  function show(next: number) {
-    setIndex(next);
-    setGroupIndex(0);
-    scrollToId("chapter-part");
-  }
-
-  function step(next: number) {
-    setIndex(next);
-    setGroupIndex(0);
-    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  function show(target: number) {
+    setIndex(target);
+    if (menu.current) menu.current.open = false;
+    history.replaceState(history.state, "", `#${parts[target].slug}`);
+    requestAnimationFrame(() => document.getElementById("chapter-part")?.scrollIntoView({ block: "start" }));
   }
 
   const current = parts[index] ?? parts[0];
   const previous = parts[index - 1];
   const upcoming = parts[index + 1];
-  const groups = current.groups;
-  const activeGroup = groups.length === 0 ? 0 : Math.min(groupIndex, groups.length - 1);
-  const hasPartsNav = parts.length > 1;
+  const nodeState = (item: number) => (item === index ? "now" : done.includes(parts[item].title) ? "done" : "ahead");
+  const list = (
+    <ol>
+      {parts.map((part, item) => (
+        <li key={part.slug} className={done.includes(part.title) ? "is-grown" : undefined}>
+          <button type="button" aria-current={item === index ? "location" : undefined} onClick={() => show(item)}>
+            <Node state={nodeState(item)} />
+            <span><Inline text={part.title} /></span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
 
   return (
-    <>
-      {hasPartsNav && (
-        <nav className="parts" id="chapter-sections" aria-label="Sections">
-          {parts.map((part, item) => (
-            <button
-              type="button"
-              key={`${part.title}-${item}`}
-              aria-current={item === index ? "true" : undefined}
-              onClick={(event) => {
-                show(item);
-                event.currentTarget.scrollIntoView({ inline: "nearest", block: "nearest" });
-              }}
-            >
-              <Inline text={part.title} />
+    <div className="reader">
+      {parts.length > 1 ? (
+        <nav className="section-stem parts" aria-label="Sections of this chapter">{list}</nav>
+      ) : <span />}
+      {parts.length > 1 && (
+        <details className="section-menu" ref={menu}>
+          <summary>
+            <b><Inline text={current.title} /></b>
+            <span>Section {index + 1} of {parts.length}</span>
+            <Icon name="down" />
+          </summary>
+          <div className="section-menu-list">{list}</div>
+        </details>
+      )}
+      <article className="reader-body">
+        {index === 0 && intro && <div className="chapter-lead">{intro}</div>}
+        <section className="part-panel" id="chapter-part">
+          <h2 id={current.slug}><Inline text={current.title} /></h2>
+          {current.body}
+        </section>
+        <nav className="handoff" aria-label="Continue reading">
+          {previous ? (
+            <button type="button" className="gh-quiet" onClick={() => show(index - 1)}>
+              <Icon name="back" />
+              <Inline text={previous.title} />
             </button>
-          ))}
+          ) : <span />}
+          {upcoming ? (
+            <div className="handoff-go">
+              <p>Next section<span><Inline text={upcoming.title} /></span></p>
+              <button
+                type="button"
+                className="gh-btn"
+                onClick={() => {
+                  markSection(courseId, chapterId, current.title);
+                  show(index + 1);
+                }}
+              >
+                Continue
+                <Icon name="arrow" />
+              </button>
+            </div>
+          ) : (
+            <FinishReading courseId={courseId} chapterId={chapterId} session={session} next={next} />
+          )}
         </nav>
-      )}
-      {intro && (
-        <div className="chapter-lead">
-          {intro}
-        </div>
-      )}
-      <section className="part-panel" id="chapter-part">
-        <h2><Inline text={current.title} /></h2>
-        {current.intro}
-        {groups.length > 0 && (
-          <Folds key={index} groups={groups} active={activeGroup} onOpen={setGroupIndex} />
-        )}
-        <ReadingFooter
-          sectionIndex={index}
-          sectionCount={parts.length}
-          previousSection={previous?.title}
-          nextSection={upcoming?.title}
-          onPreviousSection={() => step(index - 1)}
-          onNextSection={() => step(index + 1)}
-          previousChapter={previousChapter}
-          nextChapter={nextChapter}
-        />
-      </section>
-    </>
+      </article>
+    </div>
   );
 }

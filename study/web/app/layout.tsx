@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Familjen_Grotesk, Figtree, Gabarito, Heebo, IBM_Plex_Sans, IBM_Plex_Sans_Hebrew, JetBrains_Mono } from "next/font/google";
-import { Rail } from "@/components/Rail";
-import { ReadingProgress } from "@/components/ReadingProgress";
 import { loadCourse } from "@/lib/course";
 import "katex/dist/katex.min.css";
 import "./globals.css";
@@ -72,21 +70,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
-        <ReadingProgress />
         <a className="skip" href="#content">Skip to content</a>
-        <div className="shell">
-          <Rail
-            courseId={course.id}
-            title={course.title}
-            chapters={course.topics.map((topic) => ({
-              id: topic.id,
-              title: topic.title,
-              practiceIds: topic.practiceIds,
-            }))}
-            hits={course.search}
-          />
-          <main id="content">{children}</main>
-        </div>
+        <main id="content">{children}</main>
       </body>
     </html>
   );

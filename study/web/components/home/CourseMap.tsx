@@ -23,7 +23,7 @@ function rowNote(state: ChapterState, started: boolean, solved: number, total: n
 }
 
 function Row({ chapter, state, started, solved }: { chapter: ChapterInfo; state: ChapterState; started: boolean; solved: number }) {
-  const note = rowNote(state, started, solved, chapter.practiceIds.length);
+  const note = rowNote(state, started, solved, chapter.stepIds.length);
   return (
     <li className={state === "done" || state === "read" ? "is-grown" : undefined}>
       <Link className="gh-row" href={`/topics/${chapter.id}`} aria-current={state === "here" ? "step" : undefined}>
@@ -46,7 +46,7 @@ export function CourseMap({ courseId, parts, finale, chapters }: { courseId: str
       chapter={chapter}
       state={chapterState(chapter, next, progress)}
       started={started}
-      solved={chapter.practiceIds.filter((id) => progress.solved.includes(id)).length}
+      solved={chapter.stepIds.filter((id) => progress.solved.includes(id)).length}
     />
   );
   const grownClass = (list: ChapterInfo[]) => {

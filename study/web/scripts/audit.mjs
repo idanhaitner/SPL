@@ -82,7 +82,7 @@ async function checkPage(page, path, width, failures, seenSvg) {
   await page.goto(base + path, { waitUntil: "networkidle" });
   const parts = Math.max(await page.locator("nav.parts button").count(), 1);
   for (let part = 0; part < parts; part++) {
-    if (parts > 1) await page.locator("nav.parts button").nth(part).click();
+    if (parts > 1) await page.locator("nav.parts button").nth(part).evaluate((button) => button.click());
     await openHidden(page);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await checkView(page, `${width}px ${path} §${part + 1}`, failures, seenSvg);

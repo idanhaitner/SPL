@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Mixed } from "@/lib/bidi";
-import { hasStarted, isFinished, nextChapter, useProgress, type ChapterInfo } from "@/lib/progress";
+import { hasStarted, isDone, nextChapter, resumeHref, useProgress, type ChapterInfo } from "@/lib/progress";
 import { Icon } from "./Icon";
 
 export function ContinueButton({ courseId, chapters, showNote = false }: { courseId: string; chapters: ChapterInfo[]; showNote?: boolean }) {
@@ -11,17 +11,17 @@ export function ContinueButton({ courseId, chapters, showNote = false }: { cours
   const target = next ?? chapters[chapters.length - 1];
   const started = hasStarted(progress);
   const label = !next ? "Review for the exam" : started ? `Continue chapter ${target.num}` : `Start chapter ${target.num}`;
-  const finished = chapters.filter((chapter) => isFinished(chapter, progress)).length;
+  const finished = chapters.filter((chapter) => isDone(chapter, progress)).length;
   return (
     <>
-      <Link className="gh-btn" href={`/topics/${target.id}`}>
+      <Link className="gh-btn" href={next ? resumeHref(target, progress) : `/topics/${target.id}/`}>
         {label}
         <Icon name="arrow" />
       </Link>
       {showNote && (
         <p className="gh-action-note">
           <Mixed text={target.title} />
-          {started && <span> · {finished} of {chapters.length} finished</span>}
+          {started && <span> · {finished} of {chapters.length} done</span>}
         </p>
       )}
     </>

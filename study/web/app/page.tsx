@@ -3,12 +3,12 @@ import { SearchBox } from "@/components/SearchBox";
 import { CloseHeading, ContinueButton } from "@/components/home/ContinueButton";
 import { CourseMap } from "@/components/home/CourseMap";
 import { CourseStem } from "@/components/home/CourseStem";
-import { HomeNav } from "@/components/home/HomeNav";
+import { TopBar } from "@/components/shell/TopBar";
 import { TryQuestion } from "@/components/home/TryQuestion";
 import { loadCourse } from "@/lib/course";
 import { highlight } from "@/lib/highlight";
+import { courseNav } from "@/lib/nav";
 import { PARTS } from "@/lib/parts";
-import type { ChapterInfo } from "@/lib/progress";
 import type { Block } from "@/lib/types";
 
 const QUESTION_CODE = `void foo(int n) {
@@ -37,22 +37,10 @@ function countProblems(blocks: Block[], kind: string): number {
 
 export default async function HomePage() {
   const course = loadCourse();
-  const chapters: ChapterInfo[] = course.topics.map((topic, index) => ({
-    id: topic.id,
-    title: topic.title,
-    num: index + 1,
-    practiceIds: topic.practiceIds,
-  }));
+  const nav = courseNav(course);
+  const { chapters, parts, finale } = nav;
   const byId = new Map(chapters.map((chapter) => [chapter.id, chapter]));
-  const parts = PARTS.map(({ title, lang, summary, ids }) => ({
-    title,
-    lang,
-    summary,
-    chapters: ids.map((id) => byId.get(id)).filter((chapter) => chapter !== undefined),
-  }));
-  const mapped = new Set(PARTS.flatMap((part) => part.ids));
-  const finale = chapters.filter((chapter) => !mapped.has(chapter.id));
-  const practiceCount = chapters.reduce((sum, chapter) => sum + chapter.practiceIds.length, 0);
+  const practiceCount = chapters.reduce((sum, chapter) => sum + chapter.stepIds.length, 0);
   const examCount = course.topics.reduce((sum, topic) => sum + countProblems(topic.blocks, "exam"), 0);
   const questionChapter = byId.get("memory-model");
   const partStarts = parts.map((part, index) => ({ label: STEM_LABELS[index], num: part.chapters[0].num }));
@@ -64,7 +52,7 @@ export default async function HomePage() {
         <div className="gh-arch gh-arch-1" />
         <div className="gh-arch gh-arch-2" />
         <div className="gh-frame">
-          <HomeNav title={course.title} hits={course.search} />
+          <TopBar courseId={course.id} title={course.title} hits={course.search} nav={nav} tone="flat" />
           <div className="gh-hero-copy">
             <h1>Start from a seed. <em>Grow</em> a whole server.</h1>
             <p className="gh-lede">{course.title} from zero, one chapter at a time, with questions from the course&rsquo;s own past exams.</p>
