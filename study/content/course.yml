@@ -84,17 +84,17 @@ sources:
     type: lecture
     status: incorporated
     note: "The destructor, the copy constructor, and the copy assignment operator."
-    problems: [worked-copy-and-swap]
+    problems: [worked-copy-and-swap, prac-r3-which-member, prac-r3-shallow-trace, prac-r3-assignment, prac-r3-needs-three]
   - path: "materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
     type: lecture
     status: incorporated
     note: "Move, RAII, and smart pointers."
-    problems: [worked-move-image]
+    problems: [worked-move-image, prac-r5-copy-or-move, prac-r5-move-playlist, prac-r5-five-or-zero, prac-r5-unique-bag]
   - path: "materials/lectures/Chapter 6 - Inheritance.pptx"
     type: lecture
     status: incorporated
     note: "Derived classes, virtual functions, and the vtable."
-    problems: [worked-virtual-call]
+    problems: [worked-virtual-call, prac-inh-order, prac-inh-binding, prac-inh-vtable, prac-inh-clone]
   - path: "materials/lectures/Chapter 7 - Back to Java.pptx"
     type: lecture
     status: incorporated
@@ -104,12 +104,12 @@ sources:
     type: lecture
     status: incorporated
     note: "Threads, races, locks, and synchronization failures."
-    problems: [prac-threads-run-start, prac-threads-memory, prac-threads-join, prac-threads-design]
+    problems: [prac-threads-run-start, prac-threads-memory, prac-threads-join, prac-threads-design, prac-sync-immutable, prac-sync-protocols]
   - path: "materials/lectures/Chapter 9 - Design by Contract.pptx"
     type: lecture
     status: incorporated
     note: "Preconditions, postconditions, and invariants."
-    problems: [worked-crop-contract]
+    problems: [worked-crop-contract, prac-dbc-counter]
   - path: "materials/lectures/Chapter 10 - Networking.pptx"
     type: lecture
     status: incorporated
@@ -119,6 +119,7 @@ sources:
     type: lecture
     status: incorporated
     note: "A single-threaded selector loop, and non-blocking channels."
+    problems: [prac-reactor-encdec, prac-reactor-factories, prac-reactor-models]
   - path: "materials/lectures/Chapter 12 - Serialization.pptx"
     type: lecture
     status: incorporated
@@ -128,12 +129,12 @@ sources:
     type: lecture
     status: incorporated
     note: "Relational tables, SQL, and joins."
-    problems: [worked-inner-join]
+    problems: [worked-inner-join, prac-sql-constraints, prac-sql-join-steps, prac-sql-group]
   - path: "materials/notes/lecture-notes.docx.pdf"
     type: lecture
     status: incorporated
     note: "Meni Adler's lecture notes: the run-time environment, process states, address and data paths, the machine trace of i = i + j, choosing pass by value or by address, client-side locking, the versioned iterator, and relational algebra."
-    problems: [worked-add-trace]
+    problems: [worked-add-trace, prac-dbc-safe-correct, prac-sync-add-if-absent, prac-wait-queue, prac-wait-semaphore, prac-wait-readers-writers]
   - path: "materials/sessions/SPL_PS1 (1).pptx"
     type: exercise
     status: incorporated
@@ -203,62 +204,60 @@ sources:
     type: exam
     status: incorporated
     note: "2015 moed A. Threads, a vector drawing, a UDP reactor edit, and BigApple."
-    problems: [exam-15a-q1, exam-15a-q2, exam-15a-q3, exam-15a-q4]
+    problems: [exam-15a-q3, exam-15a-q4]
   - path: "materials/exams/15-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2015 moed A."
-    problems: [exam-15a-q1, exam-15a-q2, exam-15a-q3, exam-15a-q4]
+    problems: [exam-15a-q3, exam-15a-q4]
   - path: "materials/exams/15-b.pdf"
     type: exam
-    status: incorporated
-    note: "2015 moed B. Synchronization, the vector again, a length-prefix protocol, and BigApple extended."
-    problems: [exam-15b-q1, exam-15b-q2, exam-15b-q3, exam-15b-q4]
+    status: intentionally_excluded
+    note: "2015 moed B. Its questions were replaced by practice problems written for each chapter."
   - path: "materials/exams/15-b-solution.pdf"
     type: exam_solution
-    status: incorporated
-    note: "Official solutions for 2015 moed B."
-    problems: [exam-15b-q1, exam-15b-q2, exam-15b-q3, exam-15b-q4]
+    status: intentionally_excluded
+    note: "2015 moed B. Its questions were replaced by practice problems written for each chapter."
   - path: "materials/exams/16-a.pdf"
     type: exam
     status: incorporated
     note: "2016 moed A. A contract, virtual dispatch, a protocol change, and Abbey Road."
-    problems: [exam-16a-q1, exam-16a-q2, exam-16a-q3, exam-16a-q4]
+    problems: [exam-16a-q2, exam-16a-q4]
   - path: "materials/exams/16-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2016 moed A."
-    problems: [exam-16a-q1, exam-16a-q2, exam-16a-q3, exam-16a-q4]
+    problems: [exam-16a-q2, exam-16a-q4]
   - path: "materials/exams/16-b.pdf"
     type: exam
     status: incorporated
     note: "2016 moed B. Threads, move and copy, a reactor edit, and Abbey Road roles."
-    problems: [exam-16b-q1, exam-16b-q2, exam-16b-q3, exam-16b-q4]
+    problems: [exam-16b-q3]
   - path: "materials/exams/16-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2016 moed B."
-    problems: [exam-16b-q1, exam-16b-q2, exam-16b-q3, exam-16b-q4]
+    problems: [exam-16b-q3]
   - path: "materials/exams/17-a.pdf"
     type: exam
     status: incorporated
     note: "2017 moed A. Threads, the rule of three, a reactor edit, and a glasses shop."
-    problems: [exam-17a-q1, exam-17a-q2, exam-17a-q3, exam-17a-q4]
+    problems: [exam-17a-q3, exam-17a-q4]
   - path: "materials/exams/17-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2017 moed A."
-    problems: [exam-17a-q1, exam-17a-q2, exam-17a-q3, exam-17a-q4]
+    problems: [exam-17a-q3, exam-17a-q4]
   - path: "materials/exams/17-b.pdf"
     type: exam
     status: incorporated
     note: "2017 moed B. Threads, the rule of three, a protocol, and a garage."
-    problems: [exam-17b-q1, exam-17b-q2, exam-17b-q3, exam-17b-q4]
+    problems: [exam-17b-q2, exam-17b-q4]
   - path: "materials/exams/17-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2017 moed B."
-    problems: [exam-17b-q1, exam-17b-q2, exam-17b-q3, exam-17b-q4]
+    problems: [exam-17b-q2, exam-17b-q4]
   - path: "materials/exams/18-a.pdf"
     type: exam
     status: incorporated
@@ -273,82 +272,82 @@ sources:
     type: exam
     status: incorporated
     note: "2018 moed B. Virtual dispatch, threads, a reactor edit, and wiretap tables."
-    problems: [exam-18b-q1, exam-18b-q2, exam-18b-q3, exam-18b-q4]
+    problems: [exam-18b-q1, exam-18b-q2]
   - path: "materials/exams/18-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2018 moed B."
-    problems: [exam-18b-q1, exam-18b-q2, exam-18b-q3, exam-18b-q4]
+    problems: [exam-18b-q1, exam-18b-q2]
   - path: "materials/exams/19-a.pdf"
     type: exam
     status: incorporated
     note: "2019 moed A. Virtual dispatch, a contract, a reactor edit, and Airbnb."
-    problems: [exam-19a-q1, exam-19a-q2, exam-19a-q3, exam-19a-q4]
+    problems: [exam-19a-q2, exam-19a-q3, exam-19a-q4]
   - path: "materials/exams/19-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2019 moed A."
-    problems: [exam-19a-q1, exam-19a-q2, exam-19a-q3, exam-19a-q4]
+    problems: [exam-19a-q2, exam-19a-q3, exam-19a-q4]
   - path: "materials/exams/19-b.pdf"
     type: exam
     status: incorporated
     note: "2019 moed B. Virtual dispatch, threads, a reactor edit, and Airbnb nights."
-    problems: [exam-19b-q1, exam-19b-q2, exam-19b-q3, exam-19b-q4]
+    problems: [exam-19b-q3]
   - path: "materials/exams/19-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2019 moed B."
-    problems: [exam-19b-q1, exam-19b-q2, exam-19b-q3, exam-19b-q4]
+    problems: [exam-19b-q3]
   - path: "materials/exams/20-a.pdf"
     type: exam
     status: incorporated
     note: "2020 moed A. A pointer repository, threads, a reactor edit, and a DVD service."
-    problems: [exam-20a-q1, exam-20a-q2, exam-20a-q3, exam-20a-q4]
+    problems: [exam-20a-q2, exam-20a-q3, exam-20a-q4]
   - path: "materials/exams/20-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2020 moed A."
-    problems: [exam-20a-q1, exam-20a-q2, exam-20a-q3, exam-20a-q4]
+    problems: [exam-20a-q2, exam-20a-q3, exam-20a-q4]
   - path: "materials/exams/20-b.pdf"
     type: exam
     status: incorporated
     note: "2020 moed B. Smart pointers, threads, a protocol, and DVD scores."
-    problems: [exam-20b-q1, exam-20b-q2, exam-20b-q3, exam-20b-q4]
+    problems: [exam-20b-q2]
   - path: "materials/exams/20-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2020 moed B."
-    problems: [exam-20b-q1, exam-20b-q2, exam-20b-q3, exam-20b-q4]
+    problems: [exam-20b-q2]
   - path: "materials/exams/24-a.pdf"
     type: exam
     status: incorporated
     note: "2024 moed A. The rule of five, a contract, and a reactor with a database."
-    problems: [exam-24a-q1, exam-24a-q2, exam-24a-q3]
+    problems: [exam-24a-q3]
   - path: "materials/exams/24-a-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2024 moed A."
-    problems: [exam-24a-q1, exam-24a-q2, exam-24a-q3]
+    problems: [exam-24a-q3]
   - path: "materials/exams/24-b.pdf"
     type: exam
     status: incorporated
     note: "2024 moed B. Virtual dispatch, threads, and a reactor with a database."
-    problems: [exam-24b-q1, exam-24b-q2, exam-24b-q3]
+    problems: [exam-24b-q2]
   - path: "materials/exams/24-b-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2024 moed B."
-    problems: [exam-24b-q1, exam-24b-q2, exam-24b-q3]
+    problems: [exam-24b-q2]
   - path: "materials/exams/24-c.pdf"
     type: exam
     status: incorporated
     note: "2024 moed C. The rule of five, threads, and a reactor with a database."
-    problems: [exam-24c-q1, exam-24c-q2, exam-24c-q3]
+    problems: [exam-24c-q2]
   - path: "materials/exams/24-c-solution.pdf"
     type: exam_solution
     status: incorporated
     note: "Official solutions for 2024 moed C."
-    problems: [exam-24c-q1, exam-24c-q2, exam-24c-q3]
+    problems: [exam-24c-q2]
   - path: "materials/exams/ppl252-a.pdf"
     type: exam
     status: intentionally_excluded
@@ -716,58 +715,28 @@ exams:
     source: "materials/exams/15-a.pdf"
     pattern: "Threads, a stack-and-heap drawing of a vector, a UDP edit of the reactor, and a BigApple schema."
     questions:
-      - id: exam-15a-q1
-        topic: synchronization
-      - id: exam-15a-q2
-        topic: rule-of-three
       - id: exam-15a-q3
         topic: reactor
       - id: exam-15a-q4
-        topic: persistence
-  - year: 2015
-    source: "materials/exams/15-b.pdf"
-    pattern: "Narrowed synchronization, the vector again, a length-prefix tokenizer, and number portability."
-    questions:
-      - id: exam-15b-q1
-        topic: waiting-and-liveness
-      - id: exam-15b-q2
-        topic: inheritance
-      - id: exam-15b-q3
-        topic: reactor
-      - id: exam-15b-q4
         topic: persistence
   - year: 2016
     source: "materials/exams/16-a.pdf"
     pattern: "A contract, virtual dispatch, a protocol change, and Abbey Road sessions."
     questions:
-      - id: exam-16a-q1
-        topic: design-by-contract
       - id: exam-16a-q2
         topic: inheritance
-      - id: exam-16a-q3
-        topic: reactor
       - id: exam-16a-q4
         topic: persistence
   - year: 2016
     source: "materials/exams/16-b.pdf"
     pattern: "Threads, move and copy, a reactor edit, and a restricted set of roles."
     questions:
-      - id: exam-16b-q1
-        topic: waiting-and-liveness
-      - id: exam-16b-q2
-        topic: rule-of-five
       - id: exam-16b-q3
         topic: reactor
-      - id: exam-16b-q4
-        topic: persistence
   - year: 2017
     source: "materials/exams/17-a.pdf"
     pattern: "Threads, the rule of three, a reactor edit, and a glasses shop."
     questions:
-      - id: exam-17a-q1
-        topic: synchronization
-      - id: exam-17a-q2
-        topic: rule-of-three
       - id: exam-17a-q3
         topic: reactor
       - id: exam-17a-q4
@@ -776,12 +745,8 @@ exams:
     source: "materials/exams/17-b.pdf"
     pattern: "Threads, the rule of three, a command protocol, and a garage."
     questions:
-      - id: exam-17b-q1
-        topic: synchronization
       - id: exam-17b-q2
         topic: rule-of-three
-      - id: exam-17b-q3
-        topic: reactor
       - id: exam-17b-q4
         topic: persistence
   - year: 2018
@@ -804,16 +769,10 @@ exams:
         topic: inheritance
       - id: exam-18b-q2
         topic: waiting-and-liveness
-      - id: exam-18b-q3
-        topic: reactor
-      - id: exam-18b-q4
-        topic: persistence
   - year: 2019
     source: "materials/exams/19-a.pdf"
     pattern: "Virtual dispatch, a contract, a reactor edit, and Airbnb."
     questions:
-      - id: exam-19a-q1
-        topic: inheritance
       - id: exam-19a-q2
         topic: design-by-contract
       - id: exam-19a-q3
@@ -824,20 +783,12 @@ exams:
     source: "materials/exams/19-b.pdf"
     pattern: "Virtual dispatch, threads, a reactor edit, and a night that cannot be double-booked."
     questions:
-      - id: exam-19b-q1
-        topic: inheritance
-      - id: exam-19b-q2
-        topic: waiting-and-liveness
       - id: exam-19b-q3
         topic: reactor
-      - id: exam-19b-q4
-        topic: persistence
   - year: 2020
     source: "materials/exams/20-a.pdf"
     pattern: "A pointer repository, threads, a reactor edit, and a DVD catalog."
     questions:
-      - id: exam-20a-q1
-        topic: rule-of-three
       - id: exam-20a-q2
         topic: concurrency
       - id: exam-20a-q3
@@ -848,41 +799,23 @@ exams:
     source: "materials/exams/20-b.pdf"
     pattern: "Smart pointers, threads, a protocol, and an updating average score."
     questions:
-      - id: exam-20b-q1
-        topic: rule-of-five
       - id: exam-20b-q2
         topic: synchronization
-      - id: exam-20b-q3
-        topic: reactor
-      - id: exam-20b-q4
-        topic: persistence
   - year: 2024
     source: "materials/exams/24-a.pdf"
     pattern: "The rule of five, a contract, and a reactor that also talks to a database."
     questions:
-      - id: exam-24a-q1
-        topic: rule-of-five
-      - id: exam-24a-q2
-        topic: design-by-contract
       - id: exam-24a-q3
         topic: reactor
   - year: 2024
     source: "materials/exams/24-b.pdf"
     pattern: "Virtual dispatch, threads, and a reactor that also talks to a database."
     questions:
-      - id: exam-24b-q1
-        topic: inheritance
       - id: exam-24b-q2
         topic: waiting-and-liveness
-      - id: exam-24b-q3
-        topic: reactor
   - year: 2024
     source: "materials/exams/24-c.pdf"
     pattern: "The rule of five, threads, and a reactor that also talks to a database."
     questions:
-      - id: exam-24c-q1
-        topic: rule-of-five
       - id: exam-24c-q2
         topic: synchronization
-      - id: exam-24c-q3
-        topic: reactor

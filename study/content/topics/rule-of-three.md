@@ -343,234 +343,253 @@ This way, assignment needs no new code of its own: it reuses the copy constructo
 :::
 :::
 
+:::problem id=prac-r3-which-member title="Which special member runs?" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=exercise solution_origin=derived
+`Image` has the three special members from this chapter: a destructor, a copy constructor, and an assignment operator. Its constructor `Image(int width, int height)` allocates a buffer of `width * height` bytes.
+
+```cpp
+void show(Image img) { ... }          // by value
+void peek(const Image& img) { ... }   // by reference
+
+int main() {
+    Image a(2, 2);
+    Image b = a;     // line 1
+    Image c(a);      // line 2
+    c = b;           // line 3
+    show(a);         // line 4
+    peek(a);         // line 5
+}
+```
+
+:::check id=prac-r3-which-member-q1
+Line 1 calls {{=the copy constructor|the assignment operator|no special member}}.
+
+Line 2 calls {{=the copy constructor|the assignment operator|no special member}}.
+
+Line 3 calls {{=the assignment operator|the copy constructor|no special member}}.
+
+- **Lines 1 and 2** both create a new object from an existing one, so both call the copy constructor. The `=` in line 1 is part of a declaration, so it means initialization, not assignment.
+- **Line 3** gives a new value to `c`, which already exists, so it calls the assignment operator.
+:::
+
+:::check id=prac-r3-which-member-q2
+Which of the two calls, `show(a)` and `peek(a)`, makes a copy of `a`?
+
+- [x] Only `show(a)`
+- [ ] Only `peek(a)`
+- [ ] Both
+- [ ] Neither
+
+- **`show` takes its parameter by value,** so the copy constructor builds `img` as a copy of `a`.
+- **`peek` takes a reference,** so `img` is just another name for `a`, and nothing is copied.
+:::
+
+:::check id=prac-r3-which-member-q3
+`img`, the parameter of `show`, is destroyed {{=when show returns|at the end of main|never}}. At the end of `main`, the three images are destroyed in the order {{=c, b, a|a, b, c|b, a, c}}.
+
+- **`img` is a local of `show`,** so its destructor runs as soon as `show` returns, and releases only `img`'s own buffer.
+- **Local objects are destroyed in the reverse order of their creation:** `c` was created last, so it goes first, and `a` goes last.
+- **`peek` destroys nothing,** because its reference is not a new object.
+:::
+:::
+
+:::problem id=prac-r3-shallow-trace title="Following a shallow copy" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=exercise solution_origin=derived
+`Playlist` owns an array of song numbers on the heap. It has a constructor and a destructor, but no copy constructor of its own, so the compiler generates one.
+
+```cpp
+class Playlist {
+    int* _songs;
+    int _size;
+public:
+    Playlist(int size) : _songs(new int[size]), _size(size) {
+        for (int i = 0; i < size; i++)
+            _songs[i] = 0;
+    }
+    ~Playlist() { delete[] _songs; }
+    void set(int i, int song) { _songs[i] = song; }
+    int get(int i) const { return _songs[i]; }
+};
+
+int main() {
+    Playlist mine(3);
+    Playlist yours = mine;      // the generated copy constructor
+    yours.set(0, 42);
+    cout << mine.get(0);        // ?
+}
+```
+
+:::check id=prac-r3-shallow-trace-q1
+What does `cout << mine.get(0)` print?
+
+- [ ] 0
+- [x] 42
+- [ ] It does not compile
+
+- **The generated copy constructor** copies the fields one by one, so `yours._songs` gets the same address as `mine._songs`.
+- **So there is only one array.** `yours.set(0, 42)` writes into it, and `mine.get(0)` reads the same cell.
+:::
+
+:::check id=prac-r3-shallow-trace-q2
+What happens when `main` ends?
+
+- [x] `yours` is destroyed first, and its destructor releases the shared array
+- [x] Then `mine`'s destructor runs `delete[]` on the same address a second time
+- [ ] Each destructor releases an array of its own
+- [ ] The array is never released
+
+- **Objects are destroyed in reverse order,** so `yours` goes first and releases the one array.
+- **`mine._songs` is now a dangling pointer.** Its destructor releases the same array again, which is a double free, and the behavior is undefined.
+:::
+
+:::check id=prac-r3-shallow-trace-q3
+Which copy constructor fixes the bug?
+
+```cpp
+// Version A
+Playlist(const Playlist& other)
+    : _songs(other._songs), _size(other._size) { }
+
+// Version B
+Playlist(const Playlist& other)
+    : _songs(new int[other._size]), _size(other._size) {
+    for (int i = 0; i < _size; i++)
+        _songs[i] = other._songs[i];
+}
+
+// Version C
+Playlist(const Playlist& other) : _size(other._size) {
+    delete[] _songs;
+    _songs = new int[_size];
+    for (int i = 0; i < _size; i++)
+        _songs[i] = other._songs[i];
+}
+```
+
+- [ ] Version A
+- [x] Version B
+- [ ] Version C
+
+- **Version A** is exactly what the compiler already generates: it copies the address, so the bug stays.
+- **Version B** is a deep copy: a new array of its own, then every song copied into it.
+- **Version C** releases `_songs` before it ever held anything. A copy constructor builds a new object, so there is no old array to release, and `delete[]` on an uninitialized pointer is undefined behavior. Releasing the old array is the job of the assignment operator.
+:::
+:::
+
+:::problem id=prac-r3-assignment title="Assigning one playlist to another" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=exercise solution_origin=derived
+`Playlist` from the previous question now has the deep copy constructor (Version B). Here is its assignment operator, written the way the chapter wrote it for `Student`.
+
+```cpp
+Playlist& operator=(const Playlist& other) {
+    if (this != &other) {
+        delete[] _songs;                    // 1. release the old array
+        _size = other._size;
+        _songs = new int[_size];            // 2. take a copy of the other's
+        for (int i = 0; i < _size; i++)
+            _songs[i] = other._songs[i];
+    }
+    return *this;
+}
+```
+
+:::check id=prac-r3-assignment-q1
+Which of these are true?
+
+- [x] Without `if (this != &other)`, the line `p = p` would delete the array and then copy from the array it just deleted
+- [x] Without `delete[] _songs;`, every assignment would leak the array the object held before
+- [ ] Without `return *this;`, `a = b` would no longer change `a`
+
+- **The self-assignment guard:** in `p = p`, `this` and `&other` are the same address, so `other._songs` is the array that `delete[]` just released.
+- **The `delete[]`:** `_songs` is about to point at a new array. If the old one is not released first, nothing points at it anymore.
+- **`return *this`** does not change `a`: the body already did. It returns `a` so that `a = b = c` works.
+:::
+
+:::check id=prac-r3-assignment-q2
+The same operator, written with copy and swap:
+
+```cpp
+Playlist& operator=(const Playlist& other) {
+    Playlist temp(other);              // a deep copy of other
+    std::swap(_songs, temp._songs);
+    std::swap(_size, temp._size);
+    return *this;
+}
+```
+
+In `a = b`, which array does `temp`'s destructor release when the function returns?
+
+- [x] The array that `a` held before the assignment
+- [ ] The new copy of `b`'s songs
+- [ ] `b`'s own array
+
+- **`temp`** starts with a new copy of `b`'s songs.
+- **The swap** gives that copy to `a`, and gives `a`'s old array to `temp`.
+- **When `temp` is destroyed,** its destructor releases `a`'s old array, exactly once. `b` is never touched.
+:::
+
+:::check id=prac-r3-assignment-q3
+Copy and swap needs {{=no self-assignment check|a self-assignment check|a second delete[]}}, because `temp` is {{=always a separate copy|the same object as other|a reference to this}}. If `new` throws while building `temp`, `a` is {{=left unchanged|left with a released array|left empty}}.
+
+- **No check needed:** in `p = p`, `temp` is a copy of `p`, so swapping with it leaves `p`'s songs unchanged.
+- **Safe when allocation fails:** the only allocation happens inside `temp`, before `a` is touched. If it throws, `a` still holds its old array.
+:::
+:::
+
+:::problem id=prac-r3-needs-three title="Which classes need the rule of three?" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=exercise solution_origin=derived
+Each of these classes uses only the special members that the compiler generates. The comments say who owns what.
+
+```cpp
+class Point {
+    int _x, _y;
+};
+
+class FullName {
+    std::string _first, _last;
+};
+
+class Buffer {
+    char* _data;      // allocated with new[] in Buffer's constructor
+    int _len;
+};
+
+class Student {
+    int _id;
+    Bag* _bag;        // Student created this Bag, and must delete it
+};
+
+class Reader {
+    University* _univ;   // the University lives elsewhere; Reader never deletes it
+};
+```
+
+:::check id=prac-r3-needs-three-q1
+Which classes must write their own destructor, copy constructor, and assignment operator?
+
+- [ ] `Point`
+- [ ] `FullName`
+- [x] `Buffer`
+- [x] `Student`
+- [ ] `Reader`
+
+- **`Buffer` and `Student`** own memory through a raw pointer. The generated copy would share it, and nothing would release it.
+- **`Point`** holds only `int`s, so copying them field by field is a correct copy.
+- **`FullName`** holds `std::string`s, and each string already copies and releases its own characters.
+- **`Reader`** has a pointer, but owns nothing through it. Two readers sharing one `University` is exactly right, and neither may delete it.
+:::
+
+:::check id=prac-r3-needs-three-q2
+The question that decides it is {{=whether the class owns a resource|whether the class has a pointer field|whether the class has more than two fields}}. If a class needs one of the three special members, it needs {{=all three|only the destructor|only the copy constructor}}.
+
+- **Ownership decides,** not pointers: `Reader` has a pointer and needs nothing, and `Buffer` needs all three.
+- **The three come together:** the destructor that releases the resource is what makes a shared copy dangerous, so the copy constructor and the assignment operator must both make deep copies.
+:::
+:::
+
 :::examnote
 - **What the question looks like:** a small class with a raw pointer or raw array, and a request for its destructor and a deep copy constructor. Sometimes it is a two-dimensional board that needs both constructors.
 - **The usual traps:** relying on the default memberwise copy, or writing an assignment that releases the old buffer before the new one exists.
 :::
 
-:::problem id=exam-15a-q2 title="A vector as a list" source="materials/exams/15-a.pdf" kind=exam solution_origin=source
-The `<T>` after a class name means the class works for any element type `T`, the way `std::vector<int>` holds `int`s. A class `mvector<T>` behaves like a vector, but it stores its elements in a linked list of heap nodes instead of a contiguous array.
-
-- **`insertAt`** allocates a new node and inserts it at position `pos`.
-- **`removeAt`** removes a node and shrinks the list.
-- **One proposal** drops the `_len` member and uses `sizeof(_head)` as the length.
-- **The function `foo(mvector<T> vec)`** takes its argument by value.
-
-:::check id=exam-15a-q2-q1
-Which destructor matches this list, and which copy goes with it?
-
-```cpp
-// A
-delete[] _head;
-```
-
-```cpp
-// B
-node<T>* current = _head;
-while (current != nullptr) {
-    node<T>* upcoming = current->_next;
-    delete current;
-    current = upcoming;
-}
-```
-
-```cpp
-// C
-delete _head;
-```
-
-- [ ] A, together with a copy constructor that copies `_head` only.
-- [x] B, together with a copy constructor that makes a deep copy of every node.
-- [ ] C, together with a copy constructor that leaves every vector sharing one chain.
-
-- **The destructor:** the elements are separate `node<T>` objects, each made with `new`, so the destructor must walk the list and `delete` each node. Option A uses `delete[]`, which is for arrays, and option C deletes only the first node.
-- **The copy constructor:** it must deep-copy every node, so each vector owns its own nodes and its destructor releases only those.
-:::
-
-:::check id=exam-15a-q2-q2
-`_len` is removed and the length is `sizeof(_head)`. Which statement is correct?
-
-- [ ] 1. This works, and it returns the exact length.
-- [ ] 2. The result has to be divided by `sizeof(T)`.
-- [x] 3. On a 32-bit system the expression always returns 4.
-- [ ] 4. A compilation error (`sizeof` cannot be applied to a template).
-- [ ] 5. None of the answers is correct.
-
-- **The answer:** statement 3 is correct.
-- **Why:** `_head` is a pointer, and `sizeof` gives the size of the pointer itself, not of the list it points to.
-- **On a 32-bit system** every pointer is 4 bytes, so the result is always 4, no matter how many elements the list holds.
-:::
-
-:::check id=exam-15a-q2-q3
-Which description of the stack and the heap is right for `foo(mvector<T> vec)`?
-
-- [ ] The parameter is another name for the caller's vector, so both share one `_head` cell on the stack.
-- [ ] The nodes live in `foo`'s frame, next to `_head`.
-- [x] A new `mvector` is created in `foo`'s stack frame, with its own `_head` and `_len`. A deep copy puts a new chain on the heap. A shallow copy leaves both stack pointers on one heap chain.
-
-- **On the stack:** passing by value creates a new `mvector` in `foo`'s stack frame, with its own `_head` and its own `_len`.
-- **On the heap, with a deep copy:** the nodes are duplicated into a new chain, and `vec._head` points at that new chain.
-- **On the heap, with a shallow copy:** no nodes are copied, so the two `_head` pointers on the stack both point at the same chain.
-:::
-:::
-
-:::examnote
-- **What the question looks like:** an image repository stores its images through an array of pointers, and a function returns a local repository by value.
-- **The usual traps:** assuming the returned object has its own copy of the pixels, and using the `sizeof` of a pointer as if it were a length.
-:::
-
-:::problem id=exam-20a-q1 title="An image repository" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
-`Portrait` and `Scenery` are two kinds of image.
-
-- **Pixels:** each pixel is a gray level from 0 to 255, and one image stores its pixels in a one-dimensional `BYTES` array, row after row.
-- **The repository:** `ImageRepository` holds many images through an array of pointers named `_images`.
-- **The constructor** allocates an array of `capacity` pointers.
-- **`Insert`** receives an array of images, allocates a new array, and copies the pointers into it. The images' `BYTES` arrays are not copied.
-
-```cpp
-ImageRepository CreateEmptyRep() {
-    ImageRepository rep;
-    return rep;
-}
-```
-
-:::check id=exam-20a-q1-q1
-Which constructor and `Insert` match that design?
-
-```cpp
-// A
-ImageRepository(int capacity)
-    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
-void Insert(Image** src, int n) {
-    Image** copy = new Image*[n];
-    for (int i = 0; i < n; ++i) copy[i] = new Image(*src[i]);
-    delete[] _images;
-    _images = copy;
-    _capacity = n;
-    _size = n;
-}
-```
-
-```cpp
-// B
-ImageRepository(int capacity)
-    : _images(new Image*[capacity]), _capacity(capacity), _size(0) {}
-void Insert(Image** src, int n) {
-    Image** copy = new Image*[n];
-    for (int i = 0; i < n; ++i) copy[i] = src[i]; // pointers only
-    delete[] _images;
-    _images = copy;
-    _capacity = n;
-    _size = n;
-}
-```
-
-```cpp
-// C
-ImageRepository(int capacity)
-    : _images(nullptr), _capacity(capacity), _size(0) {}
-void Insert(Image** src, int n) {
-    _images = src;
-    _size = n;
-}
-```
-
-- [ ] A. `Insert` allocates a new `Image` for each element, so the pixels are copied.
-- [x] B. The constructor allocates `new Image*[capacity]`. `Insert` copies pointers into a new array. The `BYTES` blocks stay where they are.
-- [ ] C. The constructor leaves `_images` null. `Insert` stores the caller's array and does not allocate.
-
-- **The constructor in B** allocates `_images` with `new Image*[capacity]`, records the capacity, and starts with `_size` 0.
-- **`Insert` in B** allocates a new array of pointers and copies only the pointers, as the design says.
-- **Why not A:** it copies every image, and so every pixel, which the design does not ask for.
-- **Why not C:** it never allocates its own array, and just keeps the caller's.
-:::
-
-:::check id=exam-20a-q1-q2
-`Insert` releases the previous `_images` array with {{=delete[]|delete|no delete}}. It copies {{=pointers|pixels|BYTES blocks}}. Two repositories can hold the same {{=Image*|stack frame|BYTES block}}. A `delete` of an `Image` is safe only for a {{=sole owner|second repository|null pointer}}.
-
-`Insert` copies pointers and releases the previous pointer array with `delete[]`. The pixel arrays stay where the images allocated them. Because only pointers are copied, two repositories can hold the same `Image*`, so deleting an `Image` is safe only for the one object that solely owns it.
-:::
-
-:::check id=exam-20a-q1-q3
-What does `CreateEmptyRep` return?
-
-- [ ] `return rep` returns the local object itself, so the destructor of `rep` does not run.
-- [ ] The default copy constructor duplicates every `BYTES` array, so the caller owns new pixels.
-- [x] `return rep` copies `_images`. If the destructor then executes `delete[] _images`, the returned object holds a dangling pointer. If it leaves the array allocated, the caller shares that buffer with a destroyed local, and other paths leak.
-
-- **`rep`** is created in `CreateEmptyRep`'s stack frame.
-- **`return rep`** returns by value, which in the course's model uses the copy constructor.
-- **The default copy constructor** copies only the pointer `_images`. Then `rep` goes out of scope and its destructor runs.
-- **If that destructor runs `delete[] _images`,** the returned object is left holding a dangling pointer.
-- **If the destructor does not release the array,** repositories that are destroyed normally leak their arrays.
-- **The fix:** give the class a proper copy constructor. Compilers often skip this copy entirely (an optimization called NRVO), but the code must be correct either way.
-:::
-
-:::check id=exam-20a-q1-q4
-Which object is an empty repository?
-
-- [x] `ImageRepository(capacity)` with `_size == 0` and a live array of pointers.
-- [ ] The object returned by `CreateEmptyRep` after its destructor has executed `delete[] _images`.
-- [ ] A repository whose `_images` still addresses the array of a local that has been destroyed.
-
-- **A valid empty repository** is one built by `ImageRepository(capacity)`: its `_size` is 0, and it has a live array of pointers.
-- **The other two options** hold a pointer to an array that was already released, so they are not usable repositories at all.
-:::
-:::
-
-:::problem id=exam-17a-q2 title="Ownership of a description" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
-`TestRes` holds a `char* description_`, and `Test` manages a collection of `TestRes` results. The design has three rules.
-
-- **Ownership:** each result owns its own description buffer.
-- **Copying:** a copy owns a separate copy of that buffer.
-- **Assignment:** it releases the previous description exactly once.
-
-:::check id=exam-17a-q2-q1
-Which constructor body is required for that buffer?
-
-- [ ] `: description_(s)`, so both objects share one buffer
-- [x] `: description_(new char[std::strlen(s) + 1])`, then `std::strcpy(description_, s)`
-- [ ] `: description_(new char[1])`, with no copy of the characters
-
-The constructor allocates a new buffer with room for every character plus the terminating `'\0'`, which is why it adds 1 to `strlen`, and then copies the characters into it.
-:::
-
-:::check id=exam-17a-q2-q2
-Which of these hold for the other special members?
-
-- [x] The destructor is `delete[] description_`
-- [ ] Assignment `delete[]`s `description_` and then reads that same buffer to build the new one
-- [x] Assignment returns immediately when `this == &other`. Otherwise it builds a temporary, swaps the pointers, and returns `*this`
-
-- **The destructor** releases the buffer with `delete[]`, because it was allocated with `new[]`.
-- **The swap** hands the old buffer to the temporary, whose destructor releases it exactly once.
-- **The self-assignment check** returns early, so `a = a` releases nothing.
-- **Why the second option is wrong:** it reads the buffer after deleting it.
-:::
-
-:::check id=exam-17a-q2-q3
-The copy constructor delegates with {{=TestRes(other.description_)|other|nullptr}}.
-
-Delegating to `TestRes(other.description_)` reuses the constructor that already allocates a buffer and copies the characters, so the copy constructor needs no code of its own.
-:::
-
-:::check id=exam-17a-q2-q4
-Which of these hold for `Test`?
-
-- [x] An array of `TestRes*` is released with `delete[]` in the destructor
-- [ ] Copying that array's pointer is enough
-- [x] The copy constructor allocates a new array and copies each element
-- [x] If `Test` stores `TestRes` by value in a container that already has the right special members, `Test` can keep the members the compiler generates
-
-- **The same three operations apply to `Test`:** its array of `TestRes*` needs `delete[]` in the destructor, a new array with a copy of each element in the copy constructor, and copy-and-swap for assignment.
-- **Copying the array pointer alone** would make two `Test` objects share one array.
-- **The way out:** if `Test` stores its results by value in a standard container, the generated members already do the right thing.
-- **The root cause:** the raw `char*` and the raw array are what force you to write the three functions.
-:::
-:::
-
 :::problem id=exam-17b-q2 title="A deep copy of a board" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-A game keeps its board in a class `Terrain<T>`. As with `mvector<T>` above, the `<T>` means the class works for any cell type `T`: a `Terrain<int>` is a board of `int`s.
+A game keeps its board in a class `Terrain<T>`. The `<T>` means the class works for any cell type `T`, the way `std::vector<int>` holds `int`s: a `Terrain<int>` is a board of `int`s.
 
 - **The fields:** `_w` and `_h` hold the board's width and height. `_cells` points at one array of `T` on the heap, with `_w * _h` cells, one for each square of the board.
 - **The task:** write the constructor, the copy constructor, and the destructor. The copy constructor must make a deep copy, so that the copy gets a board of its own.

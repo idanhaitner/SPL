@@ -768,165 +768,135 @@ To leave politely, the client sends `DISCONNECT` with a `receipt` header. The se
 :::
 :::
 
+:::problem id=prac-reactor-encdec title="Finding messages in a byte stream" source="materials/lectures/Chapter 11 - Reactor.pptx" kind=exercise solution_origin=derived
+This is the line encoder-decoder from the chapter. The connection handler feeds it one byte at a time.
+
+```java
+public class LineMessageEncoderDecoder implements MessageEncoderDecoder<String> {
+    private List<Byte> bytes = new LinkedList<>();
+
+    public byte[] encode(String message) {
+        return (message + "\n").getBytes(StandardCharsets.UTF_8);
+    }
+
+    public String decodeNextByte(byte nextByte) {
+        if (nextByte == '\n') {
+            String ret = toUtf8String(bytes);
+            bytes.clear();
+            return ret;
+        }
+        bytes.add(nextByte);
+        return null;
+    }
+}
+```
+
+:::check id=prac-reactor-encdec-q1
+The client sends the five bytes `h`, `i`, `\n`, `y`, `o`. After `h`, `decodeNextByte` returns {{=null|the string h|an empty string}}. After `\n`, it returns {{=the string hi|null|the string hi followed by a newline}}. After `y` and `o`, the bytes `yo` {{=wait in the list for their newline|are returned as a message|are thrown away}}.
+
+- **A message ends only at `\n`.** Until then, every byte is stored, and the method returns `null`.
+- **At `\n`,** the stored bytes become the string `hi`, without the newline, and the list is cleared for the next message.
+- **`yo`** is the start of the next message. It stays in the list until its own `\n` arrives, possibly in a later read.
+:::
+
+:::check id=prac-reactor-encdec-q2
+Which parts of the protocol does each interface own?
+
+- [x] Framing, where one message ends, belongs to `MessageEncoderDecoder`
+- [x] Deciding that `bye!` ends the conversation belongs to `MessagingProtocol`
+- [ ] Printing the message belongs to `MessageEncoderDecoder`
+- [ ] Turning a `String` into bytes belongs to `MessagingProtocol`
+
+- **`MessageEncoderDecoder`** handles encoding and framing: bytes in, messages out, and back.
+- **`MessagingProtocol`** handles syntax, semantics, and synchronization: what a message means, the reply, and when the conversation ends.
+:::
+
+:::check id=prac-reactor-encdec-q3
+`encode("bye!")` returns the bytes of {{=bye! followed by a newline|bye! alone|a length followed by bye!}}, so that the other side's decoder can tell where the message ends.
+
+The encoder adds the same delimiter that the decoder looks for. Without the `\n`, the receiving decoder would keep waiting for the end of the message.
+:::
+:::
+
+:::problem id=prac-reactor-factories title="One protocol object per client" source="materials/lectures/Chapter 11 - Reactor.pptx" kind=exercise solution_origin=derived
+The base server receives factories, not objects, and calls `get()` for every client it accepts.
+
+```java
+new BaseServer(7000,
+               () -> new PrintingProtocol(),
+               () -> new LineMessageEncoderDecoder()).serve();
+```
+
+:::check id=prac-reactor-factories-q1
+Suppose a buggy server shared one `LineMessageEncoderDecoder` among all clients. Client A sends `he`, and before A sends more, client B sends `yo` and a newline. B's message is decoded as {{=heyo|yo|he}}.
+
+The decoder keeps the bytes of the message it is in the middle of. A's `he` was still in its list when B's bytes arrived, so B's message got A's bytes in front of it. Each client needs its own decoder, because each one is partway through its own message.
+:::
+
+:::check id=prac-reactor-factories-q2
+Suppose the clients also shared one `PrintingProtocol`. Client A sends `bye!`. Client B's conversation {{=ends too|goes on|ends only after B sends bye!}}.
+
+`PrintingProtocol` remembers whether `bye!` arrived, in its field `shouldTerminate`. With one shared object, A's `bye!` sets it for everyone, so B's handler stops as well.
+:::
+
+:::check id=prac-reactor-factories-q3
+`protocolFactory.get()` runs {{=once for every client the server accepts|once, when the server starts|once for every message}}.
+
+Each accepted client gets a fresh encoder-decoder and a fresh protocol, built by the factories at the moment its connection handler is created. That is the whole point of passing a `Supplier` instead of an object.
+:::
+:::
+
+:::problem id=prac-reactor-models title="Choosing a concurrency model" source="materials/lectures/Chapter 11 - Reactor.pptx" kind=exercise solution_origin=derived
+The base server has four subclasses, one for each concurrency model.
+
+```java
+// 1. a single thread
+protected void execute(ConnectionHandler h) { h.run(); }
+
+// 2. a thread per client
+protected void execute(ConnectionHandler h) { new Thread(h).start(); }
+
+// 3. a thread pool
+protected void execute(ConnectionHandler h) { pool.submit(h); }
+
+// 4. the reactor: one selector thread for all I/O, a pool for the protocol
+```
+
+:::check id=prac-reactor-models-q1
+A time server, whose few clients each ask once and leave, fits {{=a single thread|a thread per client|the reactor}}. Ten machines in a lab, each connected all day, fit {{=a thread per client|a single thread|a thread pool of two}}. Thousands of chat clients that are connected but mostly silent fit {{=the reactor|a thread per client|a single thread}}.
+
+- **A single thread** serves one client at a time, which is fine when each conversation is one quick request.
+- **A thread per client** serves everyone at once, but only works when the number of clients is small and bounded.
+- **The reactor** holds thousands of connections with a few threads, because nobody blocks on an idle socket.
+:::
+
+:::check id=prac-reactor-models-q2
+A pool has 4 threads. Four clients are connected and rarely send anything. A fifth client connects and sends a message. What happens to it?
+
+- [x] It waits in the pool's queue until one of the four conversations ends
+- [ ] It is served at once by a fifth thread
+- [ ] Its message is handled between two messages of the other clients
+
+- **In model 3, a thread serves a whole conversation.** Each of the four threads is blocked reading from its own idle client.
+- **So the fifth client gets no service at all** until one of them disconnects. That is the utilization and fairness problem that the reactor fixes.
+:::
+
+:::check id=prac-reactor-models-q3
+Which of these are what the reactor changes?
+
+- [x] A task handles one message of a client, not the whole conversation
+- [x] One thread does all the socket I/O, with non-blocking calls and a selector
+- [ ] Every client gets a thread of its own
+- [ ] `read` waits until a whole message has arrived
+
+- **One message per task** lets a pool thread move on to another client after every message, which is fair.
+- **One communication thread** never blocks: `read` returns what is there now, possibly nothing, and the selector says which clients are ready.
+:::
+:::
+
 :::examnote
 - **What the question looks like:** it asks you to replace a delimiter with a length prefix, to cap the number of clients, or to design a small command protocol on top of the existing server.
 - **The usual traps:** treating one TCP read as one whole message, or forgetting that UDP has no `accept`.
-:::
-
-:::problem id=exam-15b-q3 title="A spell-check server" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-The message server in the exam's appendix is a thread-per-client server, which starts one thread for each accepted socket. The question changes it as follows.
-
-- **At most 10 handlers** may run at the same time.
-- **`MessageLengthBasedTokenizer`** frames each message as a length followed by exactly that many bytes, replacing the delimiter used in class.
-- **`SpellMessageEncoder`** turns a `SpellMessage` into bytes and back.
-- **The spell-check server** uses `SpellMessage`, that framing, and a thread-safe `LexiconBasedSpellChecker` with an empty constructor.
-
-:::check id=exam-15b-q3-q1
-Which body caps the running handlers at 10?
-
-- [ ] `new Thread(connectionHandler).start()` for every accepted socket
-- [ ] `Executors.newFixedThreadPool(10)` created inside each handler, after `accept` has returned
-- [x] `ExecutorService executor = Executors.newFixedThreadPool(10);` and `executor.execute(connectionHandler)` for each accepted socket
-
-- **The official solution** creates one pool of 10 threads and calls `executor.execute(connectionHandler)` for each accepted socket.
-- **The accept loop** stays on the main thread, so the server keeps accepting connections.
-- **The cap:** the pool has only 10 threads, so at most 10 handlers run at once.
-- **Extra connections:** an 11th handler waits in the pool's queue until a thread is free.
-- **Why the second option is wrong:** a new pool per handler gives no shared limit at all.
-:::
-
-:::check id=exam-15b-q3-q2
-`nextMessage` returns only after the tokenizer has the integer length and then {{=that many payload bytes|a delimiter|one line}}.
-
-- **How the tokenizer works:** it collects bytes until it has read the integer length, then keeps collecting until it has exactly that many payload bytes.
-- **When `nextMessage` returns:** only after the whole payload has arrived.
-- **No delimiter:** with a length prefix, the tokenizer never searches for a delimiter.
-:::
-
-:::check id=exam-15b-q3-q3
-Which of these hold for the encoder and the handler?
-
-- [x] The encoder writes the request type, the language, and the word, in an agreed order, with the length prefix the tokenizer expects
-- [x] `fromBytes` rebuilds a `SpellMessage`
-- [ ] The handler examines a delimiter and skips `SpellMessageEncoder`
-
-The handler is built with `new SpellMessageEncoder()`, `new MessageLengthBasedTokenizer()`, and a protocol object. The protocol reads `SpellMessage.getRequest()` and calls either `LexiconBasedSpellChecker.check` or `getCorrections`. The handler never looks for a delimiter.
-:::
-
-:::check id=exam-15b-q3-q4
-Which of these hold for `SpellChecker` and the client?
-
-- [ ] Each handler builds a private checker, because the implementation is not safe to share
-- [x] `SpellChecker` stays the interface, and the handlers share one instance because the implementation is already thread-safe
-- [x] The client opens a `Socket` to the host and port, sends one encoded `SpellMessage`, and reads one framed reply
-
-- **`SpellChecker`** stays the interface that the handlers program against.
-- **One shared instance is fine:** the implementation is already thread-safe, so all handlers can share a single checker.
-- **The client** opens a `Socket` to the server's host and port, sends one encoded `SpellMessage`, and reads one framed reply.
-:::
-:::
-
-:::problem id=exam-16a-q3 title="A printer protocol" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-A printer service was originally an RMI interface with one method, `Printer.print(String)`. The question changes it as follows.
-
-- **A protocol server** replaces the stub and skeleton that RMI generated.
-- **At most ten handler threads** may run at once.
-- **Messages are framed with a length prefix** that fits in a Java `int`, instead of the delimiter used before.
-- **The same service also runs over UDP.**
-- **A `Math` interface** gets a hand-written stub and skeleton in the same style.
-
-:::check id=exam-16a-q3-q1
-Which body caps the printer handlers at ten?
-
-- [x] `Executors.newFixedThreadPool(10)` around the connection handler
-- [ ] `new Thread(connectionHandler).start()` for every accepted socket, with no pool
-- [ ] `Executors.newFixedThreadPool(Integer.MAX_VALUE)` around the connection handler
-
-A fixed pool of 10 threads runs the connection handlers, exactly as in the official solution for the message server. A pool of `Integer.MAX_VALUE` threads would set no real limit.
-:::
-
-:::check id=exam-16a-q3-q2
-The length occupies the first {{=four bytes|delimiter|datagram}}. The bytes after that prefix are the body.
-
-- **The frame:** a Java `int` takes four bytes, so the first four bytes hold the length, and the bytes after them are the body.
-- **The limit:** `Integer.MAX_VALUE` is only the largest value the type can hold. The server should still refuse a length larger than the buffer it is willing to allocate.
-:::
-
-:::check id=exam-16a-q3-q3
-Which of these hold when the printer speaks UDP?
-
-- [ ] `receive` runs only after `accept` returns a connected socket
-- [x] `ServerSocket` and `Socket` are replaced by `DatagramSocket`, and there is no `accept`
-- [x] One datagram must hold the entire frame, because the stream tokenizer was kept
-
-- **The sockets:** `DatagramSocket` replaces both `ServerSocket` and `Socket`.
-- **No connection:** UDP has no connection, so there is no `accept`.
-- **Replying:** `receive` fills a `DatagramPacket` that also records the sender's address, and the server sends its reply to that `SocketAddress`.
-- **The length prefix:** in UDP it is usually unnecessary, because one datagram is one message. Here it stays, because the student kept the stream tokenizer.
-- **The consequence:** each datagram must then hold one entire frame, length prefix included.
-:::
-
-:::check id=exam-16a-q3-q4
-Which of these hold for the stub and the skeleton?
-
-- [x] `Math_Stub` implements `Math`, writes a command such as `add 2 3`, and reads the reply line
-- [ ] `Math_Skel` implements `Math` on the client and turns a decimal result into the command string
-- [x] `Math_Skel` parses the command, calls the real `Math`, and returns the decimal result
-- [x] An exception on the server becomes an error line, which the stub turns into a `RemoteException`
-
-- **The stub (`Math_Stub`) runs on the client.** It implements `Math`, so the client calls it like a normal object. Each method sends a command such as `add 2 3` through the socket and reads the reply line.
-- **The skeleton (`Math_Skel`) runs on the server.** It parses the command, calls the real `Math` implementation, and sends back the decimal result.
-- **Errors:** an exception on the server is sent back as an error line, and the stub turns it into a `RemoteException` for the client.
-:::
-:::
-
-:::problem id=exam-17b-q3 title="Bank commands" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-A bank server uses the command-invocation protocol from class. It accepts three commands.
-
-- **`LOGIN name`:** the server remembers which client this connection belongs to, and answers `ack`.
-- **`DEPOSIT money`:** the server adds the amount to this client's balance, and answers `ack`.
-- **`BALANCE`:** the server answers with this client's current balance.
-
-:::check id=exam-17b-q3-q1
-Which of these hold for `execute`?
-
-- [x] Login stores the connection's name in the protocol's session and returns `"ack"`
-- [ ] Deposit before login returns `"ack"` and creates the account
-- [x] Deposit parses the amount, adds it to that session's account, and returns `"ack"`
-
-- **The command classes:** `LoginCommand`, `DepositCommand`, and `BalanceCommand` each implement `Command<Bank>`.
-- **`LoginCommand.execute`** stores the client's name in this connection's session and returns `"ack"`.
-- **`DepositCommand.execute`** parses the amount, adds it to the logged-in client's account, and returns `"ack"`.
-- **A deposit before login** has no account to use, so it must not succeed silently.
-:::
-
-:::check id=exam-17b-q3-q2
-A deposit before login returns {{=an error string|"ack"|the balance}}.
-
-Before `LOGIN`, the session has no name, so the deposit cannot know whose account to change. It returns an error string instead of `"ack"`.
-:::
-
-:::check id=exam-17b-q3-q3
-Which of these hold for the bank and the session?
-
-- [ ] Each connection builds its own `Bank`
-- [x] `Bank` is a map from name to balance, and its mutators are synchronized
-- [x] Each connection gets its own protocol object, so the session name is not shared between clients
-
-- **One shared `Bank`:** it is a map from each name to a balance, shared by all connections, and its methods that change balances are `synchronized`.
-- **Why the lock matters:** without it, two simultaneous deposits to the same account could overwrite each other, and one amount would be lost.
-- **One protocol object per connection:** each client's session, including its login name, is kept separately, so clients never see each other's sessions.
-:::
-
-:::check id=exam-17b-q3-q4
-Which `main` is correct?
-
-- [ ] It builds a new `Bank` inside every connection
-- [x] It builds one `Bank`, a protocol factory that closes over that bank, and the thread-per-client server from the appendix
-- [ ] It builds the protocol factory and constructs the `Bank` on the first `LOGIN`
-
-The server's `main` creates one `Bank`, then a protocol factory that gives every new protocol object a reference to that same bank, and finally starts the thread-per-client server from the appendix on the port the question names. Creating a `Bank` per connection would give every client a separate, empty bank.
-:::
 :::
 
 :::examnote
@@ -1108,40 +1078,6 @@ Leave the selector loop for {{=readiness and byte copies|framing and log writes|
 - **Lighten the selector loop:** keep only readiness checks and byte copies in it, and move framing and every log write out of it.
 - **If that is still not enough,** split the channels across several reactors, each with its own selector thread, handling its own port or its own share of the channels.
 - **Keep the threads independent:** pool threads should never need the selector's lock.
-:::
-:::
-
-:::problem id=exam-18b-q3 title="A misleading measurement" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-Shraga compares a thread-per-client server with a reactor by sending a few requests from his laptop. The thread-per-client server answers faster, so he tells the company to switch to it. Nahum says the conclusion is wrong.
-
-:::check id=exam-18b-q3-q1
-Which of these explain Shraga's faster thread-per-client result?
-
-- [x] His client count is too small to pay for a thread per connection
-- [ ] His run already holds a thousand stacks parked in `read`
-- [x] The protocol runs on the connection's thread, with no handoff to a pool
-- [ ] The reactor skips `select`, the buffers, and the queue for a few requests
-
-- **The test is too small:** with only a few clients, the cost of a thread per connection never shows up. There are no thousands of idle threads, each holding a stack while blocked in `read`.
-- **With few clients, thread-per-client really is faster:** the protocol runs directly on the connection's thread, with no handoff to a pool.
-- **The reactor has fixed overhead:** `select`, buffers, and queues. This overhead only pays off when there are many connections.
-:::
-
-:::check id=exam-18b-q3-q2
-A fair measurement holds {{=thousands of connections open|five requests from a laptop|one thread per core}} and counts {{=how many requests per second complete|the latency of those five requests|how many stacks the reactor allocates}}.
-
-A fair test matches the company's real load: it keeps thousands of connections open and measures how many requests per second the server completes (its throughput). Shraga measured something else, the latency of a few requests from one laptop.
-:::
-
-:::check id=exam-18b-q3-q3
-Which of these hold for the company's load?
-
-- [ ] The reactor creates one thread for each idle connection
-- [x] Under many connections, most of them idle, a thread-per-client server runs out of memory on stacks
-- [x] Under a burst, a thread-per-client server creates threads with no ceiling
-- [x] The reactor keeps one selector thread and a bounded pool
-
-With many connections, most of them idle, a thread-per-client server runs out of memory for all the thread stacks, and a sudden burst makes it create threads without any limit. The reactor always uses one selector thread and a fixed-size pool, no matter how many clients connect.
 :::
 :::
 
@@ -1332,177 +1268,6 @@ Where does a database query belong?
 - [ ] Inside `handleReadWrite` on the pool of two
 
 A database query is part of the protocol work, so it belongs in a protocol task in the worker pool. That way a slow query never stops `select`.
-:::
-:::
-
-:::problem id=exam-24b-q3 title="A warehouse server" source="materials/exams/24-b.pdf" kind=exam solution_origin=derived
-A logistics warehouse keeps data on volunteers, evacuated families, and food parcels.
-
-- **`DB`** is thread-safe and has an empty constructor. Its `executeQuery` returns the result rows, or throws `SQLException`.
-- **A client** sends a query as a string.
-- **The server** must use a single `DB` for every connection, and has ten worker threads.
-
-:::check id=exam-24b-q3-q1
-Which line is the bug?
-
-```java
-public static void main(String[] args) throws Exception {
-    new Reactor(Integer.parseInt(args[0]), 10,
-        () -> new DBProtocol(new DB()),
-        () -> new LineTokenizer()).serve();
-}
-```
-
-- [ ] `Integer.parseInt(args[0])`
-- [ ] The pool size `10`
-- [x] `() -> new DBProtocol(new DB())`
-- [ ] `() -> new LineTokenizer()`
-
-The protocol factory runs once per connection, so `new DB()` inside it creates a separate database for every client, which is expensive and breaks the "one `DB`" rule. Instead, `main` creates one `DB`, and the factory captures it: `() -> new DBProtocol(db)`.
-:::
-
-:::check id=exam-24b-q3-q2
-Which body is correct for `DBProtocol.process`?
-
-```java
-// Body A
-try {
-    List<String> rows = db.executeQuery(msg);
-    if (rows.isEmpty()) return "Result No";
-    return rows.get(0);
-} catch (SQLException e) {
-    return e.getMessage();
-}
-```
-
-```java
-// Body B
-List<String> rows = db.executeQuery(msg);
-return rows.toString();
-```
-
-```java
-// Body C
-try {
-    List<String> rows = db.executeQuery(msg);
-    if (rows.isEmpty()) return e.getMessage();
-    return "Result No";
-} catch (SQLException e) {
-    return rows.get(0);
-}
-```
-
-- [ ] Body B, which returns every row and does not catch `SQLException`
-- [x] Body A, which returns the first row, `"Result No"`, or the error text
-- [ ] Body C, which returns the error text for an empty list and the first row from the catch
-
-Body A handles all three cases: on a non-empty result it returns `rows.get(0)`, on an empty result it returns `"Result No"`, and on an `SQLException` it returns `e.getMessage()`. Body B does not catch the exception, and Body C mixes up the branches and does not even compile.
-:::
-
-:::check id=exam-24b-q3-q3
-Where does a slow query run?
-
-- [ ] On the selector thread, before the next `select`
-- [ ] Inside the `DB` constructor, once per connection
-- [x] On a worker in the pool of 10, while the selector thread stays in `select`
-- [ ] On a new thread created for that query alone
-
-The course's reactor runs `process` in the pool of 10 workers. A slow query therefore occupies one worker, while the selector thread keeps serving everyone else from `select`.
-:::
-
-:::check id=exam-24b-q3-q4
-Which of these hold?
-
-- [x] `DB` is thread-safe, so the ten workers may call it
-- [ ] The protocol factory should construct a new `DB` for each connection
-- [x] One `DB` is created in `main` and captured by the protocol
-
-`DB` is thread-safe, so all ten workers may call the same instance at once. That one `DB` is created in `main` and captured by the protocol factory.
-:::
-:::
-
-:::problem id=exam-24c-q3 title="A reply of another type" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
-In this design, a client sends a message of one type and receives a reply of a different type.
-
-- **`DB.executeQuery`** is thread-safe and returns an `ArrayList<String>`.
-- **`DBServer`** uses the existing `BaseServer` and `ObjectEncoderDecoder`.
-- **One `DB`** serves every client.
-
-:::check id=exam-24c-q3-q1
-`MessagingProtocol<T>` becomes {{=MessagingProtocol<T, R>|MessagingProtocol<T>|MessageEncoderDecoder<T>}}, and `process` returns {{=R|T|void}}.
-
-The protocol needs a second type parameter for the reply: `MessagingProtocol<T, R>`, where `process` takes a `T` and returns an `R`.
-:::
-
-:::check id=exam-24c-q3-q2
-Which of these hold?
-
-- [ ] The selector loop gains a second thread for the reply type
-- [x] The handler reads with an encoder-decoder of `T` and writes with an encoder-decoder of `R`, or one decoder understands both
-- [x] The reactor's type arguments follow that split
-- [ ] The reply type has to stay `T`
-
-The connection handler now decodes incoming messages as `T` and encodes replies as `R`, either with two encoder-decoders or with one that understands both, and the reactor's type parameters change to match. The selector loop itself does not change.
-:::
-
-:::check id=exam-24c-q3-q3
-Which signature completes `Command`?
-
-```java
-interface Command {
-    {{=R execute(Context ctx)|void execute()|T process(String msg)}};
-}
-```
-
-Each command returns a reply of type `R`, so the signature is `R execute(Context ctx)`. `RemoteCommandInvocationProtocol` holds the shared context, receives a decoded `Command`, calls `execute` on it, and returns the result as the reply.
-:::
-
-:::check id=exam-24c-q3-q4
-`main` builds one `DB` and one `BaseServer`. The pool size is {{=11|10|1}}. The protocol factory is {{=() -> new RemoteCommandInvocationProtocol(db)|() -> new RemoteCommandInvocationProtocol(new DB())|ObjectEncoderDecoder::new}}. The encoder factory is {{=ObjectEncoderDecoder::new|LineTokenizer::new|() -> new DB()}}.
-
-- **`main`** creates one `DB` and one `BaseServer`, with a pool size of 11 (as in the official solution), the protocol factory `() -> new RemoteCommandInvocationProtocol(db)`, and the encoder factory `ObjectEncoderDecoder::new`.
-- **The query path:** the query command's `execute` calls `db.executeQuery` inside a pool task, and the returned list is the reply object, which the encoder serializes and sends.
-:::
-:::
-
-:::problem id=exam-20b-q3 title="Store prices" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-`Stores` maps each store's name to the prices of its products.
-
-- **Commands** arrive through the command-invocation protocol, and all run on one shared `Stores` object, inside a Reactor on port 7777.
-- **`GetProductPrices`** takes a product name, and returns each store's price for that product.
-
-:::check id=exam-20b-q3-q1
-Which `execute` body is correct?
-
-- [ ] `return stores.getProductsOfStore(product).toString();`
-- [x] Walk `stores.getStores()`, and append `store=price` when `getProductsOfStore(store).get(product)` is not null
-- [ ] Open a socket to port 7777 inside `execute` and write the product name
-
-- **`execute` receives the shared `Stores` object.**
-- **It goes over every store** in `stores.getStores()`, and looks up the product's price with `stores.getProductsOfStore(store).get(product)`.
-- **When the store sells the product,** meaning the price is not null, it appends `store=price` to the result string, which it then returns.
-:::
-
-:::check id=exam-20b-q3-q2
-`main` creates `new StoresImpl()` {{=once|per connection|inside execute}}.
-
-`main` creates `Stores stores = new StoresImpl()` exactly once, and passes that same object to the protocol factory, so every connection works on the same data.
-:::
-
-:::check id=exam-20b-q3-q3
-Which of these hold for the Reactor and the protocol?
-
-- [x] The call is `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`
-- [ ] Each connection constructs a fresh `StoresImpl`
-- [x] The protocol parses a line into a `Command<Stores>` and calls `execute(stores)`
-
-`main` creates one `StoresImpl`, then starts `new Reactor(7777, 10, () -> new CommandProtocol(stores), tokenizerFactory)`. For each line, the protocol parses a `Command<Stores>` and calls `execute(stores)`. Creating a fresh `StoresImpl` per connection would give each client its own, separate data.
-:::
-
-:::check id=exam-20b-q3-q4
-The methods of `StoresImpl` are synchronized, or the map is a {{=concurrent map|private map|socket}}, because the Reactor runs several commands at once on this one object.
-
-The Reactor's worker pool runs several commands at the same time on this one shared object. So either the methods of `StoresImpl` must be `synchronized`, or the map must be a concurrent map such as `ConcurrentHashMap`.
 :::
 :::
 

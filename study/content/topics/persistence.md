@@ -9,8 +9,6 @@ sources:
   - "materials/sessions/SPL_PS13_PRES.pptx"
   - "materials/exams/15-a.pdf"
   - "materials/exams/15-a-solution.pdf"
-  - "materials/exams/15-b.pdf"
-  - "materials/exams/15-b-solution.pdf"
   - "materials/exams/16-a.pdf"
   - "materials/exams/16-a-solution.pdf"
   - "materials/exams/16-b.pdf"
@@ -1049,12 +1047,173 @@ Which of these hold?
 - **Relying on `SELECT *`** breaks as soon as someone changes the table's column order.
 - **An `INSERT` without a column list** has the same weakness, because it also depends on a column order that can change.
 :::
+:::
+
+:::problem id=prac-sql-constraints title="Which statement fails?" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=exercise solution_origin=derived
+These are the chapter's tables. `Departments` holds 201 (`math`) and 202 (`cs`). `Students` holds Dina (17, department 201), Danny (89, department 202), and Ringo (5, department 202, with no `Login`).
+
+```sql
+CREATE TABLE Departments (Id INTEGER PRIMARY KEY,
+                          Name VARCHAR(20) UNIQUE NOT NULL,
+                          Building INTEGER);
+
+CREATE TABLE Students (Id INTEGER PRIMARY KEY,
+                       Name VARCHAR(20) NOT NULL,
+                       Login VARCHAR(10) UNIQUE,
+                       DeptId INTEGER,
+                       FOREIGN KEY (DeptId) REFERENCES Departments(Id));
+
+CREATE TABLE Courses (Id INTEGER PRIMARY KEY,
+                      Name VARCHAR(20) UNIQUE NOT NULL,
+                      NAKAZ INTEGER);
+
+CREATE TABLE StudentsCourses (StudId INTEGER,
+                              CourseId INTEGER,
+                              Year INTEGER,
+                              Grade INTEGER,
+                              PRIMARY KEY (StudId, CourseId, Year),
+                              FOREIGN KEY (StudId) REFERENCES Students(Id),
+                              FOREIGN KEY (CourseId) REFERENCES Courses(Id));
+```
+
+:::check id=prac-sql-constraints-q1
+Which of these inserts fail?
+
+- [x] `INSERT INTO Students(Id, Name, DeptId) VALUES(17, 'Moshe', 202)`
+- [x] `INSERT INTO Students(Id, Name, DeptId) VALUES(40, 'Avi', 203)`
+- [ ] `INSERT INTO Students(Id, Name, DeptId) VALUES(41, 'Beni', 201)`
+- [x] `INSERT INTO Students(Id, Login, DeptId) VALUES(42, 'av', 201)`
+
+- **Id 17** is already Dina's, and `Id` is the primary key, so it must be unique.
+- **Department 203** does not exist, so the foreign key from `DeptId` rejects it.
+- **Beni** is fine: his `Login` is simply `NULL`, which is allowed, because `Login` is not `NOT NULL`.
+- **Student 42 has no name,** and `Name` is `NOT NULL`.
+:::
+
+:::check id=prac-sql-constraints-q2
+`UPDATE Students SET Login = 'ring'` fails, because of {{=UNIQUE on Login|NOT NULL on Name|the foreign key on DeptId}}. The fix adds {{=WHERE Name = 'Ringo'|ORDER BY Name|DISTINCT}}.
+
+Without `WHERE`, the update changes every student's `Login` to the same value, and `Login` must be unique. `WHERE` limits it to the one row that should change.
+:::
+
+:::check id=prac-sql-constraints-q3
+Dina took `infi` (course 7) in year 18 with grade 70. Adding a row for Dina, `infi`, year 19 is {{=allowed|rejected}}. Adding a second row for Dina, `infi`, year 18, with grade 95, is {{=rejected|allowed}}.
+
+The primary key of `StudentsCourses` is the three fields together: student, course, and year. Taking the same course again in another year is a new key. The same student, course, and year twice is a duplicate key.
+:::
+:::
+
+:::problem id=prac-sql-join-steps title="Building a query step by step" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=exercise solution_origin=derived
+The tables from the previous question hold this data. Ringo is enrolled in nothing.
+
+```text
+Students           Courses    StudentsCourses
+Id  Name   Dept    Id  Name   Stud  Course  Year  Grade
+17  Dina   201     7   infi   17    7       18    70
+89  Danny  202     8   spl    17    8       19    90
+5   Ringo  202     9   ppl    89    7       18    80
+                              89    8       19    85
+```
+
+:::check id=prac-sql-join-steps-q1
+Which query lists each student's name, the name of each course the student took, and the grade, with no wrong pairs?
+
+```sql
+-- Query A
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM Students, Courses, StudentsCourses
+
+-- Query B
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId)
+     INNER JOIN Courses ON StudentsCourses.CourseId = Courses.Id
+
+-- Query C
+SELECT Students.Name, Courses.Name, StudentsCourses.Grade
+FROM (Students INNER JOIN Courses ON Students.Id = Courses.Id)
+     INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId
+```
+
+- [ ] Query A
+- [x] Query B
+- [ ] Query C
+
+- **Query A** has no join condition, so it is the Cartesian product: every student with every course and every grade.
+- **Query B** matches each enrollment row to its student through `StudId`, and to its course through `CourseId`, the two foreign keys.
+- **Query C** matches a student's id to a course's id, which means nothing: a student is not the course with the same number.
+:::
+
+:::check id=prac-sql-join-steps-q2
+Query A returns {{=36|4|12}} rows. Query B returns {{=4|36|3}} rows. In Query B, Ringo {{=does not appear|appears once, with nulls|appears in every row}}.
+
+- **Query A:** 3 students, times 3 courses, times 4 enrollment rows, is 36.
+- **Query B:** one row per enrollment, so 4.
+- **Ringo** has no enrollment row, and an inner join keeps only matched rows. A `LEFT JOIN` from `Students` would keep him, with nulls.
+:::
+
+:::check id=prac-sql-join-steps-q3
+Query B with `WHERE Students.DeptId = 201` keeps {{=Dina's two rows|Danny's two rows|all four rows}}. Query B with `ORDER BY Students.Name ASC` puts {{=Danny's rows first|Dina's rows first|Ringo's rows first}}.
+
+- **`WHERE`** keeps only the rows whose student is in department 201, which is only Dina.
+- **`ORDER BY ... ASC`** sorts alphabetically, and `Danny` comes before `Dina`.
+:::
+:::
+
+:::problem id=prac-sql-group title="Counting with GROUP BY" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=exercise solution_origin=derived
+Same data as before: Dina has 70 in `infi` and 90 in `spl`, Danny has 80 in `infi` and 85 in `spl`, and Ringo has no grades.
+
+```sql
+SELECT Students.Name, COUNT(StudentsCourses.Grade)
+FROM Students INNER JOIN StudentsCourses ON Students.Id = StudentsCourses.StudId
+GROUP BY Students.Id
+```
+
+:::check id=prac-sql-group-q1
+The query returns Dina with {{=2|1|4}} and Danny with {{=2|1|4}}. Ringo {{=does not appear|appears with 0|appears with null}}.
+
+- **`GROUP BY Students.Id`** makes one result row per student, and `COUNT` counts the rows in each group.
+- **Ringo** has no enrollment rows, so the inner join drops him before any grouping happens.
+:::
+
+:::check id=prac-sql-group-q2
+Which query returns the average grade of each course?
+
+```sql
+-- Query A
+SELECT Courses.Name, AVG(StudentsCourses.Grade)
+FROM Courses INNER JOIN StudentsCourses ON Courses.Id = StudentsCourses.CourseId
+GROUP BY Courses.Id
+
+-- Query B
+SELECT Courses.Name, AVG(StudentsCourses.Grade)
+FROM Courses INNER JOIN StudentsCourses ON Courses.Id = StudentsCourses.CourseId
+GROUP BY StudentsCourses.StudId
+
+-- Query C
+SELECT Courses.Name, AVG(StudentsCourses.Grade)
+FROM Courses INNER JOIN StudentsCourses ON Courses.Id = StudentsCourses.CourseId
+```
+
+- [x] Query A, which gives `infi` 75 and `spl` 87.5
+- [ ] Query B
+- [ ] Query C
+
+- **Group by what you want one row for.** One row per course means `GROUP BY Courses.Id`.
+- **Query B** groups by student, so each average mixes different courses.
+- **Query C** has no `GROUP BY`, so `AVG` runs over all four grades together.
+:::
+
+:::check id=prac-sql-group-q3
+To count only grades above 80, `WHERE StudentsCourses.Grade > 80` goes {{=before GROUP BY|after GROUP BY}}, and then Dina gets {{=1|2|0}} and Danny gets {{=1|2|0}}. Separately, `SELECT DISTINCT Students.Name` over the join of `Students` and `StudentsCourses` returns {{=2|4|3}} rows.
+
+- **`WHERE` filters rows before they are grouped.** Dina keeps only her 90. Danny keeps only his 85, because 80 is not above 80.
+- **Without `DISTINCT`,** the join gives one row per enrollment, so each name appears twice. `DISTINCT` keeps one copy of each identical row: Dina and Danny.
+:::
+:::
 
 :::examnote
 - **What the question looks like:** it describes a small business in a few sentences and asks you to design the tables and keys, then write one `SELECT`.
 - **The usual traps:** squeezing a list into one column, or leaving out the junction table so that a join produces wrong or duplicated rows.
-:::
-
 :::
 
 :::problem id=exam-15a-q4 title="The BigApple schema" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
@@ -1106,44 +1265,6 @@ If A is family of B, then B is also family of A. So each pair is stored in both 
 
 :::
 
-:::problem id=exam-15b-q4 title="Number porting" source="materials/exams/15-b.pdf" kind=exam solution_origin=derived
-Extend the BigApple schema with three things.
-
-- **The kind of each family relationship,** such as parent, sibling, or child.
-- **A table of competing carriers.**
-- **A history of number porting:** for each time a customer left, the date and the carrier they moved to.
-
-:::check id=exam-15b-q4-q1
-The relationship kind is a {{=kind|left_on|carrier_id}} column added to `Family`.
-
-- **The relationship kind** describes a pair of people, so it belongs on the `Family` row as a new column, `kind TEXT`.
-- **Carriers and porting history** are new kinds of data, so each gets its own table.
-:::
-
-:::check id=exam-15b-q4-q2
-Which of these hold?
-
-- [x] `Carriers` has `id INTEGER PRIMARY KEY` and `name TEXT UNIQUE NOT NULL`
-- [ ] A porting history is two columns on `Customers`
-- [x] `Portings` has primary key `(phone, left_on)`, `phone` referencing `Customers(phone)`, and `carrier_id` referencing `Carriers(id)`
-
-- **`Portings`** stores `phone`, `left_on`, and `carrier_id`, so each row is one departure.
-- **The primary key `(phone, left_on)`** lets the same phone appear several times, once per departure date.
-- **Why not two columns on `Customers`:** that could record only one departure, not a full history.
-:::
-
-:::check id=exam-15b-q4-q3
-Which statement lists every carrier Ringo Starr moved to, with the date?
-
-- [ ] `SELECT kind, left_on FROM Family WHERE phone = 'Ringo Starr'`
-- [x] `SELECT car.name, p.left_on FROM Customers c JOIN Portings p ON p.phone = c.phone JOIN Carriers car ON car.id = p.carrier_id WHERE c.name = 'Ringo Starr' ORDER BY p.left_on`
-- [ ] `SELECT car.name FROM Actions a JOIN Carriers car ON a.kind = car.name WHERE a.phone = 'Ringo Starr'`
-
-The query finds Ringo in `Customers`, joins `Portings` to get his departures, joins `Carriers` to get each carrier's name, and sorts the result by date with `ORDER BY p.left_on`.
-:::
-
-:::
-
 :::problem id=exam-16a-q4 title="Abbey Road sessions" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 The Abbey Road studio stores its recording sessions.
 
@@ -1181,40 +1302,6 @@ Which join path returns `t.take_no` and `s.song`?
 - **The join path follows the foreign keys:** `Sessions` to `Takes`, `Takes` to `Participations`, and `Participations` to `People`.
 - **Then** the query selects `t.take_no, s.song`, and the band, song, date, person, and instrument are all `WHERE` filters on that joined result.
 - **The wrong options** join on columns that are not related, such as a band name to a person's name.
-:::
-
-:::
-
-:::problem id=exam-16b-q4 title="A fixed set of roles" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-This question uses the same Abbey Road schema: a recording session has a date, a song, a band, and many takes, and each take has people in roles (player, singer, technician). The role is stored as free text.
-
-:::check id=exam-16b-q4-q1
-While `role` is free text, Kim Philby appears as a double agent by:
-
-- [ ] adding a boolean column for each role on `People`
-- [ ] refusing every participation insert until a `Roles` table exists
-- [x] inserting Kim into `People` and a `Participations` row with `role = 'double agent'`
-
-Because the role is free text, the schema accepts any value at all. Kim Philby is simply inserted as a person, with a participation whose role is `'double agent'`. Nothing stops it.
-:::
-
-:::check id=exam-16b-q4-q2
-After `CREATE TABLE Roles (name TEXT PRIMARY KEY)`, `Participations.role` {{=REFERENCES Roles(name)|PRIMARY KEY|REFERENCES People(id)}}.
-
-- **The fix:** a `Roles` table lists the allowed roles, and `Participations.role` becomes a foreign key to it. The official solution fills it with `player`, `singer`, and `engineer`.
-- **The effect:** inserting a participation with `role = 'double agent'` now fails, unless someone first adds that role to `Roles` on purpose.
-:::
-
-:::check id=exam-16b-q4-q3
-Which of these hold?
-
-- [x] The double-agent insert fails until that role is added on purpose
-- [ ] Free text already rejects `role = 'double agent'`
-- [x] `CHECK (role IN (...))` is the alternative when the constraint is on a single column
-
-- **With the foreign key** to `Roles(name)`, the double-agent insert fails until that role is added deliberately.
-- **Free text** rejects nothing, which was the original problem.
-- **An alternative** is `CHECK (role IN ('player', 'singer', 'engineer'))` on the column itself. It also restricts the values, but changing the list then means changing the table definition.
 :::
 
 :::
@@ -1336,55 +1423,6 @@ Only the `asked` table with `PRIMARY KEY (question_id, year)` lets the database 
 
 :::
 
-:::problem id=exam-18b-q4 title="Police wiretaps" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-The police keep a database of wiretaps.
-
-- **A recording** stores the text of the call, the caller's number, the number called, and the date.
-- **Each phone number** has an owner's name and an address.
-
-Phone numbers are stored in this table:
-
-```sql
-CREATE TABLE phone (
-  phone_num INT PRIMARY KEY,
-  name TEXT NOT NULL,
-  address TEXT NOT NULL
-);
-```
-
-:::check id=exam-18b-q4-q1
-The names of both owners come from joining `phone` {{=twice|once|with a cross join}}.
-
-- **Each recording has two numbers,** `from_num` and `to_num`, and each one references `phone(phone_num)`.
-- **So you join `phone` twice,** under two different aliases, `src` and `dst`: one to find the caller's owner and one to find the receiver's owner.
-:::
-
-:::check id=exam-18b-q4-q2
-Which statement returns the recordings of a given number, with both owners' names?
-
-- [ ] `SELECT r.body, phone.name FROM recordings r JOIN phone ON phone.phone_num = r.from_num WHERE r.from_num = ?`
-- [x] `SELECT r.at, r.body, src.name, dst.name FROM recordings r JOIN phone src ON src.phone_num = r.from_num JOIN phone dst ON dst.phone_num = r.to_num WHERE r.from_num = ? OR r.to_num = ?`
-- [ ] `SELECT src.name, dst.name FROM phone src JOIN phone dst ON src.phone_num = dst.phone_num`
-
-- **The filter** keeps a recording when the given number is either the caller or the receiver.
-- **The select list** is `r.at`, `r.body`, `src.name`, and `dst.name`, so both owners' names appear.
-- **The first option** joins `phone` only once, so it shows just one name, and the third never looks at recordings.
-:::
-
-:::check id=exam-18b-q4-q3
-Which of these hold for `recordings`?
-
-- [ ] `body` is the primary key
-- [x] `id` is `INTEGER PRIMARY KEY`
-- [x] `at` is `TIMESTAMP NOT NULL` and `body` is `TEXT NOT NULL`
-- [x] `from_num` and `to_num` both reference `phone(phone_num)`
-
-- **`id`** is the primary key. The text `body` is not unique, so it cannot be one.
-- **Both number columns** are foreign keys to `phone(phone_num)`.
-:::
-
-:::
-
 :::problem id=exam-19a-q4 title="An Airbnb schema" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
 Design a database for Airbnb.
 
@@ -1427,42 +1465,6 @@ Which column list matches `rentals`?
 
 :::
 
-:::problem id=exam-19b-q4 title="One night per property" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
-This question uses the same Airbnb schema, with users, properties, and rentals. It adds one rule: two guests must never rent the same property on the same night.
-
-:::check id=exam-19b-q4-q1
-The `nights` primary key is {{=(property_id, night)|(rental_id)|(night)}}.
-
-- **The idea:** each booking writes one `nights` row for every night of the stay.
-- **The key `(property_id, night)`** allows only one row per property per night, so a second booking for an occupied night breaks the primary key and the insert fails.
-:::
-
-:::check id=exam-19b-q4-q2
-A `CHECK` constraint:
-
-- [x] looks at the row being written
-- [ ] compares two rental rows and rejects overlapping dates by itself
-- [ ] is the primary key of `rentals`
-
-A `CHECK` constraint can only look at the single row being written. It cannot compare that row with other rentals, so it cannot detect overlapping dates. That is why the extra `nights` table is needed: it turns an overlap into a duplicate key, which the database can detect.
-:::
-
-:::check id=exam-19b-q4-q3
-Which of these hold?
-
-- [x] `nights.property_id` references `properties(property_id)`
-- [ ] The primary key of `nights` is `(rental_id)` alone
-- [x] `nights.rental_id` references `rentals(id)`
-- [x] Who is staying at property P on night D is a join from `nights` to `rentals` to `users`
-
-- **The base tables** `users`, `properties`, and `rentals` stay as before.
-- **`nights`** adds `property_id`, `night`, and `rental_id`, with foreign keys to `properties` and `rentals`.
-- **To find who stays at property P on night D,** look up `nights`, follow `rental_id` to `rentals`, and then `guest_id` to `users`.
-- **The key cannot be `(rental_id)` alone,** because one rental covers many nights.
-:::
-
-:::
-
 :::problem id=exam-20a-q4 title="A DVD schema" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 A DVD service needs a database.
 
@@ -1498,48 +1500,6 @@ A movie with two categories in this query:
 - [ ] is dropped, because the category join is a left join
 
 The join produces one row for each matching category row, so a movie with two categories appears twice, once with each category. That is how a one-to-many table always behaves in a join.
-:::
-
-:::
-
-:::problem id=exam-20b-q4 title="An average score" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-This question uses the same DVD schema. A movie stores its average `score` and its `num_scorers`. Now a user submits a new score `s` for a movie, and the stored average must be updated.
-
-:::check id=exam-20b-q4-q1
-The new average stored on the movie is this expression.
-
-```sql
-(score * num_scorers + :s) / ({{=num_scorers + 1|num_scorers|score + 1}})
-```
-
-- **Why the formula works:** `score * num_scorers` is the total of all the old scores. Adding `s` gives the new total, and dividing by `num_scorers + 1` gives the new average.
-- **How to store it:** one `UPDATE ... WHERE id = :movie` sets `score` to that value and `num_scorers` to `num_scorers + 1` together. In SQL, every expression on the right reads the old values, so the order does not matter.
-:::
-
-:::check id=exam-20b-q4-q2
-Which statement lists movies in a category sorted by score?
-
-- [ ] `SELECT m.name, m.score FROM movies m ORDER BY m.num_scorers`
-- [x] `SELECT m.name, m.score FROM movies m JOIN categories c ON c.movie_id = m.id WHERE c.category = 'Drama' ORDER BY m.score DESC`
-- [ ] `SELECT m.name, m.score FROM movies m LEFT JOIN categories c ON c.movie_id = m.id WHERE m.score IS NOT NULL`
-
-- **The join** is an inner join to `categories`, filtered by `c.category = 'Drama'`, so only Drama movies remain.
-- **The order** is `ORDER BY m.score DESC`, which puts the highest score first.
-- **The other options** sort by the wrong column, or never filter by category.
-:::
-
-:::check id=exam-20b-q4-q3
-Which of these hold?
-
-- [x] One `UPDATE` changes `score` and `num_scorers` together
-- [x] Two statements need a transaction if that pair is to stay atomic
-- [ ] Object serialization makes those two column writes atomic by itself
-- [ ] The category query keeps a movie that has no Drama row
-
-- **One `UPDATE` is atomic,** so changing both columns in a single statement is safe.
-- **Two separate statements** need a transaction, or another user's update could run between them.
-- **Object serialization** only writes bytes; it provides no atomicity. Only the database provides transactions.
-- **The Drama query** uses an inner join, so a movie with no Drama row is not in its result.
 :::
 
 :::

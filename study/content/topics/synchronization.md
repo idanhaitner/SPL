@@ -610,141 +610,148 @@ The guard unlocks automatically when it goes out of scope, including on return, 
 :::
 :::
 
+:::problem id=prac-sync-immutable title="An immutable Even" source="materials/lectures/Chapter 8 - Concurrency.pptx" kind=exercise solution_origin=derived
+This `Even` never changes after it is built. `next` returns a new object instead.
+
+```java
+final class Even {
+    private final int val;
+
+    Even(int val) throws Exception {
+        if (val % 2 != 0) throw new Exception("Odd number!");
+        this.val = val;
+    }
+
+    public int get() { return val; }
+    public Even next() throws Exception { return new Even(val + 2); }
+}
+```
+
+:::check id=prac-sync-immutable-q1
+Which of these does the class rely on to stay immutable?
+
+- [x] Every field is `private final`, so it is set once, in the constructor
+- [x] `next` returns a new `Even` and leaves this one as it was
+- [x] The class is `final`, so no subclass can add a field that changes
+- [ ] `get` and `next` are `synchronized`
+
+- **`private final` fields** cannot be assigned after the constructor ends.
+- **Commands return a new object,** so nobody ever sees an `Even` in the middle of a change.
+- **`final` on the class** stops a subclass from adding mutable state.
+- **No lock is needed at all:** an object that never changes can be shared by any number of threads.
+:::
+
+:::check id=prac-sync-immutable-q2
+What does this print?
+
+```java
+Even e = new Even(0);
+e.next();
+System.out.println(e.get());
+```
+
+- [x] 0
+- [ ] 2
+- [ ] It does not compile
+
+`e.next()` builds a new `Even` holding 2, and the line throws it away. `e` still refers to the old object, which holds 0. The fix is `e = e.next();`, the same mistake as calling `s.replaceAll(...)` on a `String` and ignoring the result.
+:::
+
+:::check id=prac-sync-immutable-q3
+Two `Adder` threads each start from the same `Even(0)` and run `e = e.next();` on their own field. After both are joined, each adder's `e.get()` is {{=2|4|0}}, and the merge `a1.e.get() + a2.e.get() - 0` gives {{=4|2|8}}.
+
+- **Each thread gets its own new copy,** built from the shared `Even(0)`, so each ends with 2.
+- **The merge** adds what each thread contributed: 2 + 2 - 0 = 4, the same result as two serial calls to `next`.
+:::
+:::
+
+:::problem id=prac-sync-protocols title="Which lock protocol?" source="materials/lectures/Chapter 8 - Concurrency.pptx" kind=exercise solution_origin=derived
+This `Point` uses protocol B: the methods that touch `y` lock `lockY`, and the methods that touch `x` lock `lockX`.
+
+```java
+class Point {
+    int x, y;
+    Object lockX = new Object(), lockY = new Object();
+
+    public void up()    { synchronized (lockY) { y++; } }
+    public int getY()   { synchronized (lockY) { return y; } }
+
+    public void right() { synchronized (lockX) { x++; } }
+    public int getX()   { synchronized (lockX) { return x; } }
+}
+```
+
+:::check id=prac-sync-protocols-q1
+T1 calls `p.up()` while T2 calls `p.right()`: {{=both run at the same time|T2 waits for T1|they deadlock}}. T1 calls `p.up()` while T2 calls `p.getY()`: {{=T2 waits for T1|both run at the same time|they deadlock}}. With protocol A, a single lock on `this`, T1's `up()` and T2's `right()` would {{=run one after the other|still run at the same time|deadlock}}.
+
+- **Different groups, different locks:** `up` holds `lockY` and `right` holds `lockX`, so neither waits.
+- **Same group, same lock:** `up` and `getY` both need `lockY`, so one waits for the other.
+- **Protocol A** locks `this` for every access, so even methods on different fields wait for each other.
+:::
+
+:::check id=prac-sync-protocols-q2
+Which changes break the protocol?
+
+- [x] `getY` reads `y` without taking `lockY`
+- [x] `up` takes `lockX` instead of `lockY`
+- [ ] `right` and `getX` keep using `lockX`
+
+- **Every access to a field must hold that field's lock,** reads included. An unlocked `getY` can run in the middle of `up`, and may also read an old value.
+- **`up` under `lockX`** no longer excludes `getY`, which holds `lockY`, so the two can touch `y` at the same time.
+:::
+
+:::check id=prac-sync-protocols-q3
+An operation moves an item from list `l1` to list `l2`. It needs protocol {{=C|A|B}}: {{=one lock object that stands for both lists, used by every access to either|a separate lock for each list, taken one after the other|no lock, because each list is thread-safe}}.
+
+The move must look like one step: nobody may see the item in neither list, or in both. So one lock covers both lists, and every access to `l1` or `l2` takes that same lock.
+:::
+:::
+
+:::problem id=prac-sync-add-if-absent title="Adding a method to a thread-safe class" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+`Vector` is thread-safe: each of its methods locks the vector. Two threads run this code on the same vector `v`.
+
+```java
+if (!v.contains(5))
+    v.add(5);
+```
+
+:::check id=prac-sync-add-if-absent-q1
+What can happen?
+
+- [x] 5 ends up in the vector twice
+- [ ] Nothing can go wrong, because each method is synchronized
+- [ ] The second thread throws an exception
+
+Each call is safe by itself, but the lock is released between them. Both threads can run `contains` while 5 is absent, and then both run `add`.
+:::
+
+:::check id=prac-sync-add-if-absent-q2
+Which fix works from outside the class?
+
+- [x] `synchronized (v) { if (!v.contains(5)) v.add(5); }`
+- [ ] `synchronized (this) { if (!v.contains(5)) v.add(5); }`
+- [ ] Declaring `v` as `volatile`
+
+- **Client-side locking:** the caller takes the same lock that `Vector`'s own methods take, the vector itself, so no `add` from another thread can slip between the check and the action.
+- **Locking `this`** takes the caller's own lock, which `Vector` never uses, so other threads are not stopped.
+- **`volatile`** is about visibility. It does not make two calls one action.
+:::
+
+:::check id=prac-sync-add-if-absent-q3
+Which of these are true about putting `addIfAbsent` inside the class?
+
+- [x] `class MyVector extends Vector` with a `synchronized addIfAbsent` is safe only if `Vector`'s own methods also lock `this`
+- [x] Delegation, a private `Vector` inside a class whose every method is `synchronized`, removes that doubt
+- [ ] Extending `Vector` is always safe, because both classes use `synchronized`
+
+- **Inheriting** assumes that `Vector` protects itself with the lock on `this`. If it uses another lock, another thread's `add` can still run in the middle of `addIfAbsent`.
+- **Delegation** keeps the inner vector private, so every access goes through `MyVector`'s own methods, and its own lock.
+:::
+:::
+
 :::examnote
 - **What the question looks like:** it shows a shared data structure, and asks you to find a race, or to fix it with `synchronized` or an atomic variable.
 - **The usual traps:** locking the update but leaving the read that returns the value outside the critical section.
-:::
-
-:::problem id=exam-15a-q1 title="Gears" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
-The question models a row of meshed gears.
-
-- **`Gear`** knows its center, its radius, and its left and right neighbors. `move` rotates this gear, and rotates both neighbors in the opposite direction. `moveLeft` and `moveRight` rotate this gear and pass the turn on to the left or the right neighbor only.
-- **`SimpleGear`** stores the gear's angle in `_state`, and its `check` method validates the constructor's arguments.
-- **`Spinner`** is a thread that calls `move` on a gear.
-- **The simulation:** `main` builds three gears in a row, `gear1`, `gear2`, and `gear3`, links `gear2` to both of the others, and starts two `Spinner` threads on `gear2`, one clockwise and one counter-clockwise.
-- **The meaning of "correct":** the sequence of states must be one that some serial history of `move` calls could have produced.
-
-:::check id=exam-15a-q1-q1
-Which of these belong to the invariant?
-
-- [x] The radius is positive
-- [ ] Left and right may be the same gear
-- [x] A neighbor's center lies at a distance of exactly `radius + neighbor.radius` on the x-axis
-- [x] `_state` stays in `[0, 360)`
-
-- **The radius must be positive,** so `check` rejects a radius of zero or less.
-- **Meshed gears must touch:** a neighbor's center must lie exactly `radius + neighbor.radius` away, and `check` rejects a center that breaks that.
-- **The angle stays in `[0, 360)`.**
-- **Left and right must be different gears,** so the second option is not part of the invariant.
-:::
-
-:::check id=exam-15a-q1-q2
-Which descriptions of the unsynchronized class are right?
-
-- [x] Two calls to `move` on adjacent gears can apply one gear's angle twice, or lose it
-- [ ] Moving the `_state` updates inside `move`, `moveLeft`, and `moveRight` makes the class safe
-- [x] Thread A can be inside `gear2.moveRight` while thread B writes `_state` between A's read and A's write
-- [ ] The class is safe once each gear writes only its own `_state`
-
-Without synchronization, two `move` calls on neighboring gears can interleave their reads and writes of the same `_state`, so a rotation is applied twice or lost. Moving the updates into other methods, or having each gear write only its own `_state`, does not help: the neighbor's `_state` is still updated by two threads at once.
-:::
-
-:::check id=exam-15a-q1-q3
-Before `move` runs, the neighbor chain {{=contains no cycle this call would follow forever|is empty|is locked once per gear}}. After `move` returns, this gear's angle {{=has changed by its own step|is unchanged|equals the neighbor's angle}} and each neighbor's angle {{=has changed by the opposite step|has changed by the same step|stays at 0}}.
-
-- **The precondition:** the chain of neighbors must not contain a cycle, or the call would follow it forever.
-- **The postcondition:** this gear has turned by its own step, and each neighbor has turned by the same step in the opposite direction.
-:::
-
-:::check id=exam-15a-q1-q4
-Several `Spinner` threads overlap their `move` calls, so the run matches no serial history. Which repair does?
-
-- [ ] Locking only this gear while `move` writes the neighbors' `_state`
-- [x] One lock for the whole mesh, which every `move` takes before it starts
-- [ ] Making only `_state` volatile
-- [ ] Synchronizing the constructor and leaving `move` unsynchronized
-
-- **One lock for the whole mesh works:** every `move` takes it before it starts and releases it when it ends, so moves run one at a time, and each run matches a serial history.
-- **Locking only this gear** leaves the neighbors' `_state` open to another thread's `move`.
-- **`volatile`** makes each write visible, but does not make the read and write of `_state` one step.
-:::
-
-:::
-
-:::problem id=exam-17a-q1 title="A board with a cup" source="materials/exams/17-a.pdf" kind=exam solution_origin=derived
-A game is played on a board.
-
-- **The board** is `N` by `N`, and starts with one cup and several players.
-- **Each player** is a thread with a `Strategy` that chooses a `Direction` to move. The first player to reach the cup wins, and the game ends.
-- **The requirement:** the solution must use locks.
-
-:::check id=exam-17a-q1-q1
-Each player's `run` asks the strategy, calls {{=board.move|Thread.stop|Thread.sleep}}, and stops when the result is {{=WIN or LOST|SUCCESS|FAIL only}}. `main` starts each player with {{=Thread.start|run|sleep}} and then calls {{=join|start|sleep}}.
-
-Each player is a `Runnable`. Its `run` loops: ask the strategy for a direction, call `board.move`, and stop when the result is `WIN` or `LOST`. `main` starts each player's thread with `Thread.start`, then `join`s them all, so it waits until every player has finished.
-:::
-
-:::check id=exam-17a-q1-q2
-Which of these make `move` return `FAIL`?
-
-- [x] The game has already ended
-- [x] The step would leave the board
-- [x] The step would land on another player
-- [ ] The destination is the cup
-
-`move` fails if the game is already over, if the step would leave the board, or if the destination cell holds another player. Reaching the cup is not a failure: it returns `WIN` and ends the game. Any other legal step returns `SUCCESS` and updates the player's position.
-:::
-
-:::check id=exam-17a-q1-q3
-Which description of the board lock is right?
-
-- [x] `move` is synchronized on the board, and the check and the update hold that lock for the whole critical section
-- [ ] `move` is unsynchronized, and only the end flag is volatile
-- [ ] Each cell has its own lock, taken after the strategy runs
-- [ ] A strategy that reads only immutable data must lock the board
-
-`move` must check the destination and then update the position as one action, so the whole method is `synchronized` on the board. Otherwise two players could both see a free cell and both move into it. A strategy that reads only immutable data needs no lock at all.
-:::
-
-:::
-
-:::problem id=exam-17b-q1 title="Looking ahead on the board" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-This question extends the board game.
-
-- **Players** on the `N` by `N` board can `move` one step, or call `lookAhead`, which returns the distance in a given direction to the nearest object or to the edge.
-- **`Segment`** is an existing, immutable class that can test whether two segments intersect. Because it is immutable, it is thread-safe.
-- **Several player threads** call `move` and `lookAhead` at the same time.
-
-:::check id=exam-17b-q1-q1
-Which claims are true of `lookAhead`?
-
-- [ ] The method may move the player while it measures the distance
-- [x] `dir` is a legal direction, and the player's position is on the board
-- [x] The result counts steps along `dir` until the first other player, the cup, or the edge
-- [x] The distance comes from the board state at one moment during the call, and the method leaves the board unchanged
-
-- **The precondition:** `dir` is a legal direction, and the player is on the board.
-- **The postcondition:** the result is the number of steps along `dir` to the first other player, the cup, or the edge, measured on the board as it was at one moment during the call.
-- **`lookAhead` is a query,** so it must not move the player or change the board.
-:::
-
-:::check id=exam-17b-q1-q2
-Which locking is right?
-
-- [ ] `lookAhead` is synchronized and `move` is not, because a query needs the lock and an update does not
-- [x] Both `move` and `lookAhead` are synchronized on the board
-- [ ] Neither method takes a lock, because `Segment` is immutable
-- [ ] `lookAhead` locks the `Segment`, and `move` locks the player
-
-Both methods must lock the board. `lookAhead` needs the lock so that its walk sees one consistent layout, and `move` needs the same lock so that no position changes during that walk. A query needs the lock just as much as an update does.
-:::
-
-:::check id=exam-17b-q1-q3
-`lookAhead` builds a {{=Segment|Thread|Lock}} from the player's cell and walks until {{=intersect|join|compareAndSet}} hits another object's cell or the edge. `move` returns {{=WIN|FAIL|LOST}} when the destination is the cup.
-
-`lookAhead` builds a `Segment` from the player's cell in direction `dir`, and walks along it until `intersect` reports another object's cell or the edge. The same board lock covers that walk and the position update in `move`.
-:::
-
 :::
 
 :::problem id=exam-20b-q2 title="An atomic update" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived

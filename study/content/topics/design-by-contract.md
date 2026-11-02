@@ -498,54 +498,92 @@ Which test checks the precondition of `push`?
 :::
 :::
 
+:::problem id=prac-dbc-counter title="A contract for a bounded counter" source="materials/lectures/Chapter 9 - Design by Contract.pptx" kind=exercise solution_origin=derived
+A `Counter` counts from 0 up to a maximum that is fixed when it is created.
+
+```java
+interface Counter {
+    int get();      // the current value
+    int max();      // the largest value allowed
+    void inc();     // adds 1
+    void reset();   // goes back to 0
+}
+```
+
+:::check id=prac-dbc-counter-q1
+Which of these belong to the invariant of `Counter`?
+
+- [x] `get() >= 0`
+- [x] `get() <= max()`
+- [ ] `get() == @PRE(get()) + 1`
+- [ ] `get() < max()`
+
+- **The invariant** describes every legal state: the value is never negative, and never above the maximum.
+- **`get() == @PRE(get()) + 1`** compares the state before and after one method, so it is the postcondition of `inc`, not an invariant.
+- **`get() < max()`** is too strict: a counter that has reached its maximum is in a legal state.
+:::
+
+:::check id=prac-dbc-counter-q2
+The precondition of `inc` is {{=get() < max()|get() <= max()|none}}. Its postcondition is {{=get() == @PRE(get()) + 1|get() == max()|get() > 0}}. The postcondition of `reset` is {{=get() == 0|get() == @PRE(get()) - 1|none}}.
+
+- **`inc` may run only when there is room for one more,** so it needs `get() < max()`. With `<=`, a full counter could go above the maximum.
+- **`@PRE(get())`** is the value when `inc` was entered, so the postcondition says it went up by exactly 1.
+- **`reset`** promises the value 0, whatever it was before.
+:::
+
+:::check id=prac-dbc-counter-q3
+For each failure, whose bug is it?
+
+A caller runs `inc()` when `get() == max()`: the bug belongs to {{=the caller|the method inc|the class}}. After `reset()`, `get()` returns 1: the bug belongs to {{=the method reset|the caller|the class}}. After a long run, `get()` returns -1: the bug belongs to {{=the class implementation|the caller|nobody}}.
+
+- **A broken precondition** is the caller's bug: the caller had to make sure there was room before calling `inc`.
+- **A broken postcondition** is the method's bug: `reset` promised 0.
+- **A broken invariant** is the class's bug: no legal sequence of calls may reach a negative value.
+:::
+:::
+
+:::problem id=prac-dbc-safe-correct title="Safe, correct, or neither?" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+This `Even` starts at 0, and its invariant is `get() % 2 == 0`. Two threads each call `next()` once on the same object, with no synchronization.
+
+```java
+class EvenImpl implements Even {
+    private int counter = 0;
+    public int get() { return counter; }
+    public void next() {
+        counter++;
+        counter++;
+    }
+}
+```
+
+:::check id=prac-dbc-safe-correct-q1
+Run the two calls one after the other, in either order. The legal results are {{=only 4|2 or 4|3 or 4}}.
+
+A concurrent run is correct only if its result could come from some serial run. A then B gives 4, and B then A also gives 4, so 4 is the only legal result.
+:::
+
+:::check id=prac-dbc-safe-correct-q2
+After both threads finish, `get()` returns one of these values. Classify each run.
+
+A run that ends at 4 is {{=safe and correct|safe but not correct|neither safe nor correct}}. A run that ends at 2 is {{=safe but not correct|safe and correct|neither safe nor correct}}. A run that ends at 3 is {{=neither safe nor correct|safe but not correct|correct but not safe}}.
+
+- **Safe** means the invariant holds: the value is even.
+- **Correct** means the result is in the set of legal results, `{4}`.
+- **2 is even but wrong:** two increments were lost, so the run is safe but not correct.
+- **3 is odd:** one increment was lost, so the invariant is broken, and 3 is not a legal result either.
+:::
+
+:::check id=prac-dbc-safe-correct-q3
+Thread A prints `Hello` and thread B prints `Goodbye`, one letter at a time, and the run prints `HelGoodbyelo`. With no invariant defined for printing, that run is {{=safe but not correct|neither safe nor correct|safe and correct}}.
+
+- **Safe:** safety is defined by invariants, and no invariant was defined for the print task, so nothing was broken.
+- **Not correct:** the serial runs print `Hello Goodbye` or `Goodbye Hello`, and `HelGoodbyelo` is neither.
+:::
+:::
+
 :::examnote
 - **What the question looks like:** it shows an interface and asks you to define the invariant, plus the precondition and postcondition of one method.
 - **The usual traps:** an invariant that forgets the empty case, or a postcondition that holds only if no other code touches the object at the same time.
-:::
-
-:::problem id=exam-16a-q1 title="The contract for a queue" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-`Queue<T>` has `add(T item)` and `remove()`. `createQueue()` returns the object under test. `setUp` builds a new queue.
-
-:::check id=exam-16a-q1-q1
-The contract adds the queries {{=size|lock|thread}} and `isEmpty`.
-
-With those two queries, the invariant can say that `size() >= 0`, and that `isEmpty()` is true exactly when `size() == 0`.
-:::
-
-:::check id=exam-16a-q1-q2
-Which of these belong to the contract?
-
-- [x] The next `remove` yields the earliest `add` that has not yet been removed
-- [ ] `remove` on an empty queue has the postcondition that `size()` becomes negative
-- [x] `remove` has precondition `!isEmpty()`. Its postcondition is that `size()` is smaller by one and the removed element was the oldest
-- [x] The postcondition of `add` is that `size()` is larger by one, and later `remove` calls still yield the old elements and then the new item
-
-- **A queue keeps insertion order:** `remove` always returns the oldest element that is still in the queue.
-- **Removing from an empty queue** is ruled out by the precondition `!isEmpty()`, so the size can never become negative.
-:::
-
-:::check id=exam-16a-q1-q3
-What does `testAdd` check?
-
-- [ ] It records `size` before the call and expects that size to stay the same
-- [ ] It calls `add` and never inspects the queue
-- [x] It adds one element, then checks `size() == 1` and that `remove` returns that element
-
-`setUp` gives `testAdd` an empty queue, so there is nothing to record beforehand. The test adds one element, then checks that the size is 1 and that `remove` returns that same element.
-:::
-
-:::check id=exam-16a-q1-q4
-Which of these match the tests?
-
-- [ ] `setUp` may leave the previous test's elements in the queue
-- [x] `testRemove` on an empty queue expects the precondition to fail
-- [x] `testRemove` after one `add` checks that `size` returns to 0 and that the value matches
-- [x] `setUp` gives every test a fresh queue, so leftovers do not look like failures of the invariant
-
-- **`testRemove` on an empty queue** deliberately breaks the precondition and expects that to be reported.
-- **`testRemove` after one `add`** expects the size to return to 0 and the removed value to match.
-- **`setUp`** must create a fresh queue for every test, so that one test's leftovers cannot make another test fail.
-:::
 :::
 
 :::problem id=exam-18a-q2 title="A bounded stack" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
@@ -623,51 +661,6 @@ Which postcondition does `insert` establish?
 
 - **After `insert(v)`**, `v` is in the tree, and the tree is still sorted.
 - **If `v` was already present**, it still appears exactly once, because duplicates are never added.
-:::
-:::
-
-:::problem id=exam-24a-q2 title="The contract for a set" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-`Set<T>` has `contains` and `add`. `SetImpl` is a linked list with a `head` field. `add` walks the list and returns if `equals` matches an element. Otherwise it links a new node at the end.
-
-:::check id=exam-24a-q2-q1
-The precondition of `add` is {{=obj != null|head == null|already present}}.
-
-The implementation calls `equals` on the elements. Calling a method on null throws an exception, so unless the contract handles null, the caller must not pass it.
-:::
-
-:::check id=exam-24a-q2-q2
-Which of these belong to the invariant?
-
-- [x] No two nodes are `equals`
-- [ ] `add` of an element that is already present appends another node
-- [x] `contains(x)` is true exactly when some node reachable from `head` holds an element equal to `x`
-- [x] The list has no cycle
-
-- **No duplicates:** `add` returns early when an equal element exists, so no two nodes are ever `equals`, and adding an existing element leaves the number of nodes unchanged.
-- **`contains` agrees with the list:** it is true exactly for the elements stored in the list.
-- **No cycle:** otherwise walking the list would never end.
-:::
-
-:::check id=exam-24a-q2-q3
-Which postcondition does `add` establish?
-
-- [ ] The number of nodes always grows by one
-- [ ] The contract requires `add` to be safe for two threads at once
-- [x] `contains(obj)` holds, every previous member is still present, and the node count grows only when `obj` was not already a member
-
-After `add(obj)`, `contains(obj)` is true. Every `y` that was a member before the call is still a member, and the list grows by one node only if `obj` was new.
-:::
-
-:::check id=exam-24a-q2-q4
-What is true of the published `add` when two threads run it?
-
-- [ ] The contract promises that `add` is safe for any number of threads
-- [x] The contract says nothing about threads. Two threads can both link a node, or both assign `head`, and an element is lost
-- [ ] Linking the new node at the end is one atomic step, so nothing can be lost
-
-- **The contract is silent about threads**, so the published `add` meets its postcondition only when one thread runs it at a time.
-- **What goes wrong:** two threads can both walk to the end and link a node in the same place, so one element is lost.
-- **Who must fix it:** keeping the contract under concurrency is the implementation's job, with the tools of [Synchronization](topic:synchronization).
 :::
 :::
 

@@ -9,8 +9,6 @@ sources:
   - "materials/sessions/SPL_PS5.pptx"
   - "materials/sessions/SPL_PS7.pptx"
   - "materials/sessions/SPL_PS8.pptx"
-  - "materials/exams/15-b.pdf"
-  - "materials/exams/15-b-solution.pdf"
   - "materials/exams/16-b.pdf"
   - "materials/exams/16-b-solution.pdf"
   - "materials/exams/18-b.pdf"
@@ -739,95 +737,141 @@ Which description of the three failures is right?
 
 :::
 
-:::problem id=exam-15b-q1 title="Deadlock among gears" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-Now every public method of `SimpleGear` is `synchronized`. Since a gear's `move` calls its neighbors' `moveLeft` and `moveRight`, it must also take each neighbor's lock while still holding its own.
+:::problem id=prac-wait-queue title="The bounded queue, one rule at a time" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+This is the bounded queue from the chapter. Each question breaks one part of it.
 
-:::check id=exam-15b-q1-q1
-Which interleaving is the deadlock?
+```java
+public synchronized void add(T obj) throws InterruptedException {
+    while (lst.size() == capacity)
+        wait();
+    lst.add(obj);
+    notifyAll();
+}
 
-- [ ] `A.move` locks A and B, returns, and then `B.move` locks B
-- [x] `A.move` locks A and calls `B.moveRight`, which waits for B, while `B.move` locks B and calls `A.moveLeft`, which waits for A
-- [ ] Both threads release their own lock before calling the neighbor
-- [ ] A and B both wait for a semaphore that neither of them acquired
+public synchronized T remove() throws InterruptedException {
+    while (lst.size() == 0)
+        wait();
+    T ret = lst.remove(0);
+    notifyAll();
+    return ret;
+}
+```
 
-A's thread holds A's lock and waits for B's, while B's thread holds B's lock and waits for A's. Each holds one lock and waits for the other, so both are blocked forever.
+:::check id=prac-wait-queue-q1
+`remove` uses `if` instead of `while`. The queue is empty, and T2 and T3 both wait in `remove`. T1 adds one item and calls `notifyAll`. What can happen?
+
+- [x] T2 removes the item, and then T3 removes from an empty queue
+- [ ] T3 checks the size again and goes back to `wait`
+- [ ] Only one of T2 and T3 wakes up, so nothing goes wrong
+
+- **`notifyAll` wakes both** T2 and T3. They take the lock back one at a time.
+- **With `if`,** a thread that wakes up does not check again. T2 takes the only item, and T3 continues straight to `lst.remove(0)` on an empty list.
+- **With `while`,** T3 rechecks, finds the queue empty, and waits again.
 :::
 
-:::check id=exam-15b-q1-q2
-Which repairs keep one `move` atomic with respect to other moves?
+:::check id=prac-wait-queue-q2
+Now both methods call `notify()` instead of `notifyAll()`, and the capacity is 1. T2 and T3 wait in `remove`. T1 adds an item, which wakes T2, and then T1 calls `add` again and waits, because the queue is full. T2 removes the item and calls `notify()`, which wakes T3. What happens next?
 
-- [x] Copy the facts the neighbor call needs, release this gear's lock, and then call the neighbor
-- [x] One `Semaphore(1)` for the mesh, with `acquire` before every move and `release` after it
-- [ ] A lock per gear, taken in whichever order the call reaches the gears
-- [x] A lock per gear in address order, or in left-to-right order
+- [x] T3 finds the queue empty and waits again, and T1 keeps waiting although the queue now has room
+- [ ] T1 wakes up and adds its item
+- [ ] T3 removes T1's second item
 
-- **Narrowing the lock:** copy what the neighbor call needs, release this gear's lock, and only then call the neighbor. No thread ever holds two locks at once, so no cycle can form.
-- **One semaphore for the mesh** has a single permit, so there is no cycle either.
-- **Locks in a fixed order,** by address or from left to right, make every thread lock the earlier gear first, so the cycle cannot close.
-- **Locks in whatever order the call happens to reach them** are exactly what caused the deadlock.
+- **`notify` wakes one thread at random,** and here it woke another remover, T3, which cannot do anything on an empty queue.
+- **The thread that could make progress, T1, was never woken.** Everyone is now waiting.
+- **`notifyAll`** wakes every waiter, and each rechecks its own condition in its `while`, so the right one gets through.
 :::
 
-:::check id=exam-15b-q1-q3
-Which repair does the official solution adopt?
+:::check id=prac-wait-queue-q3
+`wait()` {{=releases the queue's lock while the thread is blocked|keeps the queue's lock while the thread is blocked|releases every lock the thread holds}}. A `synchronized` `add` that spins with `while (lst.size() == capacity);` {{=can never succeed|works, but wastes the processor|works on a single processor only}}, because {{=the spinning thread holds the lock that remove needs|the loop has no body|the queue is not volatile}}.
 
-- [ ] The mesh semaphore, because a gear holds the permit only while it copies the facts it needs
-- [ ] The address order, because it is finer than narrowing the synchronized regions
-- [ ] None of the three, because each of them drops the atomicity of `move`
-- [x] Narrowing the synchronization
-
-The official solution narrows the synchronized regions. The lock order and the mesh semaphore are also correct, but they are coarser: they hold a lock for the whole call, longer than the critical section really needs it, so they allow less concurrency.
+- **`wait` releases exactly one lock,** the lock of the object it is called on, so a remover can get in and make room.
+- **The spinning version** never releases the lock, so no remover can ever enter, and the queue never gets room.
+:::
 :::
 
+:::problem id=prac-wait-semaphore title="A semaphore with three permits" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+This is the semaphore from the chapter, created with `new Semaphore(3)`.
+
+```java
+public synchronized void acquire() throws InterruptedException {
+    while (free == 0)
+        wait();
+    free--;
+}
+
+public synchronized void release() {
+    if (free < permits)
+        free++;
+    notify();
+}
+
+public synchronized boolean tryAcquire() {
+    if (free == 0) return false;
+    free--;
+    return true;
+}
+```
+
+:::check id=prac-wait-semaphore-q1
+Four threads call `acquire`: {{=three get in, and the fourth waits|all four get in|one gets in, and three wait}}. Then one of the three calls `release`: {{=the waiting thread can get in|nobody else can get in|all threads must leave first}}.
+
+- **`free` starts at 3,** so three calls to `acquire` pass the `while` and take a place each. The fourth finds `free == 0` and waits.
+- **`release`** gives a place back and calls `notify`, which wakes the waiting thread. It rechecks, finds `free == 1`, and gets in.
 :::
 
-:::problem id=exam-16b-q1 title="A synchronized queue" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-The question has two parts.
+:::check id=prac-wait-semaphore-q2
+Which of these are true?
 
-- **The queue:** `SynchQueue` implements `Queue`, and every method is `synchronized` on `this`. `ExtIntQueue` extends it with a `sum()` method that adds up all the integers in the queue.
-- **The mystics:** a variation on the dining philosophers. Mystics look at a fork while they think, and a fork may be looked at only while nobody is eating with it.
+- [x] `tryAcquire` on a semaphore with no free place returns `false` at once, without waiting
+- [x] A semaphore created with one permit works as a lock
+- [ ] `release` must be called by the same thread that called `acquire`
+- [ ] A semaphore guarantees that the thread that waited longest gets in first
 
-:::check id=exam-16b-q1-q1
-Which claims are true of `sum`?
-
-- [x] `size` matches the length of the chain
-- [x] The result equals the sum of the integers present at one moment during the call
-- [ ] `sum` may add or remove an element while it walks
-- [x] `sum` leaves the queue unchanged
-
-- **The invariant:** `size` always matches the actual number of nodes in the chain.
-- **The postcondition of `sum`:** the result is the sum of the integers that were in the queue at one moment during the call.
-- **`sum` is a query,** so it must leave the queue unchanged and never add or remove anything.
+- **`tryAcquire`** fixes a limit of `synchronized`: it tries, and reports failure instead of blocking.
+- **One permit** lets one thread in at a time, which is mutual exclusion.
+- **`release` can be called from anywhere,** unlike the end of a `synchronized` block.
+- **No fairness:** `notify` wakes a random waiter. That is what the fair semaphore adds.
 :::
 
-:::check id=exam-16b-q1-q2
-Which interleaving makes the returned sum wrong?
+:::check id=prac-wait-semaphore-q3
+`release` may use `notify` because {{=every waiter waits for the same thing, a free place|notify is faster than notifyAll|only one thread ever waits}}. The fair semaphore must use `notifyAll`, because {{=each waiter waits for a different condition, being first in line|it has more permits|it never calls wait}}.
 
-- [ ] `sum` holds the lock, so `add` cannot land in the middle of the walk
-- [ ] `sum` reads every element, then `add` and `remove` run, so the sum matches the later state
-- [x] `sum` reads 1 and 2, another thread adds 10 and removes 1, then `sum` reads the rest
-- [ ] `sum` is not synchronized, so it never sees the elements that are already in the queue
-
-`sum` holds no lock while it walks, so an `add` and a `remove` can happen in the middle. The result, which includes 1 and 10 together, matches no single state the queue was ever in.
+- **In the plain semaphore,** any waiter that wakes up can use the freed place, so waking one is enough.
+- **In the fair semaphore,** a woken thread that is not first in line goes back to waiting. If `notify` picked it, the first in line would sleep on, so all waiters must be woken to check.
+:::
 :::
 
-:::check id=exam-16b-q1-q3
-`sum` records a {{=volatile version|lock on this|copy of every node}} that grows at the end of every mutator, walks {{=without holding the lock|inside synchronized|under a semaphore}}, and {{=tries again when the version has changed|returns the partial sum|calls notifyAll}}.
+:::problem id=prac-wait-readers-writers title="Readers and writers" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
+The reader-writer lock from the chapter decides who may enter with two methods.
 
-- **How the version works:** every method that changes the queue increments a `volatile` version number at its end. `sum` reads the version, walks the queue without a lock, then reads the version again. If it changed, the queue moved during the walk, so `sum` tries again.
-- **Making sure it ends:** if writers keep arriving, `sum` could retry forever. So after a limited number of attempts, it falls back to walking the queue while holding the lock.
+```java
+protected boolean allowRead()  { return activeWriters == 0; }
+protected boolean allowWrite() { return activeWriters == 0 && activeReaders == 0; }
+```
+
+:::check id=prac-wait-readers-writers-q1
+Three readers are inside. A fourth reader arrives and {{=gets in|waits}}. A writer arrives and {{=waits|gets in}}. While a writer is inside, a reader arrives and {{=waits|gets in}}.
+
+- **Readers only need no active writer,** so any number of them may be inside together.
+- **A writer needs the object to itself:** no active writer and no active reader.
 :::
 
-:::check id=exam-16b-q1-q4
-Which claims match the adapted dining-philosophers protocol?
+:::check id=prac-wait-readers-writers-q2
+Readers keep arriving, so at every moment at least one reader is inside. What happens to a waiting writer?
 
-- [ ] A looker may hold a fork while an eater holds that same fork
-- [x] A fork someone is eating with is held exclusively
-- [x] Two mystics can look at one fork together
-- [ ] Eating and looking both take one exclusive permit, so two mystics cannot look at the same fork
+- [x] It may wait forever: this is starvation
+- [ ] It gets in after the current readers leave, because new readers wait for it
+- [ ] It causes a deadlock
 
-This is exactly a readers-writer problem. Looking takes the read side of a `ReadWriteLock` (or uses a counter of lookers), so many mystics can look at once. Eating takes the write side, so an eater waits until all lookers leave, and lookers wait while someone eats.
+- **`allowWrite` is never true** while there is always at least one active reader, and `allowRead` lets new readers in regardless of the waiting writer.
+- **It is starvation, not deadlock:** the readers keep making progress. Only the writer is passed over again and again.
 :::
 
+:::check id=prac-wait-readers-writers-q3
+The fix counts the writers who are waiting: `allowRead()` becomes {{=activeWriters == 0 && waitingWriters == 0|waitingWriters == 0|activeReaders == 0}}. Now a reader that arrives while a writer waits {{=waits|gets in}}.
+
+New readers now wait for any writer that is already waiting. Once the current readers leave, the writer gets in. (The chapter then balances this, so that readers cannot starve in turn.)
+:::
 :::
 
 :::problem id=exam-18b-q2 title="Two stacks in deadlock" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
@@ -904,48 +948,6 @@ The caller stored the generation it saw in `g`. A waiter that wakes early, or be
 - [ ] Decrements `arrived` and leaves the barrier
 
 The waiter compares the generation it saved, `g`, with the current one. If they are still equal, its phase has not finished, so the wakeup was early, and it calls `wait` again. It leaves only once the generation has changed.
-:::
-
-:::
-
-:::problem id=exam-19b-q2 title="A sorted tree" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
-`SortedBinaryTree` states this invariant:
-
-```java
-//@INV: getData() != null &&
-// (getLeft() == null || getData().compareTo(getLeft().getData()) > 0) &&
-// (getRight() == null || getData().compareTo(getRight().getData()) < 0)
-```
-
-- **Insertion** walks down the child pointers to find the right place. The pointers are `volatile`, but the walk takes no lock.
-- **An alternative design** protects the same tree with a readers-writer lock.
-
-:::check id=exam-19b-q2-q1
-Start from a node that holds 5, with null children. Which interleaving breaks the invariant?
-
-- [ ] Both threads lock the root, so the second insert waits and the tree keeps 4
-- [x] A reads `left == null` to insert 3, B writes the node 4 into `left`, then A overwrites `left` with the node 3
-- [ ] A and B both write `right`, and the `compareTo` order stays true
-- [ ] The `volatile` pointers make the null check and the assignment one step, so the second insert sees the first child
-
-Both threads saw `left == null` before either wrote it, so A's write replaced B's. The node 4 is now disconnected, and the tree has lost a value. `volatile` makes each single write visible, but it does not make "check, then write" one step.
-:::
-
-:::check id=exam-19b-q2-q2
-Lock every node from the {{=root downward|leaf upward|left child only}}. Hold the lock on a node while the insertion {{=reads that node's child|calls wait|releases the parent}}, and, when the insertion updates that child, hold the same lock while it {{=writes the child|calls notifyAll|reads the root}}.
-
-This technique is called hand-over-hand locking. Because a node stays locked from the moment its child is read until the child is written, two insertions that reach the same node take turns on it, and neither can overwrite the other's child.
-:::
-
-:::check id=exam-19b-q2-q3
-What does a `ReadWriteLock` change?
-
-- [ ] `insert` takes the read lock, and `contains` takes the write lock
-- [ ] A `contains` that arrives during a write proceeds, because the read lock is shared with the writer
-- [ ] Readers and a writer all run together on the node being changed
-- [x] Concurrent `contains` calls take the read lock and overlap, and `insert` takes the write lock
-
-With a `ReadWriteLock`, many `contains` calls can take the read lock and run at the same time, while `insert` takes the write lock and runs alone. A `contains` that arrives during an insert waits until the insert finishes.
 :::
 
 :::

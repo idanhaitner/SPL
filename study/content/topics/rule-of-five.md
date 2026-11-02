@@ -467,205 +467,210 @@ A `unique_ptr` cannot be copied, but its ownership can be transferred with `auto
 :::
 :::
 
+:::problem id=prac-r5-copy-or-move title="Copy or move?" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=exercise solution_origin=derived
+`Image` now has all five special members. Its constructor `Image(int width, int height)` allocates a buffer of `width * height` bytes, and its move operations take the other image's buffer and leave it with `nullptr`.
+
+```cpp
+void keep(Image img) { ... }    // by value
+
+Image a(2, 2);
+Image b(a);                 // line 1
+Image c(std::move(a));      // line 2
+b = c;                      // line 3
+b = Image(4, 4);            // line 4
+keep(std::move(c));         // line 5
+```
+
+:::check id=prac-r5-copy-or-move-q1
+Line 1 runs {{=the copy constructor|the move constructor|copy assignment|move assignment}}.
+
+Line 2 runs {{=the move constructor|the copy constructor|copy assignment|move assignment}}.
+
+Line 3 runs {{=copy assignment|move assignment|the copy constructor|the move constructor}}.
+
+Line 4 runs {{=move assignment|copy assignment|the copy constructor|the move constructor}}.
+
+Line 5 builds `img` with {{=the move constructor|the copy constructor|copy assignment|move assignment}}.
+
+- **Lines 1 and 2 create `b` and `c`,** so they run constructors. `a` is an lvalue, so line 1 copies. `std::move(a)` is an rvalue, so line 2 moves.
+- **Lines 3 and 4 assign to `b`,** which already exists, so they run assignment operators. `c` is an lvalue, so line 3 copies. `Image(4, 4)` is a temporary, an rvalue, so line 4 moves.
+- **Line 5 creates the parameter `img`** from the rvalue `std::move(c)`, so it moves.
+:::
+
+:::check id=prac-r5-copy-or-move-q2
+What is left in `a` after line 2?
+
+- [x] A null `_bytes` and a size of 0: an empty image that is still safe to destroy
+- [ ] The same buffer as `c`, so the two images share it
+- [ ] Nothing at all, because `std::move` destroyed `a`
+
+- **The move constructor** copied `a`'s pointer into `c`, then set `a._bytes` to `nullptr` and its dimensions to 0.
+- **`a` still exists.** When it is destroyed, its destructor runs `delete[]` on a null pointer, which does nothing.
+- **`std::move` destroys nothing.** It is only a cast that lets the compiler choose the move constructor.
+:::
+
+:::check id=prac-r5-copy-or-move-q3
+Which of these expressions are rvalues?
+
+- [ ] `a`
+- [x] `Image(4, 4)`
+- [x] `std::move(a)`
+- [ ] `b`
+
+- **`a` and `b` are lvalues:** they have names and addresses, and the code may still use them.
+- **`Image(4, 4)`** is a temporary, destroyed at the end of its line.
+- **`std::move(a)`** is `a` cast to an rvalue. `a` itself is still an lvalue.
+:::
+:::
+
+:::problem id=prac-r5-move-playlist title="A move constructor for Playlist" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=exercise solution_origin=derived
+`Playlist` owns an array of song numbers on the heap, as in [The rule of three](topic:rule-of-three): `int* _songs` and `int _size`, with a destructor that runs `delete[] _songs`. Here are three candidates for its move constructor.
+
+```cpp
+// Version A
+Playlist(Playlist&& other)
+    : _songs(other._songs), _size(other._size) { }
+
+// Version B
+Playlist(Playlist&& other)
+    : _songs(other._songs), _size(other._size) {
+    other._songs = nullptr;
+    other._size = 0;
+}
+
+// Version C
+Playlist(Playlist&& other)
+    : _songs(new int[other._size]), _size(other._size) {
+    for (int i = 0; i < _size; i++)
+        _songs[i] = other._songs[i];
+}
+```
+
+:::check id=prac-r5-move-playlist-q1
+Which version is the right move constructor?
+
+- [ ] Version A
+- [x] Version B
+- [ ] Version C
+
+Version B takes the other playlist's array, then leaves `other` with `nullptr`, so `other`'s destructor releases nothing.
+:::
+
+:::check id=prac-r5-move-playlist-q2
+With Version A, the code runs `Playlist p(std::move(q));`, and later both `p` and `q` are destroyed. What happens?
+
+- [x] `p` and `q` hold the same array
+- [x] The array is released twice
+- [ ] `q` is left empty, so only `p` releases the array
+
+- **Version A copies the pointer and stops there.** `q._songs` still holds the address, so both objects own one array.
+- **Each destructor runs `delete[]` on it,** which is a double free, the same bug as a shallow copy.
+:::
+
+:::check id=prac-r5-move-playlist-q3
+Version C works, but it is {{=a copy, not a move|a move, not a copy|a leak}}: it {{=allocates a new array|takes the other's array|releases the other's array}}. The parameter type `Playlist&&` binds only to {{=rvalues|lvalues|both lvalues and rvalues}}.
+
+- **Version C** does everything the copy constructor does. The point of a move is to hand over the pointer and copy nothing else.
+- **`Playlist&&`** is an rvalue reference: it binds to a temporary or to the result of `std::move`, a source that nobody will read again.
+:::
+:::
+
+:::problem id=prac-r5-five-or-zero title="Five or zero" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=exercise solution_origin=derived
+Two ways to store the songs of a `Playlist`.
+
+```cpp
+// Version 1: a raw pointer
+class Playlist {
+    int* _songs;     // allocated with new[]
+    int _size;
+    ...
+};
+
+// Version 2: a vector
+class Playlist {
+    std::vector<int> _songs;
+    ...
+};
+```
+
+:::check id=prac-r5-five-or-zero-q1
+To be copied safely and moved cheaply, Version 1 writes {{=all five special members|only the destructor|none of them}}. Version 2 writes {{=none of them|only the destructor|all five special members}}.
+
+- **Version 1** owns the array through a raw pointer, so it needs the rule of five: a destructor, the two copy operations, and the two move operations.
+- **Version 2** follows the rule of zero. The vector already manages its own buffer, so the operations that the compiler generates are correct.
+:::
+
+:::check id=prac-r5-five-or-zero-q2
+Which of these hold for Version 2, with only the members that the compiler generates?
+
+- [x] Copying a `Playlist` copies the vector, and the vector makes a deep copy of the songs
+- [x] Moving a `Playlist` moves the vector, which hands over its buffer
+- [ ] It still needs a destructor that releases the vector's buffer
+- [ ] Two copies of a `Playlist` share one buffer of songs
+
+- **Copying:** the generated copy constructor copies each member, and copying a `std::vector` is a deep copy.
+- **Moving:** the generated move constructor moves each member, and moving a vector moves its buffer.
+- **No destructor needed:** the vector's own destructor releases its buffer. That is RAII: the resource lives exactly as long as the object that holds it.
+:::
+
+:::check id=prac-r5-five-or-zero-q3
+Suppose Version 1 writes a destructor and a copy constructor, but no move constructor. What does `Playlist p(std::move(q));` run?
+
+- [x] The copy constructor
+- [ ] A move constructor that the compiler generates
+- [ ] Nothing, because the line does not compile
+
+- **Declaring a copy constructor** (or a destructor) stops the compiler from generating the move operations.
+- **So the move falls back to a copy.** The rvalue `std::move(q)` binds to the `const Playlist&` parameter of the copy constructor. The code is correct, only slower.
+:::
+:::
+
+:::problem id=prac-r5-unique-bag title="A student who owns a unique bag" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=exercise solution_origin=derived
+This `Student` holds its bag in a `std::unique_ptr` instead of a raw `Bag*`, and writes none of the five special members.
+
+```cpp
+class Student {
+    int _id;
+    std::unique_ptr<Bag> _bag;
+public:
+    Student(int id) : _id(id), _bag(std::make_unique<Bag>(7)) { }
+};
+
+Student ringo(1);
+Student jango(2);
+Student copy(ringo);               // line 1
+Student moved(std::move(jango));   // line 2
+```
+
+:::check id=prac-r5-unique-bag-q1
+Which of these hold?
+
+- [x] `Student` needs no destructor: `_bag` deletes the `Bag` when the student is destroyed
+- [ ] `Student` must write `~Student() { delete _bag; }`
+- [x] Line 1 does not compile, because a `unique_ptr` cannot be copied
+- [x] Line 2 compiles, and `moved` now owns the bag that `jango` had
+
+- **No destructor:** the `unique_ptr` is the owner, and its own destructor deletes the `Bag`. `delete _bag` would not even compile, because `_bag` is not a raw pointer.
+- **Line 1:** the generated copy constructor would have to copy `_bag`, and a `unique_ptr`'s copy operations are deleted.
+- **Line 2:** the generated move constructor moves `_bag`, so ownership passes to `moved`.
+:::
+
+:::check id=prac-r5-unique-bag-q2
+After line 2, `jango._bag` is {{=null|still pointing at the bag|pointing at a copy of the bag}}, and that bag is deleted {{=once, when moved is destroyed|twice, once for each student|never}}.
+
+A moved-from `unique_ptr` is null, so exactly one owner is left. When `moved` is destroyed, its `_bag` deletes the bag, and `jango`'s null `_bag` deletes nothing.
+:::
+
+:::check id=prac-r5-unique-bag-q3
+To let several students share one bag, `_bag` would be a {{=std::shared_ptr<Bag>|std::unique_ptr<Bag>|Bag*}}, and the bag would be deleted when {{=the last student holding it is destroyed|the first student holding it is destroyed|main returns}}.
+
+A `shared_ptr` counts its owners. Copying a student copies `_bag` and adds one to the count, and each destroyed student takes one away. The bag is deleted when the count reaches zero.
+:::
+:::
+
 :::examnote
 - **What the question looks like:** it often asks for a move that transfers a resource by copying only a pointer, or for a copy-on-write class.
 - **Points to remember:** after a move, the source must be reset, and copying a `unique_ptr` does not compile.
-:::
-
-:::problem id=exam-16b-q2 title="A collection by value" source="materials/exams/16-b.pdf" kind=exam solution_origin=derived
-`ITEM_COLLECTION<T>` manages a collection of items in a heap array, and the function `byVal` takes a collection by value.
-
-:::check id=exam-16b-q2-q1
-Which copy-constructor body is required for a deep copy?
-
-- [x] Initialize `_capacity`, `_size`, and `new T[other._capacity]`, then assign each live element `_items[i] = other._items[i]`
-- [ ] Copy the pointer `_items` and share the other collection's array
-- [ ] Allocate `new T[other._capacity]` and leave the new elements unassigned
-
-A deep copy constructor copies the capacity and the size, allocates its own array with `new T[other._capacity]`, and then copies each live element into it. Sharing the pointer is a shallow copy, and leaving the elements unassigned copies nothing.
-:::
-
-:::check id=exam-16b-q2-q2
-Which holdings share one object instead of copying the `T` value?
-
-- [ ] `ITEM_COLLECTION<T>` that stores each element by value
-- [x] `ITEM_COLLECTION<T*>`
-- [x] `ITEM_COLLECTION<std::shared_ptr<T>>`
-
-- **Storing `T` by value:** copying the collection copies every `T`.
-- **Storing `T*` or `std::shared_ptr<T>`:** copying the collection copies only the pointers, so both collections share the same `T` objects.
-:::
-
-:::check id=exam-16b-q2-q3
-What does `byVal(myShapeCollection)` do when the class uses the default copy constructor?
-
-- [ ] It gives the parameter its own array, so both destructors are safe
-- [ ] The call fails to compile
-- [x] It shallow-copies the array pointer. The parameter's destructor `delete[]`s that array, the original is left dangling, and destroying the original is a double free
-
-- **The default copy constructor** makes a shallow copy (העתקה רדודה): it copies only the pointer to the array.
-- **When `byVal` returns**, the parameter's destructor releases that shared array with `delete[]`.
-- **The result:** the original collection is left with a dangling pointer, and destroying it later frees the same array a second time.
-:::
-
-:::check id=exam-16b-q2-q4
-A copied collection of {{=shared_ptr|unique_ptr|raw pointer}} elements copies smart pointers, and each copy increments a reference count.
-
-- **When the copy is destroyed**, each reference count drops by one again.
-- **The shapes themselves** stay alive until their last owner is gone, so no copy can leave another with a dangling pointer.
-:::
-:::
-
-:::problem id=exam-20b-q1 title="A smart pointer" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
-`SmartPointer<T>` implements shared ownership by hand.
-
-- **It holds** a pointer to a `T` and a pointer to a reference count, which lives on the heap so that all copies can share it.
-- **Copying it** shares the same object and the same count.
-- **It releases the memory** only when the count reaches zero.
-
-```cpp
-template <typename T>
-class SmartPointer {
-    T* ptr_;
-    int* count_;
-};
-```
-
-:::check id=exam-20b-q1-q1
-Which constructor is required?
-
-- [ ] `SmartPointer(T value) : ptr_(new T(value)), count_(nullptr) {}`
-- [ ] `explicit SmartPointer(T* p = nullptr) : ptr_(p), count_(new int(0)) {}`
-- [x] `explicit SmartPointer(T* p = nullptr) : ptr_(p), count_(p ? new int(1) : new int(0)) {}`
-
-If `p` points at an object, this smart pointer is its first owner, so the count starts at 1. If `p` is null, there is nothing to own, so the count starts at 0. `explicit` prevents a raw pointer from being converted into a `SmartPointer` by accident.
-:::
-
-:::check id=exam-20b-q1-q2
-Which of these match the copy constructor and `release`?
-
-- [x] The copy constructor copies both pointers and increments the count when `ptr_` is non-null
-- [ ] `release` deletes both blocks on every call
-- [x] `release` deletes both blocks only when `ptr_` is non-null and the decremented count is 0
-- [ ] The destructor deletes `ptr_` and leaves `count_` allocated
-
-- **The copy constructor** copies both pointers, so it shares the object and the count, and increments the count if there is an object.
-- **`release`** decrements the count, and deletes `ptr_` and `count_` only when the count reaches zero. Then it sets both pointers to null.
-- **The wrong options** delete on every call, which breaks the other owners, or leak the count.
-:::
-
-:::check id=exam-20b-q1-q3
-Which copy-assignment body is required?
-
-- [ ] Call `release()` and then copy the pointers, including when `this == &other`
-- [x] When `this != &other`, call `release()`, copy both pointers, and increment the count when `ptr_` is non-null. Return `*this`
-- [ ] Swap the pointers and leave the count unchanged
-
-- **Self-assignment:** when `this == &other`, the body does nothing, so the count is unchanged. Without the check, `release()` could delete the object that is about to be copied.
-- **Assigning from a different object:** first `release()` the current object, then copy both pointers from `other` and increment the shared count.
-:::
-
-:::check id=exam-20b-q1-q4
-`operator*` returns {{=*ptr_|ptr_|count_}}.
-
-`operator*` returns the object itself, `*ptr_`, usually as a `T&`. By contrast, `operator->` returns the raw pointer `ptr_`.
-:::
-:::
-
-:::problem id=exam-24a-q1 title="A tree under the rule of five" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
-`BinaryTree<T>` stores a value `T data` and two child pointers, `BinaryTree* left` and `BinaryTree* right`, which own their subtrees. All nodes are allocated on the heap. The class implements move, and the question asks about the call `f(BinaryTree<int>(...))`.
-
-:::check id=exam-24a-q1-q1
-Which destructor body is required?
-
-- [ ] `left = nullptr; right = nullptr;`
-- [x] `delete left; delete right;`
-- [ ] `delete this;`
-
-The tree owns its children, so the destructor runs `delete left; delete right;`. Each `delete` runs that child's destructor, which deletes its children in turn, so the whole subtree is released. Deleting a null pointer is safe.
-:::
-
-:::check id=exam-24a-q1-q2
-Which of these bodies are required?
-
-- [x] Copy constructor: `new BinaryTree(*other.left)` when `left` is non-null, and the same for `right`
-- [x] Move constructor: move `data`, take `left` and `right`, then set the source pointers to null
-- [ ] Copy assignment: `delete left` and `delete right` before the copy, with no temporary
-- [x] Move assignment: delete the old children, take the source pointers, and null the source
-- [x] `insert` sends a smaller value to the left and a larger value to the right, and it does not insert an equal key
-
-- **The copy constructor** allocates a new node for each non-null child, which copies the whole subtree recursively.
-- **Copy assignment** builds a temporary copy and swaps with it. Deleting the children first without a temporary would break `t = t`.
-- **The move constructor** takes the child pointers and then sets the source's pointers to null.
-- **Move assignment** first deletes its own old children, then takes the source's pointers and nulls them in the source.
-- **`insert`** keeps the tree sorted: smaller values go left, larger values go right, and an equal value is not inserted again.
-:::
-
-:::check id=exam-24a-q1-q3
-Copy assignment, when `this` is not the other object, builds a {{=temporary|shared node|raw alias}} and swaps `data`, `left`, and `right`.
-
-The body builds `BinaryTree temp(other)`, swaps `data`, `left`, and `right` with it, and returns `*this`. When `temp` is destroyed, it releases the old children.
-:::
-
-:::check id=exam-24a-q1-q4
-Which description of `f(BinaryTree<int>(...))` is right?
-
-- [x] The argument is an unnamed rvalue. The move constructor takes `left` and `right`, nulls the temporary, and the parameter on the stack frame of `f` owns the nodes that stay on the heap
-- [ ] The nodes leave the heap and are stored inside the stack frame of `f`
-- [ ] The argument is an lvalue, so every node is deep-copied before `f` starts
-
-`BinaryTree<int>(...)` is an unnamed temporary, which is an rvalue, so the parameter is initialized with the move constructor. Only the root object is in `f`'s frame; the child nodes stay on the heap and now belong to the parameter.
-:::
-:::
-
-:::problem id=exam-24c-q1 title="Copy on write" source="materials/exams/24-c.pdf" kind=exam solution_origin=derived
-`copy_on_write<T>` lets several copies share one heap `T` until one of them wants to write. At that point, `on_write()` gives the writer its own private clone.
-
-```cpp
-template <typename T>
-class copy_on_write {
-    T* ptr;
-    int* users;
-};
-```
-
-:::check id=exam-24c-q1-q1
-Which copy-constructor body is required?
-
-- [x] Copy `ptr` and `users`, then `++(*users)`
-- [ ] Clone the `T` in the copy constructor and set `users` to `new int(1)`
-- [ ] Copy `ptr` and set `users` to null
-
-Copying is cheap, which is the point of the class: the copy constructor shares `ptr` and `users`, then increments the user count. Cloning happens later, only on a write.
-:::
-
-:::check id=exam-24c-q1-q2
-Which of these hold?
-
-- [ ] `on_write` clones even when `*users` is 1
-- [x] `on_write` clones only when `*users` is greater than 1: it decrements the shared count, clones the `T`, and allocates a fresh count of 1
-- [x] The destructor deletes `ptr` and `users` only when the decremented count is 0
-
-- **Only clone when sharing:** if `*users` is 1, this object is the only user, so it can write in place without cloning.
-- **When shared:** `on_write` decrements the shared count, clones the `T`, and gives the clone a fresh count of 1.
-- **The destructor** decrements the count and deletes both blocks only when it reaches zero.
-:::
-
-:::check id=exam-24c-q1-q3
-The non-const `operator->` calls {{=on_write|clone|release}} and then returns `ptr`.
-
-The non-const `operator->` may be used to write, so it must call `on_write` first. The const `operator->` can only read, so it returns `ptr` without cloning.
-:::
-
-:::check id=exam-24c-q1-q4
-Which constructor body is required?
-
-- [ ] `: ptr(p), users(nullptr)`
-- [ ] `: ptr(nullptr), users(new int(0))`
-- [x] `explicit copy_on_write(T* p) : ptr(p), users(new int(1))`
-
-The object that receives the new pointer is its first and only user, so the count starts at 1.
-:::
 :::
 
 To sum up, a class that owns a resource either writes all five special members, or, better, hands the resource to a member that manages it and writes none.

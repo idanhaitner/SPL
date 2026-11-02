@@ -5,8 +5,6 @@ blurb: "Relations between types, a derived object in memory, static and dynamic 
 sources:
   - "materials/lectures/Chapter 6 - Inheritance.pptx"
   - "materials/sessions/SPL_PS3.pptx"
-  - "materials/exams/15-b.pdf"
-  - "materials/exams/15-b-solution.pdf"
   - "materials/exams/16-a.pdf"
   - "materials/exams/16-a-solution.pdf"
   - "materials/exams/18-a.pdf"
@@ -489,6 +487,217 @@ Which claim matches the rest of that rule?
 :::
 :::
 
+:::problem id=prac-inh-order title="The order of construction" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=exercise solution_origin=derived
+Each class prints when it is built and when it is destroyed.
+
+```cpp
+struct Person {
+    Person()  { cout << "P "; }
+    ~Person() { cout << "~P "; }
+};
+
+struct Learning {
+    Learning()  { cout << "L "; }
+    ~Learning() { cout << "~L "; }
+};
+
+struct Student : public Person, public Learning {
+    Student()  { cout << "S "; }
+    ~Student() { cout << "~S "; }
+};
+```
+
+:::check id=prac-inh-order-q1
+The block `{ Student s; }` prints {{=P L S ~S ~L ~P|S L P ~P ~L ~S|P L S ~P ~L ~S}}.
+
+- **Construction** builds the bases first, in the order they are listed after the colon, `Person` then `Learning`, and the `Student` part last.
+- **Destruction** runs in exactly the reverse order, so `~S` comes first and `~P` last.
+:::
+
+:::check id=prac-inh-order-q2
+If the declaration were `struct Student : public Learning, public Person`, the same block would print {{=L P S ~S ~P ~L|P L S ~S ~L ~P|L P S ~L ~P ~S}}.
+
+The order of the bases comes from the declaration, so swapping them swaps `L` and `P`. Destruction is still the exact reverse of construction.
+:::
+
+:::check id=prac-inh-order-q3
+Now `Person` has fields, and `Student`'s copy constructor does not mention `Person`.
+
+```cpp
+class Person {
+protected:
+    int _id;
+    std::string _name;
+public:
+    Person() : _id(0), _name("nobody") { }
+    Person(int id, const std::string& name) : _id(id), _name(name) { }
+};
+
+class Student : public Person {
+    Bag* _bag;
+public:
+    Student(int id, const std::string& name, Bag* bag)
+        : Person(id, name), _bag(bag) { }
+    Student(const Student& other)
+        : _bag(other._bag->clone()) { }      // no Person(...) here
+};
+```
+
+`ringo` was built as `Student(7, "ringo", new Bag(7))`. What is the `Person` part of `Student copy(ringo);`?
+
+- [ ] `_id` is 7 and `_name` is `"ringo"`
+- [x] `_id` is 0 and `_name` is `"nobody"`
+- [ ] The class does not compile
+
+- **A base that the initializer list does not name** is built with its empty constructor, so the copy gets `Person()`'s values, and `ringo`'s id and name are lost.
+- **The fix** names the base's copy constructor first: `: Person(other), _bag(other._bag->clone())`.
+:::
+:::
+
+:::problem id=prac-inh-binding title="Static or dynamic binding?" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=exercise solution_origin=derived
+`name` is an ordinary method. `draw` is virtual.
+
+```cpp
+class Shape {
+public:
+    void name()         { cout << "shape "; }
+    virtual void draw() { cout << "Shape::draw "; }
+    virtual ~Shape() { }
+};
+
+class Circle : public Shape {
+public:
+    void name() { cout << "circle "; }
+    void draw() { cout << "Circle::draw "; }
+};
+
+Shape* s = new Circle();
+Circle* c = new Circle();
+```
+
+:::check id=prac-inh-binding-q1
+`s->name();` prints {{=shape|circle}}. `s->draw();` prints {{=Circle::draw|Shape::draw}}. `c->name();` prints {{=circle|shape}}.
+
+- **`s->name()` uses static binding,** because `name` is not virtual. The compiler sees only the declared type, `Shape*`, so it calls `Shape::name`, although the object is a `Circle`.
+- **`s->draw()` uses dynamic binding,** because `draw` is virtual. The call follows the object's vptr to `Circle`'s vtable, and runs `Circle::draw`.
+- **`c->name()`** is declared `Circle*`, so static binding picks `Circle::name`.
+:::
+
+:::check id=prac-inh-binding-q2
+Which of these are true?
+
+- [x] There is one vtable for `Circle`, shared by every `Circle` object
+- [x] Each `Circle` object holds a vptr that points at that table
+- [ ] The vtable has an entry for `name`
+- [x] `Circle::draw` is virtual, even though `Circle` does not write the word `virtual`
+
+- **One table per class,** and one hidden vptr in each object, in its first cell.
+- **Only virtual methods** get entries in the vtable. `name` is bound at compile time, so it needs none.
+- **The `virtual` property is inherited:** `Circle::draw` overrides a virtual method, so it is virtual too.
+:::
+
+:::check id=prac-inh-binding-q3
+`delete s;` runs {{=~Circle and then ~Shape|only ~Shape|only ~Circle}}.
+
+`~Shape` is virtual, so the `delete` uses dynamic binding and reaches `~Circle` first. As with any derived object, the `Shape` part is destroyed after the `Circle` part.
+:::
+:::
+
+:::problem id=prac-inh-vtable title="Reading a v-table" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=exercise solution_origin=derived
+The comments give the address where each method's code starts. `Animal`'s v-table is at address 100, and `Dog`'s is at address 200.
+
+```cpp
+class Animal {
+public:
+    virtual void eat()   { ... }   // at 3000
+    virtual void sleep() { ... }   // at 3100
+};
+
+class Dog : public Animal {
+public:
+    virtual void eat()   { ... }   // overrides, at 5000
+    virtual void bark()  { ... }   // new, at 5100
+};
+```
+
+:::check id=prac-inh-vtable-q1
+`Animal`'s v-table is `[3000, 3100]`. In `Dog`'s v-table, entry 0 holds {{=5000|3000|5100}}, entry 1 holds {{=3100|5100|5000}}, and entry 2 holds {{=5100|3100|3000}}.
+
+- **Entry 0, `eat`:** `Dog` overrides it, so the entry holds `Dog`'s own code, 5000.
+- **Entry 1, `sleep`:** `Dog` inherits it, so the entry holds the same address as in `Animal`'s table, 3100.
+- **Entry 2, `bark`:** a new virtual method goes after the inherited ones, 5100.
+:::
+
+:::check id=prac-inh-vtable-q2
+The code runs `Animal* a = new Dog();` and then `a->sleep();`. The object's first cell holds {{=200|100|5000}}. The call reads entry {{=1|0|2}} of that table, and runs the code at address {{=3100|5100|3000}}.
+
+- **The first cell** is the vptr. `new Dog()` filled it with the address of `Dog`'s table, 200, whatever the pointer's declared type is.
+- **`sleep` is entry 1** in every table of this hierarchy, so the call reads entry 1 of table 200, which holds 3100: `Animal::sleep`, inherited by `Dog`.
+:::
+
+:::check id=prac-inh-vtable-q3
+What does `a->bark();` do?
+
+- [ ] It runs `Dog::bark`, through entry 2 of `Dog`'s table
+- [x] It does not compile
+- [ ] It runs `Animal::sleep`
+
+- **The compiler checks every call against the declared type.** `a` is an `Animal*`, and `Animal` has no `bark`, so the call is rejected before the program runs.
+- **To call `bark`,** the code needs a `Dog*`, for example from `dynamic_cast<Dog*>(a)`.
+:::
+:::
+
+:::problem id=prac-inh-clone title="Copying a bag through its base" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=exercise solution_origin=derived
+`Bag7` is a bag with a combination lock. The code only knows it through a `Bag*`.
+
+```cpp
+class Bag {
+public:
+    virtual Bag* clone() { return new Bag(*this); }
+    virtual ~Bag() { }
+};
+
+class Bag7 : public Bag {
+    int _code;    // the combination of the lock
+public:
+    Bag7(int code) : _code(code) { }
+    virtual Bag* clone() { return new Bag7(*this); }
+};
+
+Bag* b = new Bag7(1234);
+```
+
+:::check id=prac-inh-clone-q1
+What is the real class of the object that `new Bag(*b)` creates?
+
+- [x] A plain `Bag`, without `_code`
+- [ ] A `Bag7`, with `_code` copied
+- [ ] It does not compile
+
+- **`new Bag(...)`** always runs `Bag`'s copy constructor, which copies only the `Bag` part of `*b`.
+- **The lock is lost.** The new object is a plain `Bag`, whatever the real class of `*b` was.
+:::
+
+:::check id=prac-inh-clone-q2
+What is the real class of the object that `b->clone()` returns?
+
+- [ ] A plain `Bag`, because `b` is declared `Bag*`
+- [x] A `Bag7`, with `_code` copied
+- [ ] It depends on the order of the fields
+
+- **`clone` is virtual,** so the call follows `*b`'s vptr to `Bag7`'s table and runs `Bag7::clone`.
+- **`Bag7::clone`** runs `new Bag7(*this)`, the copy constructor of the real class, which copies `_code` too.
+:::
+
+:::check id=prac-inh-clone-q3
+If `Bag7` did not write its own `clone`, `b->clone()` would run {{=Bag::clone|Bag7::clone}} and return {{=a plain Bag|a Bag7}}. If `clone` in `Bag` were not virtual, `b->clone()` would run {{=Bag::clone|Bag7::clone}}.
+
+- **Without an override,** `Bag7`'s vtable entry for `clone` holds `Bag::clone`, which builds a plain `Bag`.
+- **Without `virtual`,** the call uses static binding on the declared type `Bag*`, so it runs `Bag::clone` even when `Bag7` writes its own.
+- **So `clone` works only when** it is virtual in the base, and every derived class overrides it.
+:::
+:::
+
 :::examnote
 - **What the question looks like:** two derived types are used through one base pointer, and you must explain why a call reaches the base-class version. The cause is usually a non-virtual function, a non-virtual destructor, or an overload written where an override was needed.
 - **The usual traps:** a memory diagram that leaves out the vptr, or a `delete` through the base pointer that never runs the derived destructor.
@@ -665,246 +874,6 @@ Which of these hold?
 - **Different vtables:** each class has its own vtable, so `show` called through an `Image*` reaches the right override.
 - **A C-style cast** never checks the type and never returns null on a mismatch. Only `dynamic_cast` does that.
 - **A correct drawing** shows a vptr in every polymorphic object, and the pixel array outside the stack frame.
-:::
-:::
-
-:::problem id=exam-19a-q1 title="An application repository" source="materials/exams/19-a.pdf" kind=exam solution_origin=derived
-`APP` is an abstract class with `virtual void run() = 0`, and `PAY_APP` and `PLAY_APP` override it.
-
-- **`MY_APPS_REPO`** stores both kinds of application in one array.
-- **Clients must not create a repository with `new`** directly.
-- **`Clone` and `test_apps_repo` are already correct,** and the question looks at the call `repo->test_apps_repo(test->Clone())`.
-- **`repo` and `test`** are both `MY_APPS_REPO*` pointers to valid repositories. `test_apps_repo` takes its `MY_APPS_REPO` argument by value.
-
-:::check id=exam-19a-q1-q1
-Which types can hold both kinds in one collection?
-
-- [x] `APP** apps_repo_arr_`
-- [ ] An array of `APP` objects
-- [x] `std::vector<std::unique_ptr<APP>>`
-
-- **The rule:** to hold different derived types in one collection, store pointers to the base class.
-- **So both `APP**` and `std::vector<std::unique_ptr<APP>>` work.**
-- **Why an array of `APP` fails:** `APP` is abstract, so no `APP` object can exist. Even for a non-abstract base, storing objects by value would slice off their derived parts.
-:::
-
-:::check id=exam-19a-q1-q2
-Which constructor body is correct for `MY_APPS_REPO(int n_pay_app, int n_play_app)`?
-
-- [x] Allocate `n_pay_app + n_play_app` slots. The first `n_pay_app` slots hold `new PAY_APP`. The remaining slots hold `new PLAY_APP`
-- [ ] Allocate one array of `PAY_APP` and a second array of `PLAY_APP`
-- [ ] Store both kinds by value in an array of `APP`
-
-- **The array** has `n_pay_app + n_play_app` slots of type `APP*`.
-- **The first `n_pay_app` slots** hold `new PAY_APP`, and the remaining slots hold `new PLAY_APP`.
-- **Why not two arrays or values:** the repository must keep both kinds in one array, which only works through base-class pointers.
-:::
-
-:::check id=exam-19a-q1-q3
-Every constructor is private. A client obtains an instance by calling {{=create|new|Clone}}.
-
-- **Private constructors** stop any code outside the class from writing `new MY_APPS_REPO`.
-- **Clients use a factory instead:** the public `static MY_APPS_REPO* create(...)`, which can call the private constructors because it is a member of the class.
-:::
-
-:::check id=exam-19a-q1-q4
-Which of these hold for `repo->test_apps_repo(test->Clone())`?
-
-- [ ] `Clone` returns the original repository, so the argument is that same object
-- [x] If `Clone` returns by value, the argument is a temporary and the move constructor takes ownership of the pointer array
-- [x] `APP` needs a virtual destructor so that destroying the repository applies `delete` to the real application objects
-
-- **`Clone` creates a new repository.** It deep-copies the applications into it, so the argument is not the original object.
-- **If `Clone` returns by value,** the argument is a temporary, so the move constructor can take its pointer array instead of copying it.
-- **`APP` needs a virtual destructor,** so that when the repository deletes its `APP*` pointers, each real `PAY_APP` or `PLAY_APP` destructor runs.
-:::
-:::
-
-:::problem id=exam-19b-q1 title="Overload resolution and the dynamic type" source="materials/exams/19-b.pdf" kind=exam solution_origin=derived
-`TESTER` declares three overloads, `test(APP*)`, `test(PAY_APP*)`, and `test(PLAY_APP*)`, and all three are virtual.
-
-- **The call** is `tester->test(app)`.
-- **The variable `app`** is declared as `APP*`, but the object it points at is a `PAY_APP`.
-
-:::check id=exam-19b-q1-q1
-Which signature does `tester->test(app)` select?
-
-- [ ] `test(PAY_APP*)`, because the object is a `PAY_APP`
-- [x] `TESTER::test(APP*)`, at compile time, from the static type of `app`
-- [ ] `test(PLAY_APP*)`, because that overload is also virtual
-
-Overloads are chosen at compile time, from the declared types of the arguments. `app` is declared as `APP*`, so the compiler picks `test(APP*)`, even though `app` points at a `PAY_APP`. `virtual` affects only which class's version of that signature runs, not which overload is picked.
-:::
-
-:::check id=exam-19b-q1-q2
-Dispatch that follows the application's dynamic type needs a virtual {{=accept|test|run}} on `APP`, or a chain of `dynamic_cast`.
-
-- **A virtual `accept` on `APP`** is the visitor pattern: each application calls `tester->test(this)`, where `this` already has the precise type, so the right overload is chosen.
-- **A chain of `dynamic_cast`** also works, but it is weaker: every new application type means editing the chain.
-:::
-
-:::check id=exam-19b-q1-q3
-Which description of the layout is right?
-
-- [ ] The pointer variable sits on the heap, and neither object has a vptr
-- [ ] Callable addresses sit in the application object, and the vtables hold the fields
-- [x] Each polymorphic object has a vptr, the pointer variable sits on the stack, and the argument stores the address of the application object
-
-- **The objects:** the picture contains the tester object and the application object, and each has a vptr because each class is polymorphic.
-- **The pointer variable** is a local, so it sits on the stack. As an argument, it holds the address of the application object.
-- **The function addresses** live in the vtables, not inside the objects, and the objects' fields live in the objects, not in the vtables.
-:::
-
-:::check id=exam-19b-q1-q4
-Which of these hold?
-
-- [x] The application's further fields sit in the derived part of its block
-- [ ] The dynamic type of `app` changes which overload was selected at compile time
-- [x] Marking the three overloads `virtual` selects the tester's override of the signature that was already chosen
-
-- **The derived fields:** fields added by `PAY_APP` sit in the derived part of the same object, after the base part.
-- **What `virtual` does here:** it chooses which tester class's version of `test(APP*)` runs, at run time.
-- **What `virtual` does not do:** the signature `test(APP*)` was fixed at compile time from the declared type of `app`, and the object's real type cannot change that.
-:::
-:::
-
-:::problem id=exam-24b-q1 title="A tree under an inorder walk" source="materials/exams/24-b.pdf" kind=exam solution_origin=derived
-`BinaryTree<T>` has child pointers `left` and `right`. `InorderBinaryTree` inherits from it, and also implements the abstract traversal interface `Traversable`, which makes it polymorphic.
-
-```cpp
-Traversable<BinaryTree<int>>* t1 = new InorderBinaryTree<BinaryTree<int>>(
-    BinaryTree<int>(2),
-    new InorderBinaryTree<BinaryTree<int>>(BinaryTree<int>(1)),
-    new InorderBinaryTree<BinaryTree<int>>(BinaryTree<int>(3)));
-InorderBinaryTree<int> t2(2,
-    new InorderBinaryTree<int>(1),
-    new InorderBinaryTree<int>(3));
-```
-
-:::check id=exam-24b-q1-q1
-Which description of the layout of `t1` is right?
-
-- [x] `t1` is a pointer in the frame and holds a heap address. That heap object has a vptr, stores datum 2 in the base subobject, and holds two child pointers. Each child is its own heap object, one with datum 1 and one with datum 3
-- [ ] `t1` is the whole tree in the frame, and the children with data 1 and 3 are embedded beside datum 2
-- [ ] `t1` points at one heap block that contains datum 2 together with both children
-
-- **`t1` itself** is a pointer in the stack frame, holding the address of a heap object.
-- **That heap object** is an `InorderBinaryTree`. Its base part stores the value 2, and it holds two child pointers.
-- **Each child** is a separate `InorderBinaryTree` on the heap, one holding 1 and one holding 3.
-- **All three objects** have a vptr, because the class is polymorphic through `Traversable`.
-:::
-
-:::check id=exam-24b-q1-q2
-Which description of the layout of `t2` is right?
-
-- [ ] `t2` is a pointer in the frame, and datum 2 lives on the heap
-- [ ] `t2` and both children sit in the frame, and none of them has a vptr
-- [x] `t2` is the whole derived object in the frame: datum 2, a vptr, and two pointers. The children with data 1 and 3 are heap objects, and each has a vptr
-
-- **`t2` is not a pointer:** the whole object lives in the stack frame, including the value 2, a vptr, and two child pointers.
-- **Its children** were created with `new`, so they are heap objects holding 1 and 3, each with its own vptr.
-- **In short:** `t2`'s own fields are in the frame, and each child's fields are in that child's own heap block.
-:::
-
-:::check id=exam-24b-q1-q3
-The `BinaryTree<int>(2)` argument was {{=copied into the parent|shared with the caller|left on the heap as a third child}}.
-
-- **The argument `BinaryTree<int>(2)`** is a temporary. The constructor copies it into the parent's base part, and the temporary is then destroyed.
-- **After the constructor returns,** only three trees remain: the parent and its two children.
-:::
-
-:::check id=exam-24b-q1-q4
-Which of these hold?
-
-- [x] Each of the three objects reachable from `t1` has a vptr, because the class is polymorphic through `Traversable`
-- [ ] The children of `t2` are embedded in the frame and have no vptr
-- [x] The fields of those children belong in their own heap blocks
-
-- **Every object reachable from `t1`** has a vptr, because the class is polymorphic through `Traversable`.
-- **The children of `t2`** were created with `new`, so they are on the heap, not in the frame, and they too have a vptr.
-- **Each child's fields** are in its own heap block.
-:::
-:::
-
-:::problem id=exam-15b-q2 title="A vector that grows" source="materials/exams/15-b.pdf" kind=exam solution_origin=source
-The class `mvector` stores its elements in a dynamic array of `node*`.
-
-- **Growing:** when `insertAt` goes past the current size, it grows the array to the smallest power of 2 that is greater than `pos`.
-- **Shrinking:** `removeAt` halves the array when its entire upper half is unused.
-- **Copying nodes:** `node` is polymorphic, and has a pure virtual method `duplicate()` that returns a copy of the real object.
-
-```cpp
-void foo(mvector vec) {
-    mvector my_vec(vec);
-    // ***** here *****
-}
-void main() {
-    mvector vec;
-    node* n = new my_node("test");
-    vec.insertAt(*n, 3);
-    foo(vec);
-}
-
-```
-
-At the end of `main`, the code adds the line `my_node* m = (my_node*)(vec.getAt(0));`.
-
-:::check id=exam-15b-q2-q1
-Which copy constructor is correct?
-
-```cpp
-// A
-node* buf = new node[n];
-for (int i = 0; i < n; ++i)
-    buf[i] = *src[i];
-```
-
-```cpp
-// B
-node** buf = src;
-```
-
-```cpp
-// C
-node** buf = new node*[n];
-for (int i = 0; i < n; ++i)
-    buf[i] = src[i]->duplicate();
-```
-
-- [ ] A. Copying a `node` by value keeps the derived part.
-- [ ] B. The copy stores the source array pointer and allocates no new array.
-- [x] C. Allocate a new array on the heap and copy every node by calling `duplicate()`.
-
-- **The copy constructor** allocates a new array of the right size on the heap, and copies every node into it.
-- **Why `duplicate()`:** `node` is polymorphic, so only a virtual function knows the real type of each node and can copy it correctly.
-- **Why A fails:** copying a `node` by value keeps only the base part and drops the derived part, which is called object slicing. Since `node` is abstract, `new node[n]` does not even compile.
-- **Why B fails:** it shares the source's array instead of copying it.
-:::
-
-:::check id=exam-15b-q2-q2
-Which description of the stack and the heap is right at the marked line?
-
-- [ ] `my_vec` is another name for `vec` in `main`, so one vector object sits on the heap.
-- [x] Three vectors sit on the stack: `vec` in `main`, the parameter `vec` in `foo`, and `my_vec`. After a deep copy, each has its own array on the heap, and `my_node` has a vtable.
-- [ ] The three vectors share one array in `foo`'s frame, and `my_node` has no vtable.
-
-- **There are three vector objects on the stack:** `vec` in `main`'s frame, the parameter `vec` in `foo`'s frame (passing by value made a copy), and the local `my_vec`, also in `foo`'s frame.
-- **With a deep copy,** each of the three has its own array on the heap.
-- **`my_node` has a vtable,** because it inherits virtual functions from `node`.
-:::
-
-:::check id=exam-15b-q2-q3
-`getAt` returns `node*`, and the added line is a C-style cast. Which statement is correct?
-
-- [ ] 1. Downcasting is forbidden in C++.
-- [ ] 2. A C-style cast is checked only at compile time.
-- [ ] 3. A downcast is safe only when there are no virtual methods.
-- [x] 4. Virtual methods are bound at run time (dynamic binding).
-- [ ] 5. None of the answers is correct.
-
-- **The answer:** statement 4 is correct. A virtual call is resolved at run time, from the real object on the heap.
-- **Why the others are wrong:** downcasting is allowed in C++, and a C-style cast is not "checked" at all; it simply converts the pointer.
-- **The safe alternative:** `dynamic_cast` performs a run-time type check.
 :::
 :::
 
