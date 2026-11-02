@@ -132,6 +132,27 @@ img[src*="/figures/"] { padding: 8px; border-radius: 10px; background: var(--can
 .gh-pill:disabled { color: var(--muted); cursor: default; }
 .gh-pill:disabled:hover { background: none; }
 
+/* A problem's setup stays in reach of its questions: pinned in a column beside them on a wide card, offered back by a floating toggle on a narrow one. */
+.statement:has(> .practice-split) { container-type: inline-size; --stick-top: 12px; }
+@media (min-width: 64rem) { .statement:has(> .practice-split) { --stick-top: 92px; } } /* clears the 76px top bar, sticky from 64rem */
+.practice-setup > * + *, .practice-questions > * + *, .practice-peek-body > * + * { margin-top: 16px; }
+.practice-questions { margin-top: 16px; }
+.practice-questions > .practice-peek + * { margin-top: 0; }
+.practice-peek { position: sticky; top: var(--stick-top, 12px); z-index: 5; height: 0; }
+.practice-peek-inner { display: none; flex-direction: column; align-items: flex-end; }
+.practice-peek.is-away .practice-peek-inner { display: flex; }
+.practice-peek-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--rule); border-radius: 999px; background: var(--raised); box-shadow: var(--shadow-float); color: var(--ink); cursor: pointer; font: 500 0.9375rem var(--gh-body); }
+.practice-peek-toggle:hover { background: var(--wash); }
+.practice-peek-toggle[aria-expanded="true"] .gh-icon { transform: rotate(180deg); }
+.practice-peek-body { align-self: stretch; max-height: min(60vh, 560px); margin-top: 8px; padding: 18px; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--rule); border-radius: 18px; background: var(--raised); box-shadow: var(--shadow-float); font-size: 1rem; line-height: 1.5; }
+.session-reading:has(.practice-split) { max-width: 1280px; }
+@container (min-width: 880px) {
+  .practice-split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 40px; align-items: start; }
+  .practice-setup { position: sticky; top: var(--stick-top, 12px); max-height: calc(100dvh - var(--stick-top, 12px) - 16px); overflow: auto; overscroll-behavior: contain; }
+  .practice-questions { margin-top: 0; }
+  .practice-peek { display: none; }
+}
+
 /* Checks */
 .card.check { margin-block: 24px; padding: 22px; font-size: 1rem; line-height: 1.5; }
 .card.check > * + * { margin-top: 14px; }

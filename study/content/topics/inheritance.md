@@ -495,43 +495,73 @@ Which claim matches the rest of that rule?
 :::
 
 :::problem id=exam-16a-q2 title="A visitor for shapes" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
-A game engine has shapes (`SPHERE` and `BOX`, both derived from `SHAPE`) that are drawn by shaders (`BASIC_SHADER` and `COMPLEX_SHADER`, both derived from `SHADER`).
+A game engine draws shapes with shaders. There are two kinds of shape, `SPHERE` and `BOX`, both derived from `SHAPE`, and two kinds of shader, `BASIC_SHADER` and `COMPLEX_SHADER`, both derived from `SHADER`. Each shader has one `Render` overload for each kind of shape.
 
-- **Each shader** has two overloads, `Render(SPHERE*)` and `Render(BOX*)`.
-- **`RENDER_MGR::Render`** goes over every pair of shape and shader.
-- **The problem:** overloads are chosen at compile time, so calling `Render` with a `SHAPE*` cannot pick `Render(SPHERE*)`. The fix is the visitor pattern, also called double dispatch.
+```cpp
+class SHAPE { ... };
+class SPHERE : public SHAPE { ... };
+class BOX : public SHAPE { ... };
+
+class SHADER { ... };
+class BASIC_SHADER : public SHADER {
+public:
+    void Render(SPHERE* s) { /* draw a sphere */ }
+    void Render(BOX* b)    { /* draw a box */ }
+};
+// COMPLEX_SHADER: the same two overloads
+
+class RENDER_MGR {
+public:
+    RENDER_MGR(int n);   // n shaders, n shapes
+    void Render();
+private:
+    SHADER** _r;         // n shaders
+    SHAPE** _s;          // n shapes
+    int _N;
+};
+
+void RENDER_MGR::Render() {
+    for (int i = 0; i < _N; i++)
+        _r[i]->Render(_s[i]);   // shader i draws shape i
+}
+```
+
+- **The problem:** the compiler picks an overload by the declared type of the argument. `_s[i]` is declared `SHAPE*`, and no shader has a `Render(SHAPE*)`, so this line does not compile, even when the shape really is a `SPHERE`.
+- **The fix, the visitor pattern (also called double dispatch):** every shape gets a virtual method `Accept(SHADER* sh)`, where `sh` is the shader that should draw it. The loop calls `_s[i]->Accept(_r[i])` instead.
+- **The task:** write `Accept`, and make `SHAPE` and `SHADER` pure abstract.
 
 :::check id=exam-16a-q2-q1
-Which `Sphere::Accept` body is correct?
+Which body of `SPHERE::Accept(SHADER* sh)` is correct?
 
-- [ ] `Render(static_cast<Shape*>(this));`
-- [ ] `shader->Render(static_cast<Shape*>(this));`
+- [ ] `sh->Render((SHAPE*)this);`
+- [ ] `Render(this);`
 - [x] `sh->Render(this);`
 
-- **The answer:** `void Accept(Shader* sh) override { sh->Render(this); }`.
-- **Why it works:** inside `Sphere::Accept`, `this` has the type `Sphere*`, so the compiler picks `Render(Sphere*)`. The call on `sh` is virtual, so it reaches the right shader.
-- **`Box::Accept`** is the same code, where `this` is a `Box*`.
-- **Why the others fail:** casting `this` to `Shape*` throws away exactly the type information the overload needs.
+- **The answer:** `virtual void Accept(SHADER* sh) { sh->Render(this); }`.
+- **Why it works:** the call `_s[i]->Accept(...)` is virtual, so it reaches `SPHERE::Accept`. Inside it, `this` has the type `SPHERE*`, so the compiler picks `Render(SPHERE*)`. The call on `sh` is virtual too, so it reaches the right shader.
+- **`BOX::Accept`** is the same code, where `this` is a `BOX*`.
+- **Casting `this` to `SHAPE*`** throws away exactly the type that the overload needs, so it fails to compile, just like the original loop.
+- **`Render(this)` alone** looks for a `Render` method in `SPHERE`, and a shape has none. The shader is the one that draws.
 :::
 
 :::check id=exam-16a-q2-q2
-`Shader::Render` and `Shape::Accept` are declared {{== 0|inline|static}}.
+`SHADER::Render` and `SHAPE::Accept` have no body in the base classes, so they are pure virtual: each declaration ends with {{== 0|= default|const}}.
 
-- **`Shader`** declares `virtual void Render(Sphere* s) = 0` and `virtual void Render(Box* b) = 0`.
-- **`Shape`** declares `virtual void Accept(Shader* sh) = 0`.
+- **`SHADER`** declares `virtual void Render(SPHERE* s) = 0` and `virtual void Render(BOX* b) = 0`.
+- **`SHAPE`** declares `virtual void Accept(SHADER* sh) = 0`.
 - **Both bases** are therefore abstract, and each also declares a virtual destructor with `= default`.
 :::
 
 :::check id=exam-16a-q2-q3
 Which of these hold?
 
-- [x] `RENDER_MGR::Render` calls `shape->Accept(shader)` for each pair
-- [ ] Copying the manager's pointer array gives the copy its own shapes and shaders
-- [x] `BasicShader` and `ComplexShader` override both `Render` overloads
+- [x] `SHADER` must declare both `Render` overloads `virtual`, so that `sh->Render(this)` reaches the real shader
+- [ ] Copying the manager's pointer arrays gives the copy its own shapes and shaders
+- [x] `BASIC_SHADER` and `COMPLEX_SHADER` override both `Render` overloads
 
-- **`RENDER_MGR::Render`** calls `shape->Accept(shader)` for each pair, which starts the double dispatch.
-- **`BasicShader` and `ComplexShader`** each override both `Render` overloads.
-- **Copying the array of pointers is a bug,** because both managers would then share the same shapes and shaders. A correct copy constructor allocates new ones.
+- **`sh` is declared `SHADER*`,** so without `virtual` the call would run `SHADER::Render`, not the real shader's version.
+- **`BASIC_SHADER` and `COMPLEX_SHADER`** each override both `Render` overloads.
+- **Copying the arrays of pointers is a bug,** because both managers would then share the same shapes and shaders. A correct copy constructor allocates new ones.
 :::
 
 :::check id=exam-16a-q2-q4

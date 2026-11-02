@@ -570,55 +570,88 @@ Which of these hold for `Test`?
 :::
 
 :::problem id=exam-17b-q2 title="A deep copy of a board" source="materials/exams/17-b.pdf" kind=exam solution_origin=derived
-`Terrain<T>` stores a game board as one heap block of `T`, with `width × height` cells.
+A game keeps its board in a class `Terrain<T>`. As with `mvector<T>` above, the `<T>` means the class works for any cell type `T`: a `Terrain<int>` is a board of `int`s.
+
+- **The fields:** `_w` and `_h` hold the board's width and height. `_cells` points at one array of `T` on the heap, with `_w * _h` cells, one for each square of the board.
+- **The task:** write the constructor, the copy constructor, and the destructor. The copy constructor must make a deep copy, so that the copy gets a board of its own.
 
 ```cpp
 template <typename T>
 class Terrain {
 public:
-    Terrain(int w, int h);
-    Terrain(const Terrain& other);
+    Terrain(int w, int h);           // w wide, h high
+    Terrain(const Terrain& other);   // deep copy
     ~Terrain();
+private:
+    int _w;       // width
+    int _h;       // height
+    T* _cells;    // _w * _h cells, new[]
 };
 ```
 
 :::check id=exam-17b-q2-q1
-Which body is required for `Terrain(int w, int h)`?
+Which initializer list is right for `Terrain(int w, int h)`?
 
-- [x] `: _w(w), _h(h), _cells(new T[w * h])`
-- [ ] `: _w(w), _h(h), _cells(nullptr)`
-- [ ] `: _cells(new T[w + h])`
+- [x] `: _w(w), _h(h), _cells(new T[w * h]) {}`
+- [ ] `: _w(w), _h(h), _cells(nullptr) {}`
+- [ ] `: _w(w), _h(h), _cells(new T[w + h]) {}`
 
-The constructor stores the width and height, and allocates one cell for every position: `w * h` cells in total.
+- **The board needs one cell for every square,** so `w` columns of `h` squares each make `w * h` cells.
+- **`nullptr`** allocates no board at all, so the first access to a cell would crash.
+- **`w + h`** is far too few: a 10 by 10 board has 100 squares, not 20.
 :::
 
 :::check id=exam-17b-q2-q2
-Which copy-constructor body is the deep copy?
+Which version of the copy constructor makes a deep copy?
 
-- [ ] `: _w(other._w), _h(other._h), _cells(other._cells)`
-- [ ] `: _w(other._w), _h(other._h), _cells(new T[_w * _h])`, with no assignment of the cells
-- [x] `: _w(other._w), _h(other._h), _cells(new T[_w * _h])`, then `_cells[i] = other._cells[i]` for each cell
+```cpp
+// Version A
+Terrain(const Terrain& other)
+    : _w(other._w), _h(other._h), _cells(other._cells) {}
 
-A deep copy needs two steps: allocate an array of its own, then copy every cell into it. The first option shares the board, and the second allocates the array but leaves its cells unset.
+// Version B
+Terrain(const Terrain& other)
+    : _w(other._w), _h(other._h), _cells(new T[other._w * other._h]) {}
+
+// Version C
+Terrain(const Terrain& other)
+    : _w(other._w), _h(other._h), _cells(new T[other._w * other._h]) {
+    for (int i = 0; i < _w * _h; i++)
+        _cells[i] = other._cells[i];
+}
+```
+
+- [ ] Version A
+- [ ] Version B
+- [x] Version C
+
+A deep copy needs two steps: allocate an array of its own, then copy every cell into it.
+
+- **Version A** copies only the address, so both boards share one array. That is the shallow copy the compiler would write anyway.
+- **Version B** allocates an array of its own, but never copies the cells into it, so the copy is a blank board, not a copy of `other`.
+- **Version C** does both steps.
 :::
 
 :::check id=exam-17b-q2-q3
-Which of these hold?
+Which of these are true?
 
-- [x] The destructor is `delete[] _cells`
-- [x] The default copy would copy `_cells` and share one board, and the copy's destructor would release the original's board
-- [ ] `_w` and `_h` are allocated with `new`
+- [x] The destructor is `delete[] _cells;`
+- [ ] The destructor is `delete _cells;`
+- [x] Without our copy constructor, a copy would share `_cells` with the original, and the first destructor to run would release a board that the other object still uses
+- [ ] The destructor must also release `_w` and `_h`
 
-- **The destructor** is `delete[] _cells`, because the cells were allocated with `new[]`.
-- **The default copy** would copy only the pointer `_cells`, so the copy's destructor would release the original's board.
-- **The connection:** once you write that destructor, you must also write the copy constructor, which is the rule of three.
-- **`_w` and `_h`** are plain `int`s inside the object, so they are not allocated with `new`.
+- **`delete[]`, not `delete`:** the cells were allocated with `new[]`, so they must be released with `delete[]`.
+- **The shared board:** the compiler's copy constructor copies only the pointer `_cells`. When one of the two objects is destroyed, the other is left pointing at released memory.
+- **The rule of three at work:** once the class needs that destructor, it also needs its own copy constructor.
+- **`_w` and `_h`** are plain `int`s inside the object. They were never allocated with `new`, so there is nothing to release.
 :::
 
 :::check id=exam-17b-q2-q4
-If the class allows `a = b`, a complete class also writes copy assignment with copy-and-swap, or removes it with {{== delete|= default|friend}}.
+`Terrain` still uses the assignment operator that the compiler generates. After `a = b`, where both boards already exist, `a._cells` holds {{=the same address as b._cells|a new copy of b's cells|nullptr}}, and the array that `a` held before is {{=never released|released by the assignment|moved into b}}. To fix both, the rule of three asks for one more method: {{=a copy assignment operator|a second destructor|a default constructor}}.
 
-The question asks only for the constructors and the destructor. A complete class also needs copy assignment, either written with copy-and-swap or forbidden with `= delete`.
+- **The generated assignment** copies the fields one by one, so `a._cells` gets the same address as `b._cells`, and the two boards are now shared.
+- **`a`'s old array is leaked:** nothing points at it anymore, and nothing releases it.
+- **The fix** is a copy assignment operator, for example with copy and swap, as on `Image` earlier in this chapter.
 :::
 :::
 

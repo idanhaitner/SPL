@@ -4,6 +4,7 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { Figure } from "@/components/Figure";
 import { Icon } from "@/components/home/Icon";
 import { PracticeCard } from "@/components/Practice";
+import { ProblemSetup } from "@/components/ProblemSetup";
 import { highlightTokens } from "@/lib/highlight";
 import { DisplayMath, Inline, localFigure, Paragraph } from "@/lib/inline";
 import type { Block } from "@/lib/types";
@@ -65,6 +66,17 @@ function splitProblem(children: Block[]) {
     else statement.push(child);
   }
   return { statement, hints, solution };
+}
+
+// The setup is everything before a problem's first check. It earns its own pane when the questions lean on it: it holds code, or several checks follow it.
+function splitSetup(statement: Block[]) {
+  const first = statement.findIndex((block) => block.type === "directive" && block.name === "check");
+  if (first <= 0) return null;
+  const setup = statement.slice(0, first);
+  const questions = statement.slice(first);
+  const checks = questions.filter((block) => block.type === "directive" && block.name === "check").length;
+  if (checks < 2 && !setup.some((block) => block.type === "code")) return null;
+  return { setup, questions };
 }
 
 function blockHasBlank(block: Block): boolean {
@@ -146,13 +158,20 @@ async function Directive({ block, courseId }: { block: Extract<Block, { type: "d
   if (name === "examnote") return null;
   if (name === "problem") {
     const parts = splitProblem(children);
+    const split = splitSetup(parts.statement);
     return (
       <PracticeCard
         id={attrs.id || ""}
         courseId={courseId}
         kind={attrs.kind || "exercise"}
         summary={attrs.title?.trim() || fallbackTitle(preview(parts.statement))}
-        statement={<Blocks blocks={parts.statement} courseId={courseId} />}
+        statement={
+          split ? (
+            <ProblemSetup setup={<Blocks blocks={split.setup} courseId={courseId} />} questions={<Blocks blocks={split.questions} courseId={courseId} />} />
+          ) : (
+            <Blocks blocks={parts.statement} courseId={courseId} />
+          )
+        }
         hints={parts.hints.map((hint, index) => (
           <Blocks key={index} blocks={hint} courseId={courseId} />
         ))}

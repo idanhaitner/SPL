@@ -424,7 +424,7 @@ With NRVO, `local` is built directly where the caller expects the result, so the
 :::
 
 :::problem id=ps4-unique-vs-shared title="shared versus unique" source="materials/sessions/SPL_PS4.pptx" kind=exercise solution_origin=source
-Compare these two fragments.
+Compare these two fragments. `auto` in a declaration tells the compiler to work out the variable's type by itself, from the value it is initialized with.
 
 ```cpp
 auto sp1 = std::make_shared<int>(1);
