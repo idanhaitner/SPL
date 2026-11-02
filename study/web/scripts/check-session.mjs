@@ -147,6 +147,23 @@ try {
   await desk.getByText("All tests pass.").waitFor({ timeout: 6000 }).catch(() => fail("A passing Submit shows no success"));
   if (await desk.getByRole("button", { name: /^(Next|Finish)$/ }).isDisabled()) fail("A passing Submit did not unlock Next");
 
+  // Enter lines the next line up at the course's four spaces, and Cmd or Ctrl + S compiles.
+  await desk.waitForTimeout(3200);
+  await desk.locator(".cm-content").click();
+  await desk.keyboard.press("ControlOrMeta+a");
+  await desk.keyboard.press("Backspace");
+  await desk.keyboard.type("void f() {");
+  await desk.keyboard.press("Enter");
+  await desk.keyboard.type("int a;");
+  await desk.keyboard.press("Enter");
+  await desk.keyboard.type("int b;");
+  const typed = await desk.locator(".cm-line").allInnerTexts();
+  if (typed[1] !== "    int a;" || typed[2] !== "    int b;") fail(`Enter did not align the next line: ${JSON.stringify(typed)}`);
+  const compiled = desk.waitForRequest("**/godbolt.org/**", { timeout: 3000 }).catch(() => null);
+  await desk.keyboard.press("ControlOrMeta+s");
+  if (!(await compiled)) fail("Cmd+S did not compile");
+  await desk.waitForTimeout(3200);
+
   // The keyboard can leave the editor: Esc, then Tab.
   await desk.locator(".cm-content").click();
   await desk.keyboard.press("Escape");

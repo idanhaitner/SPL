@@ -173,14 +173,14 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
   };
 
   // Capture phase, so this runs before CodeMirror's own Mod-Enter, which would add a blank line.
+  // The key is swallowed even while the reset prompt is open, or Cmd+S would open the browser's save dialog.
   useEffect(() => {
-    if (confirmReset) return;
     const onKey = (event: globalThis.KeyboardEvent) => {
       const shortcut = workspaceShortcut(event);
       if (!shortcut) return;
       event.preventDefault();
       event.stopPropagation();
-      act(shortcut === "run" ? "run" : "test");
+      if (!confirmReset) act(shortcut === "run" ? "run" : "test");
     };
     document.addEventListener("keydown", onKey, true);
     return () => document.removeEventListener("keydown", onKey, true);
@@ -289,7 +289,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
                 <>
                   <button type="button" className="session-quiet code-reset" ref={resetRef} onClick={() => setConfirmReset(true)}>Reset</button>
                   <p className="workspace-note">Your code is sent to godbolt.org to compile and run.</p>
-                  <button type="button" className="gh-pill" onClick={() => act("run")} disabled={locked} title="Run (Ctrl+Enter or Cmd+Enter)">Run</button>
+                  <button type="button" className="gh-pill" onClick={() => act("run")} disabled={locked} title="Run (Ctrl+S or Cmd+S, Ctrl+Enter or Cmd+Enter)">Run</button>
                   {/* Once the step is solved, Next in the bar is the one primary action. */}
                   <button type="button" className={done ? "gh-pill" : "gh-btn is-compact"} onClick={() => act("test")} disabled={locked} title="Submit (Ctrl+Shift+Enter or Cmd+Shift+Enter)">Submit</button>
                 </>

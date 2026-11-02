@@ -5,7 +5,7 @@ import { setDiagnostics, type Diagnostic as CmDiagnostic } from "@codemirror/lin
 import { EditorState, StateEffect, StateField, type Extension } from "@codemirror/state";
 import { Decoration, EditorView, drawSelection, highlightActiveLine, keymap, lineNumbers } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, isolateHistory } from "@codemirror/commands";
-import { HighlightStyle, bracketMatching, indentOnInput, syntaxHighlighting } from "@codemirror/language";
+import { HighlightStyle, bracketMatching, indentOnInput, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 import { useEffect, useRef } from "react";
 import type { Diagnostic } from "@/lib/run-result";
@@ -113,8 +113,10 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
       bracketMatching(),
       highlightActiveLine(),
       EditorView.lineWrapping,
-      keymap.of([{ key: "Shift-Alt-f", run: format }, { key: "Mod-s", run: format }, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+      keymap.of([{ key: "Shift-Alt-f", run: format }, ...defaultKeymap, ...historyKeymap, indentWithTab]),
       cpp(),
+      // The same width as CODE_STYLE, so a new line lines up with the formatted code around it.
+      indentUnit.of("    "),
       syntaxHighlighting(highlight),
       theme,
       highlightField,
