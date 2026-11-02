@@ -8,16 +8,15 @@ type Props = {
   content: ReactNode;
   examples: ReactNode[];
   hints: ReactNode[];
-  renderSolution: () => ReactNode;
+  onShowSolution: () => void;
   focusTitle: boolean;
   reread?: ReactNode;
 };
 
-export function QuestionPanel({ title, content, examples, hints, renderSolution, focusTitle, reread }: Props) {
+export function QuestionPanel({ title, content, examples, hints, onShowSolution, focusTitle, reread }: Props) {
   // How many hints are revealed, and whether they are on screen. Closing keeps the count, so reopening does not start over.
   const [hintsShown, setHintsShown] = useState(0);
   const [hintsOpen, setHintsOpen] = useState(false);
-  const [solutionOpen, setSolutionOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -66,13 +65,7 @@ export function QuestionPanel({ title, content, examples, hints, renderSolution,
             )}
           </>
         )}
-        <button type="button" className="question-toggle" aria-expanded={solutionOpen} onClick={() => setSolutionOpen((open) => !open)}>Solution</button>
-        {solutionOpen && (
-          <div className="code-solution">
-            <p className="code-label">Solution (read only)</p>
-            {renderSolution()}
-          </div>
-        )}
+        <button type="button" className="question-toggle question-solution" onClick={onShowSolution}>Show the solution<span className="question-solution-where">&nbsp;beside your code</span></button>
       </div>
       {reread && <p className="session-reread">{reread}</p>}
     </div>

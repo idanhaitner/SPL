@@ -272,9 +272,20 @@ a.gh-btn { max-width: 100%; }
 .question-toggle { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 4px; border: 0; border-top: 1px solid var(--rule); background: none; color: var(--ink); cursor: pointer; font: 600 1rem var(--gh-body); text-align: left; }
 .question-toggle:hover { background: var(--wash); }
 .question-help { border-bottom: 1px solid var(--rule); }
-.code-hints, .code-solution { display: grid; gap: 12px; padding: 4px 4px 16px; font-size: 1rem; line-height: 1.5; }
+.code-hints { display: grid; gap: 12px; padding: 4px 4px 16px; font-size: 1rem; line-height: 1.5; }
 .code-hint { padding: 12px 16px; border-radius: 18px; background: var(--code-plate); }
-.code-solution .code-editor { overflow: hidden; border-radius: 18px; }
+/* The solution fills the question's pane, so it reads at the same size and height as the student's editor beside it. */
+.workspace-fill:has(> .solution-panel) { height: 100%; }
+.solution-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--code); color: var(--code-text); }
+.solution-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 6px 12px 6px 18px; background: var(--code-bar); }
+.solution-title { max-width: none; font: 600 1rem var(--gh-body); letter-spacing: 0; outline: none; }
+.solution-panel .solution-title:focus-visible { outline: none; }
+.solution-title span { margin-left: 6px; color: var(--code-text-soft); font-weight: 500; font-size: 0.875rem; }
+.solution-bar .gh-pill { color: var(--code-text); }
+.solution-panel > .code-editor { flex: 1; min-height: 0; }
+.solution-panel .cm-editor { height: 100%; }
+.solution-panel .cm-scroller { min-height: 0; max-height: none; overflow: auto; }
+.solution-panel :focus-visible { outline-color: var(--leaf); }
 .workspace-code { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--code); }
 
 /* Function finder: a lime seed of a button over the code, opening a small reference panel above it. */
@@ -363,6 +374,8 @@ a.gh-btn { max-width: 100%; }
   .session.is-coding .session-count { margin-right: auto; }
   .session.is-coding .gh-nav-spacer { display: none; }
   .workspace-note { display: none; }
+  /* One pane shows at a time here, so the solution takes the Question tab rather than sitting beside the code. */
+  .question-solution-where { display: none; }
   .code-reset { margin-right: auto; }
   .question-panel { padding: 20px var(--gh-gutter) 32px; }
 }

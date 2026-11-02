@@ -15,6 +15,7 @@ import { CaseList, OutcomeView, type CaseView } from "./OutcomeView";
 import { QuestionPanel } from "./QuestionPanel";
 import type { RenderedStep } from "./rendered";
 import { ResultsPanel } from "./ResultsPanel";
+import { SolutionPanel } from "./SolutionPanel";
 import { QUESTION_SPLIT, Split } from "./Split";
 
 const Editor = dynamic(() => import("./Editor").then((m) => m.Editor), {
@@ -47,6 +48,8 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
   const [lastAction, setLastAction] = useState<Action>("test");
   // Which side shows in the tab layout. It only changes an attribute, so the editor is never unmounted and keeps its cursor.
   const [view, setView] = useState<View>("question");
+  // The solution replaces the question beside the editor. The question stays mounted underneath, so its hints keep their place.
+  const [solutionOpen, setSolutionOpen] = useState(false);
 
   const codeRef = useRef(code);
   const viewTabs = useRef<Record<View, HTMLButtonElement | null>>({ question: null, code: null });
@@ -55,6 +58,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
   const keepRef = useRef<HTMLButtonElement>(null);
   const resetRef = useRef<HTMLButtonElement>(null);
   const refocusReset = useRef(false);
+  const questionRef = useRef<HTMLDivElement>(null);
 
   const flush = useCallback(() => {
     if (saveTimer.current) {
@@ -206,6 +210,12 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
     viewTabs.current[next]?.focus();
   };
 
+  const closeSolution = () => {
+    setSolutionOpen(false);
+    // Back on the button that opened it. It is hidden until the state change renders, so wait a frame.
+    requestAnimationFrame(() => questionRef.current?.querySelector<HTMLButtonElement>(".question-solution")?.focus());
+  };
+
   const error = result?.kind === "error" ? result.error : null;
 
   return (
@@ -234,15 +244,22 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
         label="Resize the question and code panels"
         first={
           <div id="workspace-question" className="workspace-fill">
-            <QuestionPanel
-              title={ex.title}
-              content={rendered.content}
-              examples={rendered.examples ?? []}
-              hints={rendered.hints ?? []}
-              renderSolution={() => <Editor value={ex.solution} onChange={() => {}} diagnostics={[]} readOnly />}
-              focusTitle={moved}
-              reread={reread}
-            />
+            <div ref={questionRef} hidden={solutionOpen}>
+              <QuestionPanel
+                title={ex.title}
+                content={rendered.content}
+                examples={rendered.examples ?? []}
+                hints={rendered.hints ?? []}
+                onShowSolution={() => setSolutionOpen(true)}
+                focusTitle={moved}
+                reread={reread}
+              />
+            </div>
+            {solutionOpen && (
+              <SolutionPanel onClose={closeSolution}>
+                <Editor value={ex.solution} onChange={() => {}} diagnostics={[]} readOnly />
+              </SolutionPanel>
+            )}
           </div>
         }
         second={
