@@ -65,7 +65,7 @@ export function QuestionPanel({ title, content, examples, hints, onShowSolution,
             )}
           </>
         )}
-        <button type="button" className="question-toggle question-solution" onClick={onShowSolution}>Show the solution<span className="question-solution-where">&nbsp;beside your code</span></button>
+        <button type="button" className="question-toggle question-solution" onClick={onShowSolution}>Show the solution<span className="question-solution-where"></span></button>
       </div>
       {reread && <p className="session-reread">{reread}</p>}
     </div>

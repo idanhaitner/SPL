@@ -6,13 +6,13 @@ order: 3
 
 Turn `Ticket` into a factory: only `Ticket::create` can make tickets, and it refuses seats below 1.
 
-**What to write**
+**Requirements**
 
 - Make the constructor private, and have it store the seat number in a private field.
 - `static Ticket* create(int seat)`: if `seat` is below 1, make nothing and return `nullptr`. Otherwise make a new `Ticket` on the heap and return its address.
 - `int seat() const`: return the ticket's seat number.
 
-**Good to know**
+**Background**
 
 - A constructor cannot hand back `nullptr`, so a factory function decides whether to make the object at all.
 - A `static` member function belongs to the class rather than to one object, so you call it as `Ticket::create(...)`.

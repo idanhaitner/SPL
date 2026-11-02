@@ -6,7 +6,7 @@ order: 3
 
 Write `Note`, which keeps its text in a buffer on the heap, and write its assignment with copy and swap.
 
-**What to write**
+**Requirements**
 
 - `Note(const char* text)`: allocate a buffer of your own, and copy the characters into it. `std::strlen` counts them, and `std::strcpy` copies them.
 - `const char* text() const`: return the buffer's address.
@@ -15,7 +15,7 @@ Write `Note`, which keeps its text in a buffer on the heap, and write its assign
 - `void swap(Note& other)`: trade buffers with `other`. Only the pointers change hands, no characters are copied.
 - `Note& operator=(const Note& other)`: copy and swap. Copy `other` into a temporary `Note`, swap with it, and return `*this`. The temporary's destructor then releases the old buffer.
 
-**Good to know**
+**Background**
 
 - The text ends with the character `'\0'`, so the buffer needs one more cell than `std::strlen` counts.
 

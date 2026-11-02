@@ -6,7 +6,7 @@ order: 1
 
 Make `area` work through a `Shape*`, so that each call reaches the real object's version.
 
-**What to write**
+**Requirements**
 
 - In `Shape`: make `area` a pure virtual function, one with `= 0` and no body.
 - In `Shape`: change the destructor so that `delete` through a `Shape*` reaches the derived class's destructor.
@@ -14,7 +14,7 @@ Make `area` work through a `Shape*`, so that each call reaches the real object's
 - `area()` in `Rectangle` and `Square`: return the area, overriding `Shape`'s.
 - `int totalArea(Shape** shapes, int count)`: `shapes` is an array of `count` pointers to `Shape`. Return the sum of their areas.
 
-**Good to know**
+**Background**
 
 - Without `virtual`, a call through a `Shape*` is fixed at compile time and always reaches `Shape`'s version.
 - A class with a pure virtual function is abstract, so no plain `Shape` object can be made.

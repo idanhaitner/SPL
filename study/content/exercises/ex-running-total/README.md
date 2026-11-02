@@ -6,16 +6,16 @@ order: 1
 
 Write `runningTotal`, which keeps a total from one call to the next.
 
-**What to write**
+**Requirements**
 
 - `int runningTotal(int amount)`: add `amount` to the total, and return the new total. The total starts at 0.
 
-**Rules**
+**Constraints**
 
 - The total must be kept between calls.
 - Replace the starter's `return 0;`. It is only there so the code compiles.
 
-**Good to know**
+**Background**
 
 - An ordinary local lives in the function's stack frame, so every call gets a brand-new one.
 - A local declared `static` lives in the static region. It is initialized only once, and keeps its value between calls.

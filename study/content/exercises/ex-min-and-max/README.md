@@ -6,15 +6,15 @@ order: 2
 
 Write `minAndMax`, which hands back two answers through reference parameters.
 
-**What to write**
+**Requirements**
 
 - `void minAndMax(int a, int b, int c, int& smallest, int& largest)`: after the call, the caller's `smallest` holds the smallest of `a`, `b`, and `c`, and the caller's `largest` holds the largest.
 
-**Rules**
+**Constraints**
 
 - Whatever `smallest` and `largest` held before the call must not affect the answer.
 
-**Good to know**
+**Background**
 
 - A function returns only one value. A reference parameter is another name for the caller's variable, so writing to it writes to that variable.
 

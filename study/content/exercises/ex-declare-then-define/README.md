@@ -6,17 +6,17 @@ order: 1
 
 Fill in the bodies of `minutesToSeconds` and `totalSeconds`.
 
-**What to write**
+**Requirements**
 
 - `int minutesToSeconds(int minutes)`: return the number of seconds in `minutes` minutes. One minute is 60 seconds.
 - `int totalSeconds(int minutes, int seconds)`: return the whole time in seconds. It must call `minutesToSeconds`.
 
-**Rules**
+**Constraints**
 
 - Keep the declaration on the first line, and the first line of each function, as they are.
 - Replace each `return 0;`. They are only there so the code compiles.
 
-**Good to know**
+**Background**
 
 - A declaration gives a function's name, return type, and parameter types, and ends with `;`. A definition also gives the body, in braces.
 - The declaration on the first line is what lets `totalSeconds` call `minutesToSeconds`, even though its body comes later in the file.

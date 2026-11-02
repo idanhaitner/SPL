@@ -6,7 +6,7 @@ order: 3
 
 Give every bag a `clone` method, and use it so that copying a `Locker` copies its bag as the right class.
 
-**What to write**
+**Requirements**
 
 - `Bag(int items)`: store the number of items.
 - `int items() const` and `void setItems(int items)`: read and change that number.
@@ -15,12 +15,12 @@ Give every bag a `clone` method, and use it so that copying a `Locker` copies it
 - `Locker(const Locker& other)`: give the new locker its own copy of `other`'s bag, of the same real class.
 - `Locker& operator=(const Locker& other)`: delete the bag this locker holds, take a copy of `other`'s bag, and return `*this`.
 
-**Rules**
+**Constraints**
 
 - `a = a` must change nothing.
 - The rest of `Locker` is already written. Its constructor takes ownership of the bag it gets, and its destructor deletes it.
 
-**Good to know**
+**Background**
 
 - A `Locker`'s `Bag*` may really point at a `Bag7` or a `Bag12`.
 - `new Bag(*other._bag)` always builds a plain `Bag`, so the copy would forget its real class. A virtual `clone` builds the right one.

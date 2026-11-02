@@ -6,7 +6,7 @@ order: 1
 
 Write the class `Scores`. It keeps an array of `int`s on the heap, and every copy must get an array of its own.
 
-**What to write**
+**Requirements**
 
 - `Scores(int size)`: allocate an array of `size` ints, all set to 0.
 - `int size() const`: return the number of cells.
@@ -16,7 +16,7 @@ Write the class `Scores`. It keeps an array of `int`s on the heap, and every cop
 - `Scores(const Scores& other)`: allocate a new array, and copy `other`'s values into it.
 - `Scores& operator=(const Scores& other)`: make this object an independent copy of `other`, and return `*this`.
 
-**Rules**
+**Constraints**
 
 - In `a = b`, the two objects may have different sizes.
 - `a = a` must leave `a` unchanged.

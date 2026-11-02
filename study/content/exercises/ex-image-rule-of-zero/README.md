@@ -6,7 +6,7 @@ order: 3
 
 Finish `Image` by keeping its pixels in a `std::vector<char>`, and write none of the special members.
 
-**What to write**
+**Requirements**
 
 - A private field `std::vector<char> _bytes`.
 - `Image(int width, int height)`: store both sizes, and give `_bytes` one cell per pixel, `width * height` cells in all.
@@ -14,11 +14,11 @@ Finish `Image` by keeping its pixels in a `std::vector<char>`, and write none of
 - `void set(int x, int y, char value)` and `char get(int x, int y) const`: change and read pixel `(x, y)`, which is cell `y * width + x`.
 - `const char* pixels() const`: return `&_bytes[0]`, the address of the first cell. The tests use it to see whether the buffer changed hands.
 
-**Rules**
+**Constraints**
 
 - Do not write a destructor, a copy constructor, an assignment operator, or any move. The compiler's versions are already correct.
 
-**Good to know**
+**Background**
 
 - A vector owns its own buffer. Copying a vector copies the buffer, and moving it hands the buffer over.
 - In the initializer list, `_bytes(n)` gives the vector `n` cells, all 0.

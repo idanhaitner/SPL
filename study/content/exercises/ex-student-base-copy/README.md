@@ -6,7 +6,7 @@ order: 2
 
 Write `Student`, a `Person` with credits on the heap, with the rule of three, so that the `Person` part is never lost.
 
-**What to write**
+**Requirements**
 
 - `Student(int id, const std::string& name, int credits)`: pass `id` and `name` to the `Person` constructor, and create the credits as an `int` on the heap.
 - `credits()` and `setCredits(credits)`: read and change the credits.
@@ -14,11 +14,11 @@ Write `Student`, a `Person` with credits on the heap, with the rule of three, so
 - `Student(const Student& other)`: copy the `Person` part too, and give the new student their own `int`.
 - `Student& operator=(const Student& other)`: assign the `Person` part too, give this student `other`'s credits in an `int` of its own, and return `*this`.
 
-**Rules**
+**Constraints**
 
 - `a = a` must change nothing.
 
-**Good to know**
+**Background**
 
 - `Person` is already written. Its empty constructor makes a person with id 0 named `nobody`.
 

@@ -6,18 +6,18 @@ order: 2
 
 Write the decision `make` takes for one target: must its recipe run?
 
-**What to write**
+**Requirements**
 
 - `int needsRebuild(int targetTime, int firstDependency, int secondDependency)`: return `1` if the recipe must run, and `0` if the target is up to date.
 
-**Rules**
+**Constraints**
 
 - All three numbers are times, the moment a file last changed. A bigger number is later.
 - A target that does not exist yet has the time 0.
 - The recipe runs when the target is missing, or when either dependency is newer than the target.
 - The starter's `return 0;` is only there so the code compiles. Keep it if it fits your answer.
 
-**Good to know**
+**Background**
 
 The `if` statement runs its braces only when the condition holds. `>` means "greater than":
 

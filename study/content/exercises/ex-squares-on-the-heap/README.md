@@ -6,7 +6,7 @@ order: 3
 
 Write `sumOfSquares(n)`, which adds up 1×1 + 2×2 + … + n×n using an array on the heap.
 
-**What to write**
+**Requirements**
 
 `int sumOfSquares(int n)` does these steps, in this order:
 
@@ -15,11 +15,11 @@ Write `sumOfSquares(n)`, which adds up 1×1 + 2×2 + … + n×n using an array o
 3. Add up the cells.
 4. Release the array, and return the sum.
 
-**Rules**
+**Constraints**
 
 - Replace the starter's `return 0;`. It is only there so the code compiles.
 
-**Good to know**
+**Background**
 
 - The size is known only when the program runs, so the array goes on the heap, and the stack frame holds only a pointer to it.
 - `cells[i]` is cell `i` of the array that `cells` points at. Numbering starts at 0, so `n` cells run from `cells[0]` to `cells[n - 1]`.

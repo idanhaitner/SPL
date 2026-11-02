@@ -6,14 +6,14 @@ order: 1
 
 Finish the class `Account`, which holds an account's id, its owner's name, and its balance.
 
-**What to write**
+**Requirements**
 
 - Two private fields: the id, of type `const int`, and the balance. The `_owner` field is already there.
 - `Account(int id, const std::string& owner)`: give every field its first value in the initializer list. The balance starts at 0.
 - `int id() const` and `int balance() const`: return those values. `owner()` already returns `_owner`.
 - `void deposit(int amount)`: add `amount` to the balance.
 
-**Good to know**
+**Background**
 
 - The initializer list is the part after a colon, before the constructor's body: `Account(...) : _a(1), _b(2) { }`.
 - A `const` member function, like `id() const`, promises not to change the object.

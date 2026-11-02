@@ -6,7 +6,7 @@ order: 2
 
 Finish `Student`, which owns one `Bag` on the heap and must release it.
 
-**What to write**
+**Requirements**
 
 - A private field of type `Bag*`.
 - `Student(int bagSize)`: make a new `Bag` on the heap with that size.
@@ -14,12 +14,12 @@ Finish `Student`, which owns one `Bag` on the heap and must release it.
 - `void changeBag(int size)`: replace the bag with a new one of that size. The old bag must be released.
 - `~Student()`: release the bag.
 
-**Rules**
+**Constraints**
 
 - Leave `Bag` as it is. It counts the bags alive in `bagsAlive`, and the tests read that number to catch bags that were never released.
 - The tests never copy a `Student`. Copying comes in the next chapter.
 
-**Good to know**
+**Background**
 
 - The destructor `~Student()` runs when the object's life ends.
 

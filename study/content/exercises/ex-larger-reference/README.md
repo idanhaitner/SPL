@@ -6,11 +6,11 @@ order: 3
 
 Write `larger`, which returns a reference to the larger of its two arguments.
 
-**What to write**
+**Requirements**
 
 - `int& larger(int& a, int& b)`: return a reference to whichever of `a` and `b` holds the larger value. If they are equal, return `a`.
 
-**Good to know**
+**Background**
 
 - A reference is another name for a variable that already exists. So `larger(x, y) = 0;` sets the caller's `x` or `y` itself.
 

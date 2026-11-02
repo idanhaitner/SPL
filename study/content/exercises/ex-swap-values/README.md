@@ -6,11 +6,11 @@ order: 1
 
 Write `swapValues`, which trades the values of two variables through pointers.
 
-**What to write**
+**Requirements**
 
 - `void swapValues(int* a, int* b)`: after the call, the two variables that `a` and `b` point at have traded values.
 
-**Good to know**
+**Background**
 
 - A function gets its own copies of the values you pass it, so changing a parameter does not change the caller's variable.
 - If `p` holds the address of `x`, then writing to `*p` changes `x` itself.

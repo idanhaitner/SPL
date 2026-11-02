@@ -6,7 +6,7 @@ order: 1
 
 Write `Buffer`, which owns an array of `int`s on the heap. A copy makes a second array. A move hands the same array to a new owner.
 
-**What to write**
+**Requirements**
 
 - `Buffer(int size)`: allocate `size` ints, all 0.
 - `size()`, `get(index)`, and `set(index, value)`: read the size, read a cell, and change a cell.
@@ -17,7 +17,7 @@ Write `Buffer`, which owns an array of `int`s on the heap. A copy makes a second
 - `Buffer(Buffer&& other)`: take `other`'s array without making a new one. Then set `other`'s pointer to `nullptr` and its size to 0.
 - `Buffer& operator=(Buffer&& other)`: take `other`'s array too, and return `*this`.
 
-**Rules**
+**Constraints**
 
 - In move assignment, the array this buffer held before must still be released, either right away or later by `other`.
 - `other` must not keep the array it gave away.

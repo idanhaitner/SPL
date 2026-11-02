@@ -6,7 +6,7 @@ order: 2
 
 Write `SharedInt`, a small smart pointer. Copies share one `int` on the heap, and the last copy to go deletes it.
 
-**What to write**
+**Requirements**
 
 - `SharedInt(int value)`: create a new `int` holding `value`, and a new counter on the heap that starts at 1.
 - `SharedInt(const SharedInt& other)`: share `other`'s `int` and counter, and add 1 to the counter.
@@ -14,12 +14,12 @@ Write `SharedInt`, a small smart pointer. Copies share one `int` on the heap, an
 - `SharedInt& operator=(const SharedInt& other)`: first leave what this object shares, the same way the destructor does. Then share `other`'s `int` and counter, add 1 to that counter, and return `*this`.
 - `value()`, `setValue(value)`, and `owners()`: read the `int`, change it, and read the counter.
 
-**Rules**
+**Constraints**
 
 - `a = a` must change nothing, and `a = b = c` must work.
 - Write no move members. A copy only adds 1 to a counter, so it is already cheap.
 
-**Good to know**
+**Background**
 
 - The chapter builds the same thing as `smart_ptr`.
 

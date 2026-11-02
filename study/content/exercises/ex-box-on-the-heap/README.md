@@ -6,16 +6,16 @@ order: 2
 
 Write two functions: one puts an `int` on the heap, and the other takes it back off.
 
-**What to write**
+**Requirements**
 
 - `int* makeBox(int value)`: allocate one `int` on the heap holding `value`, and return its address.
 - `int openBox(int* box)`: read the value that `box` points at, release the block, and return that value.
 
-**Rules**
+**Constraints**
 
 - Replace the starter's `return nullptr;` and `return 0;`. They are only there so the code compiles.
 
-**Good to know**
+**Background**
 
 - `new int(9)` allocates one `int` holding 9, and gives back its address. `delete` releases it.
 - `*box` is the `int` that `box` points at. `int n = *box;` copies it into `n`.
