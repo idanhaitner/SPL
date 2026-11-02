@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Gabarito, Heebo, JetBrains_Mono } from "next/font/google";
+import { ChapterBloom } from "@/components/shell/ChapterBloom";
 import { loadCourse } from "@/lib/course";
+import { courseNav, stemParts } from "@/lib/nav";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
@@ -46,6 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const course = loadCourse();
+  const nav = courseNav(course);
   return (
     <html lang={course.lang} dir={course.dir} className={`${mono.variable} ${gabarito.variable} ${figtree.variable} ${heebo.variable}`} suppressHydrationWarning>
       <head>
@@ -54,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a className="skip" href="#content">Skip to content</a>
         <main id="content">{children}</main>
+        <ChapterBloom courseId={course.id} chapters={nav.chapters} partStarts={stemParts(nav)} />
       </body>
     </html>
   );

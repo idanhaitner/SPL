@@ -27,3 +27,10 @@ export function courseNav(course: Course): CourseNav {
 export function partOf(nav: CourseNav, chapterId: string) {
   return nav.parts.find((part) => part.chapters.some((chapter) => chapter.id === chapterId));
 }
+
+const STEM_LABELS = ["Memory", "Concurrency", "Communication", "Databases"];
+
+// Where each part's name hangs on the course stem: at the leaf of its first chapter.
+export function stemParts(nav: CourseNav) {
+  return nav.parts.map((part, index) => ({ label: STEM_LABELS[index], num: part.chapters[0].num }));
+}

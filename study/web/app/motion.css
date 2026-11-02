@@ -1,5 +1,9 @@
 /* Motion. Things used all day (links, nav, typing, Next) stay fast; growth is the only slow thing, and it is progress. */
-:root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+:root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); }
+
+/* A leaf's colors are registered so a finished leaf can fade from the "here" white to lime instead of flipping. */
+@property --blade-light { syntax: "<color>"; inherits: true; initial-value: #36957A; }
+@property --blade-shade { syntax: "<color>"; inherits: true; initial-value: #2A7A5F; }
 
 /* A page arrives with a short fade; no travel, so a click never feels delayed. */
 @keyframes gh-arrive { from { opacity: 0; } }
@@ -50,20 +54,83 @@
 :root:not([data-grown]) .gh-hero .gh-leaf-halo { animation: gh-halo-in 900ms var(--gh-ease) calc(var(--d) + 200ms) backwards, gh-breathe 4.5s ease-in-out calc(var(--d) + 1100ms) infinite alternate; }
 :root:not([data-grown]) .gh-hero .gh-leaf-body { animation: gh-unfurl 680ms cubic-bezier(0.3, 1.45, 0.5, 1) var(--d) backwards, gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
 
-/* A chapter opened since the last visit: the stem regrows up to it (REGROW_MS in CourseStem),
-   each new leaf unfurls as the tip passes it (--sprout), and the growing tip opens last. */
+/* A chapter finished or opened since the last visit (the timeline is in CourseStem): a burst of sap climbs to the leaf just finished,
+   that leaf ripens from white to lime, then the stem regrows with a light on its growing end. Each new leaf's bud swells and breaks
+   as the tip reaches it (--sprout), the leaf unfurls out of it, and the growing tip opens last. */
+@keyframes gh-surge {
+  0% { stroke-dashoffset: 0.08; opacity: 0; }
+  12%, 86% { opacity: 1; }
+  100% { stroke-dashoffset: calc(0.08 - var(--to)); opacity: 0; }
+}
+.gh-surge path { fill: none; stroke-linecap: round; stroke-dasharray: 0.08 2; pointer-events: none; animation: gh-surge 750ms var(--ease-in-out) 200ms both; }
+.gh-surge-glow { stroke: rgb(217 240 163 / 0.4); stroke-width: 20; }
+.gh-surge-core { stroke: #F6FBE3; stroke-width: 6; }
+.gh-stem-narrow .gh-surge-glow { stroke-width: 9; }
+.gh-stem-narrow .gh-surge-core { stroke-width: 3; }
+
+@keyframes gh-ripen {
+  0% { transform: scale(var(--ripen-from, 1)); animation-timing-function: var(--ease-out); }
+  28% { transform: scale(calc(var(--ripen-from, 1) * 1.16)); animation-timing-function: cubic-bezier(0.3, 1.45, 0.5, 1); }
+  100% { transform: none; }
+}
+@keyframes gh-ripen-color { from { --blade-light: #FDFEF6; --blade-shade: #E2EFC8; } }
+.is-ripening > .gh-leaf { animation: gh-ripen-color 800ms ease 120ms backwards; }
+.is-ripening > .gh-leaf .gh-leaf-body { animation: gh-ripen 1000ms backwards; }
+:is(.gh-hero, .gh-bloom) .is-ripening > .gh-leaf .gh-leaf-body { animation: gh-ripen 1000ms backwards, gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
+
+@keyframes gh-front { 0% { opacity: 0; } 8%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.gh-front { stroke-dasharray: 0.1 999999; opacity: 0; pointer-events: none; }
+.gh-front path { fill: none; stroke-linecap: round; }
+.gh-front-glow { stroke: rgb(217 240 163 / 0.35); stroke-width: 32; }
+.gh-front-core { stroke: #F6FBE3; stroke-width: 10; }
+.gh-stem-narrow .gh-front-glow { stroke-width: 14; }
+.gh-stem-narrow .gh-front-core { stroke-width: 5; }
+.is-regrowing .gh-front { transition: stroke-dashoffset 1400ms cubic-bezier(0.333, 0.667, 0.667, 1); animation: gh-front 1400ms linear both; }
+
 .is-regrowing .gh-stem-alive-line { transition: stroke-dasharray 1400ms cubic-bezier(0.333, 0.667, 0.667, 1); }
-.gh-hero .is-sprouting .gh-leaf-body { animation: gh-unfurl 680ms cubic-bezier(0.3, 1.45, 0.5, 1) var(--sprout) backwards, gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
-.gh-hero .is-sprouting .gh-leaf-num { animation: gh-fade 240ms ease-out calc(var(--sprout) + 260ms) backwards; }
-.gh-hero .is-sprouting .gh-leaf-halo { animation: gh-halo-in 900ms var(--gh-ease) calc(var(--sprout) + 200ms) backwards, gh-breathe 4.5s ease-in-out calc(var(--sprout) + 1100ms) infinite alternate; }
+@keyframes gh-bud-burst { 0% { opacity: 1; scale: 1; } 55% { opacity: 1; scale: 1.24; } 100% { opacity: 0; scale: 1.6; } }
+.gh-bud-burst { pointer-events: none; }
+.gh-bud-burst .gh-leaf > * { animation: gh-bud-burst 420ms var(--ease-out) calc(var(--sprout) - 240ms) both; }
+:is(.gh-hero, .gh-bloom) .is-sprouting > .gh-leaf .gh-leaf-body { animation: gh-unfurl 760ms cubic-bezier(0.3, 1.45, 0.5, 1) var(--sprout) backwards, gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
+:is(.gh-hero, .gh-bloom) .is-sprouting > .gh-leaf .gh-leaf-num { animation: gh-fade 240ms ease-out calc(var(--sprout) + 300ms) backwards; }
+:is(.gh-hero, .gh-bloom) .is-sprouting > .gh-leaf .gh-leaf-halo { animation: gh-halo-in 1100ms var(--gh-ease) calc(var(--sprout) + 160ms) backwards, gh-breathe 4.5s ease-in-out calc(var(--sprout) + 1300ms) infinite alternate; }
 .is-regrowing .gh-stem-tip-bud { animation: gh-unfurl 640ms cubic-bezier(0.3, 1.4, 0.5, 1) 1300ms backwards; }
+/* The last chapter opens no leaf: the crown at the stem's end opens instead. */
+.is-flowering .gh-stem-tip-bud { animation: gh-unfurl 900ms cubic-bezier(0.3, 1.4, 0.5, 1) 60ms backwards; }
+
+/* The burst that goes with each change (LeafSpark): a flash, a ring running outward, leaflets and specks thrown off. */
+@keyframes gh-spark-flash { 0% { opacity: 0; scale: 0.3; } 20% { opacity: 1; } 100% { opacity: 0; scale: 1.5; } }
+@keyframes gh-spark-ring { 0% { opacity: 0.95; scale: 0.35; } 100% { opacity: 0; scale: 2.2; } }
+@keyframes gh-spark-mote {
+  0% { opacity: 0; transform: rotate(var(--a)) translateX(6px) scale(0.3); }
+  12%, 62% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--far)) rotate(var(--spin)) scale(1); }
+}
+.gh-spark { pointer-events: none; }
+.gh-spark-flash { animation: gh-spark-flash 720ms var(--ease-out) var(--spark) both; }
+.gh-spark-ring { fill: none; stroke: var(--leaf); stroke-width: 2.5; vector-effect: non-scaling-stroke; animation: gh-spark-ring 860ms var(--ease-out) var(--spark) both; }
+.gh-spark > g { animation: gh-spark-mote 1150ms var(--ease-out) var(--spark) both; }
+.gh-spark-leaflet { fill: var(--leaf); }
+.gh-spark-speck { fill: #F6FBE3; }
+
+/* The celebration itself (ChapterBloom): the glasshouse fades up, the words rise, "grew" turns green as the leaf ripens,
+   and the way on arrives once the new leaf is out. */
+@keyframes gh-bloom-out { to { opacity: 0; } }
+.gh-bloom[open], .gh-bloom[open]::backdrop { animation: gh-fade 320ms var(--ease-out); }
+.gh-bloom.is-leaving, .gh-bloom.is-leaving::backdrop { animation: gh-bloom-out 220ms var(--ease-out) forwards; }
+.gh-bloom .gh-word > span { animation: gh-word-rise 720ms var(--gh-ease) backwards; animation-delay: calc(140ms + var(--w) * 60ms); }
+.gh-bloom h2 em { animation: gh-word-green 500ms ease-out 1000ms backwards; }
+.gh-bloom-kicker { animation: gh-soft-rise 560ms var(--gh-ease) 60ms backwards; }
+.gh-bloom-lede { animation: gh-soft-rise 560ms var(--gh-ease) 480ms backwards; }
+.gh-bloom-action { animation: gh-soft-rise 560ms var(--gh-ease) 2600ms backwards; }
+.gh-bloom-close { animation: gh-fade 300ms ease-out 200ms backwards; }
 
 /* The air stays alive: a slow breeze travels up the plant, and the leaf to open next breathes light.
    These pause when the hero is off screen (is-away, from useLeafBrush). */
 @keyframes gh-sway { from { rotate: -1.6deg; } to { rotate: 1.8deg; } }
 @keyframes gh-breathe { from { opacity: 0.72; scale: 0.94; } to { opacity: 1; scale: 1.05; } }
-.gh-hero .gh-leaf-body { animation: gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
-.gh-hero .gh-leaf-halo, .masthead .gh-leaf-halo, .gh-bed .gh-leaf-halo { animation: gh-breathe 4.5s ease-in-out infinite alternate; }
+.gh-hero .gh-leaf-body, .gh-bloom .gh-leaf-body { animation: gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
+.gh-hero .gh-leaf-halo, .gh-bloom .gh-leaf-halo, .masthead .gh-leaf-halo, .gh-bed .gh-leaf-halo { animation: gh-breathe 4.5s ease-in-out infinite alternate; }
 .is-away .gh-leaf-body, .is-away .gh-leaf-halo, .is-away .gh-sap, .is-away.gh-hero .gh-arch-1 { animation-play-state: paused; }
 
 /* Sap: a point of light runs up the stem from the button to the leaf to open next, and runs at once when the button is hovered. */
@@ -88,7 +155,7 @@
 
 /* A leaf lifts under the pointer (mouse only), and its link is the whole leaf. */
 .gh-leaf-link { cursor: pointer; }
-.gh-leaf-title rect, .gh-leaf-title text { animation: gh-fade 120ms ease-out; }
+.gh-leaf-title rect, .gh-leaf-title text { animation: gh-fade 120ms ease-out var(--title-at, 0ms) backwards; }
 @media (hover: hover) and (pointer: fine) {
   .gh-leaf-body { transition: scale 260ms cubic-bezier(0.3, 1.5, 0.5, 1); }
   .gh-leaf-link:hover .gh-leaf-body, .gh-leaf-link:focus-visible .gh-leaf-body { scale: 1.14; }
@@ -167,7 +234,9 @@
   .route-enter, .session-reading, .session-code, .results-body > * { animation: gh-arrive 100ms linear; }
   .gh-stem-grown-line, .gh-stem-alive-line, .step-mini-bar i, .gh-leaf-body, .gh-leaf-brush, .gh-row-mark, a.gh-row .gh-row-title, .gh-btn .gh-icon { transition: none !important; }
   .gh-leaf-body, .gh-leaf-num, .gh-leaf-halo, .gh-tendril, .gh-part-label, .gh-stem-reveal, .gh-stem-lead, .gh-stem-tip-bud, .masthead-leaf-open, .masthead-leaf text, .gh-word > span, .gh-hero h1 em, .gh-lede, .gh-facts, .gh-hero-action, .gh-hero .gh-arch-1, .gh-hero .gh-arch-2, .home .gh-section, .home .gh-try, .gh-course .gh-head, .gh-bed-gap, .gh-bed-stem, .gh-sprig-stem, .gh-sprig-leaf, .choices .is-right .choice-mark, .choices .is-wrong { animation: none !important; }
-  .gh-sap, .gh-burst, .gh-sun, .gh-air { display: none; }
+  .gh-sap, .gh-burst, .gh-sun, .gh-air, .gh-surge, .gh-front, .gh-spark, .gh-bud-burst { display: none; }
+  .gh-bloom .gh-word > span, .gh-bloom h2 em, .gh-bloom-kicker, .gh-bloom-lede, .is-ripening > .gh-leaf .gh-leaf-body { animation: none !important; }
+  .gh-bloom-action { animation: gh-fade 300ms ease-out 400ms backwards; }
   .finder-panel { animation: none; }
   .finder-button, .finder-button:hover, .finder-button:active { transform: none; transition: none; }
   .gh-leaf-link:hover .gh-leaf-body, a.gh-row:hover .gh-row-mark, a.gh-row:hover .gh-row-title, a.gh-bed-row:hover .gh-leaf-body, a.gh-bed-row:hover .gh-bed-title, a.gh-bed-row:hover .gh-icon, .gh-hero:has(.gh-hero-action .gh-btn:hover) .gh-leaf.is-here .gh-leaf-brush { scale: none; rotate: none; translate: none; }

@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { LeafShape } from "./LeafShape";
+import { LeafShape, LeafSpark, SparkGlow } from "./LeafShape";
 import { Stem } from "./Stem";
 import { useLeafBrush } from "./useLeafBrush";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { courseStates, lastOpen, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
-import { growthDelay, NARROW_STEM, spacedLeaves, STEM_GROW, STEM_START, WIDE_STEM, type Leaf } from "@/lib/stem";
+import { growthDelay, NARROW_STEM, spacedLeaves, STEM_GROW, STEM_START, stemTip, WIDE_STEM, type Leaf, type StemCurves } from "@/lib/stem";
 
 const wide = spacedLeaves(WIDE_STEM, 16);
+// The crown at the stem's end, placed like a leaf so a spark can open on it.
+const tipOf = (curves: StemCurves) => {
+  const { x, y, angle } = stemTip(curves);
+  return { x, y, angle };
+};
 const narrow = spacedLeaves(NARROW_STEM, 16, 0.05, 0.98);
 
 // A leaf is finished, the one to grow next, or not yet open. Nothing in between gets its own look.
@@ -17,8 +22,14 @@ const looks = (state: ChapterState): ChapterState => (state === "read" ? "done" 
 const STATE_WORDS: Record<ChapterState, string> = { done: ", done", read: ", read", here: ", you are here", ahead: "", locked: ", locked until the chapter before it is read" };
 const WIDE_SIZE: Record<ChapterState, number> = { done: 92, read: 92, here: 118, ahead: 84, locked: 58 };
 const NARROW_SIZE: Record<ChapterState, number> = { done: 46, read: 46, here: 58, ahead: 42, locked: 28 };
-// Matches .gh-stem-alive-line in motion.css.
+// A regrowth, in ms from when it starts: sap climbs to the leaf just finished, that leaf ripens, then the stem grows on.
+// SURGE_AT and REGROW_MS match .gh-surge and .is-regrowing .gh-stem-alive-line in motion.css.
+const SURGE_AT = 200;
+const RIPEN_AT = 950;
+const GROW_AT = 1250;
 const REGROW_MS = 1400;
+
+type Phase = "rest" | "surge" | "ripe" | "growing";
 
 // How far the stem reaches: a little past the last open leaf, or all the way once every chapter is open.
 function reach(leaves: Leaf[], open: number, past: number) {
@@ -27,9 +38,10 @@ function reach(leaves: Leaf[], open: number, past: number) {
 
 // The plant remembers how far it had grown, so a chapter opened since the last visit grows in while you watch.
 // It runs before paint, so the stem is never seen at full length first and then shrinking back to where it starts.
-function useRegrowth(courseId: string, open: number | null) {
+// `since` says where to grow from instead (the chapter just finished); then it plays even when nothing new opened, for the last chapter.
+function useRegrowth(courseId: string, open: number | null, since?: number) {
   const [from, setFrom] = useState<number | null>(null);
-  const [growing, setGrowing] = useState(false);
+  const [phase, setPhase] = useState<Phase>("rest");
   useLayoutEffect(() => {
     if (open === null) return;
     const key = `study:${courseId}:grown-to`;
@@ -37,19 +49,23 @@ function useRegrowth(courseId: string, open: number | null) {
     try {
       const raw = localStorage.getItem(key);
       before = raw === null ? null : Number(raw);
-      localStorage.setItem(key, String(open));
     } catch {}
+    // Saved a beat later, so an effect that runs twice in a row still sees where the plant was.
+    const timers = [setTimeout(() => {
+      try {
+        localStorage.setItem(key, String(open));
+      } catch {}
+    })];
+    const start = since ?? before;
     // On the first home visit of a browser session the whole plant grows in anyway.
-    if (before === null || !(before < open) || !document.documentElement.dataset.grown) return;
-    setFrom(before);
-    setGrowing(false);
-    // Two frames: the first paints the stem where it was, the second starts it growing from there.
-    let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => setGrowing(true));
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [courseId, open]);
-  return { from, growing, shown: from !== null && !growing ? from : open };
+    const grows = since === undefined ? before !== null && before < open && document.documentElement.dataset.grown : since <= open;
+    if (start === null || !grows) return () => timers.forEach(clearTimeout);
+    setFrom(start);
+    setPhase("surge");
+    timers.push(setTimeout(() => setPhase("ripe"), RIPEN_AT), setTimeout(() => setPhase("growing"), GROW_AT));
+    return () => timers.forEach(clearTimeout);
+  }, [courseId, open, since]);
+  return { from, phase, shown: from !== null && phase !== "growing" ? from : open };
 }
 
 // What a part's name must keep clear of: every leaf's blade, and the stem between the leaves.
@@ -91,7 +107,7 @@ function PartLabel({ label, leaf, leaves, first, delay, locked }: { label: strin
 }
 
 // A chapter's name on a small plate, measured so the plate fits it exactly.
-function LeafTitle({ title, leaf, size }: { title: string; leaf: Leaf; size: number }) {
+function LeafTitle({ title, leaf, size, delay }: { title: string; leaf: Leaf; size: number; delay?: string }) {
   const text = useRef<SVGTextElement>(null);
   const [width, setWidth] = useState(0);
   useLayoutEffect(() => setWidth(text.current?.getComputedTextLength() ?? 0), [title]);
@@ -103,14 +119,15 @@ function LeafTitle({ title, leaf, size }: { title: string; leaf: Leaf; size: num
   const toLeft = Math.cos(radians) < 0 || tipX + 14 + plate > 1430;
   const left = toLeft ? Math.min(leaf.x, tipX) - 14 - plate : tipX + 14;
   return (
-    <g className="gh-leaf-title" aria-hidden="true" style={{ visibility: width ? "visible" : "hidden" }}>
+    <g className="gh-leaf-title" aria-hidden="true" style={{ visibility: width ? "visible" : "hidden", "--title-at": delay } as React.CSSProperties}>
       <rect x={left} y={tipY - 24} width={plate} height={48} rx={24} />
       <text ref={text} x={left + 18} y={tipY + 8}>{title}</text>
     </g>
   );
 }
 
-export function CourseStem({ courseId, chapters, partStarts }: { courseId: string; chapters: ChapterInfo[]; partStarts: { label: string; num: number }[] }) {
+// `name` keeps its drawing's ids apart from another plant on the page; `since` is set when a finished chapter is being celebrated.
+export function CourseStem({ courseId, chapters, partStarts, name = "stem", since }: { courseId: string; chapters: ChapterInfo[]; partStarts: { label: string; num: number }[]; name?: string; since?: number }) {
   const loaded = useLoadedProgress(courseId);
   const [hover, setHover] = useState<number | null>(null);
   const plant = useRef<SVGSVGElement>(null);
@@ -132,12 +149,22 @@ export function CourseStem({ courseId, chapters, partStarts }: { courseId: strin
   }, []);
 
   const states = courseStates(chapters, loaded ?? { solved: [] });
-  const { from, growing, shown: openShown } = useRegrowth(courseId, loaded ? lastOpen(states) : null);
+  const { from, phase, shown: openShown } = useRegrowth(courseId, loaded ? lastOpen(states) : null, since);
   const open = openShown ?? lastOpen(states);
+  const growing = phase === "growing";
   const regrowing = growing ? "is-regrowing" : undefined;
   const hereIndex = states.indexOf("here");
-  const finished = states.every((state) => state === "done" || state === "read");
-  const shown = hover === null ? null : wide.leaves[hover];
+  // Until the regrowth reaches it, the leaf just finished still looks like the one to grow next, and the plant is not yet in flower.
+  const waiting = phase === "surge" && from !== null;
+  const finished = !waiting && phase !== "ripe" && states.every((state) => state === "done" || state === "read");
+  // The last chapter opens no leaf; finishing it opens the crown instead.
+  const flowering = growing && from === open && finished;
+  // When a celebrated chapter opens a new leaf, its name comes up once the stem has reached it.
+  const announced = since !== undefined && growing && from !== open ? open : null;
+  const titled = hover ?? announced;
+  const shown = titled === null ? null : wide.leaves[titled];
+  const lookOf = (index: number): ChapterState => (waiting && index === from ? "here" : looks(index > open ? "locked" : states[index]));
+  const ripening = (index: number) => from !== null && index === from && (phase === "ripe" || growing);
   // A leaf that opened since the last visit unfurls when the regrowing stem reaches it.
   const sprout = (index: number, leaves: Leaf[]) => {
     if (from === null || !growing || index <= from || index > open) return undefined;
@@ -145,22 +172,43 @@ export function CourseStem({ courseId, chapters, partStarts }: { courseId: strin
     const share = (leaves[index].along - start) / Math.max(1, leaves[open].along - start);
     return `${Math.round(share * REGROW_MS)}ms`;
   };
-  const leafStyle = (index: number, leaves: Leaf[]) => {
+  const leafStyle = (index: number, leaves: Leaf[], sizes: Record<ChapterState, number>) => {
     const delay = sprout(index, leaves);
-    return delay ? ({ "--sprout": delay } as React.CSSProperties) : undefined;
+    if (delay) return { "--sprout": delay } as React.CSSProperties;
+    // A ripening leaf shrinks from its "here" size to its finished size, so it starts drawn that much larger.
+    if (ripening(index)) return { "--ripen-from": Math.round((sizes.here / sizes.done) * 1000) / 1000 } as React.CSSProperties;
+    return undefined;
   };
+  const leafClass = (index: number, leaves: Leaf[]) => (sprout(index, leaves) ? "is-sprouting" : ripening(index) ? "is-ripening" : undefined);
+  // The burst that goes with a change: on the finished leaf as it ripens, on a new leaf as its bud breaks.
+  const spark = (index: number, leaves: Leaf[], sizes: Record<ChapterState, number>, glow: string) => {
+    const delay = sprout(index, leaves);
+    if (delay) return <LeafSpark leaf={leaves[index]} size={sizes.here} at={delay} glow={glow} />;
+    return ripening(index) ? <LeafSpark leaf={leaves[index]} size={sizes.done} at="0ms" glow={glow} /> : null;
+  };
+  // The bud a new leaf grows out of stays until the stem reaches it, then swells and breaks.
+  const bud = (index: number, leaves: Leaf[], sizes: Record<ChapterState, number>, numSize: number) =>
+    sprout(index, leaves) && (
+      <g className="gh-bud-burst">
+        <LeafShape leaf={leaves[index]} size={sizes.locked} state="locked" num={chapters[index].num} numSize={numSize} index={index} delay={0} halo="" />
+      </g>
+    );
+  const surge = (leaves: Leaf[], length: number) => (from !== null && phase !== "rest" ? leaves[from].along / length : undefined);
+  const front = (leaves: Leaf[], length: number, past: number) => (from !== null && from < lastOpen(states) && phase !== "rest" ? reach(leaves, open, past) ?? length : undefined);
 
   return (
     <>
       <div className="gh-stem-wide" data-ready={loaded ? "" : undefined}>
-        <svg ref={plant} className={regrowing} viewBox="0 0 1440 900" preserveAspectRatio="xMaxYMax meet" role="group" aria-label={`The course as one stem, with a leaf for each of its ${chapters.length} chapters. A chapter opens once the one before it is read.`}>
-          <Stem id="stem-wide" curves={WIDE_STEM} root={13} tip={5} alive={reach(wide.leaves, open, 52)} sapTo={hereIndex < 0 ? undefined : wide.leaves[hereIndex].along / wide.length} tipSize={46} finished={finished} />
+        <svg ref={plant} className={[regrowing, flowering && "is-flowering"].filter(Boolean).join(" ") || undefined} viewBox="0 0 1440 900" preserveAspectRatio="xMaxYMax meet" role="group" aria-label={`The course as one stem, with a leaf for each of its ${chapters.length} chapters. A chapter opens once the one before it is read.`}>
+          {from !== null && <defs><SparkGlow id={`${name}-glow-wide`} /></defs>}
+          <Stem id={`${name}-wide`} curves={WIDE_STEM} root={13} tip={5} alive={reach(wide.leaves, open, 52)} sapTo={hereIndex < 0 || waiting || phase === "ripe" ? undefined : wide.leaves[hereIndex].along / wide.length} surgeTo={surge(wide.leaves, wide.length)} front={front(wide.leaves, wide.length, 52)} tipSize={46} finished={finished} />
+          {flowering && <LeafSpark leaf={{ ...wide.leaves[0], ...tipOf(WIDE_STEM), along: 0 }} size={92} at="0ms" glow={`${name}-glow-wide`} />}
           {partStarts.map(({ label, num }) => {
             const leaf = wide.leaves[num - 1];
             return <PartLabel key={label} label={label} leaf={leaf} leaves={wide.leaves} first={num === 1} delay={growthDelay(leaf.along / wide.length) + 280} locked={looks(states[num - 1]) === "locked"} />;
           })}
           {chapters.map((chapter, index) => {
-            const current = looks(index > open ? "locked" : states[index]);
+            const current = lookOf(index);
             const leaf = wide.leaves[index];
             return (
               <Link
@@ -173,23 +221,29 @@ export function CourseStem({ courseId, chapters, partStarts }: { courseId: strin
                 onFocus={() => setHover(index)}
                 onBlur={() => setHover(null)}
               >
-                <g className={sprout(index, wide.leaves) ? "is-sprouting" : undefined} style={leafStyle(index, wide.leaves)}>
-                  <LeafShape leaf={leaf} size={WIDE_SIZE[current]} state={current} num={chapter.num} numSize={current === "here" ? 25 : current === "locked" ? 17 : 20} index={index} delay={growthDelay(leaf.along / wide.length)} halo="gh-halo-wide" />
+                <g className={leafClass(index, wide.leaves)} style={leafStyle(index, wide.leaves, WIDE_SIZE)}>
+                  {bud(index, wide.leaves, WIDE_SIZE, 17)}
+                  <LeafShape leaf={leaf} size={WIDE_SIZE[current]} state={current} num={chapter.num} numSize={current === "here" ? 25 : current === "locked" ? 17 : 20} index={index} delay={growthDelay(leaf.along / wide.length)} halo={`${name}-halo-wide`} />
+                  {spark(index, wide.leaves, WIDE_SIZE, `${name}-glow-wide`)}
                 </g>
               </Link>
             );
           })}
-          {shown && hover !== null && <LeafTitle key={hover} title={looks(states[hover]) === "locked" ? `Locked · ${chapters[hover].title}` : chapters[hover].title} leaf={shown} size={WIDE_SIZE[looks(states[hover])]} />}
+          {shown && titled !== null && <LeafTitle key={titled} title={lookOf(titled) === "locked" ? `Locked · ${chapters[titled].title}` : chapters[titled].title} leaf={shown} size={WIDE_SIZE[lookOf(titled)]} delay={hover === null ? `${REGROW_MS}ms` : undefined} />}
         </svg>
       </div>
-      <svg className={`gh-stem-narrow${regrowing ? ` ${regrowing}` : ""}`} viewBox="0 0 390 290" aria-hidden="true" data-ready={loaded ? "" : undefined}>
-        <Stem id="stem-narrow" curves={NARROW_STEM} root={6} tip={3} alive={reach(narrow.leaves, open, 14)} tipSize={22} finished={finished} />
+      <svg className={["gh-stem-narrow", regrowing, flowering && "is-flowering"].filter(Boolean).join(" ")} viewBox="0 0 390 290" aria-hidden="true" data-ready={loaded ? "" : undefined}>
+        {from !== null && <defs><SparkGlow id={`${name}-glow-narrow`} /></defs>}
+        <Stem id={`${name}-narrow`} curves={NARROW_STEM} root={6} tip={3} alive={reach(narrow.leaves, open, 14)} surgeTo={surge(narrow.leaves, narrow.length)} front={front(narrow.leaves, narrow.length, 14)} tipSize={22} finished={finished} />
+        {flowering && <LeafSpark leaf={{ ...narrow.leaves[0], ...tipOf(NARROW_STEM), along: 0 }} size={46} at="0ms" glow={`${name}-glow-narrow`} />}
         {chapters.map((chapter, index) => {
-          const current = looks(index > open ? "locked" : states[index]);
+          const current = lookOf(index);
           const leaf = narrow.leaves[index];
           return (
-            <g key={chapter.id} className={sprout(index, narrow.leaves) ? "is-sprouting" : undefined} style={leafStyle(index, narrow.leaves)}>
-              <LeafShape leaf={leaf} size={NARROW_SIZE[current]} state={current} num={chapter.num} numSize={current === "here" ? 14 : current === "locked" ? 9 : 11} index={index} delay={growthDelay(leaf.along / narrow.length)} halo="gh-halo-narrow" />
+            <g key={chapter.id} className={leafClass(index, narrow.leaves)} style={leafStyle(index, narrow.leaves, NARROW_SIZE)}>
+              {bud(index, narrow.leaves, NARROW_SIZE, 9)}
+              <LeafShape leaf={leaf} size={NARROW_SIZE[current]} state={current} num={chapter.num} numSize={current === "here" ? 14 : current === "locked" ? 9 : 11} index={index} delay={growthDelay(leaf.along / narrow.length)} halo={`${name}-halo-narrow`} />
+              {spark(index, narrow.leaves, NARROW_SIZE, `${name}-glow-narrow`)}
             </g>
           );
         })}

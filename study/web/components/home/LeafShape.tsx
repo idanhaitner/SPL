@@ -78,3 +78,41 @@ export function LeafShape({ leaf, size, state, num, numSize, index, delay, halo 
     </g>
   );
 }
+
+// Where the motes fly: an angle, how far (a share of the leaf's length), and whether it is a leaflet or a speck of light.
+const MOTES: [number, number, boolean][] = [
+  [-170, 0.95, true], [-128, 0.7, false], [-96, 1.05, true], [-58, 0.8, false], [-22, 1.1, true], [12, 0.75, false],
+  [44, 1, true], [78, 0.68, false], [110, 1.08, true], [146, 0.82, false], [190, 0.9, true], [228, 0.72, false],
+];
+
+// The moment a leaf changes: a flash, a ring that runs outward, and a handful of leaflets and light thrown off the blade.
+// It sits on the middle of the blade, and everything in it starts at --spark (see .gh-spark in motion.css). `glow` names the flash's gradient (SparkGlow).
+export function LeafSpark({ leaf, size, at, glow }: { leaf: Leaf; size: number; at: string; glow: string }) {
+  const radians = (leaf.angle * Math.PI) / 180;
+  const [x, y] = [r(leaf.x + Math.cos(radians) * size * 0.5), r(leaf.y + Math.sin(radians) * size * 0.5)];
+  const mote = r(size * 0.09);
+  return (
+    <g className="gh-spark" transform={`translate(${x} ${y})`} style={{ "--spark": at } as CSSProperties} aria-hidden="true">
+      <circle className="gh-spark-flash" r={r(size * 0.75)} fill={`url(#${glow})`} />
+      <circle className="gh-spark-ring" r={r(size * 0.55)} />
+      {MOTES.map(([angle, far, leaflet], index) => (
+        <g key={index} style={{ "--a": `${angle}deg`, "--far": `${r(size * far)}px`, "--spin": `${(index % 2 ? 1 : -1) * (90 + index * 14)}deg` } as CSSProperties}>
+          {leaflet
+            ? <path className="gh-spark-leaflet" d={`M${-mote} 0C${r(-mote * 0.4)} ${r(-mote * 0.75)} ${r(mote * 0.4)} ${r(-mote * 0.75)} ${mote} 0C${r(mote * 0.4)} ${r(mote * 0.75)} ${r(-mote * 0.4)} ${r(mote * 0.75)} ${-mote} 0Z`} />
+            : <circle className="gh-spark-speck" r={r(Math.max(1.5, mote * 0.38))} />}
+        </g>
+      ))}
+    </g>
+  );
+}
+
+// The soft light a spark's flash is painted with, one per drawing.
+export function SparkGlow({ id }: { id: string }) {
+  return (
+    <radialGradient id={id}>
+      <stop offset="0" stopColor="#F4FBD9" stopOpacity="0.9" />
+      <stop offset="0.45" stopColor="#D9F0A3" stopOpacity="0.35" />
+      <stop offset="1" stopColor="#D9F0A3" stopOpacity="0" />
+    </radialGradient>
+  );
+}

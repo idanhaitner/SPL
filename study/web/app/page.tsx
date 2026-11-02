@@ -10,7 +10,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { TryQuestion } from "@/components/home/TryQuestion";
 import { loadCourse } from "@/lib/course";
 import { highlight } from "@/lib/highlight";
-import { courseNav } from "@/lib/nav";
+import { courseNav, stemParts } from "@/lib/nav";
 import { PARTS } from "@/lib/parts";
 import type { Block } from "@/lib/types";
 
@@ -22,7 +22,6 @@ int main() {
     foo(a);
 }`;
 
-const STEM_LABELS = ["Memory", "Concurrency", "Communication", "Databases"];
 const HEADLINE = ["Start", "from", "a", "seed.", "Grow", "a", "whole", "server."];
 
 function countProblems(blocks: Block[], kind: string): number {
@@ -47,7 +46,7 @@ export default async function HomePage() {
   const practiceCount = chapters.reduce((sum, chapter) => sum + chapter.stepIds.length, 0);
   const examCount = course.topics.reduce((sum, topic) => sum + countProblems(topic.blocks, "exam"), 0);
   const questionChapter = byId.get("memory-model");
-  const partStarts = parts.map((part, index) => ({ label: STEM_LABELS[index], num: part.chapters[0].num }));
+  const partStarts = stemParts(nav);
   const questionCode = (await highlight(QUESTION_CODE, "cpp")).replace(' tabindex="0"', "");
 
   return (

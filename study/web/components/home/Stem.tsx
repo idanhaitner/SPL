@@ -23,7 +23,8 @@ function Crown({ size, finished }: { size: number; finished: boolean }) {
 
 // The stem itself: a tapered shape, revealed through a mask so it can still grow along its length.
 // `alive` is how far the plant has grown so far; past it, a dotted line marks where it will climb.
-export function Stem({ id, curves, root, tip, alive, sapTo, tipSize, finished = false }: { id: string; curves: StemCurves; root: number; tip: number; alive?: number; sapTo?: number; tipSize: number; finished?: boolean }) {
+// While it regrows, `front` is where its growing end is headed (a light rides there), and `surgeTo` is the share of the stem a burst of sap climbs first.
+export function Stem({ id, curves, root, tip, alive, sapTo, surgeTo, front, tipSize, finished = false }: { id: string; curves: StemCurves; root: number; tip: number; alive?: number; sapTo?: number; surgeTo?: number; front?: number; tipSize: number; finished?: boolean }) {
   const spine = curvePath(curves);
   const body = taperedPath(curves, root, tip);
   const last = stemTip(curves);
@@ -53,6 +54,18 @@ export function Stem({ id, curves, root, tip, alive, sapTo, tipSize, finished = 
         </g>
       </g>
       {sapTo !== undefined && <path className="gh-sap" d={spine} pathLength={1} style={{ "--to": sapTo } as React.CSSProperties} />}
+      {surgeTo !== undefined && (
+        <g className="gh-surge" style={{ "--to": surgeTo } as React.CSSProperties}>
+          <path className="gh-surge-glow" d={spine} pathLength={1} />
+          <path className="gh-surge-core" d={spine} pathLength={1} />
+        </g>
+      )}
+      {front !== undefined && (
+        <g className="gh-front" style={{ strokeDashoffset: -front }}>
+          <path className="gh-front-glow" d={spine} />
+          <path className="gh-front-core" d={spine} />
+        </g>
+      )}
       <g className="gh-stem-tip" transform={`translate(${last.x} ${last.y}) rotate(${last.angle})`}>
         <g className="gh-stem-tip-bud"><Crown size={tipSize * 1.5} finished={finished} /></g>
       </g>
