@@ -4,16 +4,22 @@ chapter: run-time-environment
 order: 1
 ---
 
-The compiler can check a call to a function as long as it knows the function's name and signature, which are its return type and the types of its parameters. A declaration gives exactly that, and it ends in a semicolon. A definition also gives the body, in braces.
+Fill in the bodies of `minutesToSeconds` and `totalSeconds`.
 
-In the starter, `minutesToSeconds` is declared on the first line and defined at the bottom. Because of that first line, `totalSeconds` can call it, even though its body comes later in the file.
+**What to write**
 
-Write the two bodies. Keep the declaration and every first line as they are.
+- `int minutesToSeconds(int minutes)`: return the number of seconds in `minutes` minutes. One minute is 60 seconds.
+- `int totalSeconds(int minutes, int seconds)`: return the whole time in seconds. It must call `minutesToSeconds`.
 
-- `minutesToSeconds(minutes)` returns how many seconds are in that many minutes. One minute is 60 seconds.
-- `totalSeconds(minutes, seconds)` returns the whole time in seconds. It must call `minutesToSeconds` to do part of the work.
+**Rules**
 
-Each `return 0;` in the starter is only there so the code compiles. Replace them.
+- Keep the declaration on the first line, and the first line of each function, as they are.
+- Replace each `return 0;`. They are only there so the code compiles.
+
+**Good to know**
+
+- A declaration gives a function's name, return type, and parameter types, and ends with `;`. A definition also gives the body, in braces.
+- The declaration on the first line is what lets `totalSeconds` call `minutesToSeconds`, even though its body comes later in the file.
 
 :::example
 **Input:** `minutesToSeconds(2)`
@@ -42,5 +48,3 @@ If the build says a function is redefined, the file has two bodies for it. The O
 :::case name="total adds the minutes"
 Look at what `totalSeconds` does with `minutes`. It has to become seconds before it can be added to `seconds`.
 :::
-
-You are done when Submit shows every test passing.

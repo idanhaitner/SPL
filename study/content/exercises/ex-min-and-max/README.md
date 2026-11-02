@@ -4,11 +4,19 @@ chapter: pointers
 order: 2
 ---
 
-A function can return only one value. When it has two answers, it can write them into the caller's variables instead. A reference parameter makes that possible: it is another name for the caller's variable, so writing to the parameter writes to that variable.
+Write `minAndMax`, which hands back two answers through reference parameters.
 
-Write `minAndMax(a, b, c, smallest, largest)`. The three numbers `a`, `b`, and `c` only get read, so they are passed by value. After the call, the caller's `smallest` must hold the smallest of the three, and the caller's `largest` must hold the largest of the three. Whatever those two variables held before the call must not affect the answer.
+**What to write**
 
-You are done when Submit shows every test passing.
+- `void minAndMax(int a, int b, int c, int& smallest, int& largest)`: after the call, the caller's `smallest` holds the smallest of `a`, `b`, and `c`, and the caller's `largest` holds the largest.
+
+**Rules**
+
+- Whatever `smallest` and `largest` held before the call must not affect the answer.
+
+**Good to know**
+
+- A function returns only one value. A reference parameter is another name for the caller's variable, so writing to it writes to that variable.
 
 :::example
 **Input:** `int low = 0; int high = 0; minAndMax(4, 9, 2, low, high);`

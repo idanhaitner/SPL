@@ -4,18 +4,19 @@ chapter: classes-and-objects
 order: 1
 ---
 
-A class bundles data with the functions that work on it. Here the data is an account's id, its owner's name, and its balance.
+Finish the class `Account`, which holds an account's id, its owner's name, and its balance.
 
-Finish the class `Account`.
+**What to write**
 
-- The constructor takes an id and an owner's name. A new account has a balance of 0.
-- The id can never change, so store it in a private field of type `const int`.
-- `id()`, `owner()`, and `balance()` read those values. They are `const` member functions, which means they promise not to change the object.
-- `deposit(amount)` adds `amount` to the balance.
+- Two private fields: the id, of type `const int`, and the balance. The `_owner` field is already there.
+- `Account(int id, const std::string& owner)`: give every field its first value in the initializer list. The balance starts at 0.
+- `int id() const` and `int balance() const`: return those values. `owner()` already returns `_owner`.
+- `void deposit(int amount)`: add `amount` to the balance.
 
-The starter already has the `_owner` field. You add the fields for the id and the balance. Give every field its first value in the initializer list, the part after a colon that comes before the constructor's body.
+**Good to know**
 
-You are done when Submit shows every test passing.
+- The initializer list is the part after a colon, before the constructor's body: `Account(...) : _a(1), _b(2) { }`.
+- A `const` member function, like `id() const`, promises not to change the object.
 
 :::example
 **Input:** `Account a(7, "Noa"); a.deposit(50); a.deposit(20);`

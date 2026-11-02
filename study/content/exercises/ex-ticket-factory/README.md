@@ -4,17 +4,19 @@ chapter: classes-and-objects
 order: 3
 ---
 
-Sometimes a constructor is not enough. A ticket for a seat that does not exist should never be made at all, and a constructor has no way to hand back `nullptr`. The factory pattern solves this. The constructor becomes private, so nobody outside the class can call it, and a `static` member function makes each object on the heap and returns its address. A `static` member function belongs to the class rather than to one object, so you call it as `Ticket::create(...)`.
+Turn `Ticket` into a factory: only `Ticket::create` can make tickets, and it refuses seats below 1.
 
-Change the class `Ticket` to follow this pattern.
+**What to write**
 
 - Make the constructor private, and have it store the seat number in a private field.
-- `create(seat)` makes a new `Ticket` on the heap and returns its address. Seat numbers start at 1, so for a seat below 1 it makes nothing and returns `nullptr`.
-- `seat()` gives the ticket's seat number.
+- `static Ticket* create(int seat)`: if `seat` is below 1, make nothing and return `nullptr`. Otherwise make a new `Ticket` on the heap and return its address.
+- `int seat() const`: return the ticket's seat number.
 
-Whoever calls `create` becomes responsible for calling `delete` on the ticket.
+**Good to know**
 
-You are done when Submit shows every test passing.
+- A constructor cannot hand back `nullptr`, so a factory function decides whether to make the object at all.
+- A `static` member function belongs to the class rather than to one object, so you call it as `Ticket::create(...)`.
+- Whoever calls `create` is responsible for calling `delete` on the ticket.
 
 :::example
 **Input:** `Ticket* t = Ticket::create(12);`

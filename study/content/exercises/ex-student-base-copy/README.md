@@ -4,17 +4,23 @@ chapter: inheritance
 order: 2
 ---
 
-A `Student` is a `Person`, so a `Student` object starts with a `Person` part: an id and a name. `Person` is already written. Its empty constructor makes a person with id 0 named `nobody`. The `Student` part adds a number of credits, in an `int` on the heap.
+Write `Student`, a `Person` with credits on the heap, with the rule of three, so that the `Person` part is never lost.
 
-Write `Student`, with the rule of three, so that the `Person` part is never lost.
+**What to write**
 
-- **`Student(id, name, credits)`** passes the id and the name to the `Person` constructor, and creates the `int` on the heap.
-- **`credits()` and `setCredits(credits)`** read and change the credits.
-- **The destructor** releases the `int`.
-- **The copy constructor** copies the `Person` part too, and gives the new student their own `int`.
-- **`a = b`** assigns the `Person` part too, and gives `a` the credits of `b`, in an `int` of its own. `a = a` must change nothing.
+- `Student(int id, const std::string& name, int credits)`: pass `id` and `name` to the `Person` constructor, and create the credits as an `int` on the heap.
+- `credits()` and `setCredits(credits)`: read and change the credits.
+- `~Student()`: release the `int`.
+- `Student(const Student& other)`: copy the `Person` part too, and give the new student their own `int`.
+- `Student& operator=(const Student& other)`: assign the `Person` part too, give this student `other`'s credits in an `int` of its own, and return `*this`.
 
-You are done when Submit shows every test passing.
+**Rules**
+
+- `a = a` must change nothing.
+
+**Good to know**
+
+- `Person` is already written. Its empty constructor makes a person with id 0 named `nobody`.
 
 :::example
 **Input:** `Student ringo(7, "ringo", 30); Student copy(ringo);`

@@ -4,19 +4,26 @@ chapter: inheritance
 order: 3
 ---
 
-A `Locker` owns one `Bag`, through a `Bag*`. The bag may really be a `Bag7` or a `Bag12`, and `Locker` does not know which. So `new Bag(*other._bag)` is not enough here: it always builds a plain `Bag`, and the copy forgets what kind of bag it was.
+Give every bag a `clone` method, and use it so that copying a `Locker` copies its bag as the right class.
 
-The fix is a virtual method `clone`, where each class makes a copy of itself on the heap and returns its address.
+**What to write**
 
-- **`Bag(items)`** stores how many items are in the bag. `items()` and `setItems(items)` read and change that number.
-- **`capacity()`** gives 5 for a plain `Bag`, 7 for a `Bag7`, and 12 for a `Bag12`.
-- **`clone()`** in each of the three classes returns a new object of that same class, a copy of this one.
-- **`Locker`'s copy constructor** gives the new locker its own bag, of the same real class.
-- **`Locker`'s assignment operator** releases the bag the locker held, and takes its own copy of the other's bag. `a = a` must change nothing.
+- `Bag(int items)`: store the number of items.
+- `int items() const` and `void setItems(int items)`: read and change that number.
+- `capacity()`: return 5 in `Bag`, 7 in `Bag7`, and 12 in `Bag12`.
+- `clone()`, in all three classes: make a new object of that same class on the heap, a copy of this one, and return its address.
+- `Locker(const Locker& other)`: give the new locker its own copy of `other`'s bag, of the same real class.
+- `Locker& operator=(const Locker& other)`: delete the bag this locker holds, take a copy of `other`'s bag, and return `*this`.
 
-The rest of `Locker` is already written: its constructor takes ownership of the bag it receives, and its destructor deletes it.
+**Rules**
 
-You are done when Submit shows every test passing.
+- `a = a` must change nothing.
+- The rest of `Locker` is already written. Its constructor takes ownership of the bag it gets, and its destructor deletes it.
+
+**Good to know**
+
+- A `Locker`'s `Bag*` may really point at a `Bag7` or a `Bag12`.
+- `new Bag(*other._bag)` always builds a plain `Bag`, so the copy would forget its real class. A virtual `clone` builds the right one.
 
 :::example
 **Input:** `Bag* original = new Bag7(3); Bag* copy = original->clone();`

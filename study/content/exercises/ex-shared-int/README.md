@@ -4,17 +4,24 @@ chapter: rule-of-five
 order: 2
 ---
 
-`SharedInt` is a small smart pointer: an object that shares one `int` on the heap with its copies, and deletes it when the last copy goes away. Next to the `int`, on the heap too, sits a counter of how many `SharedInt`s currently share it. The chapter builds the same thing as `smart_ptr`.
+Write `SharedInt`, a small smart pointer. Copies share one `int` on the heap, and the last copy to go deletes it.
 
-Write the class. It has no move members: copying only adds 1 to a counter, so a copy is already cheap.
+**What to write**
 
-- **`SharedInt(value)`** creates a new `int` and a new counter that starts at 1.
-- **The copy constructor** shares the other's `int` and counter, and adds 1 to the counter.
-- **The destructor** takes 1 from the counter. If it reaches 0, it deletes both the `int` and the counter.
-- **`a = b`** first makes `a` leave what it shared, the same way the destructor does, and then joins `b`. `a = a` must change nothing, and `a = b = c` must work.
-- **`value()`, `setValue(value)`, and `owners()`** read the `int`, change it, and read the counter.
+- `SharedInt(int value)`: create a new `int` holding `value`, and a new counter on the heap that starts at 1.
+- `SharedInt(const SharedInt& other)`: share `other`'s `int` and counter, and add 1 to the counter.
+- `~SharedInt()`: take 1 from the counter. If it reaches 0, delete both the `int` and the counter.
+- `SharedInt& operator=(const SharedInt& other)`: first leave what this object shares, the same way the destructor does. Then share `other`'s `int` and counter, add 1 to that counter, and return `*this`.
+- `value()`, `setValue(value)`, and `owners()`: read the `int`, change it, and read the counter.
 
-You are done when Submit shows every test passing.
+**Rules**
+
+- `a = a` must change nothing, and `a = b = c` must work.
+- Write no move members. A copy only adds 1 to a counter, so it is already cheap.
+
+**Good to know**
+
+- The chapter builds the same thing as `smart_ptr`.
 
 :::example
 **Input:** `SharedInt a(1); SharedInt b(2); SharedInt c = a; a = b;`

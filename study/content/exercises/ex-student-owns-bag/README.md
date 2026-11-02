@@ -4,17 +4,23 @@ chapter: rule-of-three
 order: 2
 ---
 
-A `Student` has a name and a `Bag` on the heap, and it is responsible for that bag. `Bag` is already written. Its constructors add 1 to the global variable `bagsAlive` and its destructor takes 1 away, so the tests can count how many bags exist right now. A leak shows up as too many bags, and sharing as too few.
+Write `Student`, which has a name and owns a `Bag` on the heap, with the rule of three.
 
-Write the `Student` class.
+**What to write**
 
-- **`Student(name, capacity)`** stores the name and creates a new `Bag` with that capacity.
-- **`name()`, `bagCapacity()`, and `setBagCapacity(capacity)`** read the name, read the bag's capacity, and change it.
-- **The destructor** deletes the bag.
-- **The copy constructor** gives the new student a bag of their own, which is a copy of the other's.
-- **`a = b`** releases the bag `a` held, and gives `a` a copy of `b`'s bag and `b`'s name. `a = a` must change nothing, and `a = b = c` must work.
+- `Student(const std::string& name, int capacity)`: store the name, and create a new `Bag` with that capacity.
+- `name()`, `bagCapacity()`, and `setBagCapacity(capacity)`: read the name, read the bag's capacity, and change it.
+- `~Student()`: delete the bag.
+- `Student(const Student& other)`: give the new student a bag of their own, a copy of `other`'s.
+- `Student& operator=(const Student& other)`: release the bag this student held, take a copy of `other`'s bag and `other`'s name, and return `*this`.
 
-You are done when Submit shows every test passing.
+**Rules**
+
+- `a = a` must change nothing, and `a = b = c` must work.
+
+**Good to know**
+
+- `Bag` is already written. It counts the bags alive in the global `bagsAlive`, so a leak shows up as too many bags, and sharing as too few.
 
 :::example
 **Input:** `Student ringo("ringo", 7); Student jango("jango", 5); ringo = jango;`

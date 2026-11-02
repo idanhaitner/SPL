@@ -4,11 +4,15 @@ chapter: pointers
 order: 3
 ---
 
-A function that returns a plain value hands back a copy. A function that returns a reference hands back another name for a variable that already exists, so the caller can write through it.
+Write `larger`, which returns a reference to the larger of its two arguments.
 
-Write `larger(a, b)`. It returns a reference to whichever parameter holds the larger value. If they hold the same value, it returns `a`. The call can then stand on the left of an `=`, and that assignment changes the caller's variable.
+**What to write**
 
-You are done when Submit shows every test passing.
+- `int& larger(int& a, int& b)`: return a reference to whichever of `a` and `b` holds the larger value. If they are equal, return `a`.
+
+**Good to know**
+
+- A reference is another name for a variable that already exists. So `larger(x, y) = 0;` sets the caller's `x` or `y` itself.
 
 :::example
 **Input:** `int x = 3; int y = 8; larger(x, y) = 0;`

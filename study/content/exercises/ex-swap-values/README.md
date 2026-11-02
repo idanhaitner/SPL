@@ -4,11 +4,16 @@ chapter: pointers
 order: 1
 ---
 
-A function gets its own copies of the values you pass it, so changing a parameter does not change the caller's variable. A pointer gets around that: if `p` holds the address of `x`, then writing to `*p` changes `x` itself.
+Write `swapValues`, which trades the values of two variables through pointers.
 
-Write `swapValues(a, b)`. Both parameters are pointers to `int`. After the call, the two variables they point at must have traded values.
+**What to write**
 
-You are done when Submit shows every test passing.
+- `void swapValues(int* a, int* b)`: after the call, the two variables that `a` and `b` point at have traded values.
+
+**Good to know**
+
+- A function gets its own copies of the values you pass it, so changing a parameter does not change the caller's variable.
+- If `p` holds the address of `x`, then writing to `*p` changes `x` itself.
 
 :::example
 **Input:** `int x = 3; int y = 8; swapValues(&x, &y);`

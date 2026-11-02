@@ -4,19 +4,24 @@ chapter: rule-of-five
 order: 1
 ---
 
-`Buffer` owns an array of `int`s on the heap. Copying must make a second array, and moving must not: a move hands the same array to a new owner, and only the pointer changes hands.
+Write `Buffer`, which owns an array of `int`s on the heap. A copy makes a second array. A move hands the same array to a new owner.
 
-Write the five special members and the small methods.
+**What to write**
 
-- **`Buffer(size)`** allocates `size` cells, all 0. `size()`, `get(index)`, and `set(index, value)` work as you expect.
-- **`data()`** returns the address of the array, so the tests can see whether it changed hands.
-- **The destructor, copy constructor, and copy assignment** follow the rule of three.
-- **The move constructor** takes the other buffer's array, then leaves the other with a null pointer and a size of 0.
-- **The move-assignment operator** takes the other buffer's array too. The array this object held before must be released, either right away or by the other object later. The other buffer must not be left holding the array it gave away.
+- `Buffer(int size)`: allocate `size` ints, all 0.
+- `size()`, `get(index)`, and `set(index, value)`: read the size, read a cell, and change a cell.
+- `const int* data() const`: return the array's address. The tests use it to see whether the array changed hands.
+- `~Buffer()`: release the array.
+- `Buffer(const Buffer& other)`: allocate a new array with `other`'s values.
+- `Buffer& operator=(const Buffer& other)`: make this buffer an independent copy of `other`, and return `*this`.
+- `Buffer(Buffer&& other)`: take `other`'s array without making a new one. Then set `other`'s pointer to `nullptr` and its size to 0.
+- `Buffer& operator=(Buffer&& other)`: take `other`'s array too, and return `*this`.
 
-After a move, the source can still be destroyed, or given a new value.
+**Rules**
 
-You are done when Submit shows every test passing.
+- In move assignment, the array this buffer held before must still be released, either right away or later by `other`.
+- `other` must not keep the array it gave away.
+- After a move, the source can still be destroyed, or given a new value.
 
 :::example
 **Input:** `Buffer src(3); const int* before = src.data(); Buffer dest(std::move(src));`

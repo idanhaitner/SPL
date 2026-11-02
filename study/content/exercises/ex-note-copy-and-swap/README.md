@@ -4,18 +4,20 @@ chapter: rule-of-three
 order: 3
 ---
 
-A `Note` keeps its text in a character buffer on the heap. It ends with the character `'\0'`, as the chapter's `description_` does, so a buffer needs room for every character plus one more.
+Write `Note`, which keeps its text in a buffer on the heap, and write its assignment with copy and swap.
 
-Write the class, and write the assignment operator with **copy and swap**: copy first into a temporary object, then swap with it, and let the temporary's destructor release the old buffer.
+**What to write**
 
-- **`Note(text)`** allocates its own buffer and copies the characters into it. `std::strlen` counts the characters, and `std::strcpy` copies them.
-- **`text()`** returns the address of the buffer.
-- **The destructor** releases the buffer.
-- **The copy constructor** gives the new note its own buffer with the same text.
-- **`a.swap(b)`** makes the two notes trade buffers. No characters are copied, only the pointers change hands.
-- **`a = b`** gives `a` its own copy of `b`'s text, using the copy constructor, `swap`, and the destructor.
+- `Note(const char* text)`: allocate a buffer of your own, and copy the characters into it. `std::strlen` counts them, and `std::strcpy` copies them.
+- `const char* text() const`: return the buffer's address.
+- `~Note()`: release the buffer.
+- `Note(const Note& other)`: give the new note its own buffer with the same text.
+- `void swap(Note& other)`: trade buffers with `other`. Only the pointers change hands, no characters are copied.
+- `Note& operator=(const Note& other)`: copy and swap. Copy `other` into a temporary `Note`, swap with it, and return `*this`. The temporary's destructor then releases the old buffer.
 
-You are done when Submit shows every test passing.
+**Good to know**
+
+- The text ends with the character `'\0'`, so the buffer needs one more cell than `std::strlen` counts.
 
 :::example
 **Input:** `Note a("one"); Note b("two"); a.swap(b);`

@@ -4,17 +4,23 @@ chapter: memory-model
 order: 2
 ---
 
-A stack local dies when its function returns, but a heap block stays until someone calls `delete`. So one function can create a block, and a different function can release it later.
+Write two functions: one puts an `int` on the heap, and the other takes it back off.
 
-Write two functions.
+**What to write**
 
-- `makeBox(value)` allocates one `int` on the heap, holding `value`, and returns its address.
-- `openBox(box)` gets that address, releases the block, and returns the value that was inside.
+- `int* makeBox(int value)`: allocate one `int` on the heap holding `value`, and return its address.
+- `int openBox(int* box)`: read the value that `box` points at, release the block, and return that value.
 
-You have seen `new int(9)` and `delete`. There are two more pieces of syntax here.
+**Rules**
 
-- **`*box`** is the `int` that the pointer `box` points at. For example, `int n = *box;` copies that `int` into `n`.
-- **`nullptr`** is an address that points at nothing. The starter returns it from `makeBox` only so the code compiles. Replace it, and replace the `return 0;` too.
+- Replace the starter's `return nullptr;` and `return 0;`. They are only there so the code compiles.
+
+**Good to know**
+
+- `new int(9)` allocates one `int` holding 9, and gives back its address. `delete` releases it.
+- `*box` is the `int` that `box` points at. `int n = *box;` copies it into `n`.
+- `nullptr` is an address that points at nothing.
+- A heap block stays until someone calls `delete`, so one function can create it and another can release it.
 
 :::example
 **Input:** `int* box = makeBox(7); int value = openBox(box);`
@@ -37,5 +43,3 @@ A local `int` lives in the frame, not in the block, so a copy in a local is stil
 :::case name="openBox releases the block"
 Every `new` needs a matching `delete`. Without one, the block stays occupied after the last pointer to it is gone, which is a memory leak.
 :::
-
-You are done when Submit shows every test passing.

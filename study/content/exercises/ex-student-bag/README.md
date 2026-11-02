@@ -4,21 +4,24 @@ chapter: classes-and-objects
 order: 2
 ---
 
-A `Bag` on the heap stays there until someone calls `delete` on it. When an object holds the address of something it is responsible for, its destructor must release it. The destructor is the member function that runs when the object's life ends, and it is written `~Student()`.
+Finish `Student`, which owns one `Bag` on the heap and must release it.
 
-The class `Bag` is finished, so leave it as it is. It adds 1 to `bagsAlive` when a bag is made and takes 1 away when a bag is destroyed. The tests read that number to see whether your bags were released.
+**What to write**
 
-Finish the class `Student`.
+- A private field of type `Bag*`.
+- `Student(int bagSize)`: make a new `Bag` on the heap with that size.
+- `int bagSize() const`: return the size of the student's bag.
+- `void changeBag(int size)`: replace the bag with a new one of that size. The old bag must be released.
+- `~Student()`: release the bag.
 
-- Add a private field of type `Bag*`.
-- The constructor makes a new `Bag` on the heap with the given size.
-- `bagSize()` gives the size of the student's bag.
-- `changeBag(size)` replaces the student's bag with a new one of the given size. The old bag must not be left behind.
-- The destructor releases the student's bag.
+**Rules**
 
-The tests never copy a `Student`. Copying an object like this one needs more care, and that comes in the next chapter.
+- Leave `Bag` as it is. It counts the bags alive in `bagsAlive`, and the tests read that number to catch bags that were never released.
+- The tests never copy a `Student`. Copying comes in the next chapter.
 
-You are done when Submit shows every test passing.
+**Good to know**
+
+- The destructor `~Student()` runs when the object's life ends.
 
 :::example
 **Input:** `Student s(5); s.changeBag(9);`

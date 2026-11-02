@@ -4,18 +4,25 @@ chapter: rule-of-five
 order: 3
 ---
 
-The rule of zero says to hand a resource to a member that already manages it, and then write none of the five special members. Here that member is a `std::vector<char>`, which owns its own buffer: copying a vector copies the buffer, and moving a vector hands the buffer over.
+Finish `Image` by keeping its pixels in a `std::vector<char>`, and write none of the special members.
 
-Add a field `std::vector<char> _bytes` to `Image`, and fill in the methods. Do not write a destructor, a copy constructor, an assignment operator, or any move. The compiler's versions are already correct.
+**What to write**
 
-A few things you need from `std::vector`. In a member-initializer list, `_bytes(n)` gives the vector `n` cells, all 0. `_bytes[i]` reads or changes cell `i`, the same as with an array.
+- A private field `std::vector<char> _bytes`.
+- `Image(int width, int height)`: store both sizes, and give `_bytes` one cell per pixel, `width * height` cells in all.
+- `width()` and `height()`: return the sizes.
+- `void set(int x, int y, char value)` and `char get(int x, int y) const`: change and read pixel `(x, y)`, which is cell `y * width + x`.
+- `const char* pixels() const`: return `&_bytes[0]`, the address of the first cell. The tests use it to see whether the buffer changed hands.
 
-- **`Image(width, height)`** stores the two sizes and makes one cell for each pixel, `width * height` in total.
-- **`width()` and `height()`** read the sizes.
-- **`set(x, y, value)` and `get(x, y)`** change and read one pixel. The pixels are stored row after row, so pixel `(x, y)` is cell `y * width + x`.
-- **`pixels()`** returns the address of the first cell, `&_bytes[0]`, so the tests can see whether the buffer changed hands.
+**Rules**
 
-You are done when Submit shows every test passing.
+- Do not write a destructor, a copy constructor, an assignment operator, or any move. The compiler's versions are already correct.
+
+**Good to know**
+
+- A vector owns its own buffer. Copying a vector copies the buffer, and moving it hands the buffer over.
+- In the initializer list, `_bytes(n)` gives the vector `n` cells, all 0.
+- `_bytes[i]` reads or changes cell `i`, the same as with an array.
 
 :::example
 **Input:** `Image a(3, 2); a.set(2, 1, 9); Image b = a; b.set(2, 1, 4);`

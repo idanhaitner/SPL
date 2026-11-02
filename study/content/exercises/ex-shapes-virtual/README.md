@@ -4,16 +4,20 @@ chapter: inheritance
 order: 1
 ---
 
-`Rectangle` and `Square` are kinds of `Shape`. Code that holds a `Shape*` should get the area of the real object, whichever kind it is. The starter does not do that yet: nothing is marked `virtual`, so a call through a `Shape*` is fixed at compile time and reaches `Shape`.
+Make `area` work through a `Shape*`, so that each call reaches the real object's version.
 
-Fix the base class, and fill in the rest.
+**What to write**
 
-- **`Shape`** has no area of its own, so make `area` a pure virtual function, one with `= 0` and no body. That makes `Shape` an abstract class, which means no plain `Shape` object can be created.
-- **The destructor of `Shape`** must let `delete` through a `Shape*` reach the derived destructor.
-- **`Rectangle(width, height)` and `Square(side)`** store their sizes, and override `area`.
-- **`totalArea(shapes, count)`** gets an array of `count` pointers to `Shape`, and returns the sum of their areas.
+- In `Shape`: make `area` a pure virtual function, one with `= 0` and no body.
+- In `Shape`: change the destructor so that `delete` through a `Shape*` reaches the derived class's destructor.
+- `Rectangle(int width, int height)` and `Square(int side)`: store the sizes.
+- `area()` in `Rectangle` and `Square`: return the area, overriding `Shape`'s.
+- `int totalArea(Shape** shapes, int count)`: `shapes` is an array of `count` pointers to `Shape`. Return the sum of their areas.
 
-You are done when Submit shows every test passing.
+**Good to know**
+
+- Without `virtual`, a call through a `Shape*` is fixed at compile time and always reaches `Shape`'s version.
+- A class with a pure virtual function is abstract, so no plain `Shape` object can be made.
 
 :::example
 **Input:** `Rectangle r(2, 3); Square s(4); Shape* shapes[] = {&r, &s}; totalArea(shapes, 2);`

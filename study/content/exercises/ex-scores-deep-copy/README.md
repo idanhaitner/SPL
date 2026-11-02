@@ -4,17 +4,23 @@ chapter: rule-of-three
 order: 1
 ---
 
-`Scores` keeps a row of `int`s in an array on the heap. It holds a pointer to that array, so the copies the compiler writes for you would share one array between two objects.
+Write the class `Scores`. It keeps an array of `int`s on the heap, and every copy must get an array of its own.
 
-Write the whole class, with the rule of three: the destructor, the copy constructor, and the assignment operator.
+**What to write**
 
-- **`Scores(size)`** allocates an array of `size` cells, and sets every cell to 0.
-- **`size()`, `get(index)`, and `set(index, value)`** read the size, read a cell, and change a cell.
-- **The destructor** releases the array.
-- **The copy constructor** gives the new object an array of its own, with the same values.
-- **`a = b`** makes `a` an independent copy of `b`, even if the two had different sizes. `a = a` must leave `a` as it was, and `a = b = c` must work.
+- `Scores(int size)`: allocate an array of `size` ints, all set to 0.
+- `int size() const`: return the number of cells.
+- `int get(int index) const`: return the value in cell `index`.
+- `void set(int index, int value)`: put `value` in cell `index`.
+- `~Scores()`: release the array.
+- `Scores(const Scores& other)`: allocate a new array, and copy `other`'s values into it.
+- `Scores& operator=(const Scores& other)`: make this object an independent copy of `other`, and return `*this`.
 
-You are done when Submit shows every test passing.
+**Rules**
+
+- In `a = b`, the two objects may have different sizes.
+- `a = a` must leave `a` unchanged.
+- `a = b = c` must work.
 
 :::example
 **Input:** `Scores first(3); first.set(0, 90); Scores copy(first); copy.set(0, 11);`

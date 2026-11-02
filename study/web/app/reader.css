@@ -266,6 +266,13 @@ a.gh-btn { max-width: 100%; }
 .question-title { max-width: none; font: 800 1.375rem/1.2 var(--gh-display); letter-spacing: 0; outline: none; }
 .question-heading { max-width: none; font: 800 1.0625rem/1.3 var(--gh-display); letter-spacing: 0; }
 .question-section > * + * { margin-top: 12px; }
+.question-section :is(ul, ol) { padding-left: 1.3em; }
+.question-section ul { list-style: disc; }
+.question-section ol { list-style: decimal; }
+.question-section li + li { margin-top: 8px; }
+.question-section li::marker { color: var(--muted); }
+/* A bold line on its own, like "What to write", heads the list under it. */
+.question-section > p:has(> strong:only-child) { margin-top: 20px; }
 .question-example { padding: 14px 18px; border-radius: 18px; background: var(--code-plate); font-size: 1rem; line-height: 1.5; }
 .question-example > * + * { margin-top: 6px; }
 .code-label { font: 600 0.9375rem/1.35 var(--gh-body); }

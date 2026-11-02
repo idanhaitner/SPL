@@ -4,27 +4,32 @@ chapter: memory-model
 order: 3
 ---
 
-The compiler must know the size of every local in a stack frame before the program runs. So when a size is known only at run time, the data goes on the heap with `new int[n]`, and the frame holds only a pointer to it.
+Write `sumOfSquares(n)`, which adds up 1×1 + 2×2 + … + n×n using an array on the heap.
 
-Write `sumOfSquares(n)`. It does these steps, in this order.
+**What to write**
 
-1. Allocate an array of `n` integers on the heap.
-2. Fill it with the squares 1×1, 2×2, and so on, one in each cell, up to n×n.
+`int sumOfSquares(int n)` does these steps, in this order:
+
+1. Allocate an array of `n` ints on the heap, with `new int[n]`.
+2. Fill it with the squares 1×1, 2×2, and so on up to n×n, one in each cell.
 3. Add up the cells.
 4. Release the array, and return the sum.
 
-Two pieces of syntax are new here.
+**Rules**
 
-- **`cells[i]`** is cell number `i` of the array that `cells` points at. Numbering starts at 0, so an array of `n` cells runs from `cells[0]` to `cells[n - 1]`.
-- **A `for` loop** repeats its braces while its condition holds. This one writes 7 into every cell:
+- Replace the starter's `return 0;`. It is only there so the code compiles.
+
+**Good to know**
+
+- The size is known only when the program runs, so the array goes on the heap, and the stack frame holds only a pointer to it.
+- `cells[i]` is cell `i` of the array that `cells` points at. Numbering starts at 0, so `n` cells run from `cells[0]` to `cells[n - 1]`.
+- A `for` loop repeats its braces while its condition holds. This one writes 7 into every cell:
 
 ```cpp
 for (int i = 0; i < n; i = i + 1) {
     cells[i] = 7;
 }
 ```
-
-The `return 0;` in the starter is only there so the code compiles. Replace it.
 
 :::example
 **Input:** `sumOfSquares(3)`
@@ -57,5 +62,3 @@ If you got 5, your squares started at 0×0. Look at what goes into cell 0.
 :::case name="released with delete[]"
 `delete` is for one object from `new`, and `delete[]` is for an array from `new[]`. Using the wrong one is undefined behavior, and skipping it leaks the array.
 :::
-
-You are done when Submit shows every test passing.

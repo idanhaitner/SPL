@@ -4,13 +4,22 @@ chapter: run-time-environment
 order: 2
 ---
 
-`make` runs a recipe only when the target is missing or one of its dependencies is newer than it. Here you write that same decision as a function.
+Write the decision `make` takes for one target: must its recipe run?
 
-Every file gets a time, the moment it last changed, written as a number. A bigger number means later. A target that does not exist yet has the time 0.
+**What to write**
 
-Write `needsRebuild(targetTime, firstDependency, secondDependency)`. All three parameters are times. Return `1` if `make` must run the recipe, and `0` if the target is up to date.
+- `int needsRebuild(int targetTime, int firstDependency, int secondDependency)`: return `1` if the recipe must run, and `0` if the target is up to date.
 
-This needs one piece of C++ you have not met yet, the `if` statement. Here is one that has nothing to do with `make`:
+**Rules**
+
+- All three numbers are times, the moment a file last changed. A bigger number is later.
+- A target that does not exist yet has the time 0.
+- The recipe runs when the target is missing, or when either dependency is newer than the target.
+- The starter's `return 0;` is only there so the code compiles. Keep it if it fits your answer.
+
+**Good to know**
+
+The `if` statement runs its braces only when the condition holds. `>` means "greater than":
 
 ```cpp
 int isTooHot(int degrees) {
@@ -21,9 +30,7 @@ int isTooHot(int degrees) {
 }
 ```
 
-The lines inside the braces run only when the condition holds, and `>` means "greater than". A `return` ends the function straight away, so when `degrees` is 31, the `return 0;` never runs.
-
-The `return 0;` in the starter is only there so the code compiles. You may keep it if it fits your answer.
+A `return` ends the function straight away, so when `degrees` is 31, the `return 0;` never runs.
 
 :::example
 **Input:** `needsRebuild(50, 30, 70)`
@@ -48,5 +55,3 @@ A missing target has the time 0, and every real file has a time above 0. Try a m
 :::case name="same time is not newer"
 The rule says "newer". A dependency with exactly the same time as the target is not newer, so look at which comparison you used.
 :::
-
-You are done when Submit shows every test passing.
