@@ -333,7 +333,7 @@ export function CheckCard({
       </div>
       {graded && !hasAnswer && <p className="check-result">Choose an answer first.</p>}
       {graded && hasAnswer && correct && <p className="check-result is-yes"><Icon name="check" />Right.</p>}
-      {graded && hasAnswer && !correct && <p className="check-result is-no"><Icon name="x" />Not quite. Here\u2019s why, and you can try again.</p>}
+      {graded && hasAnswer && !correct && <p className="check-result is-no"><Icon name="x" />Not quite. Here&rsquo;s why, and you can try again.</p>}
       {graded && hasAnswer && <div className="check-why">{why}</div>}
     </form>
   );

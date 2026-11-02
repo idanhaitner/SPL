@@ -80,6 +80,9 @@
 .blank-pre { padding: 14px 18px; white-space: pre; font-size: 0.9375rem; line-height: 1.8; }
 .blank-pre code { white-space: pre !important; }
 .blank-select { max-width: 100%; min-height: 34px; margin-inline: 2px; padding: 2px 8px; border: 1.5px solid var(--edge); border-radius: 10px; background: var(--raised); color: var(--ink); font: 500 0.9375rem var(--gh-body); }
+/* A menu inside a sentence is taller than its line, so the lines it sits on are spaced to keep the menus from touching. */
+:is(p, li, blockquote):has(> .blank-select) { line-height: 2; }
+:is(p, li, blockquote) > .blank-select { margin-block: 6px; }
 .code-panel .blank-select { border-color: var(--code-gutter); background: var(--code-bar); color: var(--code-text); font-family: var(--gh-mono); }
 .math-display { max-width: 100%; margin-block: 16px; overflow-x: auto; direction: ltr; }
 .math-inline { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }

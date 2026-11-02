@@ -15,10 +15,34 @@ function hashId() {
   return decodeURIComponent(window.location.hash.replace(/^#/, ""));
 }
 
+// What a margin card can rise beside: the paragraph that introduces its idea, and the lists, code, tables and worked examples that follow it.
+const ALONGSIDE = /^(UL|OL|PRE|BLOCKQUOTE)$|code-panel|table-wrap|practice/;
+
+// A margin card floats from where it sits in the text, below the idea it explains. Lift it level with that idea, never over the card above it.
+function liftMarginCards(body: HTMLElement) {
+  const cards = [...body.querySelectorAll<HTMLElement>(":is(.part-panel, .chapter-lead) > :is(.formal, .card.check)")];
+  for (const card of cards) card.style.marginTop = "";
+  let floor = -Infinity;
+  for (const card of cards) {
+    if (getComputedStyle(card).float !== "right") continue;
+    let anchor: Element | null = null;
+    for (let sibling = card.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+      if (sibling.tagName === "P" && !sibling.classList.contains("part-group")) { anchor = sibling; break; }
+      if (!ALONGSIDE.test(sibling.tagName) && !ALONGSIDE.test(sibling.className)) break;
+      anchor = sibling;
+    }
+    const top = card.getBoundingClientRect().top;
+    const lift = anchor ? Math.max(0, Math.min(top - anchor.getBoundingClientRect().top, top - floor)) : 0;
+    if (lift > 0) card.style.marginTop = `${-lift}px`;
+    floor = card.getBoundingClientRect().bottom + 20;
+  }
+}
+
 export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, session, next }: { courseId: string; chapterId: string; stepIds: string[]; intro: ReactNode; parts: SectionPart[]; session: Hop | null; next: Hop | null }) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const menu = useRef<HTMLDetailsElement>(null);
+  const body = useRef<HTMLElement>(null);
   const progress = useProgress(courseId);
   const done = progress.sections?.[chapterId] ?? [];
 
@@ -42,6 +66,16 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
     window.addEventListener("hashchange", apply);
     return () => window.removeEventListener("hashchange", apply);
   }, [parts, stepIds, chapterId, router]);
+
+  // Text reflows when the page resizes, fonts load or a check opens its answer, so the cards are placed again each time.
+  // Moving a card never resizes the blocks watched here, so placing them cannot set the observer off again.
+  useEffect(() => {
+    const article = body.current;
+    if (!article) return;
+    const observer = new ResizeObserver(() => liftMarginCards(article));
+    for (const child of article.querySelectorAll(":is(.part-panel, .chapter-lead) > *")) observer.observe(child);
+    return () => observer.disconnect();
+  }, [index]);
 
   function show(target: number) {
     setIndex(target);
@@ -87,7 +121,7 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
           <div className="section-menu-list">{list}</div>
         </details>
       )}
-      <article className="reader-body">
+      <article className="reader-body" ref={body}>
         {index === 0 && intro && <div className="chapter-lead">{intro}</div>}
         <section className="part-panel" id="chapter-part">
           {current.group && current.group.title !== current.title && (
