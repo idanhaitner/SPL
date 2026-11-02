@@ -22,7 +22,7 @@ export function ChapterGate({ courseId, chapters, chapterId, children }: { cours
       </svg>
       <h2 id="locked-title">Chapter {chapter.num} is still a bud</h2>
       <p>
-        It opens when you have read all of chapter {blocker.num}, <Mixed text={blocker.title} />, and solved every one of its practice questions. Each chapter builds only on the ones before it, so the plant grows in order.
+        To unlock it, finish chapter {blocker.num}, <Mixed text={blocker.title} />: read every section and solve all of its practice questions.
       </p>
       <div className="locked-actions">
         <Link className="gh-btn" href={`/topics/${blocker.id}/`}>Go to chapter {blocker.num}<Icon name="arrow" /></Link>
