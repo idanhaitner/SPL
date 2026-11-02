@@ -171,8 +171,8 @@
   a.gh-row:hover .gh-row-mark { rotate: -10deg; scale: 1.18; }
   a.gh-row .gh-row-title { transition: translate 180ms var(--ease-out); }
   a.gh-row:hover .gh-row-title { translate: 3px 0; }
-  a.gh-bed-row:hover { background: rgb(242 247 238 / 0.09); }
-  a.gh-bed-row.is-here:hover { background: rgb(242 247 238 / 0.15); }
+  a.gh-bed-row:hover::before { background: rgb(242 247 238 / 0.09); }
+  a.gh-bed-row.is-here:hover::before { background: rgb(242 247 238 / 0.15); }
   a.gh-bed-row:hover .gh-leaf-body { scale: 1.16; }
   .gh-bed-title { transition: translate 180ms var(--ease-out); }
   a.gh-bed-row:hover .gh-bed-title { translate: 3px 0; }

@@ -368,14 +368,16 @@ a.gh-bed-row.is-locked .gh-bed-title { color: var(--canopy-ink-soft); }
 .gh-row-mark.is-locked ~ .gh-row-title { color: var(--muted); }
 .gh-bed-rows li { position: relative; }
 .gh-bed-rows li + li::before { content: ""; position: absolute; left: 112px; right: 16px; top: 0; height: 1px; background: var(--bed-line); }
-a.gh-bed-row { display: grid; grid-template-columns: 104px minmax(0, 1fr) 20px; align-items: center; column-gap: 8px; height: 72px; padding-right: 16px; border-radius: 16px; color: var(--canopy-ink); text-decoration: none; transition: background-color 140ms; }
+a.gh-bed-row { position: relative; isolation: isolate; display: grid; grid-template-columns: 104px minmax(0, 1fr) 20px; align-items: center; column-gap: 8px; height: 72px; padding-right: 16px; color: var(--canopy-ink); text-decoration: none; }
+/* A row's highlight starts just before its title and overhangs the rules between rows by 16px at each end, so it never covers the vine. */
+a.gh-bed-row::before { content: ""; position: absolute; z-index: -1; inset: 0 0 0 96px; border-radius: 16px; transition: background-color 140ms; }
 .gh-bed-vine { width: 104px; height: 72px; overflow: visible; }
 .gh-bed-stem { fill: none; stroke: var(--stem); stroke-width: 3; }
 .gh-bed-stem.is-grown { stroke: var(--stem); }
 .gh-bed-text { display: flex; align-items: center; justify-content: space-between; gap: 2px 24px; min-width: 0; }
 .gh-bed-title { font: 500 1.0625rem/1.25 var(--gh-body); }
 .gh-bed-note { flex: none; color: var(--canopy-ink-soft); font-size: 0.875rem; font-weight: 500; line-height: 1.25; font-variant-numeric: tabular-nums; }
-a.gh-bed-row.is-here { background: rgb(242 247 238 / 0.08); }
+a.gh-bed-row.is-here::before { background: rgb(242 247 238 / 0.08); }
 .gh-bed-row.is-here .gh-bed-title { font-weight: 600; }
 .gh-bed-row.is-here .gh-bed-note { color: var(--leaf); font-weight: 600; }
 .gh-bed-row .gh-icon { color: var(--leaf); }

@@ -31,9 +31,14 @@
 .stem-node.is-here path { fill: var(--ink); stroke: var(--ground); stroke-width: 2; paint-order: stroke; }
 .stem-node.is-ahead path { fill: var(--ground); stroke: var(--edge); stroke-width: 2; stroke-linejoin: round; }
 .section-menu { display: none; }
-/* A long section split into pages: its name sits over them, and they hang a step in from the stem. */
-.section-group { margin: 10px 0 2px 38px; color: var(--muted); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3; text-transform: uppercase; }
-.section-stem li.is-sub button, .section-menu-list li.is-sub button { min-height: 38px; padding-left: 0; font-size: 0.9063rem; }
+/* A long section split into pages: its name is a heading on a branch off the stem, and its pages hang a step in, each on a short twig. */
+.section-group { position: relative; margin: 18px 0 2px; padding-left: 38px; color: var(--ink); font: 800 1rem/1.25 var(--gh-display); }
+.section-stem li:first-child .section-group, .section-menu-list li:first-child .section-group { margin-top: 4px; }
+/* A list that opens with a heading starts its stem at that heading's branch. */
+.section-stem ol:has(> li:first-child > .section-group)::before, .section-menu-list ol:has(> li:first-child > .section-group)::before { top: 13px; }
+.section-group::before { content: ""; position: absolute; left: 12px; top: calc(50% - 1.5px); width: 18px; height: 3px; border-radius: 999px; background: var(--rule); }
+.section-stem li.is-sub button, .section-menu-list li.is-sub button { min-height: 38px; padding-left: 16px; font-size: 0.9063rem; }
+.section-stem li.is-sub button::before, .section-menu-list li.is-sub button::before { content: ""; position: absolute; left: 12px; top: calc(50% - 1px); width: 12px; height: 2px; border-radius: 999px; background: var(--rule); }
 .section-stem li.is-sub .stem-node, .section-menu-list li.is-sub .stem-node { transform: scale(0.78); }
 .part-group { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 8px; color: var(--muted); font-size: 0.9375rem; font-weight: 600; }
 .part-group span { color: var(--muted); font-weight: 400; }
