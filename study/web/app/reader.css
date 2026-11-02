@@ -271,7 +271,7 @@ a.gh-btn { max-width: 100%; }
 .question-section ol { list-style: decimal; }
 .question-section li + li { margin-top: 8px; }
 .question-section li::marker { color: var(--muted); }
-/* A bold line on its own, like "What to write", heads the list under it. */
+/* A bold line on its own, like "Requirements", heads the list under it. */
 .question-section > p:has(> strong:only-child) { margin-top: 20px; }
 .question-example { padding: 14px 18px; border-radius: 18px; background: var(--code-plate); font-size: 1rem; line-height: 1.5; }
 .question-example > * + * { margin-top: 6px; }
