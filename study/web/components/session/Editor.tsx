@@ -1,5 +1,6 @@
 "use client";
 
+import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { cpp } from "@codemirror/lang-cpp";
 import { setDiagnostics, type Diagnostic as CmDiagnostic } from "@codemirror/lint";
 import { EditorState, StateEffect, StateField, type Extension } from "@codemirror/state";
@@ -111,9 +112,11 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
       drawSelection(),
       indentOnInput(),
       bracketMatching(),
+      // Typing { adds the matching }, and Enter between them opens an indented line with } below it.
+      closeBrackets(),
       highlightActiveLine(),
       EditorView.lineWrapping,
-      keymap.of([{ key: "Shift-Alt-f", run: format }, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+      keymap.of([{ key: "Shift-Alt-f", run: format }, ...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
       cpp(),
       // The same width as CODE_STYLE, so a new line lines up with the formatted code around it.
       indentUnit.of("    "),
