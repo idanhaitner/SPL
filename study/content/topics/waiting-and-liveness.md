@@ -487,7 +487,7 @@ public void swap(Even other) {
 }
 ```
 
-T1 calls `e1.swap(e2)` and locks `e1`. At the same moment, T2 calls `e2.swap(e1)` and locks `e2`. Now T1 waits for `e2`, which T2 holds, and T2 waits for `e1`, which T1 holds. Forever.
+Take two `Even` objects, `e1` and `e2`. T1 calls `e1.swap(e2)` and locks `e1`. At the same moment, T2 calls `e2.swap(e1)` and locks `e2`. Now T1 waits for `e2`, which T2 holds, and T2 waits for `e1`, which T1 holds. Forever.
 
 Four ways out:
 

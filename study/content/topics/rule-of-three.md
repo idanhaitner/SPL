@@ -42,6 +42,7 @@ The copy gets the **same address**, so both students now point at one `Bag`. Her
 void F(Student s) { ... }
 
 {
+    University univ(...);
     Student ringo(7, "ringo", new Bag(7), univ);
     F(ringo);                     // s is a copy of ringo
     cout << ringo.getBag();       // ?
@@ -181,7 +182,17 @@ Image& Image::operator=(const Image& other) {
 }
 ```
 
-Before the call, `avi` and `benni` each hold their own buffer.
+The slides follow it on two images, `avi` and `benni`, each built on a pixel buffer of its own.
+
+```cpp
+char* bytesAvi = ...;
+char* bytesBenni = ...;
+Image avi(1080, 1920, bytesAvi);
+Image benni(1080, 1920, bytesBenni);
+avi = benni;             // calls avi.operator=(benni)
+```
+
+Before the call, `avi` and `benni` each hold their own buffer. Inside `operator=`, `this` is `avi` and `other` is `benni`.
 
 - **Step 1:** `temp` is created as a third image, a deep copy of `benni`, with a new buffer.
 - **Step 2:** `swap` exchanges the contents of `avi` and `temp`, so `avi` now holds the new buffer and `temp` holds `avi`'s old one.
@@ -258,18 +269,37 @@ b = a;         // assignment, both objects already exist
 
 These three methods define the meaning of a class in the basic scenarios of a programming language: removal from memory, passing by value, and assignment.
 
-**Operator overloading.** Just as you can define the assignment operator, every class can define the meaning of the standard operators, such as `+`, `-`, `*`, `/`, `<`, `>`, `==`, `+=`, `[]`, and `<<`. This is an elegant and recommended way to design classes, but only assignment belongs to the rule of three, because it defines the basic semantics of the class.
+**Operator overloading.** Just as you can define the assignment operator, every class can define what the standard operators mean for its objects, such as `+`, `-`, `*`, `/`, `<`, `>`, `==`, `+=`, `[]`, and `<<`. This is an elegant and recommended way to design classes. Of all these operators, only assignment belongs to the rule of three, because only assignment replaces the whole contents of an object with a copy of another one.
+
+The slides show one more operator on `Image`: `operator()`, the call operator. Once a class defines it, you can write an object followed by parentheses, as if the object were a function.
+
+```cpp
+class Image {
+    ...
+    // the color of the pixel at column x, row y
+    char operator()(int x, int y) const {
+        return _bytes[y * _width + x];
+    }
+};
+
+Image avi(1080, 1920, bytesAvi);
+char c = avi(0, 0);      // calls avi.operator()(0, 0): the color of the first pixel
+```
+
+- **`avi(0, 0)` is not a function call.** `avi` is an object, and the compiler turns the line into `avi.operator()(0, 0)`.
+- **Why `y * _width + x`:** `_bytes` stores the pixels row after row, and each row holds `_width` pixels. So row `y` starts at index `y * _width`, and the pixel in column `x` is `x` places further along.
+- **The `const` at the end** promises that reading a pixel does not change the image.
+
+:::trap
+- **The mistake:** thinking that once a class overloads an operator, such as `operator()` above, it must also write the destructor, the copy constructor, and the assignment operator.
+- **Why that is wrong:** the rule of three is about who releases the memory an object owns. `operator()` only reads one pixel. It allocates nothing, copies nothing, and releases nothing, so it adds no work for the other three.
+- **What really decides it:** `Image` needs the rule of three because it owns a buffer through a raw pointer, `char* _bytes`, not because it has operators. A class that owns no memory through a raw pointer needs none of the three, however many operators it overloads.
+:::
 
 :::trap
 - **The wrong test:** `if (this == other)` compares a pointer (`this`) with an object (`other`), so it does not compile.
 - **The right test:** `if (this == &other)` compares two addresses.
 - **With copy-and-swap you need no test at all:** it releases the old buffer only after the copy exists, and the copy is always a separate object.
-:::
-
-:::trap
-- **The question:** does every overloaded operator join the rule of three? For example, an `Image` may overload `operator()` so that `avi(x, y)` returns the pixel `_bytes[y * _width + x]`.
-- **Why it does not matter here:** `operator()` is not one of the three special members, and an operator that only reads a value creates no ownership problem.
-- **What does matter:** the rule of three is required because the class owns memory through a raw pointer.
 :::
 
 ## Practice

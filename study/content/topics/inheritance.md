@@ -644,6 +644,7 @@ Which of these hold?
 - **`MY_APPS_REPO`** stores both kinds of application in one array.
 - **Clients must not create a repository with `new`** directly.
 - **`Clone` and `test_apps_repo` are already correct,** and the question looks at the call `repo->test_apps_repo(test->Clone())`.
+- **`repo` and `test`** are both `MY_APPS_REPO*` pointers to valid repositories. `test_apps_repo` takes its `MY_APPS_REPO` argument by value.
 
 :::check id=exam-19a-q1-q1
 Which types can hold both kinds in one collection?

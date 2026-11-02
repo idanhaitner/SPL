@@ -72,6 +72,7 @@ void convert(Image&& img);        // binds only a temporary, may steal
 The deep copy from [The rule of three](topic:rule-of-three) is correct, but wasteful when the source is a temporary.
 
 ```cpp
+University univ(...);
 Student ringo(Student(1, "yosi", new Bag(7), univ));
 ```
 
@@ -319,16 +320,16 @@ Image myPicture() {
 - **What to write:** `return pic;`. The compiler can then build `pic` directly in the caller's return slot, which costs nothing at all.
 
 :::problem id=worked-move-image title="Moving an image" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=worked solution_origin=source
-The object `avi` owns a pixel buffer. What do `benny._bytes` and `avi._bytes` hold after the move, and what does `avi`'s destructor `~Image` release?
+The object `avi` owns a pixel buffer. What do `benni._bytes` and `avi._bytes` hold after the move, and what does `avi`'s destructor `~Image` release?
 
 ```cpp
 Image avi(1080, 1920, pixels);
-Image benny(std::move(avi));
+Image benni(std::move(avi));
 
 ```
 
 :::solution
-The move constructor copies the pointer into `benny` and then sets `avi._bytes` to `nullptr`.
+The move constructor copies the pointer into `benni` and then sets `avi._bytes` to `nullptr`.
 
 ```cpp
 Image::Image(Image&& other)
@@ -340,9 +341,9 @@ Image::Image(Image&& other)
 
 ```
 
-- **`benny._bytes`** now holds the address of the pixel buffer, so `benny` owns the pixels.
+- **`benni._bytes`** now holds the address of the pixel buffer, so `benni` owns the pixels.
 - **`avi._bytes`** is `nullptr`, so `avi`'s destructor runs `delete[]` on a null pointer and releases nothing.
-- **At the end of the scope**, both objects are destroyed, and the buffer is released exactly once, by `benny`.
+- **At the end of the scope**, both objects are destroyed, and the buffer is released exactly once, by `benni`.
 :::
 :::
 

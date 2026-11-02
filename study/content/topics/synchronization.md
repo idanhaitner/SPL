@@ -618,9 +618,10 @@ The guard unlocks automatically when it goes out of scope, including on return, 
 :::problem id=exam-15a-q1 title="Gears" source="materials/exams/15-a.pdf" kind=exam solution_origin=derived
 The question models a row of meshed gears.
 
-- **`Gear`** knows its center, its radius, and its left and right neighbors. `move` rotates this gear, and rotates both neighbors in the opposite direction.
+- **`Gear`** knows its center, its radius, and its left and right neighbors. `move` rotates this gear, and rotates both neighbors in the opposite direction. `moveLeft` and `moveRight` rotate this gear and pass the turn on to the left or the right neighbor only.
 - **`SimpleGear`** stores the gear's angle in `_state`, and its `check` method validates the constructor's arguments.
 - **`Spinner`** is a thread that calls `move` on a gear.
+- **The simulation:** `main` builds three gears in a row, `gear1`, `gear2`, and `gear3`, links `gear2` to both of the others, and starts two `Spinner` threads on `gear2`, one clockwise and one counter-clockwise.
 - **The meaning of "correct":** the sequence of states must be one that some serial history of `move` calls could have produced.
 
 :::check id=exam-15a-q1-q1
@@ -642,7 +643,7 @@ Which descriptions of the unsynchronized class are right?
 
 - [x] Two calls to `move` on adjacent gears can apply one gear's angle twice, or lose it
 - [ ] Moving the `_state` updates inside `move`, `moveLeft`, and `moveRight` makes the class safe
-- [x] Thread A can be inside `g2.moveRight` while thread B writes `_state` between A's read and A's write
+- [x] Thread A can be inside `gear2.moveRight` while thread B writes `_state` between A's read and A's write
 - [ ] The class is safe once each gear writes only its own `_state`
 
 Without synchronization, two `move` calls on neighboring gears can interleave their reads and writes of the same `_state`, so a rotation is applied twice or lost. Moving the updates into other methods, or having each gear write only its own `_state`, does not help: the neighbor's `_state` is still updated by two threads at once.
