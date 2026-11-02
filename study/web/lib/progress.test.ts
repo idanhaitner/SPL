@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { chapterState, isDone, isRead, markRead, nextChapter, readProgress, resumeHref, type ChapterInfo } from "./progress";
+import { blockerOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, type ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, stepIds });
 
@@ -44,6 +44,33 @@ describe("progress", () => {
     expect(nextChapter(list, { solved: [], last: "b", read: ["a"] })?.id).toBe("b");
     expect(nextChapter(list, { solved: ["s"], last: "b", read: ["a", "b"] })?.id).toBe("c");
     expect(nextChapter(list, { solved: ["s"], read: ["a", "b", "c"] })).toBeNull();
+  });
+  it("opens a chapter only once the one before it is read and fully solved", () => {
+    const list = [ch("a"), ch("b", ["s"]), ch("c")];
+    expect(isUnlocked(list, "a", { solved: [] })).toBe(true);
+    expect(isUnlocked(list, "b", { solved: [] })).toBe(false);
+    expect(isUnlocked(list, "b", { solved: [], read: ["a"] })).toBe(true);
+    // Reading b is not enough while a question is unsolved.
+    expect(isUnlocked(list, "c", { solved: [], read: ["a", "b"] })).toBe(false);
+    expect(isUnlocked(list, "c", { solved: ["s"], read: ["a"] })).toBe(false);
+    expect(isUnlocked(list, "c", { solved: ["s"], read: ["a", "b"] })).toBe(true);
+    // No way around it: reading a later chapter does not open it.
+    expect(isUnlocked(list, "c", { solved: [], read: ["c"] })).toBe(false);
+    expect(blockerOf(list, "c", { solved: [], read: ["a", "b"] })?.id).toBe("b");
+  });
+  it("never sends the student to a locked chapter", () => {
+    const list = [ch("a"), ch("b"), ch("c")];
+    expect(nextChapter(list, { solved: [], last: "c" })?.id).toBe("a");
+    expect(nextChapter([ch("a", ["s"]), ...list.slice(1)], { solved: [], read: ["a"], last: "c" })?.id).toBe("a");
+  });
+  it("locks what has not opened, and grows to the last open chapter", () => {
+    const list = [ch("a"), ch("b"), ch("c"), ch("d")];
+    const states = courseStates(list, { solved: [], read: ["a"] });
+    expect(states).toEqual(["done", "here", "locked", "locked"]);
+    expect(lastOpen(states)).toBe(1);
+    expect(lastOpen(courseStates(list, { solved: [], read: ["a", "b", "c", "d"] }))).toBe(3);
+    // A later chapter read out of order stays locked behind the unfinished one.
+    expect(courseStates([ch("a", ["s"]), ch("b")], { solved: [], read: ["a", "b"] })).toEqual(["here", "locked"]);
   });
   it("names the four states", () => {
     const [a, b] = [ch("a"), ch("b", ["s"])];

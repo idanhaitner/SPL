@@ -50,6 +50,14 @@
 :root:not([data-grown]) .gh-hero .gh-leaf-halo { animation: gh-halo-in 900ms var(--gh-ease) calc(var(--d) + 200ms) backwards, gh-breathe 4.5s ease-in-out calc(var(--d) + 1100ms) infinite alternate; }
 :root:not([data-grown]) .gh-hero .gh-leaf-body { animation: gh-unfurl 680ms cubic-bezier(0.3, 1.45, 0.5, 1) var(--d) backwards, gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
 
+/* A chapter opened since the last visit: the stem regrows up to it (REGROW_MS in CourseStem),
+   each new leaf unfurls as the tip passes it (--sprout), and the growing tip opens last. */
+.is-regrowing .gh-stem-alive-line { transition: stroke-dasharray 1400ms cubic-bezier(0.333, 0.667, 0.667, 1); }
+.gh-hero .is-sprouting .gh-leaf-body { animation: gh-unfurl 680ms cubic-bezier(0.3, 1.45, 0.5, 1) var(--sprout) backwards, gh-sway 5.2s ease-in-out calc(var(--i) * -0.42s) infinite alternate; }
+.gh-hero .is-sprouting .gh-leaf-num { animation: gh-fade 240ms ease-out calc(var(--sprout) + 260ms) backwards; }
+.gh-hero .is-sprouting .gh-leaf-halo { animation: gh-halo-in 900ms var(--gh-ease) calc(var(--sprout) + 200ms) backwards, gh-breathe 4.5s ease-in-out calc(var(--sprout) + 1100ms) infinite alternate; }
+.is-regrowing .gh-stem-tip-bud { animation: gh-unfurl 640ms cubic-bezier(0.3, 1.4, 0.5, 1) 1300ms backwards; }
+
 /* The air stays alive: a slow breeze travels up the plant, and the leaf to open next breathes light.
    These pause when the hero is off screen (is-away, from useLeafBrush). */
 @keyframes gh-sway { from { rotate: -1.6deg; } to { rotate: 1.8deg; } }
@@ -136,7 +144,7 @@
   .gh-course .gh-head { animation: gh-bed-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
   .gh-bed-gap { transform-origin: top; animation: gh-bed-grow linear both; animation-timeline: view(); animation-range: entry 10% entry 90%; }
   .gh-bed-vine { view-timeline: --vine; }
-  .gh-bed-stem { animation: gh-draw linear both; animation-timeline: --vine; animation-range: entry 10% entry 90%; }
+  .gh-bed-stem:not(.is-ghost) { animation: gh-draw linear both; animation-timeline: --vine; animation-range: entry 10% entry 90%; }
   .gh-bed-vine .gh-leaf-body { animation: gh-unfurl linear both; animation-timeline: --vine; animation-range: entry 30% entry 100%; }
   .gh-bed-vine .gh-leaf-num { animation: gh-fade linear both; animation-timeline: --vine; animation-range: entry 70% entry 100%; }
 
@@ -157,9 +165,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .route-enter, .session-reading, .session-code, .results-body > * { animation: gh-arrive 100ms linear; }
-  .gh-stem-grown-line, .step-mini-bar i, .gh-leaf-body, .gh-leaf-brush, .gh-row-mark, a.gh-row .gh-row-title, .gh-btn .gh-icon { transition: none !important; }
+  .gh-stem-grown-line, .gh-stem-alive-line, .step-mini-bar i, .gh-leaf-body, .gh-leaf-brush, .gh-row-mark, a.gh-row .gh-row-title, .gh-btn .gh-icon { transition: none !important; }
   .gh-leaf-body, .gh-leaf-num, .gh-leaf-halo, .gh-tendril, .gh-part-label, .gh-stem-reveal, .gh-stem-lead, .gh-stem-tip-bud, .masthead-leaf-open, .masthead-leaf text, .gh-word > span, .gh-hero h1 em, .gh-lede, .gh-facts, .gh-hero-action, .gh-hero .gh-arch-1, .gh-hero .gh-arch-2, .home .gh-section, .home .gh-try, .gh-course .gh-head, .gh-bed-gap, .gh-bed-stem, .gh-sprig-stem, .gh-sprig-leaf, .choices .is-right .choice-mark, .choices .is-wrong { animation: none !important; }
   .gh-sap, .gh-burst, .gh-sun, .gh-air { display: none; }
+  .finder-panel { animation: none; }
+  .finder-button, .finder-button:hover, .finder-button:active { transform: none; transition: none; }
   .gh-leaf-link:hover .gh-leaf-body, a.gh-row:hover .gh-row-mark, a.gh-row:hover .gh-row-title, a.gh-bed-row:hover .gh-leaf-body, a.gh-bed-row:hover .gh-bed-title, a.gh-bed-row:hover .gh-icon, .gh-hero:has(.gh-hero-action .gh-btn:hover) .gh-leaf.is-here .gh-leaf-brush { scale: none; rotate: none; translate: none; }
   .gh-btn:hover .gh-icon, .gh-hero .gh-btn:hover, .gh-close .gh-btn:hover { transform: none; }
   .gh-btn:active, .gh-pill:active, .session-quiet:active, .gh-quiet:active, .question-toggle:active, .choices label:active, .gh-answer:active { transform: none; }

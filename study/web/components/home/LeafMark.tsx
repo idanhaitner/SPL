@@ -1,5 +1,5 @@
-// A small mark for lists of chapters and sections: a closed bud until opened, then a leaf.
-export function LeafMark({ state, className }: { state: "done" | "read" | "here" | "ahead"; className: string }) {
+// A small mark for lists of chapters and sections: a closed bud until opened, then a leaf. A locked chapter's bud is drawn dashed.
+export function LeafMark({ state, className }: { state: "done" | "read" | "here" | "ahead" | "locked"; className: string }) {
   return (
     <svg className={`${className} is-${state}`} viewBox="0 0 24 24" aria-hidden="true">
       {state === "done" || state === "read" ? (

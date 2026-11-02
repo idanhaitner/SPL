@@ -31,6 +31,12 @@
 .stem-node.is-here path { fill: var(--ink); stroke: var(--ground); stroke-width: 2; paint-order: stroke; }
 .stem-node.is-ahead path { fill: var(--ground); stroke: var(--edge); stroke-width: 2; stroke-linejoin: round; }
 .section-menu { display: none; }
+/* A long section split into pages: its name sits over them, and they hang a step in from the stem. */
+.section-group { margin: 10px 0 2px 38px; color: var(--muted); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.3; text-transform: uppercase; }
+.section-stem li.is-sub button, .section-menu-list li.is-sub button { min-height: 38px; padding-left: 0; font-size: 0.9063rem; }
+.section-stem li.is-sub .stem-node, .section-menu-list li.is-sub .stem-node { transform: scale(0.78); }
+.part-group { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 8px; color: var(--muted); font-size: 0.9375rem; font-weight: 600; }
+.part-group span { color: var(--muted); font-weight: 400; }
 
 /* Prose */
 .reader-body > .chapter-lead { margin-bottom: 40px; }
@@ -157,6 +163,16 @@ input[type="checkbox"] + .choice-mark { border-radius: 7px; }
 .gh-quiet:hover { color: var(--ink); text-decoration-color: currentColor; }
 button.gh-btn { color: var(--cta-ink); cursor: pointer; }
 
+/* A chapter that has not opened yet */
+.locked-panel { max-width: 640px; margin-inline: auto; padding: 72px var(--gh-gutter) 112px; text-align: center; }
+.locked-bud { width: 64px; height: 96px; margin-bottom: 20px; overflow: visible; }
+.locked-bud-stalk { fill: none; stroke: var(--edge); stroke-width: 3; stroke-linecap: round; }
+.locked-bud-shape { fill: var(--wash); stroke: var(--edge); stroke-width: 2; stroke-dasharray: 5 4; }
+.locked-bud-rib { fill: none; stroke: var(--edge); stroke-width: 1.5; stroke-linecap: round; opacity: 0.6; }
+.locked-panel h2 { font: 800 clamp(1.875rem, 1.5vw + 1.4rem, 2.5rem)/1.1 var(--gh-display); letter-spacing: -0.015em; }
+.locked-panel p { max-width: 52ch; margin: 16px auto 0; color: var(--ink-soft); font-size: 1.125rem; line-height: 1.6; text-wrap: pretty; }
+.locked-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 24px; margin-top: 32px; }
+
 /* Guided session */
 .session-page { min-height: 100dvh; }
 /* One primary action color for the whole session: a brighter step of the session bar's green, on every ground. */
@@ -183,6 +199,9 @@ a.session-back { display: inline-flex; align-items: center; min-height: 44px; co
 .step-shape.is-skipped path { fill: var(--canopy-mid); stroke: var(--canopy-ink-soft); stroke-width: 2; stroke-dasharray: 4 3; }
 .step-shape.is-current path { fill: var(--canopy-ink); }
 .step-shape.is-upcoming path { fill: var(--canopy-mid); stroke: var(--canopy-ink-soft); stroke-width: 2; }
+/* The step on screen is ringed whatever its state, so going Back to a solved step still shows where you are. */
+.step-leaf[aria-current="step"]::before { content: ""; position: absolute; top: 50%; left: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; background: var(--canopy-mid); box-shadow: 0 0 0 2px var(--canopy-ink); }
+.step-leaf[aria-current="step"] .step-shape { position: relative; }
 .step-mini { display: none; }
 .session-reading { max-width: 760px; margin-inline: auto; padding: 40px var(--gh-gutter) 88px; font: 400 1.125rem/1.65 var(--gh-body); }
 .session-reading > .card.practice { margin-top: 0; }
@@ -227,7 +246,47 @@ a.gh-btn { max-width: 100%; }
 .code-hints, .code-solution { display: grid; gap: 12px; padding: 4px 4px 16px; font-size: 1rem; line-height: 1.5; }
 .code-hint { padding: 12px 16px; border-radius: 18px; background: var(--code-plate); }
 .code-solution .code-editor { overflow: hidden; border-radius: 18px; }
-.workspace-code { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--code); }
+.workspace-code { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--code); }
+
+/* Function finder: a lime seed of a button over the code, opening a small reference panel above it. */
+/* The layer covers the code panel, so the open panel can be no taller than the code area it floats over. */
+.finder { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+.finder-button { position: absolute; right: 16px; bottom: 80px; pointer-events: auto; display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border: 0; border-radius: 50%; background: var(--leaf); color: var(--leaf-ink); cursor: pointer; box-shadow: 0 0 0 4px rgb(183 227 107 / 0.18), 0 10px 24px -8px rgb(0 0 0 / 0.55); transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+.finder-button:hover { transform: translateY(-2px); box-shadow: 0 0 0 6px rgb(183 227 107 / 0.22), 0 14px 28px -8px rgb(0 0 0 / 0.6); }
+.finder-button:active { transform: scale(0.95); }
+.finder-button[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--code), 0 0 0 5px var(--leaf); }
+.finder-mark { width: 26px; height: 26px; stroke: currentColor; }
+.finder-mark-leaf { fill: currentColor; stroke: none; }
+.finder-panel { position: absolute; right: 16px; bottom: 146px; pointer-events: auto; display: flex; flex-direction: column; width: min(400px, calc(100% - 32px)); max-height: min(600px, calc(100% - 158px)); overflow: hidden; border: 1px solid var(--rule); border-radius: 22px; background: var(--raised); color: var(--ink); box-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.45); font: 400 0.9375rem/1.45 var(--gh-body); transform-origin: bottom right; animation: finder-open 180ms var(--ease-out); }
+@keyframes finder-open { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
+.finder-head { display: flex; align-items: center; gap: 12px; padding: 16px 12px 12px 16px; }
+.finder-head > div { flex: 1; min-width: 0; }
+.finder-badge { display: grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--canopy); color: var(--leaf); }
+.finder-badge .finder-mark { width: 20px; height: 20px; }
+.finder-title { margin: 0; font: 800 1.0625rem/1.2 var(--gh-display); }
+.finder-sub { margin: 2px 0 0; color: var(--muted); font-size: 0.875rem; }
+.finder-close { display: grid; flex: none; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--ink-soft); cursor: pointer; }
+.finder-close:hover { background: var(--wash); color: var(--ink); }
+.finder-input { margin: 0 16px 12px; padding: 11px 16px; border: 1px solid var(--edge); border-radius: 999px; background: var(--ground); color: var(--ink); font: 400 1rem var(--gh-body); }
+.finder-input:focus { outline: 2px solid var(--bud); outline-offset: 1px; }
+.finder-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 8px; overscroll-behavior: contain; }
+.finder-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 4px 0 8px; }
+.finder-chips p { width: 100%; margin: 0; color: var(--muted); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.finder-chips button { padding: 7px 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--ground); color: var(--ink); cursor: pointer; font: 500 0.875rem var(--gh-body); }
+.finder-chips button:hover { border-color: var(--bud); background: var(--wash); }
+.finder-empty { margin: 4px 0 12px; color: var(--ink-soft); }
+.finder-results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0; padding: 0 0 4px; list-style: none; }
+.finder-card { padding: 12px 14px; border: 1px solid var(--rule); border-radius: 16px; background: var(--ground); }
+.finder-card > p { margin: 6px 0 8px; color: var(--ink-soft); }
+.finder-card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.finder-name { font: 600 0.9375rem var(--gh-mono); color: var(--ink); }
+.finder-header { color: var(--bud); font: 500 0.8125rem var(--gh-mono); }
+.finder-signature { display: block; overflow-x: auto; color: var(--muted); font: 400 0.8125rem/1.5 var(--gh-mono); white-space: pre; }
+.finder-example { position: relative; margin-top: 8px; border-radius: 12px; background: var(--code); }
+.finder-example pre { margin: 0; padding: 10px 64px 10px 12px; overflow-x: auto; color: var(--code-text); font: 400 0.8125rem/1.55 var(--gh-mono); font-variant-ligatures: none; }
+.finder-copy { position: absolute; top: 6px; right: 6px; padding: 4px 10px; border: 0; border-radius: 999px; background: var(--code-raised); color: var(--code-text); cursor: pointer; font: 500 0.75rem var(--gh-body); }
+.finder-copy:hover { background: var(--code-rule); }
+.finder-foot { margin: 0; padding: 10px 16px 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.8125rem; }
 .workspace-code > .split { flex: 1; min-height: 0; }
 .workspace-code .code-editor, .workspace-code .cm-editor { height: 100%; }
 .workspace-code .cm-scroller { min-height: 0; max-height: none; overflow: auto; }

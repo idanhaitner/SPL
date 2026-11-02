@@ -10,6 +10,7 @@ import { buildTestSource } from "@/lib/test-output";
 import { functionVerdict, programVerdict, type ProgramRun, type TestVerdict } from "@/lib/test-verdict";
 import type { Exercise } from "@/lib/types";
 import { workspaceShortcut } from "@/lib/workspace";
+import { FunctionFinder } from "./FunctionFinder";
 import { CaseList, OutcomeView, type CaseView } from "./OutcomeView";
 import { QuestionPanel } from "./QuestionPanel";
 import type { RenderedStep } from "./rendered";
@@ -295,6 +296,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
                 </>
               )}
             </div>
+            <FunctionFinder />
           </div>
         }
       />

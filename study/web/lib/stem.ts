@@ -20,8 +20,7 @@ export function curvePath(curves: Curve[], lead: Point | null = null) {
   return start + curves.map(([, b, c, d]) => `C${b.x} ${b.y} ${c.x} ${c.y} ${d.x} ${d.y}`).join("");
 }
 
-// Spaces `count` points evenly by length along the curves, each with the direction the stem is growing there.
-export function spacedLeaves(curves: Curve[], count: number, from = 0.04, to = 0.97): { leaves: Leaf[]; length: number } {
+function sampled(curves: Curve[]) {
   const samples: { point: Point; length: number }[] = [];
   let length = 0;
   let previous: Point | null = null;
@@ -33,6 +32,22 @@ export function spacedLeaves(curves: Curve[], count: number, from = 0.04, to = 0
       previous = point;
     }
   }
+  return { samples, length };
+}
+
+// The point `along` units up the stem, and which way it is heading there: where a stem that has grown that far ends.
+export function pointAlong(curves: Curve[], along: number) {
+  const { samples } = sampled(curves);
+  const position = samples.findIndex((sample) => sample.length >= along);
+  const index = position < 0 ? samples.length - 1 : position;
+  const here = samples[index].point;
+  const before = samples[Math.max(0, index - 3)].point;
+  return { x: tidy(here.x), y: tidy(here.y), angle: tidy((Math.atan2(here.y - before.y, here.x - before.x) * 180) / Math.PI) };
+}
+
+// Spaces `count` points evenly by length along the curves, each with the direction the stem is growing there.
+export function spacedLeaves(curves: Curve[], count: number, from = 0.04, to = 0.97): { leaves: Leaf[]; length: number } {
+  const { samples, length } = sampled(curves);
   const leaves = Array.from({ length: count }, (_, index) => {
     const along = length * (from + ((to - from) * index) / Math.max(1, count - 1));
     const position = samples.findIndex((sample) => sample.length >= along);
@@ -77,9 +92,11 @@ export const STEM_GROW = 2000;
 export const growthDelay = (share: number) => Math.round(STEM_START + STEM_GROW * (1 - Math.sqrt(Math.max(0, 1 - share))));
 
 export const WIDE_STEM: Curve[] = [
-  [{ x: 420, y: 790 }, { x: 700, y: 800 }, { x: 860, y: 720 }, { x: 900, y: 590 }],
-  [{ x: 900, y: 590 }, { x: 950, y: 430 }, { x: 1040, y: 400 }, { x: 1090, y: 290 }],
-  [{ x: 1090, y: 290 }, { x: 1125, y: 225 }, { x: 1130, y: 150 }, { x: 1185, y: 96 }],
+  [{ x: 420, y: 790 }, { x: 600, y: 818 }, { x: 830, y: 816 }, { x: 970, y: 722 }],
+  [{ x: 970, y: 722 }, { x: 1090, y: 642 }, { x: 1310, y: 650 }, { x: 1310, y: 540 }],
+  [{ x: 1310, y: 540 }, { x: 1310, y: 430 }, { x: 1070, y: 470 }, { x: 1010, y: 372 }],
+  [{ x: 1010, y: 372 }, { x: 950, y: 274 }, { x: 730, y: 340 }, { x: 730, y: 250 }],
+  [{ x: 730, y: 250 }, { x: 730, y: 170 }, { x: 900, y: 200 }, { x: 1050, y: 140 }],
 ];
 
 export const NARROW_STEM: Curve[] = [

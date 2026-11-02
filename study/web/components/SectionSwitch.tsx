@@ -8,7 +8,8 @@ import { LeafMark } from "@/components/home/LeafMark";
 import { Inline } from "@/lib/inline";
 import { markSection, useProgress } from "@/lib/progress";
 
-export type SectionPart = { title: string; slug: string; ids: string[]; body: ReactNode };
+// A part with a group is one page of a long section that was split at its subsections.
+export type SectionPart = { title: string; slug: string; group?: { title: string; slug: string }; label?: string; ids: string[]; body: ReactNode };
 
 function hashId() {
   return decodeURIComponent(window.location.hash.replace(/^#/, ""));
@@ -30,7 +31,7 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
         router.replace(`/sessions/${chapterId}/?step=${encodeURIComponent(id)}`);
         return;
       }
-      const hit = parts.findIndex((part) => part.slug === id || part.ids.includes(id));
+      const hit = parts.findIndex((part) => part.slug === id || part.group?.slug === id || part.ids.includes(id));
       if (hit < 0) return;
       setIndex(hit);
       requestAnimationFrame(() => {
@@ -53,16 +54,21 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
   const previous = parts[index - 1];
   const upcoming = parts[index + 1];
   const nodeState = (item: number) => (item === index ? "here" : done.includes(parts[item].title) ? "done" : "ahead");
+  const siblings = current.group ? parts.filter((part) => part.group?.slug === current.group?.slug) : [];
   const list = (
     <ol>
-      {parts.map((part, item) => (
-        <li key={part.slug} className={done.includes(part.title) ? "is-grown" : undefined}>
-          <button type="button" aria-current={item === index ? "location" : undefined} onClick={() => show(item)}>
-            <LeafMark className="stem-node" state={nodeState(item)} />
-            <span><Inline text={part.title} /></span>
-          </button>
-        </li>
-      ))}
+      {parts.map((part, item) => {
+        const opensGroup = part.group && part.group.slug !== parts[item - 1]?.group?.slug;
+        return (
+          <li key={part.slug} className={[done.includes(part.title) ? "is-grown" : "", part.group ? "is-sub" : ""].join(" ").trim() || undefined}>
+            {opensGroup && <p className="section-group"><Inline text={part.group!.title} /></p>}
+            <button type="button" aria-current={item === index ? "location" : undefined} onClick={() => show(item)}>
+              <LeafMark className="stem-node" state={nodeState(item)} />
+              <span>{part.label ? <Inline text={part.label} /> : part.group?.title === part.title ? "Overview" : <Inline text={part.title} />}</span>
+            </button>
+          </li>
+        );
+      })}
     </ol>
   );
 
@@ -84,6 +90,12 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
       <article className="reader-body">
         {index === 0 && intro && <div className="chapter-lead">{intro}</div>}
         <section className="part-panel" id="chapter-part">
+          {current.group && current.group.title !== current.title && (
+            <p className="part-group">
+              <Inline text={current.group.title} />
+              <span>Part {siblings.indexOf(current) + 1} of {siblings.length}</span>
+            </p>
+          )}
           <h2 id={current.slug}><Inline text={current.title} /></h2>
           {current.body}
         </section>

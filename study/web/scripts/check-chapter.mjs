@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
-import { startServer } from "./serve-out.mjs";
+import { openCourse, startServer } from "./serve-out.mjs";
 
 const slugs = fs.readdirSync(path.resolve("out/topics"));
 const { server, base } = await startServer();
@@ -12,6 +12,7 @@ const failures = [];
 try {
   for (const [width, scheme] of [[1440, "light"], [390, "dark"], [320, "light"]]) {
     const context = await browser.newContext({ viewport: { width, height: 844 }, colorScheme: scheme });
+    await openCourse(context);
     for (const slug of slugs) {
       const page = await context.newPage();
       const errors = [];
@@ -53,9 +54,36 @@ try {
   await page.waitForTimeout(200);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("study:systems-programming")));
   if (!saved.read?.includes("run-time-environment")) failures.push("Finish reading did not record the chapter");
+  // Reading chapter 1 opens chapter 2 and no further.
+  await page.goto(`${base}/topics/memory-model/`, { waitUntil: "networkidle" });
+  if (await page.locator(".locked-panel").count()) failures.push("Chapter 2 stayed locked after chapter 1 was read");
+  await page.goto(`${base}/topics/pointers/`, { waitUntil: "networkidle" });
+  if (!(await page.locator(".locked-panel").count())) failures.push("Chapter 3 opened before chapter 2 was read");
+  else if (!(await page.getByRole("link", { name: "Go to chapter 2" }).count())) failures.push("The locked chapter does not point to chapter 2");
+  await page.evaluate(() => {
+    const value = JSON.parse(localStorage.getItem("study:systems-programming"));
+    localStorage.setItem("study:systems-programming", JSON.stringify({ ...value, read: [...value.read, "memory-model"] }));
+    window.dispatchEvent(new Event("study-progress"));
+  });
+  if (await page.locator(".locked-panel").count()) failures.push("Chapter 3 stayed locked after chapter 2 was read");
   await page.goto(`${base}/topics/pointers/#references`, { waitUntil: "networkidle" });
   const shown = await page.locator("#chapter-part h2").innerText();
   if (shown !== "References") failures.push(`a section link opened "${shown}"`);
+
+  // A long section is read a subsection at a time, under its own name.
+  await page.goto(`${base}/topics/memory-model/#the-heap`, { waitUntil: "networkidle" });
+  if ((await page.locator("#chapter-part h2").innerText()) !== "The heap") failures.push("A subsection link did not open its page");
+  if (!(await page.locator(".part-group").innerText()).startsWith("The memory of a C++ process")) failures.push("A subsection page does not name its section");
+  const tallest = await page.evaluate(async () => {
+    let most = 0;
+    for (const button of document.querySelectorAll("nav.parts button")) {
+      button.click();
+      await new Promise((done) => setTimeout(done, 30));
+      most = Math.max(most, document.getElementById("chapter-part").offsetHeight);
+    }
+    return most;
+  });
+  if (tallest > 5000) failures.push(`The memory model has a ${tallest}px section`);
 } finally {
   await browser.close();
   server.close();

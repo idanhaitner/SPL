@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Chapter } from "@/components/Chapter";
+import { ChapterGate } from "@/components/chapter/ChapterGate";
 import { CourseStrip } from "@/components/chapter/CourseStrip";
 import { LeafBlade } from "@/components/home/LeafShape";
 import { TopBar } from "@/components/shell/TopBar";
@@ -42,12 +43,14 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         </div>
         <CourseStrip courseId={course.id} chapters={nav.chapters} currentId={topic.id} />
       </header>
-      <Chapter
-        topic={topic}
-        courseId={course.id}
-        session={nav.chapters[index].stepIds.length > 0 ? { href: `/sessions/${topic.id}/`, title: `Guided session: ${topic.title}` } : null}
-        next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
-      />
+      <ChapterGate courseId={course.id} chapters={nav.chapters} chapterId={topic.id}>
+        <Chapter
+          topic={topic}
+          courseId={course.id}
+          session={nav.chapters[index].stepIds.length > 0 ? { href: `/sessions/${topic.id}/`, title: `Guided session: ${topic.title}` } : null}
+          next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
+        />
+      </ChapterGate>
     </div>
   );
 }

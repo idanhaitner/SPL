@@ -11,7 +11,7 @@ export type Progress = {
 };
 
 export type ChapterInfo = { id: string; title: string; num: number; stepIds: string[] };
-export type ChapterState = "done" | "read" | "here" | "ahead";
+export type ChapterState = "done" | "read" | "here" | "ahead" | "locked";
 
 export function storageKey(courseId: string) {
   return `study:${courseId}`;
@@ -76,11 +76,27 @@ export function isDone(chapter: ChapterInfo, progress: Progress) {
   return isRead(chapter, progress) && allSolved(chapter, progress);
 }
 
-// Where to go next: the chapter in progress, else the first one after it that isn't done, else the first one that isn't.
+// A chapter opens only once every chapter before it is finished: read to the end and every practice question solved. There is no way around it.
+export function isUnlocked(chapters: ChapterInfo[], chapterId: string, progress: Progress) {
+  const index = chapters.findIndex((chapter) => chapter.id === chapterId);
+  return chapters.slice(0, Math.max(0, index)).every((chapter) => isDone(chapter, progress));
+}
+
+// The chapter to finish before a locked one opens: the first unfinished chapter before it.
+export function blockerOf(chapters: ChapterInfo[], chapterId: string, progress: Progress): ChapterInfo | null {
+  const index = chapters.findIndex((chapter) => chapter.id === chapterId);
+  return chapters.slice(0, Math.max(0, index)).find((chapter) => !isDone(chapter, progress)) ?? null;
+}
+
+// Where to go next: the chapter in progress, else the first open one after it that isn't done, else the first that isn't.
 export function nextChapter(chapters: ChapterInfo[], progress: Progress): ChapterInfo | null {
-  const lastIndex = chapters.findIndex((chapter) => chapter.id === progress.last);
+  const visited = chapters.findIndex((chapter) => chapter.id === progress.last);
+  // Looking at a locked chapter's page records it as the last one; resume from the furthest open chapter instead.
+  const lastIndex = visited >= 0 && !isUnlocked(chapters, chapters[visited].id, progress)
+    ? chapters.findLastIndex((chapter) => isUnlocked(chapters, chapter.id, progress))
+    : visited;
   const ordered = lastIndex < 0 ? chapters : [...chapters.slice(lastIndex), ...chapters.slice(0, lastIndex)];
-  return ordered.find((chapter) => !isDone(chapter, progress)) ?? null;
+  return ordered.find((chapter) => !isDone(chapter, progress) && isUnlocked(chapters, chapter.id, progress)) ?? null;
 }
 
 export function resumeHref(chapter: ChapterInfo, progress: Progress) {
@@ -93,12 +109,33 @@ export function chapterState(chapter: ChapterInfo, next: ChapterInfo | null, pro
   return isRead(chapter, progress) ? "read" : "ahead";
 }
 
+// Every chapter's state, with the ones that have not opened yet as locked.
+export function courseStates(chapters: ChapterInfo[], progress: Progress): ChapterState[] {
+  const next = nextChapter(chapters, progress);
+  return chapters.map((chapter) => {
+    const state = chapterState(chapter, next, progress);
+    return !isUnlocked(chapters, chapter.id, progress) ? "locked" : state;
+  });
+}
+
+// How far the plant has grown: the index of the last chapter that is open.
+export function lastOpen(states: ChapterState[]) {
+  return states.findLastIndex((state) => state !== "locked");
+}
+
 export function hasStarted(progress: Progress) {
   return Boolean(progress.last) || progress.solved.length > 0;
 }
 
+const EMPTY: Progress = { solved: [] };
+
 export function useProgress(courseId: string): Progress {
-  const [progress, setProgress] = useState<Progress>({ solved: [] });
+  return useLoadedProgress(courseId) ?? EMPTY;
+}
+
+// null until this browser's progress has been read, for drawings that would otherwise show a fresh student's plant first.
+export function useLoadedProgress(courseId: string): Progress | null {
+  const [progress, setProgress] = useState<Progress | null>(null);
   useEffect(() => {
     const sync = () => setProgress(readProgress(courseId));
     sync();

@@ -227,6 +227,10 @@ async function checkView(page, where, failures, seenSvg) {
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
+// Every chapter is open, so the audit sees each one's reading rather than its lock.
+await page.addInitScript(() => {
+  if (!localStorage.getItem("study:systems-programming")) localStorage.setItem("study:systems-programming", JSON.stringify({ solved: [], read: ["run-time-environment", "memory-model", "pointers", "classes-and-objects", "rule-of-three", "rule-of-five", "inheritance", "concurrency", "design-by-contract", "synchronization", "waiting-and-liveness", "networking", "reactor", "serialization", "persistence", "course-review"] }));
+});
 const failures = [];
 page.on("pageerror", (error) => failures.push(`page error: ${error.message}`));
 page.on("console", (message) => {

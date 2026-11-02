@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { LeafMark } from "./LeafMark";
 import { Mixed } from "@/lib/bidi";
-import { chapterState, hasStarted, nextChapter, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { courseStates, hasStarted, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 
 type Part = { title: string; lang: string; summary: string; chapters: ChapterInfo[] };
 
@@ -12,6 +12,7 @@ export function rowNote(state: ChapterState, started: boolean, solved: number, t
   if (state === "done") return "Done";
   if (state === "here") return tally || (started ? "Continue here" : "Start here");
   if (state === "read") return tally ? `Read, ${tally}` : "Read";
+  if (state === "locked") return "Locked";
   return tally;
 }
 
@@ -31,20 +32,21 @@ function Row({ chapter, state, started, solved }: { chapter: ChapterInfo; state:
 
 export function CourseMap({ courseId, parts, finale, chapters }: { courseId: string; parts: Part[]; finale: ChapterInfo[]; chapters: ChapterInfo[] }) {
   const progress = useProgress(courseId);
-  const next = nextChapter(chapters, progress);
+  const states = courseStates(chapters, progress);
+  const stateOf = (chapter: ChapterInfo) => states[chapter.num - 1];
   const started = hasStarted(progress);
   const row = (chapter: ChapterInfo) => (
     <Row
       key={chapter.id}
       chapter={chapter}
-      state={chapterState(chapter, next, progress)}
+      state={stateOf(chapter)}
       started={started}
       solved={chapter.stepIds.filter((id) => progress.solved.includes(id)).length}
     />
   );
   const grownClass = (list: ChapterInfo[]) => {
     const grown = list.every((chapter) => {
-      const state = chapterState(chapter, next, progress);
+      const state = stateOf(chapter);
       return state === "done" || state === "read";
     });
     return grown ? "gh-rows is-grown" : "gh-rows";

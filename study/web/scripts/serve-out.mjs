@@ -23,4 +23,14 @@ export function startServer() {
   });
 }
 
+// A chapter opens once the one before it is read. Checks about reading, not about that lock, start with the whole course open.
+// It only fills in progress that is not there yet, so a check can still write its own.
+export async function openCourse(context) {
+  const read = fs.readdirSync(path.join(root, "topics"));
+  await context.addInitScript((ids) => {
+    const key = "study:systems-programming";
+    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ solved: [], read: ids }));
+  }, read);
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) await startServer();

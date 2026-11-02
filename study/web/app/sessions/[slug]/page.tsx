@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Blocks } from "@/components/Blocks";
+import { ChapterGate } from "@/components/chapter/ChapterGate";
 import type { RenderedStep } from "@/components/session/rendered";
 import { Stepper } from "@/components/session/Stepper";
 import { TopBar } from "@/components/shell/TopBar";
@@ -47,16 +48,18 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
     <div className="session-page">
       <Visit courseId={course.id} slug={topic.id} />
       <TopBar courseId={course.id} title={course.title} nav={nav} where={part ? `${part.title} · ${part.lang}` : undefined} />
-      <Stepper
-        courseId={course.id}
-        chapter={nav.chapters[index]}
-        steps={steps.map(({ id, kind, title }) => ({ id, kind, title }))}
-        rendered={rendered}
-        exercises={exercises}
-        pieces={pieces}
-        harness={course.harness}
-        next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
-      />
+      <ChapterGate courseId={course.id} chapters={nav.chapters} chapterId={topic.id}>
+        <Stepper
+          courseId={course.id}
+          chapter={nav.chapters[index]}
+          steps={steps.map(({ id, kind, title }) => ({ id, kind, title }))}
+          rendered={rendered}
+          exercises={exercises}
+          pieces={pieces}
+          harness={course.harness}
+          next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
+        />
+      </ChapterGate>
     </div>
   );
 }

@@ -36,17 +36,33 @@ export function LeafBlade({ size, flip = false }: { size: number; flip?: boolean
 
 const STALK = 0.15;
 
+const r = (value: number) => Math.round(value * 100) / 100;
+
+// A chapter that has not opened yet: a closed bud waiting on the line the stem will climb.
+function Bud({ leaf, size, num, numSize, style }: { leaf: Leaf; size: number; num: number; numSize: number; style: CSSProperties }) {
+  const [from, to, wide] = [size * 0.12, size, size * 0.3];
+  const mid = (from + to) / 2;
+  return (
+    <g className="gh-leaf is-locked" transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.angle})`} style={style}>
+      <path className="gh-leaf-stalk" d={`M0 0L${r(from)} 0`} strokeWidth={2} />
+      <path className="gh-bud" d={`M${r(from)} 0C${r(mid - size * 0.2)} ${r(wide)} ${r(mid + size * 0.2)} ${r(wide)} ${r(to)} 0C${r(mid + size * 0.2)} ${r(-wide)} ${r(mid - size * 0.2)} ${r(-wide)} ${r(from)} 0Z`} />
+      <text className="gh-leaf-num" x={r(mid)} y={r(numSize * 0.35)} textAnchor="middle" fontSize={numSize} transform={`rotate(${-leaf.angle} ${r(mid)} 0)`}>{num}</text>
+    </g>
+  );
+}
+
 export function LeafShape({ leaf, size, state, num, numSize, index, delay, halo }: { leaf: Leaf; size: number; state: ChapterState; num: number; numSize: number; index: number; delay: number; halo: string }) {
   const textX = Math.round(size * 0.52 * 100) / 100;
   const textY = Math.round(numSize * 0.35 * 100) / 100;
   const style = { "--i": index, "--d": `${delay}ms`, "--side": leaf.side } as CSSProperties;
+  if (state === "locked") return <Bud leaf={leaf} size={size} num={num} numSize={numSize} style={style} />;
   return (
     <g className={`gh-leaf is-${state}`} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.angle})`} style={style} data-x={leaf.x} data-y={leaf.y} data-angle={leaf.angle}>
       {state === "here" && (
         <>
           <radialGradient id={halo}>
-            <stop offset="0" stopColor="#F4FBD9" stopOpacity="0.5" />
-            <stop offset="0.55" stopColor="#D9F0A3" stopOpacity="0.14" />
+            <stop offset="0" stopColor="#F4FBD9" stopOpacity="0.7" />
+            <stop offset="0.55" stopColor="#D9F0A3" stopOpacity="0.24" />
             <stop offset="1" stopColor="#D9F0A3" stopOpacity="0" />
           </radialGradient>
           <ellipse className="gh-leaf-halo" cx={size * 0.55} cy="0" rx={size * 1.15} ry={size} fill={`url(#${halo})`} />

@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
-import { startServer } from "./serve-out.mjs";
+import { openCourse, startServer } from "./serve-out.mjs";
 
 const { server, base } = await startServer();
 const browser = await chromium.launch();
@@ -12,6 +12,7 @@ const KEY = "study:systems-programming";
 
 try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await openCourse(context);
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -48,6 +49,12 @@ try {
   if (!(await page.locator(".step-leaf").nth(1).getAttribute("aria-label")).includes("(done)")) fail("A solved step's leaf is not done");
   if (await skip.count()) fail("Skip still shows on a solved step");
 
+  // Back to a solved step still shows which leaf you are on.
+  await page.getByRole("button", { name: /^(Next|Finish)$/ }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  const ringed = await page.locator('.step-leaf[aria-current="step"]').evaluate((leaf) => ({ label: leaf.getAttribute("aria-label"), ring: getComputedStyle(leaf, "::before").content }));
+  if (!ringed.label.includes("(done)") || ringed.ring === "none") fail("Back to a solved step does not mark the leaf you are on");
+
   // A wrong answer shows rust and keeps the step open, on the first multiple-choice question found.
   const session = await context.newPage();
   await session.goto(`${base}/sessions/pointers/`, { waitUntil: "networkidle" });
@@ -76,7 +83,7 @@ try {
   // Home's button returns to the session once the chapter is read.
   await page.evaluate(([key]) => {
     const value = JSON.parse(localStorage.getItem(key));
-    value.read = ["run-time-environment"];
+    value.read = [...new Set([...(value.read ?? []), "run-time-environment"])];
     value.last = "run-time-environment";
     localStorage.setItem(key, JSON.stringify(value));
   }, [KEY]);
@@ -99,6 +106,7 @@ try {
 
   // Phones get the step list instead of the leaves.
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await openCourse(phone);
   const small = await phone.newPage();
   await small.goto(`${base}/sessions/reactor/`, { waitUntil: "networkidle" });
   await small.getByRole("button", { name: "Start step 1" }).click();
@@ -110,6 +118,7 @@ try {
 
   // The coding workspace, with the compiler answered by this script.
   const coding = await browser.newContext({ viewport: { width: 1024, height: 768 } });
+  await openCourse(coding);
   const desk = await coding.newPage();
   let reply = "pass";
   await desk.route("**/godbolt.org/**", async (route) => {
@@ -164,6 +173,15 @@ try {
   if (!(await compiled)) fail("Cmd+S did not compile");
   await desk.waitForTimeout(3200);
 
+  // The function finder floats over the code, answers plain words, and closes on Esc.
+  await desk.getByRole("button", { name: "Find a C++ function" }).click();
+  await desk.getByRole("searchbox", { name: "What do you need to do?" }).fill("length of a string");
+  const found = await desk.locator(".finder-name").allInnerTexts();
+  if (!found.includes("std::strlen")) fail(`The finder did not find strlen: ${found.join(", ")}`);
+  await desk.keyboard.press("Escape");
+  if (await desk.locator(".finder-panel").count()) fail("Esc did not close the finder");
+  if ((await desk.evaluate(() => document.activeElement?.getAttribute("aria-label"))) !== "Find a C++ function") fail("Closing the finder lost focus");
+
   // The keyboard can leave the editor: Esc, then Tab.
   await desk.locator(".cm-content").click();
   await desk.keyboard.press("Escape");
@@ -177,6 +195,7 @@ try {
   await desk.keyboard.press("ArrowRight");
   if ((await divider.getAttribute("aria-valuenow")) === before) fail("The divider does not move by keyboard");
   const tiny = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await openCourse(tiny);
   const hand = await tiny.newPage();
   await hand.goto(`${base}/sessions/pointers/?step=ex-swap-values`, { waitUntil: "networkidle" });
   await hand.getByRole("tab", { name: "Code" }).click();
@@ -185,6 +204,17 @@ try {
   await hand.getByRole("tab", { name: "Question" }).click();
   if (!(await hand.locator(".question-title").isVisible())) fail("The question tab is empty on a phone");
   if ((await hand.evaluate(() => document.documentElement.scrollWidth - innerWidth)) > 0) fail("The workspace overflows on a phone");
+
+  // A new student's plant has one open leaf and buds for the rest, and later sessions are locked.
+  const fresh = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const start = await fresh.newPage();
+  await start.goto(`${base}/`, { waitUntil: "networkidle" });
+  const buds = await start.locator(".gh-stem-wide .gh-leaf.is-locked").count();
+  if (buds !== 15) fail(`A new student's plant has ${buds} buds, not 15`);
+  if (!(await start.locator(".gh-stem-wide .gh-stem-ghost").count())) fail("The plant shows no line for where it will grow");
+  await start.goto(`${base}/sessions/pointers/`, { waitUntil: "networkidle" });
+  if (!(await start.locator(".locked-panel").count()) || (await start.getByRole("button", { name: "Start step 1" }).count())) fail("A locked chapter's session is open");
+  await fresh.close();
 
   if (errors.length) fail(`Console: ${errors[0].slice(0, 160)}`);
   const sessions = fs.readdirSync(path.resolve("out/sessions")).length;
