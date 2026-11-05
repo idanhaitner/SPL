@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { blockerOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, type ChapterInfo } from "./progress";
+import { blockerOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, stepIds });
 
@@ -71,6 +71,32 @@ describe("progress", () => {
     expect(lastOpen(courseStates(list, { solved: [], read: ["a", "b", "c", "d"] }))).toBe(3);
     // A later chapter read out of order stays locked behind the unfinished one.
     expect(courseStates([ch("a", ["s"]), ch("b")], { solved: [], read: ["a", "b"] })).toEqual(["here", "locked"]);
+  });
+  it("opens every chapter when the student chooses to", () => {
+    const list = [ch("a", ["s"]), ch("b"), ch("c")];
+    const progress = { solved: [], openAll: true };
+    expect(list.every((chapter) => isUnlocked(list, chapter.id, progress))).toBe(true);
+    expect(courseStates(list, progress)).not.toContain("locked");
+    expect(lastOpen(courseStates(list, progress))).toBe(2);
+  });
+  it("still points to the next unfinished chapter in order with every chapter open", () => {
+    const list = [ch("a"), ch("b"), ch("c")];
+    expect(nextChapter(list, { solved: [], openAll: true })?.id).toBe("a");
+    expect(nextChapter(list, { solved: [], read: ["a"], openAll: true })?.id).toBe("b");
+  });
+  it("saves the choice to open every chapter, and keeps progress when it is turned off", () => {
+    localStorage.setItem("study:c", JSON.stringify({ solved: ["s"], read: ["a", "c"] }));
+    setOpenAll("c", true);
+    expect(readProgress("c")).toMatchObject({ solved: ["s"], read: ["a", "c"], openAll: true });
+    setOpenAll("c", false);
+    const progress = readProgress("c");
+    expect(progress).toMatchObject({ solved: ["s"], read: ["a", "c"] });
+    expect(progress.openAll).toBeFalsy();
+    expect(isUnlocked([ch("a", ["s"]), ch("b", ["t"]), ch("c")], "c", progress)).toBe(false);
+  });
+  it("treats a broken open-every-chapter value as off", () => {
+    localStorage.setItem("study:c", '{"solved":[],"openAll":"yes"}');
+    expect(readProgress("c").openAll).toBeFalsy();
   });
   it("names the four states", () => {
     const [a, b] = [ch("a"), ch("b", ["s"])];

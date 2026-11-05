@@ -6,6 +6,7 @@ import { CourseMap } from "@/components/home/CourseMap";
 import { Icon } from "@/components/home/Icon";
 import { SearchBox } from "@/components/SearchBox";
 import type { CourseNav } from "@/lib/nav";
+import { OpenAllSwitch } from "./OpenAllSwitch";
 
 // A native dialog: it keeps focus inside, closes on Esc, and hands focus back to the button that opened it.
 export function CourseDrawer({ open, onClose, courseId, nav }: { open: boolean; onClose: () => void; courseId: string; nav: CourseNav }) {
@@ -43,6 +44,7 @@ export function CourseDrawer({ open, onClose, courseId, nav }: { open: boolean; 
               <Link href="/">Home</Link>
               <Link href="/glossary">Glossary</Link>
             </div>
+            <OpenAllSwitch courseId={courseId} />
             <CourseMap courseId={courseId} parts={nav.parts} finale={nav.finale} chapters={nav.chapters} />
           </div>
         </>

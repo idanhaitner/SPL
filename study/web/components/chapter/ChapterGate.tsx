@@ -4,9 +4,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
-import { blockerOf, isUnlocked, useLoadedProgress, type ChapterInfo } from "@/lib/progress";
+import { blockerOf, isUnlocked, setOpenAll, useLoadedProgress, type ChapterInfo } from "@/lib/progress";
 
-// A chapter, or its session, stays a bud until the chapter before it is finished. Links, search, and typed addresses all land here.
+// A chapter, or its session, stays a bud until the chapter before it is finished, unless the student opens every chapter.
+// Links, search, and typed addresses all land here.
 export function ChapterGate({ courseId, chapters, chapterId, children }: { courseId: string; chapters: ChapterInfo[]; chapterId: string; children: ReactNode }) {
   const progress = useLoadedProgress(courseId);
   if (!progress || isUnlocked(chapters, chapterId, progress)) return children;
@@ -28,6 +29,10 @@ export function ChapterGate({ courseId, chapters, chapterId, children }: { cours
         <Link className="gh-btn" href={`/topics/${blocker.id}/`}>Go to chapter {blocker.num}<Icon name="arrow" /></Link>
         <Link className="gh-quiet" href="/">Back to the course</Link>
       </div>
+      <p className="locked-skip">
+        Rather go in your own order?{" "}
+        <button type="button" className="gh-quiet" onClick={() => setOpenAll(courseId, true)}>Open every chapter instead</button>
+      </p>
     </section>
   );
 }

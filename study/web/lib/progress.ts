@@ -8,6 +8,8 @@ export type Progress = {
   seen?: string[];
   read?: string[];
   sections?: Record<string, string[]>;
+  // The student chose to open every chapter instead of unlocking them in order.
+  openAll?: boolean;
 };
 
 export type ChapterInfo = { id: string; title: string; num: number; stepIds: string[] };
@@ -36,6 +38,7 @@ export function readProgress(courseId: string): Progress {
       seen: strings(parsed.seen),
       read: strings(parsed.read),
       sections: sectionsOf(parsed.sections),
+      openAll: parsed.openAll === true || undefined,
     };
   } catch {
     return { solved: [] };
@@ -64,7 +67,13 @@ export function markSection(courseId: string, chapterId: string, title: string) 
   if (!done.includes(title)) writeProgress(courseId, { ...progress, sections: { ...sections, [chapterId]: [...done, title] } });
 }
 
-const allSolved = (chapter: ChapterInfo, progress: Progress) => chapter.stepIds.every((id) => progress.solved.includes(id));
+// Opening every chapter changes only what is locked; what was read and solved stays as it is either way.
+export function setOpenAll(courseId: string, on: boolean) {
+  const { openAll: _, ...progress } = readProgress(courseId);
+  writeProgress(courseId, on ? { ...progress, openAll: true } : progress);
+}
+
+const allSolved =(chapter: ChapterInfo, progress: Progress) => chapter.stepIds.every((id) => progress.solved.includes(id));
 
 // Read means Finish reading was pressed. Students from before that button count as read once all their practice was solved.
 export function isRead(chapter: ChapterInfo, progress: Progress) {
@@ -76,8 +85,10 @@ export function isDone(chapter: ChapterInfo, progress: Progress) {
   return isRead(chapter, progress) && allSolved(chapter, progress);
 }
 
-// A chapter opens only once every chapter before it is finished: read to the end and every practice question solved. There is no way around it.
+// A chapter opens only once every chapter before it is finished: read to the end and every practice question solved,
+// unless the student chose to open every chapter.
 export function isUnlocked(chapters: ChapterInfo[], chapterId: string, progress: Progress) {
+  if (progress.openAll) return true;
   const index = chapters.findIndex((chapter) => chapter.id === chapterId);
   return chapters.slice(0, Math.max(0, index)).every((chapter) => isDone(chapter, progress));
 }

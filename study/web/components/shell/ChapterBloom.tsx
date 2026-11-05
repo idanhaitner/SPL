@@ -17,7 +17,7 @@ const CLOSE_MS = 220;
 
 function measure(courseId: string, chapters: ChapterInfo[]) {
   const progress = readProgress(courseId);
-  return { open: lastOpen(courseStates(chapters, progress)), finished: chapters.every((chapter) => isDone(chapter, progress)) };
+  return { open: lastOpen(courseStates(chapters, progress)), finished: chapters.every((chapter) => isDone(chapter, progress)), openAll: Boolean(progress.openAll) };
 }
 
 // Finishing a chapter is the one moment the whole plant comes forward: it fills the screen, the leaf just finished ripens,
@@ -33,7 +33,9 @@ export function ChapterBloom({ courseId, chapters, partStarts }: { courseId: str
     let timer = 0;
     const check = () => {
       const now = measure(courseId, chapters);
-      if (now.open > before.open || (now.finished && !before.finished)) {
+      // Opening every chapter by choice grows the plant too, but nothing was finished, so there is nothing to celebrate.
+      const chose = now.openAll !== before.openAll;
+      if (!chose && (now.open > before.open || (now.finished && !before.finished))) {
         const next = { from: Math.max(0, before.open), to: now.open };
         clearTimeout(timer);
         timer = window.setTimeout(() => setBloom(next), OPEN_AFTER);
