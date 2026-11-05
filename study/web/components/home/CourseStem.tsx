@@ -239,12 +239,23 @@ export function CourseStem({ courseId, chapters, partStarts, name = "stem", sinc
         {chapters.map((chapter, index) => {
           const current = lookOf(index);
           const leaf = narrow.leaves[index];
+          // A transparent disc over the leaf gives a finger at least a 44-unit target, since the drawn leaves are tiny.
+          const radians = (leaf.angle * Math.PI) / 180;
+          const reachSize = NARROW_SIZE[current];
           return (
-            <g key={chapter.id} className={leafClass(index, narrow.leaves)} style={leafStyle(index, narrow.leaves, NARROW_SIZE)}>
-              {bud(index, narrow.leaves, NARROW_SIZE, 9)}
-              <LeafShape leaf={leaf} size={NARROW_SIZE[current]} state={current} num={chapter.num} numSize={current === "here" ? 14 : current === "locked" ? 9 : 11} index={index} delay={growthDelay(leaf.along / narrow.length)} halo={`${name}-halo-narrow`} />
-              {spark(index, narrow.leaves, NARROW_SIZE, `${name}-glow-narrow`)}
-            </g>
+            <Link
+              key={chapter.id}
+              className="gh-leaf-link"
+              href={`/topics/${chapter.id}`}
+              aria-label={`Chapter ${chapter.num}: ${chapter.title}${STATE_WORDS[current]}`}
+            >
+              <g className={leafClass(index, narrow.leaves)} style={leafStyle(index, narrow.leaves, NARROW_SIZE)}>
+                {bud(index, narrow.leaves, NARROW_SIZE, 9)}
+                <LeafShape leaf={leaf} size={reachSize} state={current} num={chapter.num} numSize={current === "here" ? 14 : current === "locked" ? 9 : 11} index={index} delay={growthDelay(leaf.along / narrow.length)} halo={`${name}-halo-narrow`} />
+                {spark(index, narrow.leaves, NARROW_SIZE, `${name}-glow-narrow`)}
+              </g>
+              <circle cx={leaf.x + Math.cos(radians) * reachSize * 0.5} cy={leaf.y + Math.sin(radians) * reachSize * 0.5} r={Math.max(22, reachSize * 0.55)} fill="transparent" />
+            </Link>
           );
         })}
       </svg>
