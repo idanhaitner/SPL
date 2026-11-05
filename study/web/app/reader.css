@@ -194,7 +194,7 @@ button.gh-btn { color: var(--cta-ink); cursor: pointer; }
 
 /* A chapter that has not opened yet */
 .locked-panel { max-width: 640px; margin-inline: auto; padding: 72px var(--gh-gutter) 112px; text-align: center; }
-.locked-bud { width: 64px; height: 96px; margin-bottom: 20px; overflow: visible; }
+.locked-bud { width: 64px; height: 96px; margin: 0 auto 20px; overflow: visible; }
 .locked-bud-stalk { fill: none; stroke: var(--edge); stroke-width: 3; stroke-linecap: round; }
 .locked-bud-shape { fill: var(--wash); stroke: var(--edge); stroke-width: 2; stroke-dasharray: 5 4; }
 .locked-bud-rib { fill: none; stroke: var(--edge); stroke-width: 1.5; stroke-linecap: round; opacity: 0.6; }
