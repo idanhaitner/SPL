@@ -100,7 +100,6 @@
 
 /* The burst that goes with each change (LeafSpark): a flash, a ring running outward, leaflets and specks thrown off. */
 @keyframes gh-spark-flash { 0% { opacity: 0; scale: 0.3; } 20% { opacity: 1; } 100% { opacity: 0; scale: 1.5; } }
-@keyframes gh-spark-ring { 0% { opacity: 0.95; scale: 0.35; } 100% { opacity: 0; scale: 2.2; } }
 @keyframes gh-spark-mote {
   0% { opacity: 0; transform: rotate(var(--a)) translateX(6px) scale(0.3); }
   12%, 62% { opacity: 1; }
@@ -108,9 +107,8 @@
 }
 .gh-spark { pointer-events: none; }
 /* Scale and rotate each piece about its own centre; SVG's default origin is the drawing's corner, which flings it off the leaf. */
-.gh-spark-flash, .gh-spark-ring, .gh-spark > g { transform-box: fill-box; transform-origin: center; }
+.gh-spark-flash, .gh-spark > g { transform-box: fill-box; transform-origin: center; }
 .gh-spark-flash { animation: gh-spark-flash 720ms var(--ease-out) var(--spark) both; }
-.gh-spark-ring { fill: none; stroke: var(--leaf); stroke-width: 2.5; vector-effect: non-scaling-stroke; animation: gh-spark-ring 860ms var(--ease-out) var(--spark) both; }
 .gh-spark > g { animation: gh-spark-mote 1150ms var(--ease-out) var(--spark) both; }
 .gh-spark-leaflet { fill: var(--leaf); }
 .gh-spark-speck { fill: #F6FBE3; }

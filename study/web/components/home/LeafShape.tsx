@@ -85,7 +85,7 @@ const MOTES: [number, number, boolean][] = [
   [44, 1, true], [78, 0.68, false], [110, 1.08, true], [146, 0.82, false], [190, 0.9, true], [228, 0.72, false],
 ];
 
-// The moment a leaf changes: a flash, a ring that runs outward, and a handful of leaflets and light thrown off the blade.
+// The moment a leaf changes: a flash and a handful of leaflets and light thrown off the blade.
 // It sits on the middle of the blade, and everything in it starts at --spark (see .gh-spark in motion.css). `glow` names the flash's gradient (SparkGlow).
 export function LeafSpark({ leaf, size, at, glow }: { leaf: Leaf; size: number; at: string; glow: string }) {
   const radians = (leaf.angle * Math.PI) / 180;
@@ -94,7 +94,6 @@ export function LeafSpark({ leaf, size, at, glow }: { leaf: Leaf; size: number; 
   return (
     <g className="gh-spark" transform={`translate(${x} ${y})`} style={{ "--spark": at } as CSSProperties} aria-hidden="true">
       <circle className="gh-spark-flash" r={r(size * 0.75)} fill={`url(#${glow})`} />
-      <circle className="gh-spark-ring" r={r(size * 0.55)} />
       {MOTES.map(([angle, far, leaflet], index) => (
         <g key={index} style={{ "--a": `${angle}deg`, "--far": `${r(size * far)}px`, "--spin": `${(index % 2 ? 1 : -1) * (90 + index * 14)}deg` } as CSSProperties}>
           {leaflet
