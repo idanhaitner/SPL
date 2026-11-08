@@ -15,75 +15,163 @@ sources:
   - "materials/exams/24-c-solution.pdf"
 ---
 
-This chapter shows how C++ copies and moves objects that own resources, without two objects ever sharing one buffer by accident.
+This chapter answers one question: how can C++ hand an object's big resource to someone else cheaply, without two objects ever ending up owning the same buffer by accident?
 
-- **Value categories:** which objects are safe to move from, and which must be left alone.
-- **The rule of five:** the five special members that make copying and moving correct.
-- **The rule of zero:** when you should write none of them, because the compiler's versions are already correct.
+- **Moving:** giving the contents of an object to a new owner instead of making a copy.
+- **lvalues and rvalues:** the compiler's way of knowing whether an object is still needed, which is what decides if moving is safe.
+- **The rule of five:** the five special members a class needs so that copying and moving are both correct.
+- **Smart pointers and the rule of zero:** letting ready-made classes own the resource, so you write none of the five.
 
 ## Copying versus moving
 
-Copying gives two objects the same data, but it is expensive, for example when a function returns a large object.
+Start with an `Image` that owns a pixel buffer on the heap. The object itself is tiny (a width, a height, and a pointer), but the buffer it points at can be megabytes.
 
-- **A move** (העברה), added in C++11, lets a temporary object hand its resource to a new owner. Only the pointer changes hands; the bytes themselves are not copied.
-- **The rule of five** (חוק החמישה) names the five special members that make both copying and moving correct.
-- **The rule of zero** (חוק האפס) says to write none of them when every data member already manages its own resource.
+**A copy** builds a second, independent image.
 
-:::definition id=def-value-category title="lvalue and rvalue" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
-An lvalue names an object that has an address.
+- It allocates a new buffer and copies every byte.
+- Afterwards there are two buffers, and both objects keep working.
 
-- **What you can do with an lvalue:** take its address, assign to it (unless it is `const`), and bind a reference to it.
-- **Where the name comes from:** historically, an lvalue was something that could stand on the left side of an assignment.
-- **An rvalue** is a value that is about to be used up. It can stand only on the right side of an assignment.
-- **A temporary** is an rvalue, such as the result of a computation, or an object returned by value from a function.
-- **A temporary's lifetime** ends at the end of the full expression that created it, unless a reference extends it.
-- **`const T&`** can bind to an lvalue or to an rvalue. Binding it to a temporary keeps that temporary alive for as long as the reference exists.
-- **The `const`** means that code cannot modify the object through that reference.
-:::
+**A move** gives the buffer to the new object, and copies nothing but the pointer.
 
-This is why the value category matters for moving. Stealing an object's buffer leaves that object empty.
+- No new buffer is allocated and no bytes are copied.
+- Afterwards there is still one buffer. The new object owns it, and the old object is left empty.
 
-- **An rvalue is safe to move from:** it is a temporary, and nothing will read it again after this line.
-- **An lvalue is not:** it has a name, so the code below may still use it, and it must keep its contents.
-- **So the compiler moves only from rvalues.** To move from a named object anyway, you must say so explicitly, with `std::move`.
+```text
+COPY:   Image b(a);
+  a: [ width=2 | height=2 | _bytes ]---> [ p0 p1 p2 p3 ]
+  b: [ width=2 | height=2 | _bytes ]---> [ p0 p1 p2 p3 ]     a second buffer, bytes copied
 
-`std::move(x)` does not move anything by itself. It is only a cast.
-
-- **What the cast does:** it tells the compiler to treat the lvalue `x` as an rvalue. The compiler can then choose the overload that takes an rvalue reference, which is the one that steals the resource.
-- **Who actually moves:** the move constructor or move-assignment operator that the compiler chose.
-- **After the move:** `x` is in a valid but unspecified state. You may destroy it or assign it a new value, but you should not rely on its contents.
-- **For `Image`:** a moved-from `Image` holds a null pointer, so destroying it is safe.
-
-An rvalue reference is written `&&`, as in `Image&&`.
-
-- **What it binds to:** an rvalue reference can bind only to an rvalue, such as a temporary or the result of `std::move`.
-- **Where it is used:** it is the parameter type of the move constructor and of the move-assignment operator.
-
-With these two overloads, the compiler picks the right version automatically: the first one only reads the image, and the second may take its buffer.
-
-```cpp
-void convert(const Image& img);   // binds a named image or a temporary, does not steal
-void convert(Image&& img);        // binds only a temporary, may steal
-
+MOVE:   Image c(std::move(a));
+  a: [ width=0 | height=0 | _bytes=nullptr ]                 emptied
+  c: [ width=2 | height=2 | _bytes ]---> [ p0 p1 p2 p3 ]     the same buffer, new owner
 ```
 
-### Moving a Student
+Think of a notebook. Copying is photocopying every page. Moving is handing over the notebook itself, which is instant, but you no longer have it.
 
-The deep copy from [The rule of three](topic:rule-of-three) is correct, but wasteful when the source is a temporary.
+That is also the only catch. A move is safe only if the old object is never needed again. If the code below still reads `a`, and you have emptied it, you have a bug. So the compiler must be able to tell whether an object is still going to be used. That is the whole purpose of the next idea.
+
+## lvalues and rvalues
+
+Every expression in C++ is one of two kinds. The question that separates them is simple: **does this thing have a name, so that the code below can still reach it?**
+
+:::definition id=def-value-category title="lvalue and rvalue" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
+- **An lvalue** is an object with a name and a place in memory, such as a variable. It is still there on the next line, so the code may use it again.
+- **An rvalue** is a throwaway value with no name, such as the result of a computation or a temporary object. It is destroyed at the end of the line, so nobody can use it again.
+- **The quick test:** if you can write `&expression`, it is an lvalue. If the compiler refuses, it is an rvalue.
+- **Where the names come from:** an lvalue can stand on the **l**eft of `=`, as in `x = 5`. An rvalue can stand only on the **r**ight, as in `x = a + b`, because `a + b` is not a place you can store into.
+:::
+
+Here are the usual expressions, sorted.
+
+| Expression | Kind | Why |
+| --- | --- | --- |
+| `x` (a variable) | lvalue | it has a name, and it lives on after this line |
+| `arr[2]` | lvalue | a specific slot in memory, so `&arr[2]` works |
+| `*p` | lvalue | the object that `p` points at |
+| `5` | rvalue | a literal, with no place in memory to point at |
+| `x + 1` | rvalue | the result of a computation, gone after this line |
+| `Image(4, 4)` | rvalue | a temporary object, destroyed at the end of the line |
+| `makeImage()` | rvalue | a function that returns an `Image` by value gives a temporary |
+| `std::move(x)` | rvalue | `x` relabelled as a throwaway (see below) |
+
+Now connect this to moving.
+
+- **An rvalue is safe to move from.** It is going to be destroyed anyway, so stealing its buffer hurts nobody.
+- **An lvalue is not safe to move from.** The code below may still use it, so it must keep its contents. The compiler therefore **copies** from lvalues.
+- **A temporary's life** ends at the end of the full expression that created it. (The one exception is a `const` reference bound to it, which keeps the temporary alive as long as the reference exists.)
+
+### How a function says which one it accepts
+
+A function parameter can be declared so that it accepts only one of the two kinds.
+
+- **`const Image&`** (a reference to a constant) binds to an lvalue, and also to an rvalue. Use it when you only read.
+- **`Image&&`** (an rvalue reference) binds **only** to an rvalue. Use it when you want to take from the argument, because you know it is a throwaway.
+
+With both overloads written, the compiler chooses by looking at the argument.
+
+```cpp
+void convert(const Image& img);   // the safe version: only reads
+void convert(Image&& img);        // the greedy version: may steal the buffer
+
+Image a(2, 2);
+convert(a);              // a has a name, so it is an lvalue: convert(const Image&)
+convert(Image(4, 4));    // a temporary, so it is an rvalue:  convert(Image&&)
+```
+
+This is exactly how the compiler picks between the copy constructor (which takes `const Image&`) and the move constructor (which takes `Image&&`). Nothing else is needed: the type of the argument chooses.
+
+### std::move
+
+Sometimes you have a named object and you know you are finished with it. You want to move from it, but it is an lvalue, so the compiler would copy. `std::move` is how you say "I promise I will not use this again".
+
+```cpp
+Image a(2, 2);
+Image b(a);              // a is an lvalue: the copy constructor runs
+Image c(std::move(a));   // std::move(a) is an rvalue: the move constructor runs
+```
+
+`std::move(a)` does not move anything. It is only a cast, a relabel.
+
+- **What it does:** it tells the compiler to treat `a` as an rvalue. The compiler then selects the `Image&&` overload.
+- **Who actually moves:** the move constructor or move-assignment operator that the compiler selected. They are ordinary functions that you write.
+- **After the move:** `a` still exists, in a valid but unspecified state. You may destroy it or assign a new value to it, but you should not read its contents. For `Image`, a moved-from image has a null pointer, so destroying it is safe.
+
+One detail trips people up. A parameter such as `Image&& other` has a name, so inside the function `other` is itself an lvalue, even though its type is `Image&&`. The type says what the parameter can bind to when called. The name decides what it is afterwards.
+
+## Writing the move operations
+
+### The move constructor
+
+The move constructor builds a new object out of a throwaway one. It has two steps.
+
+1. **Take:** copy the pointer (and the sizes) from `other`. Now two objects point at one buffer.
+2. **Reset the source:** set `other`'s pointer to `nullptr`. Now only the new object owns the buffer.
+
+```cpp
+Image::Image(Image&& other)
+    : _width(other._width), _height(other._height), _bytes(other._bytes) {   // 1. take
+    other._bytes = nullptr;                                                  // 2. reset the source
+    other._width = 0;
+    other._height = 0;
+}
+```
+
+Step 2 is not optional. If you skip it, `other` still points at the buffer. When both objects are destroyed, each destructor runs `delete[]` on the same address, which is a double free.
+
+With step 2 done, `other`'s destructor runs `delete[]` on a null pointer, which is legal and releases nothing.
+
+### The move assignment operator
+
+Assignment is a little harder than construction, because `*this` already owns a buffer. If you just took `other`'s pointer, the old buffer would leak.
+
+The trick is to **swap** the two objects' contents, so the old buffer travels to `other`.
+
+```cpp
+Image& Image::operator=(Image&& other) {
+    swap(other);
+    return *this;
+}
+```
+
+Follow it with an example. Say `*this` owns buffer X, and `other` is a temporary that owns buffer Y.
+
+```text
+before swap:   *this --> X        other --> Y
+after swap:    *this --> Y        other --> X
+```
+
+`*this` now has the new buffer, which is what we wanted. `other` is a temporary, so when it is destroyed at the end of the line, its destructor releases X, the old buffer. The swap did the job of "release the old one, take the new one" in a single step.
+
+### The same idea with several members
+
+A class often owns more than one thing. The pattern is the same for each one: take it, then reset it in the source. Here is a `Student` that owns a `Bag*` and a vector of books.
 
 ```cpp
 University univ(...);
-Student ringo(Student(1, "yosi", new Bag(7), univ));
+Student ringo(Student(1, "yosi", new Bag(7), univ));   // Student(...) is a temporary
 ```
 
-The `Student(...)` in parentheses is a temporary, an rvalue. It is destroyed right after this line. Copying its bag and books, only to delete the originals a moment later, is pointless. Better to **take** them.
-
-C++ tells the two cases apart by the parameter type.
-
-- **`const Student&`** binds to an lvalue, an object someone will still use. Copy it.
-- **`Student&&`** binds to an rvalue, a temporary nobody will use again. Take from it.
-
-**The move constructor** takes the pointers, then clears them in the source, so the source's destructor deletes nothing.
+The `Student(...)` in parentheses is a temporary, so it will be destroyed on this very line. Copying its bag and books, only to delete the originals a moment later, would be wasteful. Taking them is better.
 
 ```cpp
 Student(Student&& other)
@@ -91,12 +179,12 @@ Student(Student&& other)
       _bag(other._bag),          // take the other's bag
       _books(other._books)       // take the other's books
 {
-    other._bag = nullptr;        // the other's destructor deletes nothing
+    other._bag = nullptr;        // reset: the other's destructor deletes nothing
     other._books.clear();
 }
 ```
 
-**The move assignment operator** does the same for an object that already exists. Like the ordinary assignment, it first releases what it held. Here is the part for `_bag`:
+The move assignment for an existing object also releases what it held first. Here is the part for `_bag`:
 
 ```cpp
 Student& operator=(Student&& other) {
@@ -112,9 +200,7 @@ Student& operator=(Student&& other) {
 
 It runs for a line like `ringo = Student(2, "danny", new Bag(5), univ);`, where the right side is a temporary.
 
-Writing these two methods, in addition to the three from before, is called the **rule of five**.
-
-### Move operations
+### The rule of five
 
 :::definition id=def-rule-of-five title="The rule of five" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx"
 The rule of five extends the rule of three (חוק השלושה).
@@ -124,36 +210,13 @@ The rule of five extends the rule of three (חוק השלושה).
 - **The last two** perform moves: a temporary hands over its resource, and the only thing copied is the pointer.
 :::
 
-The move constructor copies the pointer and leaves the bytes where they are.
-
-- **Resetting the source:** it then sets the source's pointer to `nullptr` and its dimensions to 0, so the source no longer owns the buffer.
-- **Why that matters:** when the source is destroyed later, its destructor runs `delete[]` on a null pointer, which is safe and releases nothing.
-
-```cpp
-Image::Image(Image&& other)
-    : _width(other._width), _height(other._height), _bytes(other._bytes) {
-    other._bytes = nullptr;
-    other._width = 0;
-    other._height = 0;
-}
-
-```
-
-The move-assignment operator is different, because `*this` already holds a buffer that must be released. A `swap` handles both jobs at once.
-
-```cpp
-Image& Image::operator=(Image&& other) {
-    swap(other);
-    return *this;
-}
-
-```
-
-After the swap, `other` holds the buffer that used to belong to `*this`. Since `other` is a temporary, its destructor soon releases that old buffer.
+In short, the five say what happens in each of five situations. An object dies (destructor). A new object is made from an lvalue (copy constructor). A new object is made from an rvalue (move constructor). An existing object receives an lvalue (copy assignment). An existing object receives an rvalue (move assignment).
 
 ## Smart pointers
 
-The memory part of the notes ends with a design pattern that uses the rule of three to manage heap objects automatically: the **smart pointer**.
+A **smart pointer** is a small object that holds a raw pointer and deletes the heap object for you, so you never write `delete` yourself.
+
+It works because of something you already know: a destructor runs automatically when an object goes out of scope. If the pointer lives inside an object, the object's destructor can do the `delete`. The only hard question is **who is responsible for the delete** when several variables point at the same object. That responsibility is called **ownership**.
 
 **The problem.** With raw pointers, it is often unclear who should delete what.
 
@@ -279,6 +342,11 @@ std::unique_ptr<char[]> bytes = std::make_unique<char[]>(100);
 std::shared_ptr<Filter> filter = std::make_shared<Filter>(args...);
 
 ```
+
+The two kinds answer the ownership question differently.
+
+- **`unique_ptr`: one key to the room.** Only one pointer owns the object, so there is never a doubt about who deletes it. You cannot copy the key, but you can hand it over. That hand-over is a move: `auto p2 = std::move(p1);` leaves `p1` null and `p2` the owner. This is the move constructor you just wrote, applied to a pointer.
+- **`shared_ptr`: many keys, and the last one out locks up.** Every copy adds one to the count you built above, and the object is deleted when the count reaches 0.
 
 Declaring some members stops the compiler from generating others.
 
