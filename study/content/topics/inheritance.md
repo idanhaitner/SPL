@@ -214,9 +214,20 @@ This layout is the reason a `Student*` can be used as a `Person*`. The `Person` 
 **Order of construction and destruction.** An object is built from the bottom up. The base parts are built first, in the order they are listed, and the derived part last. The easiest way to see it is with classes that print.
 
 ```cpp
-struct A { A() { cout << "A "; }  ~A() { cout << "~A "; } };
-struct B { B() { cout << "B "; }  ~B() { cout << "~B "; } };
-struct C : public A, public B {
+class A {
+public:
+    A()  { cout << "A "; }
+    ~A() { cout << "~A "; }
+};
+
+class B {
+public:
+    B()  { cout << "B "; }
+    ~B() { cout << "~B "; }
+};
+
+class C : public A, public B {
+public:
     C()  { cout << "C "; }
     ~C() { cout << "~C "; }
 };
@@ -491,12 +502,14 @@ This is why C++ does not make everything virtual by default.
 A destructor is a function like any other, so `delete p` is also a call that needs binding. See what goes wrong when the destructor is not virtual.
 
 ```cpp
-struct Person {
+class Person {
+public:
     ~Person() { cout << "~Person "; }              // NOT virtual
 };
 
-struct Student : public Person {
+class Student : public Person {
     Bag* _bag = new Bag();
+public:
     ~Student() { delete _bag; cout << "~Student "; }
 };
 
@@ -507,7 +520,8 @@ delete p;       // prints: ~Person     (~Student never ran, so the bag is leaked
 `delete p` is a call to the destructor through a `Person*`. The destructor is not virtual, so it gets static binding, and the compiler picks `~Person` from the pointer's type. The student's own destructor never runs. The fix is the same keyword as before.
 
 ```cpp
-struct Person {
+class Person {
+public:
     virtual ~Person() { cout << "~Person "; }      // virtual
 };
 
@@ -695,17 +709,20 @@ Which claim matches the rest of that rule?
 Each class prints when it is built and when it is destroyed.
 
 ```cpp
-struct Person {
+class Person {
+public:
     Person()  { cout << "P "; }
     ~Person() { cout << "~P "; }
 };
 
-struct Learning {
+class Learning {
+public:
     Learning()  { cout << "L "; }
     ~Learning() { cout << "~L "; }
 };
 
-struct Student : public Person, public Learning {
+class Student : public Person, public Learning {
+public:
     Student()  { cout << "S "; }
     ~Student() { cout << "~S "; }
 };
@@ -719,7 +736,7 @@ The block `{ Student s; }` prints {{=P L S ~S ~L ~P|S L P ~P ~L ~S|P L S ~P ~L ~
 :::
 
 :::check id=prac-inh-order-q2
-If the declaration were `struct Student : public Learning, public Person`, the same block would print {{=L P S ~S ~P ~L|P L S ~S ~L ~P|L P S ~L ~P ~S}}.
+If the declaration were `class Student : public Learning, public Person`, the same block would print {{=L P S ~S ~P ~L|P L S ~S ~L ~P|L P S ~L ~P ~S}}.
 
 The order of the bases comes from the declaration, so swapping them swaps `L` and `P`. Destruction is still the exact reverse of construction.
 :::
