@@ -85,10 +85,10 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
 
   const tidy = useCallback(async () => {
     const before = codeRef.current;
-    const formatted = await formatCode(before);
+    const formatted = await formatCode(before, ex.lang);
     // The first format downloads the formatter, so the student may have typed something newer by now.
     if (formatted !== before && codeRef.current === before) edit(formatted);
-  }, [edit]);
+  }, [edit, ex.lang]);
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -116,9 +116,9 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
   // These run after tidy, so they read the ref: the `code` in this render is from before the format.
   const doRun = async () => {
     const current = codeRef.current;
-    const source = ex.mode === "function" ? buildTestSource(current, harness, ex.test ?? "") : { source: current, studentLines: NO_LINE_LIMIT };
+    const source = ex.mode === "function" ? buildTestSource(current, ex.harness || harness, ex.test ?? "") : { source: current, studentLines: NO_LINE_LIMIT };
     const first = ex.cases[0];
-    const outcome = await runProgram(source.source, ex.mode === "program" && first ? { args: first.args, stdin: first.stdin } : {});
+    const outcome = await runProgram(source.source, { lang: ex.lang, ...(ex.mode === "program" && first ? { args: first.args, stdin: first.stdin } : {}) });
     showOutcome(outcome, source.studentLines);
     setResult({ kind: "outcome", outcome, studentLines: source.studentLines });
   };
@@ -128,15 +128,15 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
     let verdict: TestVerdict;
     let studentLines = NO_LINE_LIMIT;
     if (ex.mode === "function") {
-      const built = buildTestSource(current, harness, ex.test ?? "");
+      const built = buildTestSource(current, ex.harness || harness, ex.test ?? "");
       studentLines = built.studentLines;
-      const outcome = await runProgram(built.source);
+      const outcome = await runProgram(built.source, { lang: ex.lang });
       showOutcome(outcome, studentLines);
       verdict = functionVerdict(outcome, ex.caseNames);
     } else {
       const runs: ProgramRun[] = [];
       for (const item of ex.cases) {
-        const outcome = await runProgram(current, { args: item.args, stdin: item.stdin });
+        const outcome = await runProgram(current, { args: item.args, stdin: item.stdin, lang: ex.lang });
         runs.push({ name: item.name, expected: item.expected, outcome });
         if (outcome.kind === "compile-error") break;
       }
@@ -257,7 +257,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
             </div>
             {solutionOpen && (
               <SolutionPanel onClose={closeSolution}>
-                <Editor value={ex.solution} onChange={() => {}} diagnostics={[]} readOnly />
+                <Editor value={ex.solution} onChange={() => {}} diagnostics={[]} lang={ex.lang} readOnly />
               </SolutionPanel>
             )}
           </div>
@@ -272,7 +272,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
               minFirst={160}
               minSecond={120}
               label="Resize the editor and results panels"
-              first={<Editor value={code} onChange={edit} diagnostics={diagnostics} onFormat={tidy} />}
+              first={<Editor value={code} onChange={edit} diagnostics={diagnostics} onFormat={tidy} lang={ex.lang} />}
               second={
                 <ResultsPanel>
                   {result === null && <p className="results-empty">Run shows what your code prints. Submit checks it against the tests.</p>}
@@ -286,10 +286,10 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
                       </div>
                     </div>
                   )}
-                  {result?.kind === "outcome" && <OutcomeView outcome={result.outcome} studentLines={result.studentLines} />}
+                  {result?.kind === "outcome" && <OutcomeView outcome={result.outcome} studentLines={result.studentLines} lang={ex.lang} />}
                   {result?.kind === "cases" && (
                     <>
-                      {result.outcome && <OutcomeView outcome={result.outcome} studentLines={result.studentLines} />}
+                      {result.outcome && <OutcomeView outcome={result.outcome} studentLines={result.studentLines} lang={ex.lang} />}
                       <CaseList cases={result.cases} />
                     </>
                   )}
@@ -313,7 +313,7 @@ export function ExerciseStep({ exercise: ex, courseId, done, onComplete, harness
                 </>
               )}
             </div>
-            <FunctionFinder />
+            {ex.lang === "cpp" && <FunctionFinder />}
           </div>
         }
       />

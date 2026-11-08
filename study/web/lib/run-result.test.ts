@@ -200,3 +200,29 @@ describe("C++ memory reports", () => {
     expect(classifyRun({ didExecute: true, code: 143, timedOut: true, stdout: [], stderr: [] }).kind).toBe("timeout");
   });
 });
+
+describe("classifyRun for Java and Python", () => {
+  const exited = (stderr: string) => ({
+    didExecute: true,
+    code: 1,
+    stdout: [{ text: "PASS a" }],
+    stderr: stderr.split("\n").map((text) => ({ text })),
+  });
+
+  it("names an uncaught Java exception instead of a signal", () => {
+    const r = classifyRun(exited('Exception in thread "main" java.lang.NullPointerException\n\tat Main.main(example.java:1)'));
+    expect(r.kind).toBe("crash");
+    if (r.kind !== "crash") return;
+    expect(r.name).toBe("Uncaught exception");
+    expect(r.signal).toBeNull();
+    expect(r.fullStdout).toBe("PASS a");
+  });
+
+  it("names a Python traceback", () => {
+    const r = classifyRun(exited('Traceback (most recent call last):\n  File "x", line 2, in <module>\nValueError: boom'));
+    expect(r.kind).toBe("crash");
+    if (r.kind !== "crash") return;
+    expect(r.name).toBe("Python error");
+  });
+});
+

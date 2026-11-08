@@ -3,6 +3,7 @@
 import { OUTPUT_CAP, type Diagnostic, type RunOutcome } from "@/lib/run-result";
 import { splitDiagnostics } from "@/lib/run-result";
 import type { CaseResult } from "@/lib/test-output";
+import type { ExerciseLang } from "@/lib/types";
 import type { ReactNode } from "react";
 
 export type CaseView = CaseResult & { hint: ReactNode | null };
@@ -42,12 +43,12 @@ function Output({ stdout, stderr, truncated }: { stdout: string; stderr: string;
   );
 }
 
-export function OutcomeView({ outcome, studentLines }: { outcome: RunOutcome; studentLines: number }) {
+export function OutcomeView({ outcome, studentLines, lang = "cpp" }: { outcome: RunOutcome; studentLines: number; lang?: ExerciseLang }) {
   if (outcome.kind === "compile-error") {
     const { inEditor, inTests } = splitDiagnostics(outcome.diagnostics, studentLines);
     return (
       <div className="code-result" data-state="bad">
-        <p className="code-headline">Your code did not compile. The compiler (the tool that turns C++ into a program) found a problem.</p>
+        <p className="code-headline">{lang === "cpp" ? "Your code did not compile. The compiler (the tool that turns C++ into a program) found a problem." : lang === "java" ? "Your code did not compile. The Java compiler found a problem." : "Your code did not run. Python found a problem before it could start."}</p>
         {outcome.hint && <p><WithCode text={outcome.hint} /></p>}
         {inEditor.length > 0 && <DiagnosticList items={inEditor} />}
         {inTests.length > 0 && (

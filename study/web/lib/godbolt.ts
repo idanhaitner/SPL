@@ -1,6 +1,11 @@
 import { classifyRun, type RunOutcome } from "./run-result";
+import type { ExerciseLang } from "./types";
 
 export const GODBOLT_COMPILER = "g162";
+
+// Godbolt runs Java and Python through the same endpoint. Its Java sandbox cannot start threads,
+// so Java exercises must not use Thread, executors, or sockets.
+const COMPILERS: Record<ExerciseLang, string> = { cpp: GODBOLT_COMPILER, java: "java2102", python: "python313" };
 export const GODBOLT_BASE = "https://godbolt.org/api";
 
 export const REQUEST_TIMEOUT_MS = 30_000; // godbolt itself takes about 21 s to report an infinite loop
@@ -24,11 +29,11 @@ export class GodboltError extends Error {
 
 export const RUN_FLAGS = "-std=c++17 -Wall -Wextra -Wno-unused-parameter -O0 -g -fsanitize=address,undefined";
 
-async function post(body: unknown, fetchImpl: typeof fetch): Promise<unknown> {
+async function post(compiler: string, body: unknown, fetchImpl: typeof fetch): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetchImpl(`${GODBOLT_BASE}/compiler/${GODBOLT_COMPILER}/compile`, {
+    const response = await fetchImpl(`${GODBOLT_BASE}/compiler/${compiler}/compile`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(body),
@@ -50,13 +55,15 @@ async function post(body: unknown, fetchImpl: typeof fetch): Promise<unknown> {
 
 export async function runProgram(
   source: string,
-  opts: { args?: string[]; stdin?: string; fetchImpl?: typeof fetch } = {},
+  opts: { args?: string[]; stdin?: string; lang?: ExerciseLang; fetchImpl?: typeof fetch } = {},
 ): Promise<RunOutcome> {
+  const lang = opts.lang ?? "cpp";
   const json = await post(
+    COMPILERS[lang],
     {
       source,
       options: {
-        userArguments: RUN_FLAGS,
+        userArguments: lang === "cpp" ? RUN_FLAGS : "",
         executeParameters: { args: opts.args ?? [], stdin: opts.stdin ?? "" },
         compilerOptions: { executorRequest: true },
         filters: { execute: true },

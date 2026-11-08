@@ -63,6 +63,8 @@ changelog:
     note: "Parameter passing shows a call for each form, and code line numbers sit in a gutter beside the text."
   - date: 2026-10-25
     note: "Chapters follow the order and material of Adler's lecture notes: a run-time environment chapter, the Student, Bag, and Book memory examples, design by contract as safety and correctness inside concurrency, new synchronization and waiting chapters, the general server, the command-invocation server, the Python persistence layer, and a course review. Back to Java was folded into the chapters that use it."
+  - date: 2026-11-08
+    note: "Coding exercises now run in Java and Python as well as C++: ten Java exercises across design by contract, concurrency, synchronization, waiting, serialization, and the reactor, and five Python and SQL exercises in the persistence chapter."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"

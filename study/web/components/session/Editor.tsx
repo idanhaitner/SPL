@@ -2,6 +2,8 @@
 
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { cpp } from "@codemirror/lang-cpp";
+import { java } from "@codemirror/lang-java";
+import { python } from "@codemirror/lang-python";
 import { setDiagnostics, type Diagnostic as CmDiagnostic } from "@codemirror/lint";
 import { EditorState, StateEffect, StateField, type Extension } from "@codemirror/state";
 import { Decoration, EditorView, drawSelection, highlightActiveLine, keymap, lineNumbers } from "@codemirror/view";
@@ -10,6 +12,7 @@ import { HighlightStyle, bracketMatching, indentOnInput, indentUnit, syntaxHighl
 import { tags as t } from "@lezer/highlight";
 import { useEffect, useRef } from "react";
 import type { Diagnostic } from "@/lib/run-result";
+import type { ExerciseLang } from "@/lib/types";
 
 type Props = {
   value: string;
@@ -19,6 +22,7 @@ type Props = {
   onFormat?(): void;
   highlightLines?: number[];
   readOnly?: boolean;
+  lang?: ExerciseLang;
 };
 
 // Formatting only moves whitespace, so counting the other characters finds the same spot in the new text.
@@ -94,7 +98,10 @@ function toCm(doc: EditorState["doc"], list: Diagnostic[]): CmDiagnostic[] {
   });
 }
 
-export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, highlightLines, readOnly = false }: Props) {
+const LANGUAGES = { cpp, java, python };
+const LABELS: Record<ExerciseLang, string> = { cpp: "C++", java: "Java", python: "Python" };
+
+export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, highlightLines, readOnly = false, lang = "cpp" }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const cb = useRef({ onChange, onHoverLine, onFormat });
@@ -117,7 +124,7 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
       highlightActiveLine(),
       EditorView.lineWrapping,
       keymap.of([{ key: "Shift-Alt-f", run: format }, ...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
-      cpp(),
+      LANGUAGES[lang](),
       // The same width as CODE_STYLE, so a new line lines up with the formatted code around it.
       indentUnit.of("    "),
       syntaxHighlighting(highlight),
@@ -127,7 +134,7 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
       EditorView.editable.of(!readOnly),
       // A read-only editor is not focusable on its own, so a keyboard user could not scroll a long solution.
       EditorView.contentAttributes.of(
-        readOnly ? { "aria-label": "Solution code, read only", tabindex: "0", spellcheck: "false" } : { "aria-label": "C code editor", spellcheck: "false" },
+        readOnly ? { "aria-label": "Solution code, read only", tabindex: "0", spellcheck: "false" } : { "aria-label": `${LABELS[lang]} code editor`, spellcheck: "false" },
       ),
       EditorView.updateListener.of((u) => {
         if (u.docChanged) cb.current.onChange(u.state.doc.toString());
@@ -150,7 +157,7 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
     };
     // The editor is created once; later prop changes are pushed in by the effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly]);
+  }, [readOnly, lang]);
 
   useEffect(() => {
     const v = view.current;
