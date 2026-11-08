@@ -239,7 +239,7 @@ Construction goes `A`, `B`, then `C`. Destruction goes in exactly the reverse or
 
 **Choosing a base constructor.** By default each base is built with its empty constructor. To pass it arguments, name it in the initializer list, as `Student` did with `Person(id, name)` in the running example.
 
-**Copying.** The copy constructor works the same way. If you write your own and forget to name the base's copy constructor, the base is built with its *empty* constructor, and the `Person` part of the copy is lost: the new student gets no id and no name.
+**Copying.** The copy constructor works the same way. If you write your own and forget to name the base's copy constructor, the base is built with its **empty** constructor, and the `Person` part of the copy is lost: the new student gets no id and no name.
 
 ```cpp
 Student(const Student& other)
@@ -337,7 +337,7 @@ Person* p = new Student();
 p->live();      // prints: a student lives
 ```
 
-`virtual` tells the compiler: *"do not decide which `live` to call while compiling. Wait until the program runs, look at the real object, and call its version."*
+`virtual` tells the compiler: **"do not decide which `live` to call while compiling. Wait until the program runs, look at the real object, and call its version."**
 
 With a pointer `p` whose static type is `Person*`, a call `p->live()` runs:
 
@@ -349,7 +349,7 @@ With a pointer `p` whose static type is `Person*`, a call `p->live()` runs:
 Things to know about `virtual`:
 
 - **Write it in the base class,** on the first declaration of the function. Every override in a derived class is automatically virtual too, even if you do not write the word again. Many programmers repeat `virtual` in the derived class anyway, to remind the reader.
-- **`override` is an optional safety net** (C++11). Writing `void live() override { ... }` makes the compiler check that the base really has a virtual `live` with the same signature. Without it, a typo such as `lvie()` or a missing `const` silently creates a *new* function instead of an override.
+- **`override` is an optional safety net** (C++11). Writing `void live() override { ... }` makes the compiler check that the base really has a virtual `live` with the same signature. Without it, a typo such as `lvie()` or a missing `const` silently creates a **new** function instead of an override.
 - **It only matters through a pointer or a reference.** If you call `s.live()` on the object itself, the compiler already knows its exact class, so there is nothing to wait for.
 - **Java comparison:** in Java every method behaves as if it were `virtual`. In C++ you have to opt in, function by function.
 
@@ -430,13 +430,10 @@ class Student : public Person {
 
 **Step 1: the compiler builds one table per class.** The table is called the **v-table** (vtable). It lists the addresses of the class's virtual functions, always in the same order.
 
-```text
-Person's table, stored at address 100:     [ 7000,  4000 ]
-                                              live   love
-
-Student's table, stored at address 200:    [ 8000,  4000,  9000 ]
-                                              live   love   learn
-```
+| Table | Position 0 (`live`) | Position 1 (`love`) | Position 2 (`learn`) |
+| --- | --- | --- | --- |
+| `Person`'s table, stored at address 100 | 7000 | 4000 | (none) |
+| `Student`'s table, stored at address 200 | 8000 | 4000 | 9000 |
 
 Compare the two tables.
 
@@ -453,15 +450,14 @@ Person*  a = new Person(...);       // object stored at address 500
 Person*  b = new Student(...);      // object stored at address 600
 ```
 
-```text
-object at 500 (a Person)            object at 600 (a Student)
-┌──────────────────────┐            ┌──────────────────────┐
-│ vptr = 100           │            │ vptr = 200           │   ← the hidden cell
-│ _id                  │            │ _id                  │
-│ _name                │            │ _name                │
-└──────────────────────┘            │ _bag                 │
-                                    └──────────────────────┘
-```
+| Cell | The object at 500 (a `Person`) | The object at 600 (a `Student`) |
+| --- | --- | --- |
+| 1st: the hidden vptr | `100`, the address of `Person`'s table | `200`, the address of `Student`'s table |
+| 2nd | `_id` | `_id` |
+| 3rd | `_name` | `_name` |
+| 4th | (none) | `_bag` |
+
+Both objects start with the same kinds of cells. The only difference in the first cell is the number, and that number is what tells each object which table to use.
 
 Both pointers, `a` and `b`, have the static type `Person*`. Only the objects themselves know what they really are, through the number in their first cell.
 
