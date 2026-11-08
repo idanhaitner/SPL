@@ -970,6 +970,12 @@ If `Bag7` did not write its own `clone`, `b->clone()` would run {{=Bag::clone|Ba
 :::problem id=exam-16a-q2 title="A visitor for shapes" source="materials/exams/16-a.pdf" kind=exam solution_origin=derived
 A game engine draws shapes with shaders. There are two kinds of shape, `SPHERE` and `BOX`, both derived from `SHAPE`, and two kinds of shader, `BASIC_SHADER` and `COMPLEX_SHADER`, both derived from `SHADER`. Each shader has one `Render` overload for each kind of shape.
 
+- **The problem:** the compiler picks an overload by the declared type of the argument. `_s[i]` is declared `SHAPE*`, and no shader has a `Render(SHAPE*)`, so this line does not compile, even when the shape really is a `SPHERE`.
+- **The fix, the visitor pattern (also called double dispatch):** every shape gets a virtual method `Accept(SHADER* sh)`, where `sh` is the shader that should draw it. The loop calls `_s[i]->Accept(_r[i])` instead.
+- **The questions below** are closed questions about this fix: the body of `Accept`, the declarations that make `SHAPE` and `SHADER` abstract, and how to copy a `RENDER_MGR`. You do not write code here.
+
+Here is the code the bullets refer to:
+
 ```cpp
 class SHAPE {
 public:
@@ -1008,10 +1014,6 @@ void RENDER_MGR::Render() {
         _r[i]->Render(_s[i]);   // shader i draws shape i
 }
 ```
-
-- **The problem:** the compiler picks an overload by the declared type of the argument. `_s[i]` is declared `SHAPE*`, and no shader has a `Render(SHAPE*)`, so this line does not compile, even when the shape really is a `SPHERE`.
-- **The fix, the visitor pattern (also called double dispatch):** every shape gets a virtual method `Accept(SHADER* sh)`, where `sh` is the shader that should draw it. The loop calls `_s[i]->Accept(_r[i])` instead.
-- **The questions below** are closed questions about this fix: the body of `Accept`, the declarations that make `SHAPE` and `SHADER` abstract, and how to copy a `RENDER_MGR`. You do not write code here.
 
 :::check id=exam-16a-q2-q1
 Which body of `SPHERE::Accept(SHADER* sh)` is correct?

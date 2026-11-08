@@ -350,7 +350,7 @@ The full code is in the course's class material.
 ## Practice
 
 :::problem id=prac-ser-fields title="What survives the trip" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=exercise solution_origin=derived
-A `Player` is written with `writeObject`, and `readObject` then builds `copy` from those bytes.
+A `Player` is written with `writeObject`, and `readObject` then builds `copy` from those bytes. Before the write, the program ran `Player p = new Player("Noa", 80);`, `p.cachedRank = 3;`, and `Player.total = 7;`. Here is the class.
 
 ```java
 public class Player implements Serializable {
@@ -365,8 +365,6 @@ public class Player implements Serializable {
     }
 }
 ```
-
-Before the write, the program ran `Player p = new Player("Noa", 80);`, `p.cachedRank = 3;`, and `Player.total = 7;`.
 
 :::check id=prac-ser-fields-q1
 Which of these are true of `copy`?

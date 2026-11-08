@@ -508,14 +508,12 @@ Each worker writes only its own private sum, and the parent reads those sums onl
 :::
 
 :::problem id=ps8-singleton title="A lazy singleton" source="materials/sessions/SPL_PS8.pptx" kind=exercise solution_origin=source
-A lazy singleton creates its single instance only on first use. It is written like this.
+A lazy singleton creates its single instance only on first use. Two threads may call the getter at the same time. One fix makes the whole getter `synchronized`. Another uses a holder class. The getter is written like this.
 
 ```java
 if (instance == null)
     instance = new ClassicSingleton();
 ```
-
-Two threads may call the getter at the same time. One fix makes the whole getter `synchronized`. Another uses a holder class.
 
 :::check id=ps8-singleton-q1
 Which description of the unsynchronized getter is right?
