@@ -183,6 +183,15 @@ input[type="checkbox"] + .choice-mark { border-radius: 7px; }
   .part-panel > :is(.formal, .card.check), .chapter-lead > :is(.formal, .card.check) { float: right; clear: right; width: 300px; margin: 0 -348px 20px 0; }
 }
 
+/* A section with no definition or standalone check beside it has nothing for the right column, so its text takes that room. */
+@media (min-width: 64rem) {
+  .reader:not(:has(.part-panel > :is(.formal, .card.check), .chapter-lead > :is(.formal, .card.check))) { grid-template-columns: 220px minmax(0, 1fr); }
+  .reader:not(:has(.part-panel > :is(.formal, .card.check), .chapter-lead > :is(.formal, .card.check))) .reader-body :is(p, ul, ol) { max-width: 100ch; }
+}
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  .reader:not(:has(.part-panel > :is(.formal, .card.check), .chapter-lead > :is(.formal, .card.check))) { grid-template-columns: 200px minmax(0, 1fr); }
+}
+
 /* Moving on */
 .handoff { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--rule); clear: both; }
 .handoff-go { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin-left: auto; }

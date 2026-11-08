@@ -78,38 +78,76 @@ A `Student` **has a** `Bag`. That is not inheritance at all, but **composition**
 
 ## Derived classes in C++
 
-A **derived class** (מחלקה נגזרת) is a class built on top of another class, the **base class** (מחלקת בסיס). It is the same idea as `extends` in Java.
+A **derived class** (מחלקה נגזרת) is a class built on top of another class, the **base class** (מחלקת בסיס). It is the same idea as `extends` in Java. The derived class gets everything the base class has, which means its fields and its functions. It can then add new fields and functions of its own, or replace a function of the base with its own version. Replacing a function is called **overriding**.
 
-- **It gets everything the base has:** the fields and the functions.
-- **It can add things of its own:** new fields and new functions.
-- **It can replace a function of the base** with its own version. This is called **overriding**.
+Overriding is the tricky part. Suppose a `Person*` points at a `Student`, and you call `p->live()`. Should the person's `live` run, or the student's? In C++ the answer is surprising, and it is the reason the keyword `virtual` exists. The section "Polymorphism and virtual functions" below explains it step by step. First, the basics of writing a derived class.
 
-Overriding is the tricky part. Suppose a `Person*` points at a `Student`, and you call `p->live()`. Should the person's `live` run, or the student's? The answer is surprising in C++, and it is why the keyword `virtual` exists. The section "Polymorphism and virtual functions" below explains it step by step. First, the basics of writing a derived class.
-
-A derived class names its base after a colon, and calls a base constructor from its member-initializer list.
+Throughout this chapter we use one running example.
 
 ```cpp
-class BlurFilter : public Filter {
-    double _str;
+class Person {
+protected:
+    int _id;
+    string _name;
 public:
-    BlurFilter(double strength) : Filter("blur"), _str(strength) {}
-    double getStrength() const { return _str; }
+    Person(int id, const string& name) : _id(id), _name(name) {}
+    string getName() const { return _name; }
 };
 
+class Student : public Person {
+    Bag* _bag;
+public:
+    Student(int id, const string& name, Bag* bag)
+        : Person(id, name), _bag(bag) {}
+    void study() { ... }
+};
+
+Student s(7, "Dana", new Bag());
+cout << s.getName();     // prints: Dana   (getName comes from Person)
+s.study();               // study comes from Student
 ```
 
-- **The base is built first:** the derived constructor calls a base constructor in its initializer list, here `Filter("blur")`.
-- **If you leave that call out,** the compiler calls the base class's default constructor, and the code does not compile if the base has none.
+Read the example in three parts.
+
+- **`: public Person`** after the class name says that `Student` is built on top of `Person`. That is why a `Student` object can call `getName`, even though `Student` never defines it.
+- **`Student` adds a field,** `_bag`, and a function, `study`. Those exist only in students.
+- **The constructor** starts with `: Person(id, name)`. This is the **initializer list**, and its first job is to build the `Person` part of the student. The base part is always built first. If you leave the call out, the compiler builds the base with its default constructor, and the code does not compile if the base has none.
 
 ### Access levels and inheritance in C++
 
-The word after the colon, here `public`, sets how the base class's members can be reached through the derived class.
+Every member has an access level: `public` (anyone), `protected` (the class itself and its derived classes), or `private` (only the class itself). Look at what a `Student` can reach in `Person`.
+
+```cpp
+class Person {
+public:    string name;       // anyone
+protected: int id;            // Person and its derived classes
+private:   string secret;     // Person only
+};
+
+class Student : public Person {
+    void f() {
+        name = "Dana";        // ok
+        id = 7;               // ok: protected is open to derived classes
+        secret = "x";         // ERROR: private to Person
+    }
+};
+
+Student s;
+s.name = "Dana";              // ok: public
+s.id = 7;                     // ERROR: protected is closed to outside code
+```
+
+The word after the colon (`public` in `: public Person`) sets how the base members look from **outside** the derived class. It can only keep the access level the same or make it stricter.
 
 | Kind of inheritance | A public member of the base becomes | A protected member of the base becomes | A private member of the base |
 | --- | --- | --- | --- |
-| `public` | `public` (an "is-a" relationship) | `protected` | inaccessible |
+| `public` | `public` | `protected` | inaccessible |
 | `protected` | `protected` | `protected` | inaccessible |
-| `private` | `private` (used like composition: "implemented in terms of") | `private` | inaccessible |
+| `private` | `private` | `private` | inaccessible |
+
+- **`public` inheritance** is the normal one. It means "a `Student` **is a** `Person`", so outside code can use a student as a person. Use it for almost everything.
+- **`private` inheritance** hides the base from outside code. It means "implemented in terms of", and it is used like composition, as a way to reuse code without promising "is a".
+- **A private member** is never reachable from the derived class, whichever kind of inheritance you use.
 
 ## The Liskov substitution principle
 
@@ -120,15 +158,46 @@ The Liskov substitution principle says that an object of a derived class must be
 - **Whatever is always true of a base object** must still be true of the derived object.
 :::
 
-The classic example that breaks the principle is deriving `Square` from `Rectangle`.
+In plain words: if a function works for a `Person`, it must also work when you hand it a `Student`. A derived class that behaves in a way the base class promised it never would breaks this rule.
 
-- **For a rectangle,** `setWidth(w)` changes the width and leaves the height as it is.
-- **For a square,** the same call must also change the height, or it would stop being a square.
-- **The result:** code written for a `Rectangle` that sets the width and expects the height to stay the same breaks when it receives a `Square`. The override does something the base class's contract does not allow.
+The classic example is deriving `Square` from `Rectangle`. In geometry a square is a rectangle, so it looks like a good fit. Now write a function for rectangles. (The setters are `virtual`, which the polymorphism section below explains. Here it only means that a `Square` can replace them.)
+
+```cpp
+class Rectangle {
+protected:
+    int _w, _h;
+public:
+    virtual void setWidth(int w)  { _w = w; }       // changes only the width
+    virtual void setHeight(int h) { _h = h; }
+    int area() const { return _w * _h; }
+};
+
+void stretch(Rectangle& r) {
+    r.setHeight(2);
+    r.setWidth(10);
+    // a Rectangle promises: the height is still 2, so the area is 20
+}
+```
+
+A square must keep its sides equal, so its override of `setWidth` changes the height too.
+
+```cpp
+class Square : public Rectangle {
+public:
+    void setWidth(int w)  { _w = w; _h = w; }       // also changes the height
+    void setHeight(int h) { _w = h; _h = h; }
+};
+
+Square sq;
+stretch(sq);
+cout << sq.area();      // prints 100, but stretch expected 20
+```
+
+`stretch` is correct for every `Rectangle`, and it breaks on a `Square`. The override changed something the `Rectangle` contract says stays fixed, so a `Square` cannot stand in for a `Rectangle`, even though a square "is" a rectangle in geometry. The test for inheritance is therefore not "is it a kind of that thing in real life?", but "can every piece of code written for the base class safely use it?"
 
 ## A derived object in memory
 
-**Structure.** A derived object is laid out as its base classes, in the order they are listed, followed by its own fields. Each base is laid out the same way, recursively.
+**Structure.** An object of a derived class is stored as its base class part first, followed by its own fields. If there are several bases, they come in the order they are listed. Each base is laid out the same way, recursively. Take the running example, with a second base `Learning` that has no fields.
 
 ```cpp
 class Student : public Person, public Learning { Bag* _bag; ... };
@@ -138,9 +207,11 @@ class Student : public Person, public Learning { Bag* _bag; ... };
 | --- | --- |
 | `Person` | `_id`, `_name` |
 | `Learning` | (no fields) |
-| `Student` | `_bag`, `_books`, `_univ` |
+| `Student` | `_bag` |
 
-**Order of construction and destruction.** The easiest way to see the order is a class that prints.
+This layout is the reason a `Student*` can be used as a `Person*`. The `Person` part sits at the start of the student, so code that expects a `Person` finds the fields it expects, in the places it expects.
+
+**Order of construction and destruction.** An object is built from the bottom up. The base parts are built first, in the order they are listed, and the derived part last. The easiest way to see it is with classes that print.
 
 ```cpp
 struct A { A() { cout << "A "; }  ~A() { cout << "~A "; } };
@@ -153,36 +224,32 @@ struct C : public A, public B {
 { C c; }    // prints: A B C ~C ~B ~A
 ```
 
-- **Construction** goes base by base, in the order listed, then the derived class.
-- **Destruction** goes in exactly the reverse order.
+Construction goes `A`, `B`, then `C`. Destruction goes in exactly the reverse order, `~C`, `~B`, `~A`. This makes sense: `C` may use `A` and `B`, so they must exist before `C` is built and must still exist while `C` is destroyed.
 
-**Choosing a base constructor.** By default each base is built with its empty constructor. To pass it arguments, name it in the initializer list.
+**Choosing a base constructor.** By default each base is built with its empty constructor. To pass it arguments, name it in the initializer list, as `Student` did with `Person(id, name)` in the running example.
 
-```cpp
-Student(int id, const string& name, Bag* bag)
-    : Person(id, name), _bag(bag) { }
-```
-
-**Copying.** The same applies to the copy constructor: unless you name the base's copy constructor, the base is built with its *empty* constructor, and the `Person` part of the copy is lost.
+**Copying.** The copy constructor works the same way. If you write your own and forget to name the base's copy constructor, the base is built with its *empty* constructor, and the `Person` part of the copy is lost: the new student gets no id and no name.
 
 ```cpp
 Student(const Student& other)
     : Person(other),                    // copy the Person part
-      _bag(other._bag->clone()) { }     // then the Student part
+      _bag(new Bag(*other._bag)) { }    // then the Student part: a copy of the bag
 ```
 
-**Assigning.** The assignment operator is different: the compiler does **not** call the base's assignment for you. You must call it yourself, inside the body.
+**Assigning.** The assignment operator is different. The compiler does **not** call the base's assignment for you, so you must call it yourself, inside the body. If you forget, the `Student` fields are assigned and the `Person` fields silently keep their old values.
 
 ```cpp
 Student& operator=(const Student& other) {
     if (this != &other) {
         Person::operator=(other);       // assign the Person part
         delete _bag;
-        _bag = other._bag->clone();     // then the Student part
+        _bag = new Bag(*other._bag);    // then the Student part: a copy of the bag
     }
     return *this;
 }
 ```
+
+(This copies the bag with a plain `new Bag(*other._bag)`, as in the rule of three. The section on `clone` below shows a better way when bags can have derived classes.)
 
 For the rule of five, the move versions pass `std::move(other)` to the base, so the base receives an rvalue too.
 
@@ -329,9 +396,14 @@ public:
 
 ### How `virtual` works inside: the v-table
 
-With static binding, the compiler writes a fixed address into the program. With a virtual call it cannot, because the right address depends on the object. Instead it writes a short **recipe for finding the address while the program runs**. The recipe needs two things: a table of addresses for each class, and a hidden pointer in each object that says which table is its.
+With static binding the compiler knows the answer while compiling, so it writes the function's address straight into the program. With a virtual call it cannot, because the right address depends on which object shows up at run time. So the compiler writes a short **recipe for finding the address while the program runs**. The recipe needs two things.
 
-Take these classes. The comments show where each function's code sits in memory.
+- **A table for each class,** listing the addresses of that class's virtual functions.
+- **A hidden pointer inside each object,** saying which table belongs to it.
+
+You can think of it as a menu. Every class has its own menu of "which code to run for each function", and every object carries a card that tells it which menu is its own.
+
+Here are two classes. The comments show where each function's code happens to sit in memory (the numbers are made up, to make the example easy to follow).
 
 ```cpp
 class Person {
@@ -340,45 +412,70 @@ class Person {
 };
 
 class Student : public Person {
-    virtual void live() { ... }     // overrides: code at address 8000
-    virtual void learn() { ... }    // new: code at address 9000
+    virtual void live() { ... }     // overrides Person::live: code at address 8000
+    virtual void learn() { ... }    // a new function: code at address 9000
 };
 ```
 
-**Step 1: a table for each class.** For every class that has virtual functions, the compiler builds one table in memory, the **v-table** (vtable), listing the addresses of that class's virtual functions in a fixed order.
+**Step 1: the compiler builds one table per class.** The table is called the **v-table** (vtable). It lists the addresses of the class's virtual functions, always in the same order.
 
 ```text
-Person v-table, at address 100: [7000, 4000]
-Student v-table, at address 200: [8000, 4000, 9000]
+Person's table, stored at address 100:     [ 7000,  4000 ]
+                                              live   love
+
+Student's table, stored at address 200:    [ 8000,  4000,  9000 ]
+                                              live   love   learn
 ```
 
-Read the `Student` table like this.
+Compare the two tables.
 
-- **Entry 0 is `live`,** and `Student` replaced it, so it holds `Student`'s own address, 8000.
-- **Entry 1 is `love`,** which `Student` did not replace, so it holds `Person`'s address, 4000.
-- **Entry 2 is `learn`,** a new function that only `Student` has.
+- **`live` is in position 0 in both tables.** `Student` replaced `live`, so its entry holds `Student`'s own code, 8000, instead of `Person`'s 7000.
+- **`love` is in position 1 in both tables.** `Student` did not replace it, so it simply reuses `Person`'s address, 4000.
+- **`learn` is in position 2 of the student's table only.** It is new, so `Person` has no entry for it.
 
-Every class keeps its inherited functions in the same positions, so `live` is entry 0 in `Person`'s table and in `Student`'s table. This is what makes the recipe work for both.
+Every derived class keeps the inherited functions in the same positions as its base. That is the trick that makes the recipe work: "`live` is position 0" is true for every class in the family.
 
-**Step 2: a hidden cell in every object.** Each object of such a class gets one extra cell at its start, the **vptr**, holding the address of *its class's* table. `new` fills it in when the object is created, according to the real class.
-
-| Cell of a `Student` object | Content |
-| --- | --- |
-| first (hidden) | 200, the address of `Student`'s v-table |
-| then | the `Person` fields, then the `Student` fields |
-
-**Step 3: the call.** Now `p->live()` becomes three small steps instead of a fixed address.
+**Step 2: every object carries a card pointing to its table.** Each object of a class with virtual functions gets one extra hidden cell at its start, the **vptr** ("virtual pointer"). It holds the address of its own class's table. The constructor fills it in when the object is created, according to the object's real class, and it never changes.
 
 ```cpp
-Person* p = new Student(...);
-p->live();      // compiled into: pc = (*((*p) + 0))
+Person*  a = new Person(...);       // object stored at address 500
+Person*  b = new Student(...);      // object stored at address 600
 ```
 
-1. **`*p`:** go to the object and read its first cell, the vptr. It holds 200.
-2. **`+ 0`:** `live` is entry 0 in every table of this hierarchy, so look at entry 0 of the table at 200.
-3. **`*(...)`:** read that entry. It holds 8000, so the program jumps to 8000, which is `Student::live`.
+```text
+object at 500 (a Person)            object at 600 (a Student)
+┌──────────────────────┐            ┌──────────────────────┐
+│ vptr = 100           │            │ vptr = 200           │   ← the hidden cell
+│ _id                  │            │ _id                  │
+│ _name                │            │ _name                │
+└──────────────────────┘            │ _bag                 │
+                                    └──────────────────────┘
+```
 
-If `p` pointed at a plain `Person` object, step 1 would read 100 (the `Person` table) and step 3 would read 7000, so `Person::live` would run. The code of the call is the same each time. Only the object differs.
+Both pointers, `a` and `b`, have the static type `Person*`. Only the objects themselves know what they really are, through the number in their first cell.
+
+**Step 3: the call follows the card.** Now the compiler can translate `p->live()`, whatever `p` points at. It writes this formula:
+
+```cpp
+p->live();      // is compiled into the formula:  pc = (*((*p) + 0))
+```
+
+The formula is just three small steps. Read it from the inside out.
+
+1. **`*p` — find the table.** Go to the object that `p` points at and read its first cell, the vptr. That is the address of the object's table.
+2. **`+ 0` — find the entry.** `live` is in position 0 of every table in this family, so move to entry 0 of that table.
+3. **`*(...)` — read the address of the code.** Read that entry. The number you find is where the code of the right `live` is stored, and the program jumps there (`pc` is the program counter, the address of the next instruction to run).
+
+Now run it on both objects from step 2. The call `p->live()` is written once, and the formula is the same, but the answer differs.
+
+| `p` points at | step 1: the vptr | step 3: entry 0 of that table | what runs |
+| --- | --- | --- | --- |
+| the object at 500 (a `Person`) | 100, the `Person` table | 7000 | `Person::live` |
+| the object at 600 (a `Student`) | 200, the `Student` table | 8000 | `Student::live` |
+
+This is the "wait until run time and look at the real object" that the keyword `virtual` asked for. The call itself never checks the class by name. It simply follows the object's own card, and the card was set when the object was created.
+
+The same formula works for the other functions, with a different position. For example `p->love()` uses `+ 1` and `p->learn()` (on a `Student*`) uses `+ 2`.
 
 ![A BlurFilter object holds a vptr. The call follows it to the class vtable and finds BlurFilter::apply](../../web/public/figures/vtable-call.svg)
 
