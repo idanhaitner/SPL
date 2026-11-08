@@ -78,12 +78,13 @@ A `Student` **has a** `Bag`. That is not inheritance at all, but **composition**
 
 ## Derived classes in C++
 
-A derived class (מחלקה נגזרת) extends a base class (מחלקת בסיס).
+A **derived class** (מחלקה נגזרת) is a class built on top of another class, the **base class** (מחלקת בסיס). It is the same idea as `extends` in Java.
 
-- **What a derived class can do:** add its own fields, and override (replace) a virtual function (פונקציה וירטואלית) of the base.
-- **The challenge:** a call through a base pointer must find the override that belongs to the actual object, which is known only at run time.
-- **How C++ solves it:** each such object stores a hidden pointer, the vptr, which points at its class's table of functions, the vtable.
-- **The condition for safety:** substituting a derived object is correct only if the derived class still keeps the base class's contract.
+- **It gets everything the base has:** the fields and the functions.
+- **It can add things of its own:** new fields and new functions.
+- **It can replace a function of the base** with its own version. This is called **overriding**.
+
+Overriding is the tricky part. Suppose a `Person*` points at a `Student`, and you call `p->live()`. Should the person's `live` run, or the student's? The answer is surprising in C++, and it is why the keyword `virtual` exists. The section "Polymorphism and virtual functions" below explains it step by step. First, the basics of writing a derived class.
 
 A derived class names its base after a colon, and calls a base constructor from its member-initializer list.
 
@@ -192,36 +193,87 @@ Person* p = new Student(...);
 delete p;
 ```
 
-Without `virtual`, `delete p` looks only at the type `Person*`, runs `~Person`, and never runs `~Student`, so the student's bag is leaked. The next section explains what `virtual` does.
+Without `virtual`, `delete p` looks only at the type `Person*`, runs `~Person`, and never runs `~Student`, so the student's bag is leaked. The section "Polymorphism and virtual functions" below explains what `virtual` does.
 
-## Polymorphism in memory
+## Polymorphism and virtual functions
 
-Remember that the program's code is loaded when the process is initialized, by the operating system, into the process's memory, in the region called the code section. In particular, each function is stored at some address in memory. A call to a function is translated into setting the program counter to the address where the function's code starts. That translation, from a call to a function to setting the `pc` to its address, is called **binding**.
-
-When is binding done?
-
-- **Option A:** at compile time. This is **static binding**.
-- **Option B:** at run time. This is **dynamic binding**.
-
-In Java, binding is always dynamic, at run time. In C++, programmers decide, for each function, whether calls to it are translated statically (at compile time) or dynamically (at run time). The default is compile time.
-
-Why would you want the translation to happen only at run time?
+**Polymorphism** (פולימורפיזם, "many forms") means that one line of code can do different things, depending on the real kind of object it works on.
 
 ```cpp
-class A { void F() { cout << "A"; } };          // F's code is at address 1000
-class B : public A { void F() { cout << "B"; } };  // F's code is at address 2000
-
-A* a = new B();
-a->F();
+Person* p = ...;    // may point at a Person, a Student, or any other kind of person
+p->live();          // run "live" as it is defined for the object p points at
 ```
 
-- **With static binding,** the compiler sees only the declared type of `a`, which is `A*`, and translates the call into `pc = 1000`. It prints `A`, although the object is a `B`.
-- **With dynamic binding,** the compiler cannot write a fixed address. It writes a small formula that finds the address at run time, from the object itself, so the call prints `B`.
+You write the call once. If `p` points at a `Student`, you want the student's `live`. If it points at a plain `Person`, you want the person's `live`. Java does this automatically. C++ does it only when you ask, using the keyword `virtual`. This section shows the problem, then the keyword, and then how it works inside.
 
-To support polymorphism, the binding of the function must be dynamic. How do you tell the C++ compiler? The keyword `virtual` marks the requirement that calls to the function be translated only at run time.
+### The problem: which `live` runs?
 
-- **The `virtual` property of a function is inherited.**
-- **Now it is clear why abstract functions must be virtual:** you cannot ask the compiler to translate calls to them at compile time, because they have no implementation.
+```cpp
+class Person {
+public:
+    void live() { cout << "a person lives"; }
+};
+
+class Student : public Person {
+public:
+    void live() { cout << "a student lives"; }    // overrides Person::live
+};
+
+Student s;
+Person* p = &s;     // allowed: a Student is a Person
+p->live();
+```
+
+A Java programmer expects `a student lives`. This C++ code prints **`a person lives`**.
+
+To see why, you need two ideas.
+
+**Two kinds of type.** Every pointer has a type written in the code, and the object it points at has a real class.
+
+- **The static type** is the type written in the code. Here `p` is declared `Person*`, so its static type is `Person`.
+- **The dynamic type** is the real class of the object, known only while the program runs. Here `p` points at a `Student`, so the dynamic type is `Student`.
+
+**Binding.** When the program runs, the code of every function sits in memory at some address, and calling a function means jumping to that address. Choosing *which address* a call jumps to is called **binding** (קשירה). It can happen at two moments.
+
+- **Static binding (קשירה סטטית), at compile time.** The compiler picks the address while compiling, and the program always jumps to it. The compiler can only look at the code, so it can only use the **static type**. For `p->live()` it sees `Person*`, so it picks `Person::live`.
+- **Dynamic binding (קשירה דינמית), at run time.** The choice is made when the call happens, by looking at the real object. It uses the **dynamic type**, so it picks `Student::live`.
+
+Java always uses dynamic binding. C++ uses **static binding by default**, because it is faster and simpler, and uses dynamic binding only for functions you mark. Marking them is what `virtual` does.
+
+### The keyword `virtual`
+
+Write `virtual` before the function in the base class.
+
+```cpp
+class Person {
+public:
+    virtual void live() { cout << "a person lives"; }     // now virtual
+};
+
+class Student : public Person {
+public:
+    void live() { cout << "a student lives"; }
+};
+
+Person* p = new Student();
+p->live();      // prints: a student lives
+```
+
+`virtual` tells the compiler: *"do not decide which `live` to call while compiling. Wait until the program runs, look at the real object, and call its version."*
+
+With a pointer `p` whose static type is `Person*`, a call `p->live()` runs:
+
+| `p` points at | `live` is **not** virtual | `live` is **virtual** |
+| --- | --- | --- |
+| a `Person` | `Person::live` | `Person::live` |
+| a `Student` | `Person::live` (wrong!) | `Student::live` |
+
+Things to know about `virtual`:
+
+- **Write it in the base class,** on the first declaration of the function. Every override in a derived class is automatically virtual too, even if you do not write the word again. Many programmers repeat `virtual` in the derived class anyway, to remind the reader.
+- **`override` is an optional safety net** (C++11). Writing `void live() override { ... }` makes the compiler check that the base really has a virtual `live` with the same signature. Without it, a typo such as `lvie()` or a missing `const` silently creates a *new* function instead of an override.
+- **It only matters through a pointer or a reference.** If you call `s.live()` on the object itself, the compiler already knows its exact class, so there is nothing to wait for.
+- **Java comparison:** in Java every method behaves as if it were `virtual`. In C++ you have to opt in, function by function.
 
 :::definition id=def-virtual title="Virtual function and vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
 A function that is not virtual is selected by **static binding** (קשירה סטטית).
@@ -252,16 +304,34 @@ filter->apply(img);
 :::
 :::
 
-![A BlurFilter object holds a vptr. The call follows it to the class vtable and finds BlurFilter::apply](../../web/public/figures/vtable-call.svg)
+### Pure virtual functions and abstract classes
 
-A pure virtual function is declared with `= 0`, and has no implementation in the base class.
+Sometimes the base class cannot say what a function should do. What does a generic `Shape` do when you ask for its area? Nothing sensible. In that case, declare the function **pure virtual** by writing `= 0` instead of a body.
 
-- **An abstract class** (מחלקה מופשטת) is a class with at least one pure virtual function.
-- **You cannot create objects of an abstract class.** You can only create objects of derived classes that override every pure virtual function.
+```cpp
+class Shape {
+public:
+    virtual double area() = 0;       // pure virtual: no body, derived classes must provide one
+};
 
-### How dynamic binding is carried out
+class Circle : public Shape {
+    double _r;
+public:
+    Circle(double r) : _r(r) {}
+    double area() { return 3.14159 * _r * _r; }
+};
+```
 
-Take this pair of classes.
+- **An abstract class** (מחלקה מופשטת) is a class with at least one pure virtual function. It is the C++ version of a Java `abstract` class, or of an interface when it has only pure virtual functions.
+- **You cannot create an object of an abstract class.** `new Shape()` does not compile. You create objects of a derived class that overrides every pure virtual function, such as `Circle`.
+- **You can still have a `Shape*`,** and it can point at any `Circle`. Then `shape->area()` runs the circle's version.
+- **Why pure virtual functions must be virtual:** there is no code to call at compile time, so the call can only be resolved at run time.
+
+### How `virtual` works inside: the v-table
+
+With static binding, the compiler writes a fixed address into the program. With a virtual call it cannot, because the right address depends on the object. Instead it writes a short **recipe for finding the address while the program runs**. The recipe needs two things: a table of addresses for each class, and a hidden pointer in each object that says which table is its.
+
+Take these classes. The comments show where each function's code sits in memory.
 
 ```cpp
 class Person {
@@ -275,42 +345,79 @@ class Student : public Person {
 };
 ```
 
-**The tables.** For every class that has a virtual method, the compiler builds a table in memory with the addresses of that class's virtual methods, in a fixed order. It is called the **v-table**.
+**Step 1: a table for each class.** For every class that has virtual functions, the compiler builds one table in memory, the **v-table** (vtable), listing the addresses of that class's virtual functions in a fixed order.
 
 ```text
 Person v-table, at address 100: [7000, 4000]
 Student v-table, at address 200: [8000, 4000, 9000]
-
 ```
 
-Read the `Student` table as: entry 0 (`live`) is `Student`'s own version, entry 1 (`love`) is inherited from `Person`, so it is the same address, 4000, and entry 2 (`learn`) is new. Every class keeps the same order for the methods they share, so `live` is always entry 0.
+Read the `Student` table like this.
 
-**The extra cell.** Every object of a class with a v-table gets one more cell, at its start, holding the address of its class's table. `new` (or `push`, on the stack) fills it in when the object is created, according to the object's real class.
+- **Entry 0 is `live`,** and `Student` replaced it, so it holds `Student`'s own address, 8000.
+- **Entry 1 is `love`,** which `Student` did not replace, so it holds `Person`'s address, 4000.
+- **Entry 2 is `learn`,** a new function that only `Student` has.
 
-| Cell of a `Student` | Content |
+Every class keeps its inherited functions in the same positions, so `live` is entry 0 in `Person`'s table and in `Student`'s table. This is what makes the recipe work for both.
+
+**Step 2: a hidden cell in every object.** Each object of such a class gets one extra cell at its start, the **vptr**, holding the address of *its class's* table. `new` fills it in when the object is created, according to the real class.
+
+| Cell of a `Student` object | Content |
 | --- | --- |
-| first | 200, the address of `Student`'s v-table |
+| first (hidden) | 200, the address of `Student`'s v-table |
 | then | the `Person` fields, then the `Student` fields |
 
-**The call.** Now the compiler can write a formula instead of a fixed address.
+**Step 3: the call.** Now `p->live()` becomes three small steps instead of a fixed address.
 
 ```cpp
 Person* p = new Student(...);
-p->live();      // pc = (*((*p) + 0))
+p->live();      // compiled into: pc = (*((*p) + 0))
 ```
 
-1. **`*p`:** read the object's first cell, the table's address: 200.
-2. **`+ 0`:** `live` is entry 0 of every table in this hierarchy.
-3. **`*(...)`:** read that entry: 8000, so `Student::live` runs.
+1. **`*p`:** go to the object and read its first cell, the vptr. It holds 200.
+2. **`+ 0`:** `live` is entry 0 in every table of this hierarchy, so look at entry 0 of the table at 200.
+3. **`*(...)`:** read that entry. It holds 8000, so the program jumps to 8000, which is `Student::live`.
 
-If `p` pointed at a plain `Person`, step 1 would read 100, and step 3 would read 7000.
+If `p` pointed at a plain `Person` object, step 1 would read 100 (the `Person` table) and step 3 would read 7000, so `Person::live` would run. The code of the call is the same each time. Only the object differs.
+
+![A BlurFilter object holds a vptr. The call follows it to the class vtable and finds BlurFilter::apply](../../web/public/figures/vtable-call.svg)
 
 Dynamic binding has two costs.
 
-- **Memory:** the virtual tables, and one more cell in every object.
-- **Time:** two more memory accesses on every call to a virtual method.
+- **Memory:** the v-tables, and one more cell in every object.
+- **Time:** two more memory reads on every call to a virtual function.
+
+This is why C++ does not make everything virtual by default.
 
 ### The virtual destructor
+
+A destructor is a function like any other, so `delete p` is also a call that needs binding. See what goes wrong when the destructor is not virtual.
+
+```cpp
+struct Person {
+    ~Person() { cout << "~Person "; }              // NOT virtual
+};
+
+struct Student : public Person {
+    Bag* _bag = new Bag();
+    ~Student() { delete _bag; cout << "~Student "; }
+};
+
+Person* p = new Student();
+delete p;       // prints: ~Person     (~Student never ran, so the bag is leaked)
+```
+
+`delete p` is a call to the destructor through a `Person*`. The destructor is not virtual, so it gets static binding, and the compiler picks `~Person` from the pointer's type. The student's own destructor never runs. The fix is the same keyword as before.
+
+```cpp
+struct Person {
+    virtual ~Person() { cout << "~Person "; }      // virtual
+};
+
+// delete p;    now prints: ~Student ~Person
+```
+
+Now the call is dynamic, `~Student` runs first, and then `~Person` runs as usual, in the destruction order seen above.
 
 :::theorem id=thm-virtual-dtor title="A polymorphic base needs a virtual destructor" source="materials/lectures/Chapter 6 - Inheritance.pptx"
 If a class has virtual functions, it is meant to be used as a polymorphic base class, and its destructor must be declared `virtual`.
