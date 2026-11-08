@@ -34,7 +34,9 @@ function load(): Promise<Format> {
 }
 
 // Formatting only tidies, so when it cannot run the code simply stays as it is.
-export async function formatCode(source: string): Promise<string> {
+export async function formatCode(source: string, lang: string = "cpp"): Promise<string> {
+  // clang-format only knows C++, so Java and Python code stays as the student typed it.
+  if (lang !== "cpp") return source;
   try {
     const format = await load();
     return format(source, "main.cpp", CODE_STYLE);

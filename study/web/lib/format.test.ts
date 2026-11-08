@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { format } from "@wasm-fmt/clang-format/node";
 import { describe, expect, it } from "vitest";
@@ -22,7 +22,8 @@ describe("the C++ formatter", () => {
 
 // Pressing Format on a starter or a solution should change nothing.
 describe("exercise code is already formatted", () => {
-  for (const name of readdirSync(EXERCISES).filter((entry) => entry.startsWith("ex-"))) {
+  // clang-format only formats C++, so the Java and Python exercises are left out.
+  for (const name of readdirSync(EXERCISES).filter((entry) => entry.startsWith("ex-") && existsSync(`${EXERCISES}${entry}/starter.cpp`))) {
     for (const file of ["starter.cpp", "solution.cpp"]) {
       it(`${name}/${file}`, () => {
         const source = readFileSync(`${EXERCISES}${name}/${file}`, "utf8");
@@ -35,7 +36,8 @@ describe("exercise code is already formatted", () => {
 describe("exercise starters leave the work to the student", () => {
   for (const name of readdirSync(EXERCISES).filter((entry) => entry.startsWith("ex-"))) {
     it(`${name} has no comments`, () => {
-      expect(readFileSync(`${EXERCISES}${name}/starter.cpp`, "utf8")).not.toMatch(/\/\*|\/\/|TODO/);
+      const starter = readdirSync(`${EXERCISES}${name}`).find((file) => file.startsWith("starter."));
+      expect(readFileSync(`${EXERCISES}${name}/${starter}`, "utf8")).not.toMatch(/\/\*|\/\/|TODO|^\s*#(?!include)/m);
     });
   }
 });

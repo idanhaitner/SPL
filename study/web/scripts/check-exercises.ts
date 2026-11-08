@@ -8,7 +8,7 @@ import { buildTestSource, parseTestOutput } from "../lib/test-output";
 const FLAGS = ["-std=c++17", "-Wall", "-Wextra", "-Wno-unused-parameter", "-O0", "-g"];
 const repoRoot = path.resolve(process.cwd(), "../..");
 
-type Exercise = { id: string; starter: string; solution: string; test: string | null; caseNames: string[]; examples: unknown[] };
+type Exercise = { id: string; lang: "cpp" | "java" | "python"; harness: string; starter: string; solution: string; test: string | null; caseNames: string[]; examples: unknown[] };
 type Course = { harness: string; topics: { exercises?: Exercise[] }[] };
 
 const raw = execFileSync("python3", [path.join(process.cwd(), "scripts", "course-export", "export_course.py"), "--root", repoRoot], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -20,14 +20,29 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "check-exercises-"));
 function attempt(ex: Exercise, code: string, name: string) {
   const dir = path.join(tmp, ex.id, name);
   fs.mkdirSync(dir, { recursive: true });
-  const src = path.join(dir, "main.cpp");
-  const exe = path.join(dir, "prog");
-  fs.writeFileSync(src, buildTestSource(code, course.harness, ex.test ?? "").source);
-  const build = spawnSync("g++", [...FLAGS, src, "-o", exe], { encoding: "utf8", timeout: 60000 });
-  if (build.status !== 0) return { compiled: false, warnings: "", message: (build.stderr ?? "").trim().split("\n")[0], failed: [] as string[] };
-  const run = spawnSync(exe, [], { encoding: "utf8", timeout: 5000, killSignal: "SIGKILL" });
+  const source = buildTestSource(code, ex.harness || course.harness, ex.test ?? "").source;
+  let build: ReturnType<typeof spawnSync>;
+  let command: [string, string[]];
+  if (ex.lang === "java") {
+    // Godbolt compiles one file with no public class, so the tests' class Main is run from a plain main.java.
+    fs.writeFileSync(path.join(dir, "main.java"), source);
+    build = spawnSync("javac", ["-Xlint:all", "-d", dir, path.join(dir, "main.java")], { encoding: "utf8", timeout: 60000 });
+    command = ["java", ["-cp", dir, "Main"]];
+  } else if (ex.lang === "python") {
+    fs.writeFileSync(path.join(dir, "main.py"), source);
+    build = spawnSync("python3", ["-I", "-m", "py_compile", path.join(dir, "main.py")], { encoding: "utf8", timeout: 60000 });
+    command = ["python3", ["-I", path.join(dir, "main.py")]];
+  } else {
+    const src = path.join(dir, "main.cpp");
+    fs.writeFileSync(src, source);
+    build = spawnSync("g++", [...FLAGS, src, "-o", path.join(dir, "prog")], { encoding: "utf8", timeout: 60000 });
+    command = [path.join(dir, "prog"), []];
+  }
+  if (build.status !== 0) return { compiled: false, warnings: "", message: String(build.stderr ?? "").trim().split("\n")[0], failed: [] as string[] };
+  const run = spawnSync(command[0], command[1], { encoding: "utf8", timeout: 10000, killSignal: "SIGKILL" });
   const results = parseTestOutput(run.stdout ?? "", ex.caseNames);
-  return { compiled: true, warnings: (build.stderr ?? "").trim(), message: "", failed: results.filter((item) => item.status !== "pass").map((item) => `"${item.name}": ${item.message || item.status}`) };
+  const warnings = ex.lang === "python" ? "" : String(build.stderr ?? "").trim();
+  return { compiled: true, warnings, message: "", failed: results.filter((item) => item.status !== "pass").map((item) => `"${item.name}": ${item.message || item.status}`) };
 }
 
 try {

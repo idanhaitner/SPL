@@ -32,9 +32,14 @@ export type Topic = {
 
 export type ProgramCase = { name: string; args: string[]; stdin: string; expected: string; hint: string };
 
+export type ExerciseLang = "cpp" | "java" | "python";
+
 export type Exercise = {
   id: string;
   title: string;
+  lang: ExerciseLang;
+  // The test helpers for this exercise's language, placed between the student's code and the tests.
+  harness: string;
   mode: "function" | "program";
   statement: Block[];
   hints: Block[][];

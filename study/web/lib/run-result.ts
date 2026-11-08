@@ -64,6 +64,20 @@ const SANITIZER_REPORTS: { pattern: RegExp; name: string; explanation: string }[
   },
 ];
 
+// What Java and Python print when an error stops the program. The last lines of the error output name the error.
+const RAISED_ERRORS: { pattern: RegExp; name: string; explanation: string }[] = [
+  {
+    pattern: /Exception in thread "main"|Exception in thread "Thread|java\.lang\.\w*Error\b/,
+    name: "Uncaught exception",
+    explanation: "Your program threw an exception that nothing caught. The first line of the error output names it, and the next lines show where it happened.",
+  },
+  {
+    pattern: /Traceback \(most recent call last\)|^\s*\w*(?:Error|Exception): /m,
+    name: "Python error",
+    explanation: "Your program stopped with an error. The last line of the error output names it, and the lines above it show where it happened.",
+  },
+];
+
 const UNDEFINED_BEHAVIOR = {
   name: "Undefined behavior",
   explanation:
@@ -140,6 +154,12 @@ export function classifyRun(response: unknown): RunOutcome {
   if (code !== 0) {
     const report = SANITIZER_REPORTS.find((x) => x.pattern.test(stderrFull));
     if (report) return { kind: "crash", signal: null, name: report.name, explanation: report.explanation, ...output };
+  }
+
+  // A Java exception or a Python traceback ends the program with exit code 1, which is not a signal.
+  if (code !== 0) {
+    const raised = RAISED_ERRORS.find((x) => x.pattern.test(stderrFull));
+    if (raised) return { kind: "crash", signal: null, name: raised.name, explanation: raised.explanation, ...output };
   }
 
   // With the sanitizer on, AddressSanitizer catches the signal itself and the

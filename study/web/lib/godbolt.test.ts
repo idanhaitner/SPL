@@ -110,3 +110,23 @@ describe("runProgram", () => {
     expect(err.kind).toBe("unreachable");
   });
 });
+
+describe("runProgram for Java and Python", () => {
+  const okBody = () => jsonResponse(fixture("run-ok.json"));
+
+  it("sends Java to a JDK with no C++ flags", async () => {
+    const fetchImpl = vi.fn(async () => okBody());
+    await runProgram("class Main {}", { lang: "java", fetchImpl: fetchImpl as unknown as typeof fetch });
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://godbolt.org/api/compiler/java2102/compile");
+    expect(JSON.parse(init.body as string).options.userArguments).toBe("");
+  });
+
+  it("sends Python to CPython", async () => {
+    const fetchImpl = vi.fn(async () => okBody());
+    await runProgram("print(1)", { lang: "python", fetchImpl: fetchImpl as unknown as typeof fetch });
+    const [url] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://godbolt.org/api/compiler/python313/compile");
+  });
+});
+

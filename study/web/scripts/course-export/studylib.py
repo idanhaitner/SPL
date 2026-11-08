@@ -1586,7 +1586,16 @@ def coverage_errors(model) -> list[str]:
     return errors
 
 
-def load_exercise(directory: Path) -> dict:
+# One exercise language per folder, set by `lang:` in its README (C++ when absent).
+# The test's case names come from the call the language's harness provides.
+EXERCISE_LANGS = {
+    "cpp": {"ext": "cpp", "harness": "harness.h", "case": r'CHECK\(\s*"([^"]*)"', "call": 'CHECK("name", ...)'},
+    "java": {"ext": "java", "harness": "harness.java", "case": r'Check\.test\(\s*"([^"]*)"', "call": 'Check.test("name", ...)'},
+    "python": {"ext": "py", "harness": "harness.py", "case": r'^\s*test\(\s*"([^"]*)"', "call": 'test("name", ...)'},
+}
+
+
+def load_exercise(directory: Path, base: Path | None = None) -> dict:
     """Reads one exercise folder. A problem with its files stops the build, so a broken exercise never ships."""
     rel = f"study/content/exercises/{directory.name}"
 
@@ -1601,6 +1610,12 @@ def load_exercise(directory: Path) -> dict:
     for key in ("title", "chapter", "order"):
         if meta.get(key) in (None, ""):
             raise StudyError(f"{rel}/README.md: frontmatter needs {key}")
+    lang = str(meta.get("lang") or "cpp").strip()
+    if lang not in EXERCISE_LANGS:
+        raise StudyError(f"{rel}/README.md: lang must be one of {', '.join(EXERCISE_LANGS)}")
+    spec = EXERCISE_LANGS[lang]
+    ext = spec["ext"]
+    harness_path = (base or directory.parent) / spec["harness"]
     statement, hints, examples, case_hints = [], [], [], {}
     for block in blocks:
         name = block["name"] if block["type"] == "directive" else ""
@@ -1612,17 +1627,18 @@ def load_exercise(directory: Path) -> dict:
             case_hints[str(block["attrs"].get("name") or "")] = block["children"]
         else:
             statement.append(block)
-    test = need("test.cpp")
-    case_names = re.findall(r'CHECK\(\s*"([^"]*)"', test)
+    test = need(f"test.{ext}")
+    case_names = re.findall(spec["case"], test, flags=re.MULTILINE)
     if not case_names:
-        raise StudyError(f'{rel}/test.cpp: no CHECK("name", ...) calls found')
+        raise StudyError(f"{rel}/test.{ext}: no {spec['call']} calls found")
     for name in case_hints:
         if name not in case_names:
             raise StudyError(f"{rel}/README.md: case hint {name!r} is not a test of this exercise")
     return {
         "id": directory.name, "title": str(meta["title"]).strip(), "chapter": str(meta["chapter"]).strip(), "order": int(meta["order"]),
-        "mode": "function", "statement": statement, "hints": hints, "examples": examples, "caseHints": case_hints,
-        "starter": need("starter.cpp"), "solution": need("solution.cpp"), "test": test, "caseNames": case_names, "cases": [],
+        "mode": "function", "lang": lang, "statement": statement, "hints": hints, "examples": examples, "caseHints": case_hints,
+        "starter": need(f"starter.{ext}"), "solution": need(f"solution.{ext}"), "test": test, "caseNames": case_names, "cases": [],
+        "harness": harness_path.read_text(encoding="utf-8") if harness_path.is_file() else "",
     }
 
 

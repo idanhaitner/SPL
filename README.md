@@ -57,6 +57,7 @@ npm run audit   # optional content/UI checks
 ## Edit content
 
 1. Update or add a topic in `study/content/topics/*.md`.
+   Coding exercises live in `study/content/exercises/<id>/` (`README.md`, `starter`, `solution`, `test`). Add `lang: java` or `lang: python` to the README's frontmatter for those languages; C++ is the default. Java exercises must not start threads or open sockets, because the online runner blocks them. Run `npm run check:exercises` in `study/web` to check every exercise.
 2. Register it in `study/content/course.yml` if it is new.
 3. Put new diagrams in `study/web/public/figures/` and reference them from a topic as `../../web/public/figures/name.svg`. That path is a real file, so GitHub can show it. The app remaps it to `/figures/name.svg` on the site.
 4. Refresh the local dev server to see changes.
