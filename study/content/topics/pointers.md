@@ -581,7 +581,7 @@ delete b;
 ```
 
 :::check id=ps2-pointer-dangers-q1
-Which of these are faults?
+Which of these lines or statements in the code above are faults?
 
 - [ ] `int* r = new int` stores an indeterminate address.
 - [x] `*p = 3` dereferences null.
@@ -704,7 +704,7 @@ What does `emphasize1` do with the caller's string?
 :::
 
 :::check id=ps3-pass-by-value-q2
-Which of these hold?
+Which of these are true about how `emphasize2` and `emphasize3` receive the string?
 
 - [x] `emphasize2` receives a reference, so changes inside the function modify the caller's string
 - [ ] `emphasize2` can be passed `nullptr`

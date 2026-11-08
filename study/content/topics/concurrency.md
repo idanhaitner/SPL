@@ -364,7 +364,7 @@ public class Shared {
 ```
 
 :::check id=prac-threads-memory-q1
-While both threads run, which statements are true?
+While both threads run, which statements about their variables and the shared `Counter` are true?
 
 - [x] Each thread has its own `local`, on its own stack
 - [x] Both threads reach the same `Counter` object on the heap

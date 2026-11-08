@@ -295,7 +295,7 @@ Java and C++ both turn source into a program that can run. In this session the C
 :::
 
 :::check id=ps1-link-vs-java-q2
-Which of these hold for Java?
+Which of these are true about how Java source is compiled and linked?
 
 - [ ] Java source is compiled straight to an `.o` file
 - [x] Java source is compiled to bytecode

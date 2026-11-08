@@ -589,7 +589,7 @@ A method that neither catches nor declares `FileNotFoundException` does not comp
 :::
 
 :::check id=ps5-checked-exception-q2
-Which of these hold?
+Which of these are true about ignoring a checked and an unchecked exception?
 
 - [x] Ignoring `ArithmeticException` still compiles
 - [ ] Ignoring `FileNotFoundException` still compiles
@@ -613,7 +613,7 @@ The exception unwinds every frame up to and including `main`. The JVM then termi
 :::
 
 :::check id=ps5-checked-exception-q4
-Which of these hold on that path?
+Which of these are true about `finally` and `try-with-resources` when an exception travels up that path?
 
 - [x] `finally` blocks along the walk still run
 - [ ] A second failure thrown by `close` replaces the original exception
@@ -636,7 +636,7 @@ The way that blocks, without polling, is {{=wait|busy-waiting|sleep-and-check}}.
 :::
 
 :::check id=ps7-wait-vs-spin-q2
-Which claims match the three ways?
+Which of these are true about busy-waiting, sleep-and-check, and `wait`?
 
 - [ ] Busy-waiting spends less processor time than a sleep between attempts
 - [x] Busy-waiting reacts at once and occupies a core
@@ -820,7 +820,7 @@ Four threads call `acquire`: {{=three get in, and the fourth waits|all four get 
 :::
 
 :::check id=prac-wait-semaphore-q2
-Which of these are true?
+Which of these are true about the semaphore?
 
 - [x] `tryAcquire` on a semaphore with no free place returns `false` at once, without waiting
 - [x] A semaphore created with one permit works as a lock
@@ -881,6 +881,30 @@ Two bounded stacks are used by two threads.
 - **The locking:** each method locks its own `Stack`. A `push` that moves a value from one stack into the other locks both stacks.
 - **The threads:** `T1` and `T2` both use the stacks `S1` and `S2`.
 
+```java
+class Stack<T> {
+    private final T[] items;
+    private int size;
+
+    public synchronized void push(Stack<T> from) {   // moves the top of `from` onto this stack
+        synchronized (from) {                        // locks this stack first, then `from`
+            items[size++] = from.removeTop();
+        }
+    }
+
+    public synchronized void pop(Stack<T> to) {      // moves the top of this stack onto `to`
+        synchronized (to) {                          // locks this stack first, then `to`
+            to.items[to.size++] = removeTop();
+        }
+    }
+
+    private T removeTop() { return items[--size]; }
+}
+
+Stack<Integer> S1 = new Stack<>(), S2 = new Stack<>();
+// thread T1 calls S1.push(S2);   thread T2 calls S2.push(S1);
+```
+
 :::check id=exam-18b-q2-q1
 Which pair enters deadlock?
 
@@ -893,7 +917,7 @@ Each transfer locks the stack it is called on first, and then the other one. `T1
 :::
 
 :::check id=exam-18b-q2-q2
-Which claims describe that deadlock?
+Which of these are true about the deadlock of the two stacks?
 
 - [ ] The thread that locked its stack first returns from `pop`
 - [x] Each thread holds the monitor of one `Stack` and waits for the lock the other holds
@@ -917,6 +941,19 @@ A `Barrier` lets a fixed group of threads advance together, in phases.
 - **`await`** means "I have finished this phase". The caller blocks until every thread in the group has called `await`, and then all of them continue into the next phase together.
 - **A generation counter** numbers the phases, so that a fast thread that starts the next phase cannot release threads still waiting in the previous one.
 - **An `InterruptedException`** in one thread must leave the barrier usable for the remaining threads.
+
+```java
+class Barrier {
+    private final int parties;     // the size of the group
+    private int arrived;           // threads that reached this phase
+    private int generation;        // the number of the current phase
+
+    public Barrier(int parties) { this.parties = parties; }
+
+    // blocks until all the threads have called await; returns 0 for the last arrival
+    public synchronized int await() throws InterruptedException { /* the questions fill this in */ }
+}
+```
 
 :::check id=exam-24b-q2-q1
 `arrived` counts threads that have reached this phase, and `parties` is the size of the group. Which body is correct for the last arrival?

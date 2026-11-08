@@ -718,7 +718,7 @@ Deleting a derived object through a base pointer whose destructor is not virtual
 :::
 
 :::check id=ps3-virtual-destructor-q2
-Which of these hold in a typical implementation of that `delete`?
+A `Derived` object is deleted through a `Base*` whose destructor is not virtual. Which of these happen in a typical implementation?
 
 - [x] The derived destructor is skipped, so resources the derived class owns are leaked
 - [ ] The derived destructor still runs
@@ -848,7 +848,7 @@ Circle* c = new Circle();
 :::
 
 :::check id=prac-inh-binding-q2
-Which of these are true?
+Which of these are true about the vtable and the vptr of `Circle`?
 
 - [x] There is one vtable for `Circle`, shared by every `Circle` object
 - [x] Each `Circle` object holds a vptr that points at that table
@@ -971,17 +971,27 @@ If `Bag7` did not write its own `clone`, `b->clone()` would run {{=Bag::clone|Ba
 A game engine draws shapes with shaders. There are two kinds of shape, `SPHERE` and `BOX`, both derived from `SHAPE`, and two kinds of shader, `BASIC_SHADER` and `COMPLEX_SHADER`, both derived from `SHADER`. Each shader has one `Render` overload for each kind of shape.
 
 ```cpp
-class SHAPE { ... };
-class SPHERE : public SHAPE { ... };
-class BOX : public SHAPE { ... };
+class SHAPE {
+public:
+    virtual ~SHAPE() = default;
+};
+class SPHERE : public SHAPE { };
+class BOX    : public SHAPE { };
 
-class SHADER { ... };
+class SHADER {
+public:
+    virtual ~SHADER() = default;
+};
 class BASIC_SHADER : public SHADER {
 public:
     void Render(SPHERE* s) { /* draw a sphere */ }
     void Render(BOX* b)    { /* draw a box */ }
 };
-// COMPLEX_SHADER: the same two overloads
+class COMPLEX_SHADER : public SHADER {
+public:
+    void Render(SPHERE* s) { /* draw a sphere, with lighting */ }
+    void Render(BOX* b)    { /* draw a box, with lighting */ }
+};
 
 class RENDER_MGR {
 public:
@@ -1001,7 +1011,7 @@ void RENDER_MGR::Render() {
 
 - **The problem:** the compiler picks an overload by the declared type of the argument. `_s[i]` is declared `SHAPE*`, and no shader has a `Render(SHAPE*)`, so this line does not compile, even when the shape really is a `SPHERE`.
 - **The fix, the visitor pattern (also called double dispatch):** every shape gets a virtual method `Accept(SHADER* sh)`, where `sh` is the shader that should draw it. The loop calls `_s[i]->Accept(_r[i])` instead.
-- **The task:** write `Accept`, and make `SHAPE` and `SHADER` pure abstract.
+- **The questions below** are closed questions about this fix: the body of `Accept`, the declarations that make `SHAPE` and `SHADER` abstract, and how to copy a `RENDER_MGR`. You do not write code here.
 
 :::check id=exam-16a-q2-q1
 Which body of `SPHERE::Accept(SHADER* sh)` is correct?
@@ -1026,7 +1036,7 @@ Which body of `SPHERE::Accept(SHADER* sh)` is correct?
 :::
 
 :::check id=exam-16a-q2-q3
-Which of these hold?
+Which of these are true about the shader classes and the manager in the visitor design?
 
 - [x] `SHADER` must declare both `Render` overloads `virtual`, so that `sh->Render(this)` reaches the real shader
 - [ ] Copying the manager's pointer arrays gives the copy its own shapes and shaders
@@ -1050,10 +1060,37 @@ Which copy of `RENDER_MGR` is correct?
 :::
 
 :::problem id=exam-18a-q1 title="An image destructor" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
-`Image` is an abstract base class with a field `int n_pixels` and a pure virtual function `virtual void show() = 0`. `ColorImage` inherits from it and holds a heap array of pixels.
+`Image` is an abstract base class, and `ColorImage` inherits from it and owns a heap array of pixels. Here is the code the questions are about. The destructor of `Image` is not virtual yet.
 
-- **In one place,** a `ColorImage` is destroyed through an `Image*`.
-- **In another,** a `ColorImage` is passed by value.
+```cpp
+class Image {
+public:
+    Image(int n) : n_pixels(n) { }
+    ~Image() = default;                  // not virtual
+    virtual void show() = 0;
+protected:
+    int n_pixels;
+};
+
+class ColorImage : public Image {
+public:
+    ColorImage(int n) : Image(n), _pixels(new int[n]) { }
+    ~ColorImage() { delete[] _pixels; }  // releases the array
+    void show() override { /* draw _pixels */ }
+private:
+    int* _pixels;                        // heap array, one int per pixel
+};
+
+void use(Image* p) { delete p; }         // destroys a ColorImage through an Image*
+void take(ColorImage c) { }              // gets a ColorImage by value
+
+int main() {
+    Image* p = new ColorImage(100);
+    use(p);                              // in one place: destroyed through an Image*
+    ColorImage c(100);
+    take(c);                             // in another: passed by value
+}
+```
 
 :::check id=exam-18a-q1-q1
 What does `delete` through an `Image*` do when the destructor is not virtual?
@@ -1074,7 +1111,7 @@ The destructor that must be virtual is the base class's, because `delete` looks 
 :::
 
 :::check id=exam-18a-q1-q3
-Which of these hold when `ColorImage` owns a raw array?
+`ColorImage` owns a raw pixel array. Which of these are true about releasing and copying that array?
 
 - [x] `~ColorImage` must apply `delete[]` to the array
 - [x] The copy constructor and the assignment operator must copy the array deeply
@@ -1085,7 +1122,7 @@ Which of these hold when `ColorImage` owns a raw array?
 :::
 
 :::check id=exam-18a-q1-q4
-Which of these hold for the other repairs?
+Apart from the virtual destructor, which of these are true about changing `main` and about passing a `ColorImage` by value?
 
 - [x] Declaring the variable in `main` with the dynamic type fixes that one line. The next `delete` through an `Image*` is still wrong
 - [ ] That change of `main` makes every later `delete` through an `Image*` run `~ColorImage`
@@ -1097,7 +1134,36 @@ Which of these hold for the other repairs?
 :::
 
 :::problem id=exam-18b-q1 title="Memory of an image hierarchy" source="materials/exams/18-b.pdf" kind=exam solution_origin=derived
-`Image` is an abstract base class with a field `int n_pixels` and a pure virtual function `virtual void show() = 0`. `GrayImage` and `ColorImage` inherit from it. They store different pixel types, and each holds its own pixel array on the heap. The questions ask about memory during a call to `show`, and about `dynamic_cast`.
+`Image` is an abstract base class. `GrayImage` and `ColorImage` inherit from it, store different pixel types, and each holds its own pixel array on the heap. Here is the code the questions are about. They ask about memory during the call `p->show()`, and about `dynamic_cast`.
+
+```cpp
+class Image {
+public:
+    virtual ~Image() = default;
+    virtual void show() = 0;
+protected:
+    int n_pixels;
+};
+
+class GrayImage : public Image {
+public:
+    void show() override;
+private:
+    unsigned char* _pixels;      // heap array, one byte per pixel
+};
+
+class ColorImage : public Image {
+public:
+    void show() override;
+private:
+    int* _pixels;                // heap array, one int per pixel
+};
+
+void display(Image* p) {
+    p->show();                   // the call the memory questions are about
+    ColorImage* c = dynamic_cast<ColorImage*>(p);
+}
+```
 
 :::check id=exam-18b-q1-q1
 Which description of the layout is right during that call?
@@ -1129,7 +1195,7 @@ During the call, the stack frame holds the pointer parameter and the return addr
 :::
 
 :::check id=exam-18b-q1-q4
-Which of these hold?
+Which of these are true about the vtables, about C-style casts, and about a correct drawing of the layout?
 
 - [x] A grayscale image and a color image have different vtables, so `show` through an `Image*` reaches the override
 - [ ] A C-style cast consults the vtable and returns null when the type does not match

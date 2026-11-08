@@ -487,7 +487,7 @@ Which verdict matches this function?
 :::
 
 :::check id=ps6-average-safe-q2
-Which claims hold for this program and for the private-sum repair?
+Which of these are true about the shared array and the private-sum repair of the averaging program?
 
 - [x] After every `join` returns, the division observes the workers' writes
 - [ ] The shared array is written by more than one worker
@@ -600,7 +600,7 @@ Every `std::thread` must be joined or detached before its destructor runs. If it
 :::
 
 :::check id=ps10-lock-guard-q4
-Which of these hold?
+Which of these are true about the `lock_guard` and the `std::thread` in this program?
 
 - [ ] The `lock_guard` stays locked after `run` returns
 - [x] The `lock_guard` unlocks when `guard` leaves the scope, including on return
@@ -757,6 +757,18 @@ Which of these are true about putting `addIfAbsent` inside the class?
 :::problem id=exam-20b-q2 title="An atomic update" source="materials/exams/20-b.pdf" kind=exam solution_origin=derived
 Two threads, `t1` and `t2`, both call `f()`. One version of `f` updates a plain `int`. The other uses an `AtomicInteger`, because the new value depends on the old one.
 
+Here are the two versions of the update. The question is whether the plain one can lose an update.
+
+```java
+// version 1: a plain int
+int n = 0;
+void f() { n = n + 1; }               // read n, add 1, store the result
+
+// version 2: an AtomicInteger
+AtomicInteger a = new AtomicInteger(0);
+void g() { /* a loop of get and compareAndSet, see question 2 */ }
+```
+
 :::check id=exam-20b-q2-q1
 Which outcomes are possible when both threads update a plain `int` by storing the value they read, plus one?
 
@@ -803,6 +815,25 @@ A thread-safe set is implemented as a linked list.
 - **`Set`** has `contains` and `add`, plus `iterator()` and `clone()`. `SetImpl` stores the elements in a linked list.
 - **The iterator** walks the `next` pointers, and may run at the same time as an `add`.
 - **`clone`** returns a new, separate set, and every node in it must be fully copied before the set is returned.
+
+```java
+interface Set<T> {
+    boolean contains(T x);
+    boolean add(T x);
+    Iterator<T> iterator();
+    Set<T> clone();
+}
+
+class SetImpl<T> implements Set<T> {
+    private class Node { T value; Node next; }
+
+    private final Object lock = new Object();   // the set's single lock
+    private Node head;                          // the linked list
+    private int modCount;                       // version number, grows with every add
+
+    // contains, add, iterator, and clone are the methods the questions ask about
+}
+```
 
 :::check id=exam-24c-q2-q1
 Which of these run under the one lock?

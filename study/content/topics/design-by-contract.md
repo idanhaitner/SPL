@@ -475,7 +475,7 @@ The postcondition says that after `push(obj)`, `size()` equals `size()@pre + 1`,
 :::
 
 :::check id=ps5-stack-contract-q2
-Which of these belong to the contract?
+Which of these belong to the contract of `Stack`?
 
 - [x] Invariant: `size() >= 0`, and `isEmpty()` is true exactly when `size()` is 0
 - [ ] Postcondition of `top`: `size()` grows by one
@@ -596,7 +596,7 @@ Since `push` may store null, the only precondition is that the stack has room. T
 :::
 
 :::check id=exam-18a-q2-q2
-Which of these belong to the contract?
+Which of these belong to the contract of the bounded `Stack<T>`?
 
 - [x] Invariant: `0 <= size() <= capacity()`, and `capacity()` does not change
 - [ ] `push` of null violates the precondition
@@ -623,7 +623,7 @@ Which implementation breaks the postcondition even when only one thread calls it
 `SortedBinaryTree<T extends Comparable<T>>` has `getData`, `getLeft`, `getRight`, and `insert`. The invariant describes the tree when no method is running on it.
 
 :::check id=exam-19a-q2-q1
-Which claims belong to the invariant?
+Which claims belong to the invariant of `SortedBinaryTree`?
 
 - [x] For every node, `getData() != null`
 - [ ] A child may hold a datum equal to its parent

@@ -300,7 +300,7 @@ UDP needs no handshake and keeps no connection state, so the whole exchange is j
 :::
 
 :::check id=ps9-tcp-udp-q2
-Which of these hold for that UDP choice?
+The spell-check client uses UDP. Which of these are true about a lost datagram and a slow server?
 
 - [x] Either datagram can disappear
 - [ ] The client can already tell a lost reply from a slow server
@@ -348,7 +348,7 @@ Which construction is correct?
 :::
 
 :::check id=ps9-encoding-q3
-Which of these hold for that pair?
+Which of these are true about where the charset is applied, in the client and in the server?
 
 - [x] Both directions name UTF-8
 - [x] `BufferedReader` splits lines after the charset is applied

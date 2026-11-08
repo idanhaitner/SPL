@@ -898,7 +898,7 @@ Session 12 uses two tables.
 :::
 
 :::check id=ps12-foreign-key-q2
-Which of these hold?
+Which of these are true about the keys and column types of `PRACTICAL_SESSIONS` and `TEACHING_ASSISTANTS`?
 
 - [x] `GroupNum` is `INTEGER PRIMARY KEY` on `PRACTICAL_SESSIONS`
 - [ ] `TA_ID` is the primary key of `PRACTICAL_SESSIONS`
@@ -956,7 +956,7 @@ A `LEFT JOIN` starting from `TEACHING_ASSISTANTS` keeps every assistant, includi
 :::
 
 :::check id=ps12-join-q3
-Which of these hold for the inner join in the example?
+Which of these are true about the rows that the inner join in the example returns?
 
 - [ ] Matan appears once
 - [x] Shaked appears twice, once for each group
@@ -1037,7 +1037,7 @@ Now `num` is at index 1 and `expected_output` is at index 0. The constructor wan
 :::
 
 :::check id=ps13-orm-find-q3
-Which of these hold?
+Which of these are true about `col_mapping` and `row_map`?
 
 - [x] `col_mapping` lists indexes in constructor order
 - [ ] `row_map` ignores `col_mapping` and always calls `Assignment(*row)`
@@ -1223,7 +1223,7 @@ The phone company BigApple stores two kinds of data.
 - **Account actions:** each action has a date, the other phone number involved, and a kind, which is one of: message sent, outgoing call, missed call, or message received.
 
 :::check id=exam-15a-q4-q1
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the BigApple schema?
 
 - [x] `Customers.phone` is `TEXT PRIMARY KEY`, with `name TEXT NOT NULL` and `joined DATE NOT NULL`
 - [ ] A text column `relatives` on `Customers` is what the family query joins
@@ -1273,7 +1273,7 @@ The Abbey Road studio stores its recording sessions.
 - **The query:** find the takes on which Billy Preston played keyboards during the Beatles' "Get Back" sessions in January 1969.
 
 :::check id=exam-16a-q4-q1
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the Abbey Road schema?
 
 - [x] `Takes` has primary key `(session_id, take_no)`, and `session_id` references `Sessions(id)`
 - [x] `Participations.person_id` references `People(id)`, and `(session_id, take_no)` references `Takes`
@@ -1333,7 +1333,7 @@ Which statement lists every receipt?
 :::
 
 :::check id=exam-17a-q4-q3
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the glasses shop schema?
 
 - [x] `Models.model_no` is `INTEGER PRIMARY KEY` and `price` is `INTEGER NOT NULL`
 - [x] `Receipts.receipt_no` is `INTEGER PRIMARY KEY`
@@ -1370,7 +1370,7 @@ The worker and the flag are stored in `Assignments`, not in `Jobs`, so the query
 :::
 
 :::check id=exam-17b-q4-q3
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the garage schema?
 
 - [x] `Jobs.job_id` is `INTEGER PRIMARY KEY`, and `Workers.id` is `TEXT PRIMARY KEY`
 - [ ] Finishing a job deletes the assignment row
@@ -1399,7 +1399,7 @@ The key that rejects a second use in the same year is {{=PRIMARY KEY (question_i
 :::
 
 :::check id=exam-18a-q4-q2
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the question bank schema?
 
 - [x] `questions` has `id INTEGER PRIMARY KEY` and `text TEXT NOT NULL`
 - [x] `asked.question_id` references `questions(id)`, `year` is `INTEGER NOT NULL`, and `moed` is `TEXT NOT NULL`
@@ -1439,7 +1439,7 @@ The foreign key to the host is {{=properties.host_id|users.host_id|rentals.host_
 :::
 
 :::check id=exam-19a-q4-q2
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the Airbnb schema?
 
 - [x] `users` is the only people table, with `id INTEGER PRIMARY KEY` and `name TEXT NOT NULL`
 - [ ] Guests and hosts are two tables, each with its own primary key
@@ -1480,7 +1480,7 @@ A movie with no category row is kept by a {{=LEFT JOIN|INNER JOIN|CROSS JOIN}} f
 :::
 
 :::check id=exam-20a-q4-q2
-Which of these hold?
+Which of these are true about the tables, keys, and column types of the DVD service schema?
 
 - [x] `categories` has primary key `(movie_id, category)` and `movie_id` references `movies(id)`
 - [ ] `movies` stores every category in one `category` column

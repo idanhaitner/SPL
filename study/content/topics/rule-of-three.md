@@ -491,7 +491,7 @@ Playlist& operator=(const Playlist& other) {
 ```
 
 :::check id=prac-r3-assignment-q1
-Which of these are true?
+Which of these are true about the lines of the assignment operator?
 
 - [x] Without `if (this != &other)`, the line `p = p` would delete the array and then copy from the array it just deleted
 - [x] Without `delete[] _songs;`, every assignment would leak the array the object held before
@@ -652,7 +652,7 @@ A deep copy needs two steps: allocate an array of its own, then copy every cell 
 :::
 
 :::check id=exam-17b-q2-q3
-Which of these are true?
+Which of these are true about the destructor and the copy constructor of `Terrain`?
 
 - [x] The destructor is `delete[] _cells;`
 - [ ] The destructor is `delete _cells;`

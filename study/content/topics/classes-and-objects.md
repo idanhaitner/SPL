@@ -468,7 +468,7 @@ What happens when you compile this class?
 :::
 
 :::check id=prac-classes-seat-q2
-Here is the repaired constructor. Which statements about it are true?
+Here is the repaired `Seat` constructor. Which statements about its initializer list are true?
 
 ```cpp
 class Seat {

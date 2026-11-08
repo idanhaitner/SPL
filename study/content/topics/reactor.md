@@ -609,7 +609,7 @@ The full reactor code is in the course's class material.
 A buffer with capacity 8 was cleared, and then three bytes were stored in it with `put`.
 
 :::check id=ps10-flip-q1
-Which of these hold before `flip`?
+Which of these are true about the buffer's `position`, `limit`, and `capacity` before `flip`?
 
 - [ ] After three `put` calls, `limit` is 3
 - [x] After `clear`, position is 0, limit is 8, and capacity is 8
@@ -661,7 +661,7 @@ An actor pool keeps a separate queue for each client, which the pool calls an ac
 :::
 
 :::check id=ps11-actor-order-q3
-Which of these hold?
+Which of these are true about the actor pool, compared with an ordinary pool, for the messages M1 and M2?
 
 - [ ] The selector thread runs the protocol for R1 and R2
 - [x] Different clients still run concurrently, on the pool's threads
@@ -711,7 +711,7 @@ Turn `OP_WRITE` on only when there is something left to send: a reply has been q
 :::
 
 :::check id=ps11-write-interest-q4
-Which of these hold?
+Which of these are true about `OP_WRITE` and the `interestOps` call in the reactor?
 
 - [ ] `interestOps` from another thread is the same bug as the spin
 - [x] The `interestOps` call that clears `OP_WRITE` is made on the selector thread
@@ -740,7 +740,7 @@ What does the client send first, and what does it send after it has read the rep
 :::
 
 :::check id=ps10-stomp-q2
-Which of these hold after that `SUBSCRIBE`?
+Which of these are true about the headers of that `SUBSCRIBE` and the server's answers to it?
 
 - [x] If the server cannot create the subscription, it sends `ERROR` with a `message` header
 - [ ] The headers are rejected unless `id` comes before `destination`
@@ -882,7 +882,7 @@ A pool has 4 threads. Four clients are connected and rarely send anything. A fif
 :::
 
 :::check id=prac-reactor-models-q3
-Which of these are what the reactor changes?
+Compared with a thread per client, which of these does the reactor change?
 
 - [x] A task handles one message of a client, not the whole conversation
 - [x] One thread does all the socket I/O, with non-blocking calls and a selector
@@ -911,7 +911,7 @@ Change the reactor to use UDP: it talks to every client through a single `Datagr
 - **`receive`** returns the sender's address, or null when nothing has arrived.
 
 :::check id=exam-15a-q3-q1
-Which of these match the change?
+Which of these steps belong to changing the reactor from TCP to UDP?
 
 - [ ] Keep `ConnectionAcceptor` and accept datagram connections
 - [x] Remove `ServerSocketChannel` and `SocketChannel`
@@ -941,7 +941,7 @@ UDP needs no connection handshake and no socket per client. It does not keep dat
 :::
 
 :::check id=exam-15a-q3-q4
-Which of these hold?
+Which of these are true about UDP and the single `DatagramSocketChannel`?
 
 - [x] UDP can drop datagrams or change their order
 - [ ] A channel per client makes delivery reliable
@@ -1062,7 +1062,7 @@ Does Shraga's change take load off this selector?
 :::
 
 :::check id=exam-18a-q3-q2
-Which of these hold?
+The selector thread is saturated. Which of these are true about adding workers or processors?
 
 - [ ] A second processor splits one selector thread by itself
 - [x] Shraga's change helps when the pool is the saturated part
@@ -1094,7 +1094,7 @@ Each client has its own request queue, plus a flag (or chain) that says whether 
 :::
 
 :::check id=exam-19a-q3-q2
-Which of these hold?
+Which of these are true about the requests of one client in the actor pool?
 
 - [ ] Two requests of one client run together on two workers
 - [x] Two requests of one client never run together
@@ -1166,7 +1166,7 @@ The bug is that a worker writes to the channel directly. In the reactor, only th
 :::
 
 :::check id=exam-19b-q3-q3
-Which of these hold?
+Which of these are true about the running flag and the tasks in the improved actor pool?
 
 - [x] `execute` still submits one task when the client was idle
 - [ ] A second `Runnable` is allocated for a message already queued while the worker was alive
@@ -1181,6 +1181,17 @@ Which of these hold?
 
 :::problem id=exam-20a-q3 title="Logging off the selector thread" source="materials/exams/20-a.pdf" kind=exam solution_origin=derived
 A `Logger` wraps an `OutputStream` and records the server's actions. Two workers may log at the same time, and the selector thread must never wait for the disk.
+
+```java
+class Logger {
+    private final OutputStream out;
+
+    public Logger(OutputStream out) { this.out = out; }
+
+    // called by the two workers and by the selector thread
+    public void log(String action) { /* the questions decide what goes here */ }
+}
+```
 
 :::check id=exam-20a-q3-q1
 Workers and the selector place a finished line, a `byte[]`, on a {{=BlockingQueue owned by the logger|write queue of the client|ByteBuffer of the channel}}. A single logger thread then {{=takes and writes the stream|calls select|changes interestOps}}.
@@ -1200,7 +1211,7 @@ Only one thread ever writes to the stream, so two lines can never be interleaved
 :::
 
 :::check id=exam-20a-q3-q3
-Which of these hold when the queue is bounded?
+Which of these are true about the logger when its queue is bounded?
 
 - [ ] A `put` from the selector thread is how it waits for disk space
 - [x] A full queue drops log lines or counts them
@@ -1226,6 +1237,29 @@ Formatting and writing happen on the logger thread, outside any lock the workers
 
 :::problem id=exam-24a-q3 title="Communication threads" source="materials/exams/24-a.pdf" kind=exam solution_origin=derived
 A student changes `Reactor.handleReadWrite` so that the I/O for each ready key is handed to a pool of two threads, `Executors.newFixedThreadPool(2)`, named `communicationThreads`.
+
+```java
+class Reactor {
+    private Selector selector;
+    private final ExecutorService communicationThreads = Executors.newFixedThreadPool(2);
+
+    public void serve() throws IOException {
+        while (true) {
+            selector.select();
+            for (SelectionKey key : selector.selectedKeys()) {
+                if (key.isAcceptable()) handleAccept(key);
+                else communicationThreads.submit(() -> handleReadWrite(key));   // the change
+            }
+            selector.selectedKeys().clear();
+        }
+    }
+
+    private void handleReadWrite(SelectionKey key) {
+        // channel.read into the handler's ByteBuffer, run the protocol,
+        // channel.write the reply, and key.interestOps(...) to ask for more
+    }
+}
+```
 
 :::check id=exam-24a-q3-q1
 Which of these make two communication threads on one selector unsafe?

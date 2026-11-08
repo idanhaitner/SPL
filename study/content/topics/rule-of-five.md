@@ -473,7 +473,7 @@ The first copy initializes the parameter `value` from the argument. The second c
 :::
 
 :::check id=ps4-copy-count-q2
-Which of these hold for `passRef`?
+Which of these are true about the copies that `passRef` makes?
 
 - [x] Entering the function copies nothing, because the parameter is a const reference
 - [ ] `MyClass local(value)` is skipped when NRVO is off
@@ -519,7 +519,7 @@ After `sp2 = sp1`, and before the inner block ends, what is the reference count?
 :::
 
 :::check id=ps4-unique-vs-shared-q2
-Which of these hold when the inner block ends?
+Which of these are true about `sp1`, `sp2`, and the `int` when the inner block ends?
 
 - [x] `sp2` is destroyed and the count drops to 1
 - [ ] The `int` on the heap is deleted
@@ -669,7 +669,7 @@ To be copied safely and moved cheaply, Version 1 writes {{=all five special memb
 :::
 
 :::check id=prac-r5-five-or-zero-q2
-Which of these hold for Version 2, with only the members that the compiler generates?
+Version 2 has only the members that the compiler generates. Which of these are true about copying and moving a `Playlist`?
 
 - [x] Copying a `Playlist` copies the vector, and the vector makes a deep copy of the songs
 - [x] Moving a `Playlist` moves the vector, which hands over its buffer
@@ -711,7 +711,7 @@ Student moved(std::move(jango));   // line 2
 ```
 
 :::check id=prac-r5-unique-bag-q1
-Which of these hold?
+Which of these are true about `Student`, line 1, and line 2?
 
 - [x] `Student` needs no destructor: `_bag` deletes the `Bag` when the student is destroyed
 - [ ] `Student` must write `~Student() { delete _bag; }`
