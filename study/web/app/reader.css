@@ -73,7 +73,7 @@
 .code-scroll:focus-visible { outline-offset: -3px; }
 .code-panel pre { margin: 0; padding-block: 14px; overflow: visible; background: transparent !important; color: var(--code-text); font: 400 0.9375rem/1.7 var(--gh-mono); font-variant-ligatures: none; tab-size: 4; }
 .code-panel pre code { display: block; padding: 0; background: none; counter-reset: line; white-space: normal; font-size: inherit; overflow-wrap: normal; }
-.code-panel .line { position: relative; display: block; min-height: 1.7em; padding: 0 20px 0 64px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.code-panel .line { position: relative; display: block; min-height: 1.7em; width: max-content; min-width: 100%; padding: 0 20px 0 64px; white-space: pre; }
 .code-panel .line::before { counter-increment: line; content: counter(line); position: absolute; left: 0; width: 44px; color: var(--code-gutter); font-variant-numeric: tabular-nums; text-align: right; user-select: none; }
 .code-panel .line.is-marked { background: var(--code-mark); }
 .code-panel .line.is-marked::after { content: ""; position: absolute; left: 49px; top: 0.38em; width: 10px; height: 10px; border-radius: 0 80% 0 80%; background: var(--leaf); }
@@ -434,7 +434,7 @@ body .not-found :focus-visible { outline-color: var(--leaf); }
   .masthead-inner { grid-template-columns: minmax(0, 1fr); row-gap: 14px; padding-bottom: 28px; }
   .masthead-leaf { width: 68px; height: 68px; }
   .course-strip { display: none; }
-  .code-panel .line { width: max-content; min-width: 100%; padding-left: 52px; white-space: pre; overflow-wrap: normal; }
+  .code-panel .line { padding-left: 52px; }
   .code-panel .line::before { width: 34px; }
   .code-panel .line.is-marked::after { left: 39px; }
   .code-panel[data-lang="text"] .line { padding-left: 16px; }
