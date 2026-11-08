@@ -241,6 +241,17 @@ Construction goes `A`, `B`, then `C`. Destruction goes in exactly the reverse or
 
 **Copying.** The copy constructor works the same way. If you write your own and forget to name the base's copy constructor, the base is built with its **empty** constructor, and the `Person` part of the copy is lost: the new student gets no id and no name.
 
+:::check id=chk-copy-base
+`Person` has a default constructor. `Student`'s copy constructor is `Student(const Student& other) : _bag(new Bag(*other._bag)) { }`, with no `Person(...)` call. What happens to the `Person` part of the new student?
+
+- [x] It is built with `Person`'s empty constructor, so the id and name of `other` are lost
+- [ ] The compiler copies it from `other` automatically
+- [ ] The new student shares the `Person` part of `other`
+
+- **Only what you name is copied.** The initializer list does not mention `Person`, so the base part is built the default way.
+- **The fix** is to write `Person(other)` first in the initializer list.
+:::
+
 ```cpp
 Student(const Student& other)
     : Person(other),                    // copy the Person part
@@ -304,6 +315,17 @@ p->live();
 
 A Java programmer expects `a student lives`. This C++ code prints **`a person lives`**.
 
+:::check id=chk-static-type
+In the code above, `live` is **not** virtual, `p` is declared `Person*`, and it points at a `Student`. What does the compiler use to choose which `live` to call?
+
+- [x] The static type, `Person*`
+- [ ] The dynamic type, `Student`
+- [ ] The order in which the classes were written
+
+- **The compiler works before the program runs,** so it cannot know what `p` will really point at.
+- **It uses the type written in the code,** `Person*`, so it picks `Person::live`.
+:::
+
 To see why, you need two ideas.
 
 **Two kinds of type.** Every pointer has a type written in the code, and the object it points at has a real class.
@@ -311,7 +333,7 @@ To see why, you need two ideas.
 - **The static type** is the type written in the code. Here `p` is declared `Person*`, so its static type is `Person`.
 - **The dynamic type** is the real class of the object, known only while the program runs. Here `p` points at a `Student`, so the dynamic type is `Student`.
 
-**Binding.** When the program runs, the code of every function sits in memory at some address, and calling a function means jumping to that address. Choosing *which address* a call jumps to is called **binding** (קשירה). It can happen at two moments.
+**Binding.** When the program runs, the code of every function sits in memory at some address, and calling a function means jumping to that address. Choosing **which address** a call jumps to is called **binding** (קשירה). It can happen at two moments.
 
 - **Static binding (קשירה סטטית), at compile time.** The compiler picks the address while compiling, and the program always jumps to it. The compiler can only look at the code, so it can only use the **static type**. For `p->live()` it sees `Person*`, so it picks `Person::live`.
 - **Dynamic binding (קשירה דינמית), at run time.** The choice is made when the call happens, by looking at the real object. It uses the **dynamic type**, so it picks `Student::live`.
@@ -339,6 +361,30 @@ p->live();      // prints: a student lives
 
 `virtual` tells the compiler: **"do not decide which `live` to call while compiling. Wait until the program runs, look at the real object, and call its version."**
 
+:::check id=chk-override-virtual
+`Person::live` is declared `virtual`. `Student` overrides it and does **not** write `virtual` again. Is `Student::live` virtual?
+
+- [x] Yes, an override of a virtual function is virtual automatically
+- [ ] No, each class must write `virtual` for itself
+- [ ] Only if it also writes `override`
+
+- **The virtual property is inherited,** so every override of a virtual function is virtual too.
+- **`override` is only a safety check,** it does not change how the call is bound.
+:::
+
+:::definition id=def-virtual title="Virtual function and vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
+A function that is not virtual is selected by **static binding** (קשירה סטטית).
+
+- **How it works:** the compiler looks at the declared (static) type of the pointer or reference, and fixes which function to call at compile time.
+
+A function declared `virtual` is selected by **dynamic binding** (קשירה דינמית), also called late binding.
+
+- **How it works:** the function is chosen at run time, from the dynamic type, which is the actual class of the object.
+- **What the call does:** it reads the object's vptr, looks up the function's address in that class's vtable, and calls it with the object's address as `this`.
+- **A polymorphic class** is one with at least one virtual function. The compiler puts a hidden vptr in every object of such a class.
+- **The vptr** points at the vtable of the object's own class. There is one vtable per class, shared by all its objects.
+:::
+
 With a pointer `p` whose static type is `Person*`, a call `p->live()` runs:
 
 | `p` points at | `live` is **not** virtual | `live` is **virtual** |
@@ -353,18 +399,6 @@ Things to know about `virtual`:
 - **It only matters through a pointer or a reference.** If you call `s.live()` on the object itself, the compiler already knows its exact class, so there is nothing to wait for.
 - **Java comparison:** in Java every method behaves as if it were `virtual`. In C++ you have to opt in, function by function.
 
-:::definition id=def-virtual title="Virtual function and vtable" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-A function that is not virtual is selected by **static binding** (קשירה סטטית).
-
-- **How it works:** the compiler looks at the declared (static) type of the pointer or reference, and fixes which function to call at compile time.
-
-A function declared `virtual` is selected by **dynamic binding** (קשירה דינמית), also called late binding.
-
-- **How it works:** the function is chosen at run time, from the dynamic type, which is the actual class of the object.
-- **What the call does:** it reads the object's vptr, looks up the function's address in that class's vtable, and calls it with the object's address as `this`.
-- **A polymorphic class** is one with at least one virtual function. The compiler puts a hidden vptr in every object of such a class.
-- **The vptr** points at the vtable of the object's own class. There is one vtable per class, shared by all its objects.
-:::
 
 :::problem id=worked-virtual-call title="Tracing a virtual call" source="materials/lectures/Chapter 6 - Inheritance.pptx" kind=worked solution_origin=source
 Which method runs when `apply` is declared `virtual`, and which method runs when it is not?
@@ -445,6 +479,17 @@ Every derived class keeps the inherited functions in the same positions as its b
 
 **Step 2: every object carries a card pointing to its table.** Each object of a class with virtual functions gets one extra hidden cell at its start, the **vptr** ("virtual pointer"). It holds the address of its own class's table. The constructor fills it in when the object is created, according to the object's real class, and it never changes.
 
+:::check id=chk-vtable-count
+A program creates 1000 `Student` objects. How many `Student` v-tables are in memory, and how many vptr cells?
+
+- [ ] 1000 v-tables, 1000 vptr cells
+- [x] One v-table, 1000 vptr cells
+- [ ] One v-table, one vptr cell
+
+- **The v-table belongs to the class.** All `Student` objects share the same one.
+- **The vptr belongs to the object.** Each of the 1000 objects has its own hidden cell, and they all hold the same address.
+:::
+
 ```cpp
 Person*  a = new Person(...);       // object stored at address 500
 Person*  b = new Student(...);      // object stored at address 600
@@ -495,7 +540,28 @@ This is why C++ does not make everything virtual by default.
 
 ### The virtual destructor
 
-A destructor is a function like any other, so `delete p` is also a call that needs binding. See what goes wrong when the destructor is not virtual.
+A destructor is a function like any other, so `delete p` is also a call that needs binding. The rule is in the card beside this text. The example below shows what goes wrong when the destructor is not virtual.
+
+:::theorem id=thm-virtual-dtor title="A polymorphic base needs a virtual destructor" source="materials/lectures/Chapter 6 - Inheritance.pptx"
+If a class has virtual functions, it is meant to be used as a polymorphic base class, and its destructor must be declared `virtual`.
+
+:::proof
+- **The setup:** `Base* p = new Derived();` followed by `delete p;`. The destructor call follows the same binding rules as any other call.
+- **If the destructor is not virtual,** static binding picks `~Base` from the pointer's type, and only `~Base` runs.
+- **The consequence:** `~Derived` never runs, so whatever the derived class acquired is leaked. Formally, the behavior is undefined.
+:::
+:::
+
+:::check id=chk-virtual-dtor
+You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true of `~Filter`?
+
+- [ ] It must be pure virtual and have no body
+- [x] It must be virtual
+- [ ] It must be private
+
+- **What must happen:** `~BlurFilter` has to run, followed by `~Filter`.
+- **How to make it happen:** declare `~Filter` virtual. The `delete` then dispatches through the vptr and reaches `~BlurFilter` first.
+:::
 
 ```cpp
 class Person {
@@ -526,26 +592,6 @@ public:
 
 Now the call is dynamic, `~Student` runs first, and then `~Person` runs as usual, in the destruction order seen above.
 
-:::theorem id=thm-virtual-dtor title="A polymorphic base needs a virtual destructor" source="materials/lectures/Chapter 6 - Inheritance.pptx"
-If a class has virtual functions, it is meant to be used as a polymorphic base class, and its destructor must be declared `virtual`.
-
-:::proof
-- **The setup:** `Base* p = new Derived();` followed by `delete p;`. The destructor call follows the same binding rules as any other call.
-- **If the destructor is not virtual,** static binding picks `~Base` from the pointer's type, and only `~Base` runs.
-- **The consequence:** `~Derived` never runs, so whatever the derived class acquired is leaked. Formally, the behavior is undefined.
-:::
-:::
-
-:::check id=chk-virtual-dtor
-You are about to `delete` a `BlurFilter` through a `Filter*`. What must be true of `~Filter`?
-
-- [ ] It must be pure virtual and have no body
-- [x] It must be virtual
-- [ ] It must be private
-
-- **What must happen:** `~BlurFilter` has to run, followed by `~Filter`.
-- **How to make it happen:** declare `~Filter` virtual. The `delete` then dispatches through the vptr and reaches `~BlurFilter` first.
-:::
 
 ### Copying through a base pointer: clone
 
@@ -614,6 +660,18 @@ Now a new document means adding a method, not editing existing code. But `hp->pr
 - **Which class's method runs** is decided at run time, through the vtable. That part works.
 - **Which overload runs** is decided at compile time, from the declared type of the argument. `*pdf` is declared `Doc`, so the compiler picks `print(const Doc&)`.
 
+:::check id=chk-double-dispatch
+In the overload-only version, `Doc* pdf = new PDF();` and `hp->print(*pdf)` runs. Which `print` is called?
+
+- [ ] `HP::print(const PDF&)`
+- [x] `HP::print(const Doc&)`
+- [ ] `Printer::print(const PDF&)`
+
+- **The printer is chosen at run time:** `print` is virtual, so the call reaches `HP`.
+- **The overload is chosen at compile time:** `*pdf` has the declared type `Doc`, so the compiler picks the signature that takes a `Doc`.
+- **Double dispatch fixes it** by calling `doc.printMe(*this)`, where the document's own `*this` has the exact type.
+:::
+
 **The solution: dispatch a second time, on the document.** Let the document call the printer back, at a point where its own type is known exactly.
 
 ```cpp
@@ -638,17 +696,6 @@ Follow `hp->print(*pdf)`:
 2. **Dispatch on the document:** `doc.printMe(*this)` is virtual, so it reaches `PDF::printMe`.
 3. **The right overload:** inside `PDF::printMe`, `*this` is declared `PDF`, so the compiler picks `print(const PDF&)`. It runs on the HP printer, so it is the HP-PDF code.
 
-:::check id=chk-double-dispatch
-In the overload-only version, `Doc* pdf = new PDF();` and `hp->print(*pdf)` runs. Which `print` is called?
-
-- [ ] `HP::print(const PDF&)`
-- [x] `HP::print(const Doc&)`
-- [ ] `Printer::print(const PDF&)`
-
-- **The printer is chosen at run time:** `print` is virtual, so the call reaches `HP`.
-- **The overload is chosen at compile time:** `*pdf` has the declared type `Doc`, so the compiler picks the signature that takes a `Doc`.
-- **Double dispatch fixes it** by calling `doc.printMe(*this)`, where the document's own `*this` has the exact type.
-:::
 
 ## Practice
 
