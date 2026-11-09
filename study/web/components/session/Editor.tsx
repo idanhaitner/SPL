@@ -1,6 +1,6 @@
 "use client";
 
-import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
+import { acceptCompletion, autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap, type Completion, type CompletionContext, type CompletionResult } from "@codemirror/autocomplete";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
 import { python } from "@codemirror/lang-python";
@@ -68,6 +68,8 @@ const theme = EditorView.theme(
     ".cm-matchingBracket": { backgroundColor: "rgb(227 204 143 / 0.22)", outline: "none" },
     ".cm-linked-line": { backgroundColor: "rgb(227 204 143 / 0.16)" },
     ".cm-tooltip": { backgroundColor: "var(--raised)", color: "var(--ink)", border: "1px solid var(--rule)", borderRadius: "10px" },
+    ".cm-tooltip-autocomplete ul": { fontFamily: "var(--gh-mono)", fontSize: "0.875rem" },
+    ".cm-tooltip-autocomplete ul li[aria-selected]": { backgroundColor: "var(--code-selection)", color: "var(--ink)" },
     ".cm-diagnostic": { fontFamily: "var(--gh-body)", fontSize: "0.875rem", padding: "6px 10px" },
     ".cm-lintRange-error": { backgroundImage: "none", textDecoration: "wavy underline #F2A36F", textUnderlineOffset: "3px" },
     ".cm-lintRange-warning": { backgroundImage: "none", textDecoration: "wavy underline #E3CC8F", textUnderlineOffset: "3px" },
@@ -98,6 +100,32 @@ function toCm(doc: EditorState["doc"], list: Diagnostic[]): CmDiagnostic[] {
   });
 }
 
+const KEYWORDS: Record<ExerciseLang, string[]> = {
+  cpp: "auto bool break case catch char class const continue default delete do double else enum explicit false float for if include inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template this throw true try typedef typename unsigned using virtual void while override final std string vector cout cin endl cerr map set unique_ptr shared_ptr make_unique make_shared size_t".split(" "),
+  java: "abstract boolean break byte case catch char class continue default do double else enum extends final finally float for if implements import instanceof int interface long new null package private protected public return short static super switch this throw throws true false try void while String System out println List ArrayList Map HashMap Override".split(" "),
+  python: "and as assert break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield print len range self str int list dict set tuple isinstance super".split(" "),
+};
+
+// Names the user has written in this file: a word followed by ( is offered as a function, any other word as a variable.
+function nameCompletions(lang: ExerciseLang) {
+  return (ctx: CompletionContext): CompletionResult | null => {
+    const word = ctx.matchBefore(/[A-Za-z_]\w*/);
+    if (!word || (word.from === word.to && !ctx.explicit)) return null;
+    const text = ctx.state.doc.toString();
+    const seen = new Map<string, Completion>();
+    for (const m of text.matchAll(/[A-Za-z_]\w*/g)) {
+      // Skip the word being typed right now, or it would suggest itself.
+      if (m.index === word.from) continue;
+      const name = m[0];
+      if (seen.has(name) || KEYWORDS[lang].includes(name)) continue;
+      const isFn = /^\s*\(/.test(text.slice(m.index + name.length, m.index + name.length + 8));
+      seen.set(name, { label: name, type: isFn ? "function" : "variable", boost: 1 });
+    }
+    const keywords = KEYWORDS[lang].map((k): Completion => ({ label: k, type: "keyword" }));
+    return { from: word.from, options: [...seen.values(), ...keywords], validFor: /^\w*$/ };
+  };
+}
+
 const LANGUAGES = { cpp, java, python };
 const LABELS: Record<ExerciseLang, string> = { cpp: "C++", java: "Java", python: "Python" };
 
@@ -123,7 +151,9 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
       closeBrackets(),
       highlightActiveLine(),
       EditorView.lineWrapping,
-      keymap.of([{ key: "Shift-Alt-f", run: format }, ...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+      // Suggests variables, functions and keywords as you type; Tab or Enter accepts, Ctrl-Space opens the list.
+      ...(readOnly ? [] : [autocompletion({ override: [nameCompletions(lang)], icons: false })]),
+      keymap.of([{ key: "Shift-Alt-f", run: format }, ...closeBracketsKeymap, ...completionKeymap, ...defaultKeymap, ...historyKeymap, { key: "Tab", run: acceptCompletion }, indentWithTab]),
       LANGUAGES[lang](),
       // The same width as CODE_STYLE, so a new line lines up with the formatted code around it.
       indentUnit.of("    "),
