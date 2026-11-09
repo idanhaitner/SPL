@@ -34,3 +34,6 @@ CLAUDE.md
 .impeccable/mocks/
 .impeccable/review/
 .impeccable/questions/
+
+# Assignments live in their own separate repos
+assignments/
