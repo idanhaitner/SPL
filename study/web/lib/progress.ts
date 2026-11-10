@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { hrefOf } from "./chapters";
+
+export { hrefOf, nameOf } from "./chapters";
 
 export type Progress = {
   solved: string[];
@@ -111,15 +114,6 @@ export function nextChapter(chapters: ChapterInfo[], progress: Progress): Chapte
     : visited;
   const ordered = lastIndex < 0 ? chapters : [...chapters.slice(lastIndex), ...chapters.slice(0, lastIndex)];
   return ordered.find((chapter) => !isDone(chapter, progress) && isUnlocked(chapters, chapter.id, progress)) ?? null;
-}
-
-// A bridge has no reading page: it opens straight in its session.
-export function hrefOf(chapter: ChapterInfo) {
-  return chapter.kind === "bridge" ? `/sessions/${chapter.id}/` : `/topics/${chapter.id}/`;
-}
-
-export function nameOf(chapter: ChapterInfo) {
-  return chapter.kind === "bridge" ? "Review" : `Chapter ${chapter.num}`;
 }
 
 export function resumeHref(chapter: ChapterInfo, progress: Progress) {

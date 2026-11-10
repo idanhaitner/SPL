@@ -19,6 +19,10 @@ describe("session store", () => {
     expect(openStep(["a", "b"], { current: "a", skipped: [] }, [], "b")).toBe(1);
     expect(openStep(["a", "b"], { current: "gone", skipped: [] }, ["a"], "also-gone")).toBe(1);
   });
+  it("drops a reminder that was renamed, and resumes after one that was passed", () => {
+    expect(openStep(["b--one", "q1"], { current: "b--gone", skipped: [] }, [], null)).toBe(0);
+    expect(openStep(["b--one", "q1"], { current: "b--gone", skipped: [] }, ["b--one"], null)).toBe(1);
+  });
   it("survives broken storage", () => {
     localStorage.setItem("study:c:session:x", "not json");
     expect(readSession("c", "x")).toEqual({ skipped: [] });
