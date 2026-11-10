@@ -568,13 +568,20 @@ topics:
     exam_weight: core
     exam_shape: "Write the invariant and the preconditions and postconditions of a method. The trap is an invariant that forgets the empty case, or a postcondition that is only true when nobody else mutates the object."
     prerequisites: [concurrency]
+    unlocks: [bridge-threads-and-safety]
+  - id: bridge-threads-and-safety
+    file: topics/bridge-threads-and-safety.md
+    title: "Review: threads and safe objects"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [design-by-contract]
     unlocks: [synchronization]
   - id: synchronization
     file: topics/synchronization.md
     title: Synchronization
     exam_weight: core
     exam_shape: "A shared structure. Show a race, or repair it with synchronized, an immutable copy, or an atomic compare-and-set. The trap is protecting the update but not the read that publishes it, or relying on a thread-safe class across two calls."
-    prerequisites: [design-by-contract]
+    prerequisites: [bridge-threads-and-safety]
     unlocks: [waiting-and-liveness]
   - id: waiting-and-liveness
     file: topics/waiting-and-liveness.md
