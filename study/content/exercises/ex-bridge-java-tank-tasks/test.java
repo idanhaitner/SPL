@@ -1,16 +1,3 @@
-class SpyTank extends Tank {
-    volatile Thread filledBy = null;
-
-    SpyTank(int capacity) {
-        super(capacity);
-    }
-
-    void fill(int n) {
-        filledBy = Thread.currentThread();
-        super.fill(n);
-    }
-}
-
 class Main {
     public static void main(String[] args) {
         Check.test("fill adds to the level", () -> {
@@ -45,30 +32,34 @@ class Main {
             new FillTask(tank, 3, 5).run();
             Check.eq(tank.level(), 9, "level() of a tank of 10 after a task of 5 fills of 3");
         });
-        Check.test("fillAll returns the sum of the levels", () -> {
+        Check.test("one task per tank, in order", () -> {
             Tank[] tanks = { new Tank(10), new Tank(4), new Tank(100) };
-            Check.eq(Filler.fillAll(tanks, 2, 3), 16, "fillAll over tanks of 10, 4 and 100 with 3 fills of 2");
-            Check.eq(tanks[0].level(), 6, "level() of the tank of 10");
-            Check.eq(tanks[1].level(), 4, "level() of the tank of 4");
-            Check.eq(tanks[2].level(), 6, "level() of the tank of 100");
+            Runnable[] tasks = Filler.tasksFor(tanks, 2, 3);
+            Check.eq(tasks.length, 3, "the number of tasks for three tanks");
+            Check.isTrue(tasks[0] instanceof FillTask && tasks[1] instanceof FillTask && tasks[2] instanceof FillTask, "every task should be a FillTask");
+            tasks[1].run();
+            Check.eq(tanks[0].level(), 0, "level() of the first tank after only the second task ran");
+            Check.eq(tanks[1].level(), 4, "level() of the second tank after its task ran");
+            Check.eq(tanks[2].level(), 0, "level() of the third tank after only the second task ran");
         });
-        Check.test("fillAll runs each task on a new thread", () -> {
-            SpyTank first = new SpyTank(10);
-            SpyTank second = new SpyTank(10);
-            Filler.fillAll(new Tank[] { first, second }, 1, 2);
-            Check.isTrue(first.filledBy != null && second.filledBy != null, "each tank should have been filled");
-            Check.isTrue(first.filledBy != Thread.currentThread() && second.filledBy != Thread.currentThread(), "the tasks ran on the calling thread: use start(), not run()");
-            Check.isTrue(first.filledBy != second.filledBy, "each tank should be filled by a thread of its own");
+        Check.test("total adds the levels", () -> {
+            Tank[] tanks = { new Tank(10), new Tank(4), new Tank(100) };
+            for (Runnable task : Filler.tasksFor(tanks, 2, 3)) {
+                task.run();
+            }
+            Check.eq(Filler.total(tanks), 16, "total over tanks of 10, 4 and 100 after 3 fills of 2 each");
         });
-        Check.test("fillAll waits for every thread", () -> {
-            SpyTank first = new SpyTank(1000);
-            SpyTank second = new SpyTank(1000);
-            Filler.fillAll(new Tank[] { first, second }, 1, 1000);
-            Check.isTrue(!first.filledBy.isAlive() && !second.filledBy.isAlive(), "fillAll returned while a thread was still running: join every thread");
-            Check.eq(first.level() + second.level(), 2000, "the sum of the levels once both threads have finished");
+        Check.test("the order of the tasks does not matter", () -> {
+            Tank[] tanks = { new Tank(7), new Tank(3), new Tank(50) };
+            Runnable[] tasks = Filler.tasksFor(tanks, 3, 4);
+            for (int i = tasks.length - 1; i >= 0; i--) {
+                tasks[i].run();
+            }
+            Check.eq(Filler.total(tanks), 21, "total after running the tasks in reverse order (6 + 3 + 12)");
         });
-        Check.test("fillAll with no tanks", () -> {
-            Check.eq(Filler.fillAll(new Tank[0], 5, 5), 0, "fillAll over no tanks");
+        Check.test("no tanks, no tasks", () -> {
+            Check.eq(Filler.tasksFor(new Tank[0], 5, 5).length, 0, "the number of tasks for no tanks");
+            Check.eq(Filler.total(new Tank[0]), 0, "total over no tanks");
         });
     }
 }

@@ -34,7 +34,11 @@ class FillTask implements Runnable {
 }
 
 class Filler {
-    static int fillAll(Tank[] tanks, int amount, int times) throws InterruptedException {
+    static Runnable[] tasksFor(Tank[] tanks, int amount, int times) {
+        return new Runnable[0];
+    }
+
+    static int total(Tank[] tanks) {
         return 0;
     }
 }

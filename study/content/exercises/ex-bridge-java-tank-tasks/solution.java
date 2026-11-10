@@ -47,15 +47,17 @@ class FillTask implements Runnable {
 }
 
 class Filler {
-    static int fillAll(Tank[] tanks, int amount, int times) throws InterruptedException {
-        Thread[] threads = new Thread[tanks.length];
+    static Runnable[] tasksFor(Tank[] tanks, int amount, int times) {
+        Runnable[] tasks = new Runnable[tanks.length];
         for (int i = 0; i < tanks.length; i++) {
-            threads[i] = new Thread(new FillTask(tanks[i], amount, times));
-            threads[i].start();
+            tasks[i] = new FillTask(tanks[i], amount, times);
         }
+        return tasks;
+    }
+
+    static int total(Tank[] tanks) {
         int sum = 0;
         for (int i = 0; i < tanks.length; i++) {
-            threads[i].join();
             sum = sum + tanks[i].level();
         }
         return sum;
