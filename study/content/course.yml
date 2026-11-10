@@ -65,6 +65,8 @@ changelog:
     note: "Chapters follow the order and material of Adler's lecture notes: a run-time environment chapter, the Student, Bag, and Book memory examples, design by contract as safety and correctness inside concurrency, new synchronization and waiting chapters, the general server, the command-invocation server, the Python persistence layer, and a course review. Back to Java was folded into the chapters that use it."
   - date: 2026-11-08
     note: "Coding exercises now run in Java and Python as well as C++: ten Java exercises across design by contract, concurrency, synchronization, waiting, serialization, and the reactor, and five Python and SQL exercises in the persistence chapter."
+  - date: 2026-11-10
+    note: "Review bridges sit between chapters: a guided session of short reminders, questions, and a coding exercise that use the last two or three chapters together. The first one follows the pointers chapter."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -505,12 +507,19 @@ topics:
     title: Variables, pointers, and references
     exam_weight: taught
     prerequisites: [memory-model]
+    unlocks: [bridge-memory-basics]
+  - id: bridge-memory-basics
+    file: topics/bridge-memory-basics.md
+    title: "Review: memory and pointers"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [pointers]
     unlocks: [classes-and-objects]
   - id: classes-and-objects
     file: topics/classes-and-objects.md
     title: Classes and objects
     exam_weight: taught
-    prerequisites: [pointers]
+    prerequisites: [bridge-memory-basics]
     unlocks: [rule-of-three]
   - id: rule-of-three
     file: topics/rule-of-three.md

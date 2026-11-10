@@ -107,7 +107,7 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
             <>
               <h1 ref={heading} tabIndex={-1}><Mixed text={chapter.title} /></h1>
               {intro ?? <p>This review teaches nothing new. It brings back the last chapters and has you use them together.</p>}
-              {reviews.length > 0 && <p className="session-reviews">Reviews: {reviewLinks}</p>}
+              {reviews.length > 0 && <p className="session-reviews">Looks back at: {reviewLinks}</p>}
             </>
           ) : (
             <>

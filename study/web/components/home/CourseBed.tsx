@@ -5,7 +5,7 @@ import { rowNote } from "./CourseMap";
 import { Icon } from "./Icon";
 import { LeafBlade, LeafShape } from "./LeafShape";
 import { Mixed } from "@/lib/bidi";
-import { courseStates, hasStarted, hrefOf, useProgress, type ChapterInfo, type ChapterState, type Progress } from "@/lib/progress";
+import { courseStates, hasStarted, hrefOf, leavesOf, useProgress, type ChapterInfo, type ChapterState, type Progress } from "@/lib/progress";
 import type { Leaf } from "@/lib/stem";
 
 type Part = { title: string; lang: string; summary: string; chapters: ChapterInfo[] };
@@ -80,8 +80,9 @@ export function CourseBed({ courseId, parts, finale, chapters }: { courseId: str
         ))}
       </ul>
       {beds.map((part, index) => {
-        const finished = part.chapters.filter((chapter) => stateOf(chapter) === "done").length;
-        const meta = [part.lang, finished > 0 ? `${finished} of ${part.chapters.length} done` : ""].filter(Boolean).join(" · ");
+        const counted = leavesOf(part.chapters);
+        const finished = counted.filter((chapter) => stateOf(chapter) === "done").length;
+        const meta = [part.lang, finished > 0 ? `${finished} of ${counted.length} done` : ""].filter(Boolean).join(" · ");
         const following = beds[index + 1]?.chapters[0];
         return (
           <section className="gh-bed-part" key={part.title} aria-label={part.title}>
