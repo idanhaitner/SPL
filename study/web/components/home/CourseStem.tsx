@@ -5,7 +5,7 @@ import { LeafShape, LeafSpark, SparkGlow } from "./LeafShape";
 import { Stem } from "./Stem";
 import { useLeafBrush } from "./useLeafBrush";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { courseStates, lastOpen, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { lastOpen, leafStates, leavesOf, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 import { growthDelay, NARROW_STEM, spacedLeaves, STEM_GROW, STEM_START, stemTip, WIDE_STEM, type Leaf, type StemCurves } from "@/lib/stem";
 
 const wide = spacedLeaves(WIDE_STEM, 16);
@@ -127,7 +127,7 @@ function LeafTitle({ title, leaf, size, delay }: { title: string; leaf: Leaf; si
 }
 
 // `name` keeps its drawing's ids apart from another plant on the page; `since` is set when a finished chapter is being celebrated.
-export function CourseStem({ courseId, chapters, partStarts, name = "stem", since }: { courseId: string; chapters: ChapterInfo[]; partStarts: { label: string; num: number }[]; name?: string; since?: number }) {
+export function CourseStem({ courseId, chapters: all, partStarts, name = "stem", since }: { courseId: string; chapters: ChapterInfo[]; partStarts: { label: string; num: number }[]; name?: string; since?: number }) {
   const loaded = useLoadedProgress(courseId);
   const [hover, setHover] = useState<number | null>(null);
   const plant = useRef<SVGSVGElement>(null);
@@ -148,7 +148,9 @@ export function CourseStem({ courseId, chapters, partStarts, name = "stem", sinc
     };
   }, []);
 
-  const states = courseStates(chapters, loaded ?? { solved: [] });
+  // One leaf per chapter: the reviews between chapters are not drawn, though each still holds the next leaf shut.
+  const chapters = leavesOf(all);
+  const states = leafStates(all, loaded ?? { solved: [] });
   const { from, phase, shown: openShown } = useRegrowth(courseId, loaded ? lastOpen(states) : null, since);
   const open = openShown ?? lastOpen(states);
   const growing = phase === "growing";

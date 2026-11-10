@@ -507,3 +507,6 @@ html:has(.gh-bloom[open]) { overflow-y: clip; }
 @media (prefers-reduced-motion: reduce) {
   .home *, .home *::before, .home *::after { transition: none !important; animation: none !important; }
 }
+
+/* A review between chapters carries no number, and its name is set apart from the chapters around it. */
+:is(.gh-row, .gh-bed-row).is-review :is(.gh-row-title, .gh-bed-title) { font-style: italic; }

@@ -11,6 +11,7 @@ import { TryQuestion } from "@/components/home/TryQuestion";
 import { loadCourse } from "@/lib/course";
 import { highlight } from "@/lib/highlight";
 import { courseNav, stemParts } from "@/lib/nav";
+import { stepsOf } from "@/lib/steps";
 import { PARTS } from "@/lib/parts";
 import type { Block } from "@/lib/types";
 
@@ -43,7 +44,8 @@ export default async function HomePage() {
   const nav = courseNav(course);
   const { chapters, parts, finale } = nav;
   const byId = new Map(chapters.map((chapter) => [chapter.id, chapter]));
-  const practiceCount = chapters.reduce((sum, chapter) => sum + chapter.stepIds.length, 0);
+  // A bridge's reminder cards are steps, but they are not practice.
+  const practiceCount = course.topics.reduce((sum, topic) => sum + stepsOf(topic).filter((step) => step.kind !== "recap").length, 0);
   const examCount = course.topics.reduce((sum, topic) => sum + countProblems(topic.blocks, "exam"), 0);
   const questionChapter = byId.get("memory-model");
   const partStarts = stemParts(nav);

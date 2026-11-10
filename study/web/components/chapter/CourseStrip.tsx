@@ -5,19 +5,21 @@ import { useRef } from "react";
 import { LeafShape } from "@/components/home/LeafShape";
 import { Stem } from "@/components/home/Stem";
 import { useLeafBrush } from "@/components/home/useLeafBrush";
-import { courseStates, lastOpen, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { leafStates, leavesOf, lastOpen, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 import { spacedLeaves, STRIP_STEM } from "@/lib/stem";
 
 const strip = spacedLeaves(STRIP_STEM, 16, 0.03, 0.97);
 const SIZE: Record<ChapterState, number> = { done: 60, read: 60, here: 78, ahead: 54, locked: 40 };
 
 // This chapter's place on the one course stem.
-export function CourseStrip({ courseId, chapters, currentId }: { courseId: string; chapters: ChapterInfo[]; currentId: string }) {
+export function CourseStrip({ courseId, chapters: all, currentId }: { courseId: string; chapters: ChapterInfo[]; currentId: string }) {
+  // One leaf per chapter: the reviews between chapters are not drawn.
+  const chapters = leavesOf(all);
   const progress = useProgress(courseId);
   const plant = useRef<SVGSVGElement>(null);
   useLeafBrush(plant);
   // This page's chapter is the one marked here, wherever the course's next chapter is, unless it has not opened yet.
-  const states = courseStates(chapters, progress).map((state, index): ChapterState => (state === "locked" ? state : chapters[index].id === currentId ? "here" : state === "here" ? "ahead" : state));
+  const states = leafStates(all, progress).map((state, index): ChapterState => (state === "locked" ? state : chapters[index].id === currentId ? "here" : state === "here" ? "ahead" : state));
   const open = lastOpen(states);
   return (
     <nav className="course-strip" aria-label="Your place in the course">

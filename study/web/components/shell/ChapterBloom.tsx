@@ -6,7 +6,7 @@ import { CourseStem } from "@/components/home/CourseStem";
 import { HeroAir } from "@/components/home/HeroAir";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
-import { courseStates, isDone, lastOpen, readProgress, type ChapterInfo } from "@/lib/progress";
+import { courseStates, hrefOf, isDone, lastOpen, leavesOf, nameOf, readProgress, type ChapterInfo } from "@/lib/progress";
 
 type Bloom = { from: number; to: number };
 
@@ -89,7 +89,7 @@ export function ChapterBloom({ courseId, chapters, partStarts }: { courseId: str
               <Icon name="x" />
             </button>
             <div className="gh-bloom-copy">
-              <p className="gh-bloom-kicker">Chapter {finishedChapter.num} finished</p>
+              <p className="gh-bloom-kicker">{nameOf(finishedChapter)} finished</p>
               <h2 id="bloom-title">
                 {words.map((word, index) => (
                   <Fragment key={index}>
@@ -99,16 +99,20 @@ export function ChapterBloom({ courseId, chapters, partStarts }: { courseId: str
               </h2>
               <p className="gh-bloom-lede">
                 {opened ? (
-                  <>You finished <Mixed text={finishedChapter.title} />. Chapter {opened.num}, <Mixed text={opened.title} />, is open now.</>
+                  opened.kind === "bridge" ? (
+                    <>You finished <Mixed text={finishedChapter.title} />. A look back at the last chapters, <Mixed text={opened.title} />, is open now.</>
+                  ) : (
+                    <>You finished <Mixed text={finishedChapter.title} />. Chapter {opened.num}, <Mixed text={opened.title} />, is open now.</>
+                  )
                 ) : (
-                  <>You finished all {chapters.length} chapters. Every leaf on the stem is grown.</>
+                  <>You finished all {leavesOf(chapters).length} chapters. Every leaf on the stem is grown.</>
                 )}
               </p>
             </div>
             <div className="gh-bloom-action">
               {opened ? (
-                <Link className="gh-btn" href={`/topics/${opened.id}/`} onClick={() => dialog.current?.close()}>
-                  Open chapter {opened.num}
+                <Link className="gh-btn" href={hrefOf(opened)} onClick={() => dialog.current?.close()}>
+                  {opened.kind === "bridge" ? "Open the review" : `Open chapter ${opened.num}`}
                   <Icon name="arrow" />
                 </Link>
               ) : (
@@ -118,7 +122,7 @@ export function ChapterBloom({ courseId, chapters, partStarts }: { courseId: str
                 </Link>
               )}
             </div>
-            <CourseStem courseId={courseId} chapters={chapters} partStarts={partStarts} name="bloom" since={bloom.from} />
+            <CourseStem courseId={courseId} chapters={chapters} partStarts={partStarts} name="bloom" since={Math.max(0, leavesOf(chapters.slice(0, bloom.from + 1)).length - 1)} />
           </div>
         </>
       )}

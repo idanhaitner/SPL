@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { blockerOf, hrefOf, nameOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
+import { blockerOf, hrefOf, leafStates, leavesOf, nameOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, pos: 0, stepIds });
 const br = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 0, pos: 0, stepIds, kind: "bridge" });
@@ -135,6 +135,11 @@ describe("progress", () => {
     });
     it("a bridge is never in the read state", () => {
       expect(chapterState(r, a, { solved: [] })).toBe("ahead");
+    });
+    it("draws leaves for chapters only, with states that still respect the bridge", () => {
+      expect(leavesOf(list)).toEqual([a, c]);
+      expect(leafStates(list, { solved: [], read: ["a"] })).toEqual(["done", "locked"]);
+      expect(leafStates(list, { solved: ["r--one", "q"], read: ["a"] })).toEqual(["done", "here"]);
     });
     it("links and names chapters and bridges", () => {
       expect(hrefOf(a)).toBe("/topics/a/");

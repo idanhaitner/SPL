@@ -46,7 +46,7 @@ function Bud({ leaf, size, num, numSize, style }: { leaf: Leaf; size: number; nu
     <g className="gh-leaf is-locked" transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.angle})`} style={style}>
       <path className="gh-leaf-stalk" d={`M0 0L${r(from)} 0`} strokeWidth={2} />
       <path className="gh-bud" d={`M${r(from)} 0C${r(mid - size * 0.2)} ${r(wide)} ${r(mid + size * 0.2)} ${r(wide)} ${r(to)} 0C${r(mid + size * 0.2)} ${r(-wide)} ${r(mid - size * 0.2)} ${r(-wide)} ${r(from)} 0Z`} />
-      <text className="gh-leaf-num" x={r(mid)} y={r(numSize * 0.35)} textAnchor="middle" fontSize={numSize} transform={`rotate(${-leaf.angle} ${r(mid)} 0)`}>{num}</text>
+      <text className="gh-leaf-num" x={r(mid)} y={r(numSize * 0.35)} textAnchor="middle" fontSize={numSize} transform={`rotate(${-leaf.angle} ${r(mid)} 0)`}>{num > 0 ? num : null}</text>
     </g>
   );
 }
@@ -72,7 +72,7 @@ export function LeafShape({ leaf, size, state, num, numSize, index, delay, halo 
         <g className="gh-leaf-body">
           <path className="gh-leaf-stalk" d={`M0 0L${Math.round(size * STALK * 100) / 100} 0`} strokeWidth={Math.max(2, size * 0.035)} />
           <LeafBlade size={size} flip={leaf.side < 0} />
-          <text className="gh-leaf-num" x={textX} y={textY} textAnchor="middle" fontSize={numSize} transform={`rotate(${-leaf.angle} ${textX} 0)`}>{num}</text>
+          <text className="gh-leaf-num" x={textX} y={textY} textAnchor="middle" fontSize={numSize} transform={`rotate(${-leaf.angle} ${textX} 0)`}>{num > 0 ? num : null}</text>
         </g>
       </g>
     </g>

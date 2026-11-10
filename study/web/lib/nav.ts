@@ -36,5 +36,8 @@ const STEM_LABELS = ["Memory", "Concurrency", "Communication", "Databases"];
 
 // Where each part's name hangs on the course stem: at the leaf of its first chapter.
 export function stemParts(nav: CourseNav) {
-  return nav.parts.map((part, index) => ({ label: STEM_LABELS[index], num: part.chapters[0].num }));
+  return nav.parts.flatMap((part, index) => {
+    const first = part.chapters.find((chapter) => chapter.kind !== "bridge");
+    return first ? [{ label: STEM_LABELS[index], num: first.num }] : [];
+  });
 }

@@ -136,6 +136,15 @@ export function courseStates(chapters: ChapterInfo[], progress: Progress): Chapt
   });
 }
 
+// The stem draws one leaf per chapter. A bridge sits between two leaves and is not drawn, but it still holds the next leaf shut.
+export function leavesOf(chapters: ChapterInfo[]) {
+  return chapters.filter((chapter) => chapter.kind !== "bridge");
+}
+
+export function leafStates(chapters: ChapterInfo[], progress: Progress): ChapterState[] {
+  return courseStates(chapters, progress).filter((_, index) => chapters[index].kind !== "bridge");
+}
+
 // How far the plant has grown: the index of the last chapter that is open.
 export function lastOpen(states: ChapterState[]) {
   return states.findLastIndex((state) => state !== "locked");
