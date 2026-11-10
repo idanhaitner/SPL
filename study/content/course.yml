@@ -589,13 +589,20 @@ topics:
     exam_weight: core
     exam_shape: "A guarded wait on a shared queue or resource, or a deadlock to explain and fix. The trap is if instead of while around wait, notify where notifyAll is needed, or a lock order that waits forever."
     prerequisites: [synchronization]
+    unlocks: [bridge-locks-and-waiting]
+  - id: bridge-locks-and-waiting
+    file: topics/bridge-locks-and-waiting.md
+    title: "Review: locks and waiting"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [waiting-and-liveness]
     unlocks: [networking]
   - id: networking
     file: topics/networking.md
     title: Communication between processes
     exam_weight: core
     exam_shape: "Replace a delimiter with a length prefix, cap the clients, or write a small command protocol. The trap is treating a TCP read as a whole message, or forgetting that UDP has no accept."
-    prerequisites: [waiting-and-liveness]
+    prerequisites: [bridge-locks-and-waiting]
     unlocks: [reactor]
   - id: reactor
     file: topics/reactor.md
