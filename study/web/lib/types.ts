@@ -28,6 +28,9 @@ export type Topic = {
   practiceIds: string[];
   blocks: Block[];
   exercises?: Exercise[];
+  // A bridge reviews earlier chapters instead of teaching: it has no reading page, only a session.
+  kind?: "bridge";
+  reviews?: string[];
 };
 
 export type ProgramCase = { name: string; args: string[]; stdin: string; expected: string; hint: string };
@@ -54,7 +57,9 @@ export type Exercise = {
 
 export type SessionStep =
   | { kind: "question"; id: string; title: string; block: Extract<Block, { type: "directive" }> }
-  | { kind: "exercise"; id: string; title: string; exercise: Exercise };
+  | { kind: "exercise"; id: string; title: string; exercise: Exercise }
+  // A reminder card in a bridge: read it and move on.
+  | { kind: "recap"; id: string; title: string; blocks: Block[] };
 
 export type GlossaryEntry = {
   term: string;

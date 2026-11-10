@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
 
-export type StepMeta = { id: string; kind: "question" | "exercise"; title: string };
+export type StepMeta = { id: string; kind: "question" | "exercise" | "recap"; title: string };
 export type StepStatus = "done" | "skipped" | "current" | "upcoming";
 
-const KIND = { question: "Question", exercise: "Coding exercise" };
+const KIND = { question: "Question", exercise: "Coding exercise", recap: "Reminder" };
 
 function Shape({ status }: { status: StepStatus }) {
   return (

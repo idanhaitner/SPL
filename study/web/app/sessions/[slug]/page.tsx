@@ -33,6 +33,8 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   for (const step of steps) {
     if (step.kind === "question") {
       rendered[step.id] = render([step.block]);
+    } else if (step.kind === "recap") {
+      rendered[step.id] = render(step.blocks);
     } else {
       const { exercise } = step;
       exercises[step.id] = exercise;
