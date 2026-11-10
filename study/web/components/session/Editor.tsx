@@ -11,6 +11,7 @@ import { defaultKeymap, history, historyKeymap, indentWithTab, isolateHistory } 
 import { HighlightStyle, bracketMatching, indentOnInput, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 import { useEffect, useRef } from "react";
+import { STDLIB } from "@/lib/editor-stdlib";
 import type { Diagnostic } from "@/lib/run-result";
 import type { ExerciseLang } from "@/lib/types";
 
@@ -100,29 +101,50 @@ function toCm(doc: EditorState["doc"], list: Diagnostic[]): CmDiagnostic[] {
   });
 }
 
-const KEYWORDS: Record<ExerciseLang, string[]> = {
-  cpp: "auto bool break case catch char class const continue default delete do double else enum explicit false float for if include inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template this throw true try typedef typename unsigned using virtual void while override final std string vector cout cin endl cerr map set unique_ptr shared_ptr make_unique make_shared size_t".split(" "),
-  java: "abstract boolean break byte case catch char class continue default do double else enum extends final finally float for if implements import instanceof int interface long new null package private protected public return short static super switch this throw throws true false try void while String System out println List ArrayList Map HashMap Override".split(" "),
-  python: "and as assert break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield print len range self str int list dict set tuple isinstance super".split(" "),
+const IMPORT_LINE: Record<ExerciseLang, RegExp> = {
+  cpp: /^\s*#\s*include\s*<$/,
+  java: /^\s*import\s+(static\s+)?[\w.]*$/,
+  python: /^\s*(import\s+[\w., ]*|from\s+[\w.]*)$/,
 };
 
-// Names the user has written in this file: a word followed by ( is offered as a function, any other word as a variable.
+// Suggests the names written in this file (a word followed by ( is a function, any other word a variable)
+// together with the language's keywords and standard library. What is offered depends on where the cursor is:
+// after . or -> only members, after std:: only the standard library, on an include or import line only modules.
 function nameCompletions(lang: ExerciseLang) {
+  const std = STDLIB[lang];
+  const as = (type: string, list: string[]) => list.map((label): Completion => ({ label, type }));
+  const general = [...as("keyword", std.keywords), ...as("class", std.types), ...as("function", std.functions)];
+  const members = as("method", std.members);
+  const modules = as("namespace", std.modules);
+  const library = [...as("class", std.types), ...as("function", std.functions)];
+
   return (ctx: CompletionContext): CompletionResult | null => {
     const word = ctx.matchBefore(/[A-Za-z_]\w*/);
-    if (!word || (word.from === word.to && !ctx.explicit)) return null;
+    const from = word ? word.from : ctx.pos;
+    const line = ctx.state.doc.lineAt(from);
+    const before = line.text.slice(0, from - line.from);
+    const result = (options: Completion[]): CompletionResult => ({ from, options, validFor: /^\w*$/ });
+
+    if (IMPORT_LINE[lang].test(before)) return result(modules);
+    if (lang === "cpp" && /\bstd\s*::$/.test(before)) return result(library);
+    // A dot after a number is a decimal point, not a member access.
+    const afterDot = /(\.|->)$/.test(before) && !/\b\d+\.$/.test(before);
+    if (!word && !afterDot && !ctx.explicit) return null;
+
+    const offered = afterDot ? members : general;
+    // Keywords in the file are never a member, so after a dot they are left out altogether.
+    const known = new Set([...offered.map((c) => c.label), ...std.keywords]);
     const text = ctx.state.doc.toString();
     const seen = new Map<string, Completion>();
     for (const m of text.matchAll(/[A-Za-z_]\w*/g)) {
       // Skip the word being typed right now, or it would suggest itself.
-      if (m.index === word.from) continue;
+      if (m.index === from) continue;
       const name = m[0];
-      if (seen.has(name) || KEYWORDS[lang].includes(name)) continue;
+      if (seen.has(name) || known.has(name)) continue;
       const isFn = /^\s*\(/.test(text.slice(m.index + name.length, m.index + name.length + 8));
       seen.set(name, { label: name, type: isFn ? "function" : "variable", boost: 1 });
     }
-    const keywords = KEYWORDS[lang].map((k): Completion => ({ label: k, type: "keyword" }));
-    return { from: word.from, options: [...seen.values(), ...keywords], validFor: /^\w*$/ };
+    return result([...seen.values(), ...offered]);
   };
 }
 
@@ -151,7 +173,7 @@ export function Editor({ value, onChange, diagnostics, onHoverLine, onFormat, hi
       closeBrackets(),
       highlightActiveLine(),
       EditorView.lineWrapping,
-      // Suggests variables, functions and keywords as you type; Tab or Enter accepts, Ctrl-Space opens the list.
+      // Suggests variables, functions, keywords and the standard library as you type; Tab or Enter accepts, Ctrl-Space opens the list.
       ...(readOnly ? [] : [autocompletion({ override: [nameCompletions(lang)], icons: false })]),
       keymap.of([{ key: "Shift-Alt-f", run: format }, ...closeBracketsKeymap, ...completionKeymap, ...defaultKeymap, ...historyKeymap, { key: "Tab", run: acceptCompletion }, indentWithTab]),
       LANGUAGES[lang](),
