@@ -12,7 +12,8 @@ export type Progress = {
   openAll?: boolean;
 };
 
-export type ChapterInfo = { id: string; title: string; num: number; stepIds: string[] };
+// pos is the place in the course, counting bridges. num is the printed chapter number, which skips bridges; a bridge has 0.
+export type ChapterInfo = { id: string; title: string; num: number; pos: number; stepIds: string[]; kind?: "bridge" };
 export type ChapterState = "done" | "read" | "here" | "ahead" | "locked";
 
 export function storageKey(courseId: string) {
@@ -76,7 +77,9 @@ export function setOpenAll(courseId: string, on: boolean) {
 const allSolved =(chapter: ChapterInfo, progress: Progress) => chapter.stepIds.every((id) => progress.solved.includes(id));
 
 // Read means Finish reading was pressed. Students from before that button count as read once all their practice was solved.
+// A bridge has nothing to read, so only its steps count.
 export function isRead(chapter: ChapterInfo, progress: Progress) {
+  if (chapter.kind === "bridge") return true;
   if ((progress.read ?? []).includes(chapter.id)) return true;
   return chapter.stepIds.length > 0 && (progress.seen ?? []).includes(chapter.id) && allSolved(chapter, progress);
 }
@@ -110,14 +113,24 @@ export function nextChapter(chapters: ChapterInfo[], progress: Progress): Chapte
   return ordered.find((chapter) => !isDone(chapter, progress) && isUnlocked(chapters, chapter.id, progress)) ?? null;
 }
 
+// A bridge has no reading page: it opens straight in its session.
+export function hrefOf(chapter: ChapterInfo) {
+  return chapter.kind === "bridge" ? `/sessions/${chapter.id}/` : `/topics/${chapter.id}/`;
+}
+
+export function nameOf(chapter: ChapterInfo) {
+  return chapter.kind === "bridge" ? "Review" : `Chapter ${chapter.num}`;
+}
+
 export function resumeHref(chapter: ChapterInfo, progress: Progress) {
+  if (chapter.kind === "bridge") return hrefOf(chapter);
   return isRead(chapter, progress) && !isDone(chapter, progress) ? `/sessions/${chapter.id}/` : `/topics/${chapter.id}/`;
 }
 
 export function chapterState(chapter: ChapterInfo, next: ChapterInfo | null, progress: Progress): ChapterState {
   if (isDone(chapter, progress)) return "done";
   if (next?.id === chapter.id) return "here";
-  return isRead(chapter, progress) ? "read" : "ahead";
+  return chapter.kind !== "bridge" && isRead(chapter, progress) ? "read" : "ahead";
 }
 
 // Every chapter's state, with the ones that have not opened yet as locked.

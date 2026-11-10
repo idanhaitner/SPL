@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { blockerOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
+import { blockerOf, hrefOf, nameOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
 
-const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, stepIds });
+const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, pos: 0, stepIds });
+const br = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 0, pos: 0, stepIds, kind: "bridge" });
 
 describe("progress", () => {
   beforeEach(() => localStorage.clear());
@@ -105,5 +106,41 @@ describe("progress", () => {
     expect(chapterState(b, next, { solved: [], read: ["b"] })).toBe("here");
     expect(chapterState(b, a, { solved: [], read: ["b"] })).toBe("read");
     expect(chapterState(ch("z"), next, { solved: [] })).toBe("ahead");
+  });
+
+  describe("bridges", () => {
+    const [a, r, c] = [ch("a"), br("r", ["r--one", "q"]), ch("c")];
+    const list = [a, r, c];
+    it("a bridge is done once every step is solved, with no read mark", () => {
+      expect(isDone(r, { solved: ["r--one", "q"], read: [] })).toBe(true);
+    });
+    it("a bridge with an unsolved step is not done", () => {
+      expect(isDone(r, { solved: ["r--one"], read: ["r"] })).toBe(false);
+    });
+    it("a bridge blocks the chapter after it until done", () => {
+      const progress = { solved: ["r--one"], read: ["a"] };
+      expect(isUnlocked(list, "c", progress)).toBe(false);
+      expect(blockerOf(list, "c", progress)).toBe(r);
+      expect(isUnlocked(list, "c", { solved: ["r--one", "q"], read: ["a"] })).toBe(true);
+    });
+    it("openAll opens past an unfinished bridge", () => {
+      expect(isUnlocked(list, "c", { solved: [], openAll: true })).toBe(true);
+    });
+    it("resumes a bridge in its session", () => {
+      expect(resumeHref(r, { solved: [] })).toBe("/sessions/r/");
+      expect(resumeHref(r, { solved: ["r--one"] })).toBe("/sessions/r/");
+    });
+    it("sends a student already past a bridge back to it", () => {
+      expect(nextChapter(list, { solved: [], read: ["a", "c"], last: "c" })).toBe(r);
+    });
+    it("a bridge is never in the read state", () => {
+      expect(chapterState(r, a, { solved: [] })).toBe("ahead");
+    });
+    it("links and names chapters and bridges", () => {
+      expect(hrefOf(a)).toBe("/topics/a/");
+      expect(nameOf(a)).toBe("Chapter 1");
+      expect(hrefOf(r)).toBe("/sessions/r/");
+      expect(nameOf(r)).toBe("Review");
+    });
   });
 });
