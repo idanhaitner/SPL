@@ -527,13 +527,20 @@ topics:
     exam_weight: core
     exam_shape: "A small class owns a raw array. Write the destructor and the deep copy. The trap is the default memberwise copy, or an assignment that frees the buffer before the new one exists."
     prerequisites: [classes-and-objects]
+    unlocks: [bridge-objects-and-copies]
+  - id: bridge-objects-and-copies
+    file: topics/bridge-objects-and-copies.md
+    title: "Review: objects that own memory"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [rule-of-three]
     unlocks: [rule-of-five]
   - id: rule-of-five
     file: topics/rule-of-five.md
     title: The rule of five and smart pointers
     exam_weight: core
     exam_shape: "Steal a buffer, or delay the clone until a write. The trap is leaving the source pointer alive so two destructors free one block, or copying a unique_ptr."
-    prerequisites: [rule-of-three]
+    prerequisites: [bridge-objects-and-copies]
     unlocks: [inheritance]
   - id: inheritance
     file: topics/inheritance.md
