@@ -2,7 +2,7 @@ class Deck {
   public:
     static int alive;
 
-    Deck(int size) : _size(size), _cards(nullptr) {
+    Deck(int size) : _size(size), _cards(new int[size]) {
     }
 
     Deck(const Deck& other) : _size(other._size), _cards(other._cards) {

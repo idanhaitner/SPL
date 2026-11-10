@@ -548,12 +548,19 @@ topics:
     exam_weight: core
     exam_shape: "Two derived types sit behind one base pointer. The call is non-virtual, the destructor is non-virtual, or an overload is used where an override was needed. The trap is a memory drawing that omits the vptr, or a delete through the base that skips the derived destructor."
     prerequisites: [rule-of-five]
+    unlocks: [bridge-ownership-and-polymorphism]
+  - id: bridge-ownership-and-polymorphism
+    file: topics/bridge-ownership-and-polymorphism.md
+    title: "Review: ownership and polymorphism"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [inheritance]
     unlocks: [concurrency]
   - id: concurrency
     file: topics/concurrency.md
     title: Threads
     exam_weight: taught
-    prerequisites: [inheritance]
+    prerequisites: [bridge-ownership-and-polymorphism]
     unlocks: [design-by-contract]
   - id: design-by-contract
     file: topics/design-by-contract.md
