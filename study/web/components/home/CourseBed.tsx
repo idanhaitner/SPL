@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { rowNote } from "./CourseMap";
 import { Icon } from "./Icon";
+import { Flower } from "./Flower";
 import { LeafBlade, LeafShape } from "./LeafShape";
 import { Mixed } from "@/lib/bidi";
 import { courseStates, hasStarted, hrefOf, leavesOf, useProgress, type ChapterInfo, type ChapterState, type Progress } from "@/lib/progress";
@@ -20,7 +21,7 @@ const LEGEND: { state: ChapterState; label: string }[] = [
 // Done, here and locked are the only looks; a chapter read but not finished counts as done, one open but not next as locked.
 const looks = (state: ChapterState): ChapterState => (state === "read" ? "done" : state === "ahead" ? "locked" : state);
 
-// `place` is the row's 1-based place on the vine, which sets the side its leaf grows on. A bridge's leaf is smaller and carries no number.
+// `place` is the row's 1-based place on the vine, which sets the side its leaf grows on. A bridge is a flower instead of a leaf, and carries no number.
 function Vine({ place, num, state, grown, first, last }: { place: number; num: number; state: ChapterState; grown: boolean; first: boolean; last: boolean }) {
   const side = place % 2 ? -1 : 1;
   const small = num === 0;
@@ -32,7 +33,11 @@ function Vine({ place, num, state, grown, first, last }: { place: number; num: n
   return (
     <svg className="gh-bed-vine" viewBox="0 0 104 72" aria-hidden="true">
       <path className={`gh-bed-stem${grown ? " is-grown" : state === "locked" ? " is-ghost" : ""}`} d={`${above}${below}`} pathLength={1} />
-      <LeafShape leaf={leaf} size={small ? (here ? 40 : 34) : here ? 52 : 46} state={state} num={num} numSize={here ? 16 : 15} index={place} delay={0} halo={`gh-halo-bed-${place}`} />
+      {small ? (
+        <Flower spot={{ x: leaf.x, y: leaf.y, heading: 0, angle: leaf.angle, side: leaf.side, along: 0 }} size={here ? 46 : 40} state={state} index={place} delay={0} />
+      ) : (
+        <LeafShape leaf={leaf} size={here ? 52 : 46} state={state} num={num} numSize={here ? 16 : 15} index={place} delay={0} halo={`gh-halo-bed-${place}`} />
+      )}
     </svg>
   );
 }
