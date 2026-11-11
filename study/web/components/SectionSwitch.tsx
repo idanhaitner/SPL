@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FinishReading, type Hop } from "@/components/chapter/FinishReading";
@@ -89,6 +90,13 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
   const upcoming = parts[index + 1];
   const nodeState = (item: number) => (item === index ? "here" : done.includes(parts[item].title) ? "done" : "ahead");
   const siblings = current.group ? parts.filter((part) => part.group?.slug === current.group?.slug) : [];
+  // Practice lives in the session, so it is one step from any page of the reading.
+  const jump = session && (
+    <Link className="section-session" href={session.href}>
+      <Icon name="arrow" />
+      <span>Go to the guided session</span>
+    </Link>
+  );
   const list = (
     <ol>
       {parts.map((part, item) => {
@@ -105,12 +113,18 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
       })}
     </ol>
   );
+  const listWithJump = (
+    <>
+      {jump}
+      {list}
+    </>
+  );
 
   return (
     <div className="reader">
       {parts.length > 1 ? (
-        <nav className="section-stem parts" aria-label="Sections of this chapter">{list}</nav>
-      ) : <span />}
+        <nav className="section-stem parts" aria-label="Sections of this chapter">{listWithJump}</nav>
+      ) : <span className="section-solo">{jump}</span>}
       {parts.length > 1 && (
         <details className="section-menu" ref={menu}>
           <summary>
@@ -118,7 +132,7 @@ export function SectionSwitch({ courseId, chapterId, stepIds, intro, parts, sess
             <span>Section {index + 1} of {parts.length}</span>
             <Icon name="down" />
           </summary>
-          <div className="section-menu-list">{list}</div>
+          <div className="section-menu-list">{listWithJump}</div>
         </details>
       )}
       <article className="reader-body" ref={body}>

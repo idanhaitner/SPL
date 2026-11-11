@@ -31,6 +31,11 @@
 .stem-node.is-here path { fill: var(--ink); stroke: var(--ground); stroke-width: 2; paint-order: stroke; }
 .stem-node.is-ahead path { fill: var(--ground); stroke: var(--edge); stroke-width: 2; stroke-linejoin: round; }
 .section-menu { display: none; }
+.section-session { display: flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 16px; padding: 8px 16px; border: 1.5px solid var(--edge); border-radius: 999px; color: var(--ink); font-weight: 600; line-height: 1.25; text-decoration: none; }
+.section-session:hover { background: var(--wash); }
+.section-session .gh-icon { flex: none; }
+.section-menu-list .section-session { margin-top: 12px; }
+.section-solo .section-session { margin-bottom: 0; }
 /* A long section split into pages: its name is a heading on a branch off the stem, and its pages hang a step in, each on a short twig. */
 .section-group { position: relative; margin: 18px 0 2px; padding-left: 38px; color: var(--ink); font: 800 1rem/1.25 var(--gh-display); }
 .section-stem li:first-child .section-group, .section-menu-list li:first-child .section-group { margin-top: 4px; }
@@ -413,7 +418,8 @@ body .not-found :focus-visible { outline-color: var(--leaf); }
 }
 @media (max-width: 63.99rem) {
   .reader { grid-template-columns: minmax(0, 1fr); padding-top: 0; }
-  .reader > span:first-child { display: none; }
+  .reader > span:first-child:not(.section-solo) { display: none; }
+  .section-solo { margin-bottom: 24px; }
   .section-stem { display: none; }
   .section-menu { display: block; position: sticky; top: 0; z-index: 20; margin: 0 calc(-1 * var(--gh-gutter)) 32px; background: var(--raised); border-bottom: 1px solid var(--rule); font-size: 0.9375rem; }
   .section-menu summary { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px var(--gh-gutter); cursor: pointer; list-style: none; }
