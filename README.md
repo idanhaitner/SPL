@@ -10,7 +10,8 @@ An interactive study site for **Systems Programming** (תכנות מערכות, 
 - Worked examples with real code, hints, and solutions
 - Practice cards you can mark as solved (progress stays in the browser)
 - Diagrams for frames, heaps, vtables, reactors, and more
-- Search across chapters, practice, and the glossary
+- Six review bridges between chapters: short reminders, questions, and a coding exercise that combine the last two or three chapters
+- Search across chapters, reviews, practice, and the glossary
 - English, read left to right, with the course's Hebrew term on first use
 
 ## Stack

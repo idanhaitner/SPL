@@ -17,6 +17,11 @@ describe("matchHits", () => {
     expect(matchHits(HITS, "מצביע").map((item) => item.title)).toContain("Pointers");
   });
 
+  it("ranks a whole review before a single question, like a chapter", () => {
+    const hits = [hit("Practice", "stack question", "stack"), hit("Review", "Review: stack", "stack")];
+    expect(matchHits(hits, "stack").map((item) => item.kind)).toEqual(["Review", "Practice"]);
+  });
+
   it("ignores case in the query and in the index", () => {
     expect(matchHits(HITS, "POINTERS").map((item) => item.title)).toEqual(["Pointers"]);
     expect(matchHits([hit("Chapter", "RAII")], "raii")).toHaveLength(1);
