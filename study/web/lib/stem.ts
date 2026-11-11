@@ -62,6 +62,32 @@ export function spacedLeaves(curves: Curve[], count: number, from = 0.04, to = 0
   return { leaves, length: tidy(length) };
 }
 
+// A review hangs from the stem between two leaves, as a berry. `heading` is the way the stem grows there, `angle` the way the berry points.
+export type BridgeSpot = { x: number; y: number; heading: number; angle: number; side: 1 | -1; along: number };
+
+// `afters` lists, for each bridge in order, the index of the leaf just before it.
+export function bridgeSpots(curves: Curve[], leaves: Leaf[], afters: number[]): BridgeSpot[] {
+  const { length } = sampled(curves);
+  return afters.map((after) => {
+    const before = leaves[after];
+    const next = leaves[after + 1];
+    const along = next ? (before.along + next.along) / 2 : Math.min(length, before.along + 70);
+    const { x, y, angle: heading } = pointAlong(curves, along);
+    // A leaf's blade reaches forward past the middle of the gap, so the berry takes the other side, where the next leaf grows.
+    const side = (next ? next.side : -before.side) as 1 | -1;
+    return { x, y, heading, angle: tidy(heading + side * 90), side, along: tidy(along) };
+  });
+}
+
+// How far the stem reaches: a little past the last open leaf, on past any open bridge after it, or all the way once the last leaf is open.
+export function reachPast(leaves: Leaf[], open: number, past: number, openBridges: number[]) {
+  if (open >= leaves.length - 1) return undefined;
+  const from = leaves[Math.max(0, open)].along;
+  const base = from + past;
+  const beyond = Math.max(0, ...openBridges.filter((along) => along > from));
+  return beyond > 0 ? Math.min(Math.max(base, beyond + past * 0.5), leaves[open + 1].along - 6) : base;
+}
+
 // The stem as a filled outline, thick at the root and thin at the growing tip.
 export function taperedPath(curves: Curve[], root: number, tip: number) {
   const spine = curves.flatMap((curve, index) => Array.from({ length: 41 }, (_, step) => at(curve, step / 40)).slice(index ? 1 : 0));

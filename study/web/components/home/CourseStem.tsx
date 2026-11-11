@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { Berry } from "./Berry";
 import { LeafShape, LeafSpark, SparkGlow } from "./LeafShape";
 import { Stem } from "./Stem";
 import { useLeafBrush } from "./useLeafBrush";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { lastOpen, leafStates, leavesOf, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
-import { growthDelay, NARROW_STEM, spacedLeaves, STEM_GROW, STEM_START, stemTip, WIDE_STEM, type Leaf, type StemCurves } from "@/lib/stem";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { courseStates, hrefOf, lastOpen, leafStates, leavesOf, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { bridgeSpots, growthDelay, NARROW_STEM, reachPast, spacedLeaves, STEM_GROW, STEM_START, stemTip, WIDE_STEM, type Leaf, type StemCurves } from "@/lib/stem";
 
 const wide = spacedLeaves(WIDE_STEM, 16);
 // The crown at the stem's end, placed like a leaf so a spark can open on it.
@@ -22,6 +23,10 @@ const looks = (state: ChapterState): ChapterState => (state === "read" ? "done" 
 const STATE_WORDS: Record<ChapterState, string> = { done: ", done", read: ", read", here: ", you are here", ahead: "", locked: ", locked until the chapter before it is read" };
 const WIDE_SIZE: Record<ChapterState, number> = { done: 92, read: 92, here: 118, ahead: 84, locked: 58 };
 const NARROW_SIZE: Record<ChapterState, number> = { done: 46, read: 46, here: 58, ahead: 42, locked: 28 };
+// A review's berry is drawn smaller than a leaf, so it reads as fruit on the stem and not as a chapter.
+const BERRY_WIDE: Record<ChapterState, number> = { done: 62, read: 62, here: 78, ahead: 56, locked: 42 };
+const BERRY_NARROW: Record<ChapterState, number> = { done: 32, read: 32, here: 40, ahead: 28, locked: 22 };
+const BERRY_WORDS: Record<ChapterState, string> = { done: ", done", read: ", done", here: ", you are here", ahead: "", locked: ", locked until the chapter before it is finished" };
 // A regrowth, in ms from when it starts: sap climbs to the leaf just finished, that leaf ripens, then the stem grows on.
 // SURGE_AT and REGROW_MS match .gh-surge and .is-regrowing .gh-stem-alive-line in motion.css.
 const SURGE_AT = 200;
@@ -30,11 +35,6 @@ const GROW_AT = 1250;
 const REGROW_MS = 1400;
 
 type Phase = "rest" | "surge" | "ripe" | "growing";
-
-// How far the stem reaches: a little past the last open leaf, or all the way once every chapter is open.
-function reach(leaves: Leaf[], open: number, past: number) {
-  return open >= leaves.length - 1 ? undefined : leaves[Math.max(0, open)].along + past;
-}
 
 // The plant remembers how far it had grown, so a chapter opened since the last visit grows in while you watch.
 // It runs before paint, so the stem is never seen at full length first and then shrinking back to where it starts.
@@ -69,8 +69,12 @@ function useRegrowth(courseId: string, open: number | null, since?: number) {
 }
 
 // What a part's name must keep clear of: every leaf's blade, and the stem between the leaves.
-function obstacles(leaves: Leaf[]) {
+function obstacles(leaves: Leaf[], berries: { x: number; y: number; angle: number }[]) {
   const points: { x: number; y: number }[] = [];
+  for (const berry of berries) {
+    const radians = (berry.angle * Math.PI) / 180;
+    for (const t of [0, 0.25, 0.5, 0.75, 1, 1.25]) points.push({ x: berry.x + Math.cos(radians) * 48 * t, y: berry.y + Math.sin(radians) * 48 * t });
+  }
   leaves.forEach((leaf, index) => {
     const radians = (leaf.angle * Math.PI) / 180;
     for (const t of [0, 0.35, 0.7, 1]) points.push({ x: leaf.x + Math.cos(radians) * 76 * t, y: leaf.y + Math.sin(radians) * 76 * t });
@@ -81,22 +85,25 @@ function obstacles(leaves: Leaf[]) {
 }
 
 const LABEL_SPOTS = Array.from({ length: 12 }, (_, step) => (step * Math.PI) / 6);
+// The name sits close to its leaf, or one ring further out when the plant is crowded there.
+const LABEL_RINGS = [64, 100];
 
 // A thin tendril ties a part's name to the leaf where that part begins. The name goes wherever around the leaf is emptiest.
-function PartLabel({ label, leaf, leaves, first, delay, locked }: { label: string; leaf: Leaf; leaves: Leaf[]; first: boolean; delay: number; locked: boolean }) {
+function PartLabel({ label, leaf, leaves, berries, first, delay, locked }: { label: string; leaf: Leaf; leaves: Leaf[]; berries: { x: number; y: number; angle: number }[]; first: boolean; delay: number; locked: boolean }) {
   const { x, y } = leaf;
   const width = label.length * 13.5;
-  const spots = LABEL_SPOTS.map((angle) => {
+  const spots = LABEL_RINGS.flatMap((ring) => LABEL_SPOTS.map((angle) => ({ ring, angle }))).map(({ ring, angle }) => {
     const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
     const anchor: "start" | "end" | "middle" = cos > 0.35 ? "start" : cos < -0.35 ? "end" : "middle";
-    const [ax, ay] = [x + cos * 64, y + sin * 64];
+    const [ax, ay] = [x + cos * ring, y + sin * ring];
     const left = anchor === "start" ? ax : anchor === "end" ? ax - width : ax - width / 2;
     const top = sin > 0.35 ? ay : sin < -0.35 ? ay - 26 : ay - 13;
-    const clear = Math.min(...obstacles(leaves).map((point) => Math.hypot(Math.max(left - point.x, 0, point.x - (left + width)), Math.max(top - point.y, 0, point.y - (top + 26)))));
+    const clear = Math.min(...obstacles(leaves, berries).map((point) => Math.hypot(Math.max(left - point.x, 0, point.x - (left + width)), Math.max(top - point.y, 0, point.y - (top + 26)))));
     const inside = left > 500 && left + width < 1420 && top > 70;
     return { ax, ay, anchor, top, clear: inside ? clear : -1 };
   });
-  const best = first ? spots[9] : spots.reduce((a, b) => (b.clear > a.clear ? b : a));
+  // Prefer the near ring: a farther spot has to be clearly emptier to win.
+  const best = first ? spots[9] : spots.reduce((a, b, index) => ((index >= LABEL_SPOTS.length ? b.clear - 14 : b.clear) > a.clear ? b : a));
   const tendril = `M${x} ${y}Q${Math.round((x + best.ax) / 2 + (best.ay - y) * 0.2)} ${Math.round((y + best.ay) / 2 - (best.ax - x) * 0.2)} ${Math.round(best.ax)} ${Math.round(best.ay)}`;
   return (
     <g aria-hidden="true" className={locked ? "is-locked" : undefined} style={{ "--d": `${delay}ms` } as React.CSSProperties}>
@@ -130,8 +137,13 @@ function LeafTitle({ title, leaf, size, delay }: { title: string; leaf: Leaf; si
 export function CourseStem({ courseId, chapters: all, partStarts, name = "stem", since }: { courseId: string; chapters: ChapterInfo[]; partStarts: { label: string; num: number }[]; name?: string; since?: number }) {
   const loaded = useLoadedProgress(courseId);
   const [hover, setHover] = useState<number | null>(null);
+  const [berryHover, setBerryHover] = useState<number | null>(null);
   const plant = useRef<SVGSVGElement>(null);
   useLeafBrush(plant);
+  // Each review hangs on the stem after the leaf before it.
+  const bridges = useMemo(() => all.filter((chapter) => chapter.kind === "bridge").map((chapter) => ({ chapter, after: leavesOf(all.slice(0, chapter.pos)).length - 1 })), [all]);
+  const wideBerries = useMemo(() => bridgeSpots(WIDE_STEM, wide.leaves, bridges.map((bridge) => bridge.after)), [bridges]);
+  const narrowBerries = useMemo(() => bridgeSpots(NARROW_STEM, narrow.leaves, bridges.map((bridge) => bridge.after)), [bridges]);
 
   // The plant grows once per browser session; coming back to home later, it is simply there.
   useEffect(() => {
@@ -151,6 +163,9 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
   // One leaf per chapter: the reviews between chapters are not drawn, though each still holds the next leaf shut.
   const chapters = leavesOf(all);
   const states = leafStates(all, loaded ?? { solved: [] });
+  const everyState = courseStates(all, loaded ?? { solved: [] });
+  const berryLook = (index: number) => looks(everyState[bridges[index].chapter.pos]);
+  const reachOf = (leaves: Leaf[], past: number, spots: typeof wideBerries) => reachPast(leaves, open, past, spots.filter((_, index) => berryLook(index) !== "locked").map((spot) => spot.along));
   const { from, phase, shown: openShown } = useRegrowth(courseId, loaded ? lastOpen(states) : null, since);
   const open = openShown ?? lastOpen(states);
   const growing = phase === "growing";
@@ -196,18 +211,18 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
       </g>
     );
   const surge = (leaves: Leaf[], length: number) => (from !== null && phase !== "rest" ? leaves[from].along / length : undefined);
-  const front = (leaves: Leaf[], length: number, past: number) => (from !== null && from < lastOpen(states) && phase !== "rest" ? reach(leaves, open, past) ?? length : undefined);
+  const front = (leaves: Leaf[], length: number, past: number, spots: typeof wideBerries) => (from !== null && from < lastOpen(states) && phase !== "rest" ? reachOf(leaves, past, spots) ?? length : undefined);
 
   return (
     <>
       <div className="gh-stem-wide" data-ready={loaded ? "" : undefined}>
         <svg ref={plant} className={[regrowing, flowering && "is-flowering"].filter(Boolean).join(" ") || undefined} viewBox="0 0 1440 900" preserveAspectRatio="xMaxYMax meet" role="group" aria-label={`The course as one stem, with a leaf for each of its ${chapters.length} chapters. A chapter opens once the one before it is read.`}>
           {from !== null && <defs><SparkGlow id={`${name}-glow-wide`} /></defs>}
-          <Stem id={`${name}-wide`} curves={WIDE_STEM} root={13} tip={5} alive={reach(wide.leaves, open, 52)} sapTo={hereIndex < 0 || waiting || phase === "ripe" ? undefined : wide.leaves[hereIndex].along / wide.length} surgeTo={surge(wide.leaves, wide.length)} front={front(wide.leaves, wide.length, 52)} tipSize={46} finished={finished} />
+          <Stem id={`${name}-wide`} curves={WIDE_STEM} root={13} tip={5} alive={reachOf(wide.leaves, 52, wideBerries)} sapTo={hereIndex < 0 || waiting || phase === "ripe" ? undefined : wide.leaves[hereIndex].along / wide.length} surgeTo={surge(wide.leaves, wide.length)} front={front(wide.leaves, wide.length, 52, wideBerries)} tipSize={46} finished={finished} />
           {flowering && <LeafSpark leaf={{ ...wide.leaves[0], ...tipOf(WIDE_STEM), along: 0 }} size={92} at="0ms" glow={`${name}-glow-wide`} />}
           {partStarts.map(({ label, num }) => {
             const leaf = wide.leaves[num - 1];
-            return <PartLabel key={label} label={label} leaf={leaf} leaves={wide.leaves} first={num === 1} delay={growthDelay(leaf.along / wide.length) + 280} locked={looks(states[num - 1]) === "locked"} />;
+            return <PartLabel key={label} label={label} leaf={leaf} leaves={wide.leaves} berries={wideBerries} first={num === 1} delay={growthDelay(leaf.along / wide.length) + 280} locked={looks(states[num - 1]) === "locked"} />;
           })}
           {chapters.map((chapter, index) => {
             const current = lookOf(index);
@@ -231,12 +246,31 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
               </Link>
             );
           })}
+          {bridges.map(({ chapter }, index) => {
+            const spot = wideBerries[index];
+            const current = berryLook(index);
+            return (
+              <Link
+                key={chapter.id}
+                className="gh-leaf-link"
+                href={hrefOf(chapter)}
+                aria-label={`${chapter.title}${BERRY_WORDS[current]}`}
+                onMouseEnter={() => setBerryHover(index)}
+                onMouseLeave={() => setBerryHover(null)}
+                onFocus={() => setBerryHover(index)}
+                onBlur={() => setBerryHover(null)}
+              >
+                <Berry spot={spot} size={BERRY_WIDE[current]} state={current} index={chapter.pos} delay={growthDelay(spot.along / wide.length)} />
+              </Link>
+            );
+          })}
+          {berryHover !== null && <LeafTitle key={`berry-${berryHover}`} title={berryLook(berryHover) === "locked" ? `Locked · ${bridges[berryHover].chapter.title}` : bridges[berryHover].chapter.title} leaf={{ x: wideBerries[berryHover].x, y: wideBerries[berryHover].y, angle: wideBerries[berryHover].angle, along: wideBerries[berryHover].along, side: wideBerries[berryHover].side }} size={BERRY_WIDE[berryLook(berryHover)]} />}
           {shown && titled !== null && <LeafTitle key={titled} title={lookOf(titled) === "locked" ? `Locked · ${chapters[titled].title}` : chapters[titled].title} leaf={shown} size={WIDE_SIZE[lookOf(titled)]} delay={hover === null ? `${REGROW_MS}ms` : undefined} />}
         </svg>
       </div>
       <svg className={["gh-stem-narrow", regrowing, flowering && "is-flowering"].filter(Boolean).join(" ")} viewBox="0 0 390 290" aria-hidden="true" data-ready={loaded ? "" : undefined}>
         {from !== null && <defs><SparkGlow id={`${name}-glow-narrow`} /></defs>}
-        <Stem id={`${name}-narrow`} curves={NARROW_STEM} root={6} tip={3} alive={reach(narrow.leaves, open, 14)} surgeTo={surge(narrow.leaves, narrow.length)} front={front(narrow.leaves, narrow.length, 14)} tipSize={22} finished={finished} />
+        <Stem id={`${name}-narrow`} curves={NARROW_STEM} root={6} tip={3} alive={reachOf(narrow.leaves, 14, narrowBerries)} surgeTo={surge(narrow.leaves, narrow.length)} front={front(narrow.leaves, narrow.length, 14, narrowBerries)} tipSize={22} finished={finished} />
         {flowering && <LeafSpark leaf={{ ...narrow.leaves[0], ...tipOf(NARROW_STEM), along: 0 }} size={46} at="0ms" glow={`${name}-glow-narrow`} />}
         {chapters.map((chapter, index) => {
           const current = lookOf(index);
@@ -257,6 +291,18 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
                 {spark(index, narrow.leaves, NARROW_SIZE, `${name}-glow-narrow`)}
               </g>
               <circle cx={leaf.x + Math.cos(radians) * reachSize * 0.5} cy={leaf.y + Math.sin(radians) * reachSize * 0.5} r={Math.max(22, reachSize * 0.55)} fill="transparent" />
+            </Link>
+          );
+        })}
+        {bridges.map(({ chapter }, index) => {
+          const spot = narrowBerries[index];
+          const current = berryLook(index);
+          const radians = (spot.angle * Math.PI) / 180;
+          const reachSize = BERRY_NARROW[current];
+          return (
+            <Link key={chapter.id} className="gh-leaf-link" href={hrefOf(chapter)} aria-label={`${chapter.title}${BERRY_WORDS[current]}`}>
+              <Berry spot={spot} size={reachSize} state={current} index={chapter.pos} delay={growthDelay(spot.along / narrow.length)} />
+              <circle cx={spot.x + Math.cos(radians) * reachSize * 0.55} cy={spot.y + Math.sin(radians) * reachSize * 0.55} r={Math.max(22, reachSize * 0.6)} fill="transparent" />
             </Link>
           );
         })}
