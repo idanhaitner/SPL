@@ -287,14 +287,18 @@ a.gh-brand { display: flex; align-items: center; min-height: 44px; white-space: 
 .gh-leaf.is-done .gh-leaf-stalk { stroke: var(--leaf); }
 .gh-leaf-num { fill: var(--blade-ink); font-family: var(--gh-display); font-weight: 800; paint-order: stroke; stroke: var(--blade-shade); stroke-width: 3.5px; stroke-linejoin: round; font-variant-numeric: tabular-nums; pointer-events: none; }
 .gh-leaf-halo { pointer-events: none; }
-/* A review is a berry: the leaf's state colors on a round body, with no number. */
-.gh-berry-shade { fill: var(--blade-shade); stroke: var(--blade-edge); stroke-width: 1.1; vector-effect: non-scaling-stroke; transition: fill 160ms; }
-.gh-berry-light { fill: var(--blade-light); transition: fill 160ms; }
-.gh-berry-glint { fill: rgb(255 255 255 / 0.5); pointer-events: none; }
-.gh-berry-calyx ellipse { fill: var(--stem); stroke: var(--canopy); stroke-width: 0.75; vector-effect: non-scaling-stroke; }
-.gh-leaf.is-locked .gh-berry-calyx { opacity: 0.55; }
-.gh-leaf.is-done .gh-berry-calyx ellipse { fill: var(--leaf); }
-.gh-leaf-link:focus-visible .gh-berry-shade { stroke: var(--leaf); stroke-width: 3; }
+/* A review is a flower: a five-petal blossom on a short stalk, with no number. Its petals take the state's color. */
+.gh-flower { --petal: #E27C98; --petal-edge: #B95472; --petal-sheen: rgb(255 255 255 / 0.28); --heart: #F6D77A; --seed: #B8872A; }
+.gh-flower.is-here { --petal: #FFFDF5; --petal-edge: #E8D9B8; --petal-sheen: rgb(255 214 120 / 0.35); --heart: #F4C84F; --seed: #A9731B; }
+.gh-flower.is-done { --petal: #FFD97A; --petal-edge: #E0A93C; --petal-sheen: rgb(255 255 255 / 0.4); --heart: #E27C98; --seed: #8E3552; }
+.gh-flower-petal { fill: var(--petal); stroke: var(--petal-edge); stroke-width: 0.9; stroke-linejoin: round; vector-effect: non-scaling-stroke; transition: fill 160ms; }
+.gh-flower-sheen { fill: var(--petal-sheen); pointer-events: none; }
+.gh-flower-heart { fill: var(--heart); stroke: var(--petal-edge); stroke-width: 0.8; vector-effect: non-scaling-stroke; transition: fill 160ms; }
+.gh-flower-seed { fill: var(--seed); pointer-events: none; }
+.gh-flower-calyx ellipse { fill: var(--leaf); stroke: var(--canopy); stroke-width: 0.75; vector-effect: non-scaling-stroke; }
+.gh-flower.is-locked .gh-flower-calyx { opacity: 0.55; }
+.gh-leaf-link:hover .gh-flower.is-ahead { --petal: #EC93AB; }
+.gh-leaf-link:focus-visible .gh-flower-petal { stroke: var(--leaf); stroke-width: 2.5; }
 .gh-leaf.is-here .gh-leaf-body { filter: drop-shadow(0 0 7px rgb(244 251 217 / 0.8)) drop-shadow(0 0 22px rgb(217 240 163 / 0.55)); }
 .gh-leaf-link:hover .gh-leaf.is-ahead { --blade-light: #46AE8D; --blade-shade: #378F71; }
 body .gh-leaf-link:focus-visible { outline: none; }

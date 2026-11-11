@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Berry } from "./Berry";
+import { Flower } from "./Flower";
 import { LeafShape, LeafSpark, SparkGlow } from "./LeafShape";
 import { Stem } from "./Stem";
 import { useLeafBrush } from "./useLeafBrush";
@@ -23,7 +23,7 @@ const looks = (state: ChapterState): ChapterState => (state === "read" ? "done" 
 const STATE_WORDS: Record<ChapterState, string> = { done: ", done", read: ", read", here: ", you are here", ahead: "", locked: ", locked until the chapter before it is read" };
 const WIDE_SIZE: Record<ChapterState, number> = { done: 92, read: 92, here: 118, ahead: 84, locked: 58 };
 const NARROW_SIZE: Record<ChapterState, number> = { done: 46, read: 46, here: 58, ahead: 42, locked: 28 };
-// A review's berry is drawn smaller than a leaf, so it reads as fruit on the stem and not as a chapter.
+// A review's berry is drawn smaller than a leaf, so it reads as a blossom on the stem and not as a chapter.
 const BERRY_WIDE: Record<ChapterState, number> = { done: 62, read: 62, here: 78, ahead: 56, locked: 42 };
 const BERRY_NARROW: Record<ChapterState, number> = { done: 32, read: 32, here: 40, ahead: 28, locked: 22 };
 const BERRY_WORDS: Record<ChapterState, string> = { done: ", done", read: ", done", here: ", you are here", ahead: ", optional", locked: ", locked until the chapter before it is finished" };
@@ -260,7 +260,7 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
                 onFocus={() => setBerryHover(index)}
                 onBlur={() => setBerryHover(null)}
               >
-                <Berry spot={spot} size={BERRY_WIDE[current]} state={current} index={chapter.pos} delay={growthDelay(spot.along / wide.length)} />
+                <Flower spot={spot} size={BERRY_WIDE[current]} state={current} index={chapter.pos} delay={growthDelay(spot.along / wide.length)} />
               </Link>
             );
           })}
@@ -301,7 +301,7 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
           const reachSize = BERRY_NARROW[current];
           return (
             <Link key={chapter.id} className="gh-leaf-link" href={hrefOf(chapter)} aria-label={`${chapter.title}${BERRY_WORDS[current]}`}>
-              <Berry spot={spot} size={reachSize} state={current} index={chapter.pos} delay={growthDelay(spot.along / narrow.length)} />
+              <Flower spot={spot} size={reachSize} state={current} index={chapter.pos} delay={growthDelay(spot.along / narrow.length)} />
               <circle cx={spot.x + Math.cos(radians) * reachSize * 0.55} cy={spot.y + Math.sin(radians) * reachSize * 0.55} r={Math.max(22, reachSize * 0.6)} fill="transparent" />
             </Link>
           );
