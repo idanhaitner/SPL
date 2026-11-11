@@ -195,6 +195,13 @@
 @keyframes gh-drift { to { transform: translate3d(0, -10px, 0); } }
 .gh-hero .gh-arch-1 { animation: gh-drift 9s ease-in-out infinite alternate; }
 
+/* The beams breathe out of step and slide a little, so the light feels like it moves through the glass. */
+@keyframes gh-beam { from { opacity: 0.35; translate: -18px 0; } to { opacity: 1; translate: 22px 0; } }
+.gh-beams span:nth-child(1) { animation: gh-beam 7s ease-in-out infinite alternate; }
+.gh-beams span:nth-child(2) { animation: gh-beam 10s ease-in-out -3s infinite alternate; }
+.gh-beams span:nth-child(3) { animation: gh-beam 8.5s ease-in-out -6s infinite alternate; }
+.is-away .gh-beams span { animation-play-state: paused; }
+
 @supports (animation-timeline: view()) {
   /* Home sections fade up as they scroll into view (browsers without scroll timelines just show them). */
   @keyframes gh-reveal { from { opacity: 0; transform: translateY(18px); } }
@@ -234,7 +241,7 @@
   .route-enter, .session-reading, .session-code, .results-body > * { animation: gh-arrive 100ms linear; }
   .gh-stem-grown-line, .gh-stem-alive-line, .step-mini-bar i, .gh-leaf-body, .gh-leaf-brush, .gh-row-mark, a.gh-row .gh-row-title, .gh-btn .gh-icon { transition: none !important; }
   .gh-leaf-body, .gh-leaf-num, .gh-leaf-halo, .gh-tendril, .gh-part-label, .gh-stem-reveal, .gh-stem-lead, .gh-stem-tip-bud, .masthead-leaf-open, .masthead-leaf text, .gh-word > span, .gh-hero h1 em, .gh-lede, .gh-facts, .gh-hero-action, .gh-hero .gh-arch-1, .gh-hero .gh-arch-2, .home .gh-section, .home .gh-try, .gh-course .gh-head, .gh-bed-gap, .gh-bed-stem, .gh-sprig-stem, .gh-sprig-leaf, .choices .is-right .choice-mark, .choices .is-wrong { animation: none !important; }
-  .gh-sap, .gh-burst, .gh-sun, .gh-air, .gh-surge, .gh-front, .gh-spark, .gh-bud-burst { display: none; }
+  .gh-sap, .gh-burst, .gh-sun, .gh-air, .gh-beams, .gh-surge, .gh-front, .gh-spark, .gh-bud-burst { display: none; }
   .gh-bloom .gh-word > span, .gh-bloom h2 em, .gh-bloom-kicker, .gh-bloom-lede, .is-ripening > .gh-leaf .gh-leaf-body { animation: none !important; }
   .gh-bloom-action { animation: gh-fade 300ms ease-out 400ms backwards; }
   .finder-panel { animation: none; }

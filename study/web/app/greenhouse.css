@@ -310,6 +310,12 @@ body .gh-leaf-link:focus-visible { outline: none; }
 .gh-leaf-title text { fill: var(--canopy-ink); font: 600 20px var(--gh-body); }
 
 /* The air in the glasshouse. */
+/* Light shafts through the glasshouse arches: three soft beams that lean toward the stem. Motion lives in motion.css. */
+.gh-beams { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.gh-beams span { position: absolute; top: -25%; width: 150px; height: 150%; rotate: 22deg; transform-origin: 50% 0; background: linear-gradient(to bottom, rgb(244 251 217 / 0.2), rgb(217 240 163 / 0.07) 55%, transparent 85%); mask-image: linear-gradient(to right, transparent, #000 45%, #000 55%, transparent); }
+.gh-beams span:nth-child(1) { left: 56%; width: 120px; }
+.gh-beams span:nth-child(2) { left: 68%; width: 210px; }
+.gh-beams span:nth-child(3) { left: 82%; width: 140px; }
 .gh-air { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
 .gh-sun { position: absolute; left: 0; top: 0; z-index: -1; width: 760px; height: 760px; background: radial-gradient(closest-side, rgb(217 240 163 / 0.13), rgb(217 240 163 / 0.04) 55%, transparent); pointer-events: none; will-change: transform; transform: translate3d(72vw, 30vh, 0) translate(-50%, -50%); }
 
