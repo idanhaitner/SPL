@@ -63,6 +63,7 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
           pieces={pieces}
           harness={course.harness}
           next={nextChapter ? { href: hrefOf(nextChapter), title: nextChapter.title, review: nextChapter.kind === "bridge" } : null}
+          chapters={nav.chapters}
           intro={introBlocks.length > 0 ? render(introBlocks) : undefined}
           reviews={(topic.reviews ?? []).map((id) => ({ id, title: course.topics.find((item) => item.id === id)?.title ?? id }))}
         />

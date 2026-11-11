@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { blockerOf, hrefOf, leafStates, leavesOf, nameOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
+import { blockerOf, hrefOf, isWaived, leafStates, leavesOf, nameOf, chapterState, courseStates, isDone, isRead, isUnlocked, lastOpen, markRead, nextChapter, readProgress, resumeHref, setOpenAll, type ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, pos: 0, stepIds });
 const br = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 0, pos: 0, stepIds, kind: "bridge" });
@@ -130,9 +130,6 @@ describe("progress", () => {
       expect(resumeHref(r, { solved: [] })).toBe("/sessions/r/");
       expect(resumeHref(r, { solved: ["r--one"] })).toBe("/sessions/r/");
     });
-    it("sends a student already past a bridge back to it", () => {
-      expect(nextChapter(list, { solved: [], read: ["a", "c"], last: "c" })).toBe(r);
-    });
     it("a bridge is never in the read state", () => {
       expect(chapterState(r, a, { solved: [] })).toBe("ahead");
     });
@@ -146,6 +143,47 @@ describe("progress", () => {
       expect(nameOf(a)).toBe("Chapter 1");
       expect(hrefOf(r)).toBe("/sessions/r/");
       expect(nameOf(r)).toBe("Review");
+    });
+  });
+
+  describe("a bridge the student is already past", () => {
+    const [a, r, c, d] = [ch("a"), br("r", ["r--one", "q"]), ch("c", ["cs"]), ch("d")];
+    const list = [a, r, c, d];
+
+    it("is waived once a later chapter was read", () => {
+      expect(isWaived(list, r, { solved: [], read: ["a", "c"] })).toBe(true);
+    });
+    it("is waived once any step of a later chapter was solved", () => {
+      expect(isWaived(list, r, { solved: ["cs"], read: ["a"] })).toBe(true);
+    });
+    it("is not waived for a student who has not gone past it", () => {
+      expect(isWaived(list, r, { solved: [], read: ["a"] })).toBe(false);
+      expect(isWaived(list, r, { solved: ["r--one"], read: ["a"], seen: ["c"], last: "c" })).toBe(false);
+    });
+    it("is not waived by openAll alone, only by going on", () => {
+      expect(isWaived(list, r, { solved: [], read: ["a"], openAll: true })).toBe(false);
+    });
+    it("is never waived once done, and a chapter is never waived", () => {
+      expect(isWaived(list, r, { solved: ["r--one", "q", "cs"], read: ["c"] })).toBe(false);
+      expect(isWaived(list, a, { solved: [], read: ["c"] })).toBe(false);
+    });
+    it("does not block the chapters after it", () => {
+      const progress = { solved: [], read: ["a", "c"] };
+      expect(isUnlocked(list, "c", progress)).toBe(true);
+      expect(isUnlocked(list, "d", progress)).toBe(false);
+      expect(blockerOf(list, "d", { solved: ["cs"], read: ["a", "c"] })).toBe(null);
+      expect(isUnlocked(list, "d", { solved: ["cs"], read: ["a", "c"] })).toBe(true);
+    });
+    it("is not offered as the next thing to do", () => {
+      expect(nextChapter(list, { solved: [], read: ["a", "c"], last: "c" })).toBe(c);
+      expect(nextChapter(list, { solved: ["cs"], read: ["a", "c", "d"], last: "d" })).toBe(null);
+    });
+    it("shows as open but not finished, never locked", () => {
+      expect(courseStates(list, { solved: [], read: ["a", "c"] })[1]).toBe("read");
+      expect(isDone(r, { solved: [], read: ["a", "c"] })).toBe(false);
+    });
+    it("keeps working as a normal bridge for a student who is not past it", () => {
+      expect(courseStates(list, { solved: [], read: ["a"] }).slice(1)).toEqual(["here", "locked", "locked"]);
     });
   });
 });

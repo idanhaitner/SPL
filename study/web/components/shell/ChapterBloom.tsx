@@ -6,7 +6,7 @@ import { CourseStem } from "@/components/home/CourseStem";
 import { HeroAir } from "@/components/home/HeroAir";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
-import { courseStates, hrefOf, isDone, lastOpen, leavesOf, nameOf, readProgress, type ChapterInfo } from "@/lib/progress";
+import { courseStates, hrefOf, isPassed, lastOpen, leavesOf, nameOf, readProgress, type ChapterInfo } from "@/lib/progress";
 
 type Bloom = { from: number; to: number };
 
@@ -17,7 +17,7 @@ const CLOSE_MS = 220;
 
 function measure(courseId: string, chapters: ChapterInfo[]) {
   const progress = readProgress(courseId);
-  return { open: lastOpen(courseStates(chapters, progress)), finished: chapters.every((chapter) => isDone(chapter, progress)), openAll: Boolean(progress.openAll) };
+  return { open: lastOpen(courseStates(chapters, progress)), finished: chapters.every((chapter) => isPassed(chapters, chapter, progress)), openAll: Boolean(progress.openAll) };
 }
 
 // Finishing a chapter is the one moment the whole plant comes forward: it fills the screen, the leaf just finished ripens,

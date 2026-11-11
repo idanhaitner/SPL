@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
-import { isRead, readProgress, useProgress, writeProgress, type ChapterInfo } from "@/lib/progress";
+import { isRead, isWaived, readProgress, useProgress, writeProgress, type ChapterInfo } from "@/lib/progress";
 import { openStep, readSession, writeSession } from "@/lib/session-store";
 import type { Exercise } from "@/lib/types";
 import { ExerciseStep } from "./ExerciseStep";
@@ -14,7 +14,7 @@ import { StepStem, type StepMeta, type StepStatus } from "./StepStem";
 type Hop = { href: string; title: string; review?: boolean };
 type Reviewed = { id: string; title: string };
 
-export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces, harness, next, intro, reviews = [] }: { courseId: string; chapter: ChapterInfo; steps: StepMeta[]; rendered: Record<string, ReactNode>; exercises: Record<string, Exercise>; pieces: Record<string, RenderedStep>; harness: string; next: Hop | null; intro?: ReactNode; reviews?: Reviewed[] }) {
+export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces, harness, next, intro, reviews = [], chapters = [] }: { courseId: string; chapter: ChapterInfo; steps: StepMeta[]; rendered: Record<string, ReactNode>; exercises: Record<string, Exercise>; pieces: Record<string, RenderedStep>; harness: string; next: Hop | null; intro?: ReactNode; reviews?: Reviewed[]; chapters?: ChapterInfo[] }) {
   const ids = useMemo(() => steps.map((step) => step.id), [steps]);
   const progress = useProgress(courseId);
   const solved = progress.solved;
@@ -107,6 +107,7 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
             <>
               <h1 ref={heading} tabIndex={-1}><Mixed text={chapter.title} /></h1>
               {intro ?? <p>This review teaches nothing new. It brings back the last chapters and has you use them together.</p>}
+              {isWaived(chapters, chapter, progress) && <p className="session-optional">You are already past this point in the course, so this review is optional. Do it when you want a refresher.</p>}
               {reviews.length > 0 && <p className="session-reviews">Looks back at: {reviewLinks}</p>}
             </>
           ) : (

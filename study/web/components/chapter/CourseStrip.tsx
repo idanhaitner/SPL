@@ -6,13 +6,12 @@ import { Berry } from "@/components/home/Berry";
 import { LeafShape } from "@/components/home/LeafShape";
 import { Stem } from "@/components/home/Stem";
 import { useLeafBrush } from "@/components/home/useLeafBrush";
-import { courseStates, hrefOf, leafStates, leavesOf, lastOpen, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { berryLook, courseStates, hrefOf, leafStates, leavesOf, lastOpen, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 import { bridgeSpots, reachPast, spacedLeaves, STRIP_STEM } from "@/lib/stem";
 
 const strip = spacedLeaves(STRIP_STEM, 16, 0.03, 0.97);
 const SIZE: Record<ChapterState, number> = { done: 60, read: 60, here: 78, ahead: 54, locked: 40 };
 const BERRY: Record<ChapterState, number> = { done: 34, read: 34, here: 42, ahead: 30, locked: 24 };
-const BERRY_STATE: Record<ChapterState, ChapterState> = { done: "done", read: "done", here: "here", ahead: "locked", locked: "locked" };
 
 // This chapter's place on the one course stem.
 export function CourseStrip({ courseId, chapters: all, currentId }: { courseId: string; chapters: ChapterInfo[]; currentId: string }) {
@@ -28,7 +27,10 @@ export function CourseStrip({ courseId, chapters: all, currentId }: { courseId: 
   const bridges = useMemo(() => all.filter((chapter) => chapter.kind === "bridge").map((chapter) => ({ chapter, after: leavesOf(all.slice(0, chapter.pos)).length - 1 })), [all]);
   const berries = useMemo(() => bridgeSpots(STRIP_STEM, strip.leaves, bridges.map((bridge) => bridge.after)), [bridges]);
   const everyState = courseStates(all, progress);
-  const berryState = (index: number): ChapterState => (everyState[bridges[index].chapter.pos] === "here" ? "ahead" : BERRY_STATE[everyState[bridges[index].chapter.pos]]);
+  const berryState = (index: number): ChapterState => {
+    const state = everyState[bridges[index].chapter.pos];
+    return berryLook(state === "here" ? "ahead" : state, bridges[index].chapter, progress);
+  };
   return (
     <nav className="course-strip" aria-label="Your place in the course">
       <svg ref={plant} viewBox="0 0 1360 176" role="group" aria-label="The 16 chapters of the course">
@@ -45,7 +47,7 @@ export function CourseStrip({ courseId, chapters: all, currentId }: { courseId: 
         {bridges.map(({ chapter }, index) => {
           const state = berryState(index);
           return (
-            <Link key={chapter.id} className="gh-leaf-link" href={hrefOf(chapter)} aria-label={`${chapter.title}${state === "locked" ? ", locked" : state === "done" ? ", done" : ""}`}>
+            <Link key={chapter.id} className="gh-leaf-link" href={hrefOf(chapter)} aria-label={`${chapter.title}${state === "locked" ? ", locked" : state === "done" ? ", done" : ", optional"}`}>
               <title>{chapter.title}</title>
               <Berry spot={berries[index]} size={BERRY[state]} state={state} index={chapter.pos} delay={0} />
             </Link>

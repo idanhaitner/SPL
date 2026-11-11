@@ -6,7 +6,7 @@ import { LeafShape, LeafSpark, SparkGlow } from "./LeafShape";
 import { Stem } from "./Stem";
 import { useLeafBrush } from "./useLeafBrush";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { courseStates, hrefOf, lastOpen, leafStates, leavesOf, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { berryLook as berryLookOf, courseStates, hrefOf, lastOpen, leafStates, leavesOf, useLoadedProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 import { bridgeSpots, growthDelay, NARROW_STEM, reachPast, spacedLeaves, STEM_GROW, STEM_START, stemTip, WIDE_STEM, type Leaf, type StemCurves } from "@/lib/stem";
 
 const wide = spacedLeaves(WIDE_STEM, 16);
@@ -26,7 +26,7 @@ const NARROW_SIZE: Record<ChapterState, number> = { done: 46, read: 46, here: 58
 // A review's berry is drawn smaller than a leaf, so it reads as fruit on the stem and not as a chapter.
 const BERRY_WIDE: Record<ChapterState, number> = { done: 62, read: 62, here: 78, ahead: 56, locked: 42 };
 const BERRY_NARROW: Record<ChapterState, number> = { done: 32, read: 32, here: 40, ahead: 28, locked: 22 };
-const BERRY_WORDS: Record<ChapterState, string> = { done: ", done", read: ", done", here: ", you are here", ahead: "", locked: ", locked until the chapter before it is finished" };
+const BERRY_WORDS: Record<ChapterState, string> = { done: ", done", read: ", done", here: ", you are here", ahead: ", optional", locked: ", locked until the chapter before it is finished" };
 // A regrowth, in ms from when it starts: sap climbs to the leaf just finished, that leaf ripens, then the stem grows on.
 // SURGE_AT and REGROW_MS match .gh-surge and .is-regrowing .gh-stem-alive-line in motion.css.
 const SURGE_AT = 200;
@@ -164,7 +164,7 @@ export function CourseStem({ courseId, chapters: all, partStarts, name = "stem",
   const chapters = leavesOf(all);
   const states = leafStates(all, loaded ?? { solved: [] });
   const everyState = courseStates(all, loaded ?? { solved: [] });
-  const berryLook = (index: number) => looks(everyState[bridges[index].chapter.pos]);
+  const berryLook = (index: number) => berryLookOf(everyState[bridges[index].chapter.pos], bridges[index].chapter, loaded ?? { solved: [] });
   const reachOf = (leaves: Leaf[], past: number, spots: typeof wideBerries) => reachPast(leaves, open, past, spots.filter((_, index) => berryLook(index) !== "locked").map((spot) => spot.along));
   const { from, phase, shown: openShown } = useRegrowth(courseId, loaded ? lastOpen(states) : null, since);
   const open = openShown ?? lastOpen(states);

@@ -91,18 +91,30 @@ export function isDone(chapter: ChapterInfo, progress: Progress) {
   return isRead(chapter, progress) && allSolved(chapter, progress);
 }
 
+// A review that was added after a student had already gone on is optional for them: once a later chapter has been read, or any of its steps solved,
+// the student is past it. It no longer blocks anything or comes up as the next step, and stays open to do whenever they like. A new student has gone past nothing.
+export function isWaived(chapters: ChapterInfo[], chapter: ChapterInfo, progress: Progress) {
+  if (chapter.kind !== "bridge" || allSolved(chapter, progress)) return false;
+  return chapters.slice(chapter.pos + 1).some((later) => later.kind !== "bridge" && ((progress.read ?? []).includes(later.id) || later.stepIds.some((id) => progress.solved.includes(id))));
+}
+
+// Finished, or a review the student is past.
+export function isPassed(chapters: ChapterInfo[], chapter: ChapterInfo, progress: Progress) {
+  return isDone(chapter, progress) || isWaived(chapters, chapter, progress);
+}
+
 // A chapter opens only once every chapter before it is finished: read to the end and every practice question solved,
 // unless the student chose to open every chapter.
 export function isUnlocked(chapters: ChapterInfo[], chapterId: string, progress: Progress) {
   if (progress.openAll) return true;
   const index = chapters.findIndex((chapter) => chapter.id === chapterId);
-  return chapters.slice(0, Math.max(0, index)).every((chapter) => isDone(chapter, progress));
+  return chapters.slice(0, Math.max(0, index)).every((chapter) => isPassed(chapters, chapter, progress));
 }
 
 // The chapter to finish before a locked one opens: the first unfinished chapter before it.
 export function blockerOf(chapters: ChapterInfo[], chapterId: string, progress: Progress): ChapterInfo | null {
   const index = chapters.findIndex((chapter) => chapter.id === chapterId);
-  return chapters.slice(0, Math.max(0, index)).find((chapter) => !isDone(chapter, progress)) ?? null;
+  return chapters.slice(0, Math.max(0, index)).find((chapter) => !isPassed(chapters, chapter, progress)) ?? null;
 }
 
 // Where to go next: the chapter in progress, else the first open one after it that isn't done, else the first that isn't.
@@ -113,7 +125,7 @@ export function nextChapter(chapters: ChapterInfo[], progress: Progress): Chapte
     ? chapters.findLastIndex((chapter) => isUnlocked(chapters, chapter.id, progress))
     : visited;
   const ordered = lastIndex < 0 ? chapters : [...chapters.slice(lastIndex), ...chapters.slice(0, lastIndex)];
-  return ordered.find((chapter) => !isDone(chapter, progress) && isUnlocked(chapters, chapter.id, progress)) ?? null;
+  return ordered.find((chapter) => !isPassed(chapters, chapter, progress) && isUnlocked(chapters, chapter.id, progress)) ?? null;
 }
 
 export function resumeHref(chapter: ChapterInfo, progress: Progress) {
@@ -132,8 +144,17 @@ export function courseStates(chapters: ChapterInfo[], progress: Progress): Chapt
   const next = nextChapter(chapters, progress);
   return chapters.map((chapter) => {
     const state = chapterState(chapter, next, progress);
-    return !isUnlocked(chapters, chapter.id, progress) ? "locked" : state;
+    if (!isUnlocked(chapters, chapter.id, progress)) return "locked";
+    // An optional review reads as grown, so the plant is not held back by it.
+    return isWaived(chapters, chapter, progress) ? "read" : state;
   });
+}
+
+// How a review's berry looks on the stem. A review the student is past reads as open, not finished and not locked.
+export function berryLook(state: ChapterState, chapter: ChapterInfo, progress: Progress): ChapterState {
+  if (state === "locked") return "locked";
+  if (isDone(chapter, progress)) return "done";
+  return state === "here" ? "here" : "ahead";
 }
 
 // The stem draws one leaf per chapter. A bridge sits between two leaves and is not drawn, but it still holds the next leaf shut.
