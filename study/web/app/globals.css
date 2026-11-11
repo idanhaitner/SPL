@@ -4,6 +4,7 @@
 
 @import "./reader.css";
 @import "./motion.css";
+@import "./tour.css";
 
 code, pre, kbd, samp { font-family: var(--gh-mono); }
 

@@ -472,7 +472,7 @@ html:has(.gh-bloom[open]) { overflow-y: clip; }
 .gh-foot { display: flex; justify-content: space-between; gap: 16px 48px; align-items: flex-end; margin-top: 88px; padding-top: 20px; border-top: 1px solid var(--canopy-high); font-size: 0.9375rem; line-height: 1.45; color: var(--canopy-ink-soft); }
 .gh-foot span { max-width: 62ch; }
 .gh-foot nav { display: flex; flex: none; gap: 20px; }
-.home .gh-foot a { color: var(--canopy-ink); display: inline-flex; align-items: center; min-height: 44px; }
+.home .gh-foot a, .home .gh-foot .gh-linkbtn { color: var(--canopy-ink); display: inline-flex; align-items: center; min-height: 44px; }
 
 @media (max-width: 77.5rem) {
   .gh-part { grid-template-columns: 260px minmax(0, 1fr); gap: 16px 32px; }

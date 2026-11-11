@@ -6,6 +6,7 @@ import { PlantMark } from "@/components/home/Icon";
 import { SearchBox } from "@/components/SearchBox";
 import type { CourseNav } from "@/lib/nav";
 import { CourseDrawer } from "./CourseDrawer";
+import { TourLink } from "@/components/tour/TourLink";
 import { ThemeToggle } from "./ThemeToggle";
 
 // `flat` sits on a green field the page already paints; `canopy` paints its own and stays pinned on wide screens.
@@ -21,6 +22,7 @@ export function TopBar({ courseId, title, nav, where, tone = "canopy" }: { cours
         {where && <span className="gh-where">{where}</span>}
         <div className="gh-nav-links">
           <Link href="/glossary">Glossary</Link>
+          <TourLink />
         </div>
         <span className="gh-nav-spacer" />
         <div className="gh-nav-search">
