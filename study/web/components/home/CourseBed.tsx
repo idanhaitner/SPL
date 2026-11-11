@@ -43,10 +43,12 @@ function Row({ chapter, state, progress, started, run, total }: { chapter: Chapt
   const bridge = chapter.kind === "bridge";
   const unit = bridge ? "step" : "question";
   const count = questions > 0 ? `${questions} ${questions === 1 ? unit : `${unit}s`}` : "";
-  const note = rowNote(state, started, solved, questions) || count;
+  // A review the student is already past is optional: it reads as grown, but only the steps they did are counted.
+  const optional = bridge && state === "read";
+  const note = optional ? (solved > 0 ? `Optional, ${solved} of ${questions} done` : "Optional") : rowNote(state, started, solved, questions) || count;
   return (
     <Link className={`gh-bed-row is-${state}${bridge ? " is-review" : ""}`} href={hrefOf(chapter)} aria-current={state === "here" ? "step" : undefined}>
-      <Vine place={chapter.pos + 1} num={chapter.num} state={looks(state)} grown={chapter.pos < run} first={chapter.pos === 0} last={chapter.pos === total - 1} />
+      <Vine place={chapter.pos + 1} num={chapter.num} state={optional ? "ahead" : looks(state)} grown={chapter.pos < run} first={chapter.pos === 0} last={chapter.pos === total - 1} />
       <span className="gh-bed-text">
         {!bridge && <span className="sr-only">Chapter {chapter.num}: </span>}
         <span className="gh-bed-title"><Mixed text={chapter.title} /></span>

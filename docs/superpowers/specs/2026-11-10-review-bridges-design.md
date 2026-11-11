@@ -72,7 +72,7 @@ Target size per bridge: 3 recap cards, 4-5 questions, 1-2 coding exercises, abou
 - A bridge has no "read" state. `isRead` returns true for a bridge, so `isDone` is "every step is in `solved`" (recap steps included, since passing them records them).
 - `isUnlocked`, `blockerOf`, and `nextChapter` work on the ordered list and need no change: a bridge unlocks when everything before it is done, and blocks what follows until it is done. `openAll` opens bridges too.
 - `resumeHref` returns the session URL for a bridge.
-- Existing students: a student who is already past a bridge's position finds the chapters after it locked until the bridge is done. This is intended (the bridge is the point), and `openAll` remains the way around it.
+- **Existing students keep going.** A bridge is waived for a student who is already past it: once a later chapter has been read, or any of its steps solved, the bridge no longer blocks anything and is never offered as the next step. It stays open to do whenever they like, shows as "Optional" on the map, as an open berry on the stem, and its intro says so. A new student has gone past nothing, so they have to cross every bridge. `openAll` opens the chapters but does not waive a bridge.
 
 ## Where a bridge appears
 

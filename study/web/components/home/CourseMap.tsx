@@ -17,7 +17,9 @@ export function rowNote(state: ChapterState, started: boolean, solved: number, t
 }
 
 function Row({ chapter, state, started, solved }: { chapter: ChapterInfo; state: ChapterState; started: boolean; solved: number }) {
-  const note = rowNote(state, started, solved, chapter.stepIds.length);
+  // A review the student is already past is optional: it reads as grown, but only the steps they did are counted.
+  const optional = chapter.kind === "bridge" && state === "read";
+  const note = optional ? (solved > 0 ? `Optional, ${solved} of ${chapter.stepIds.length} done` : "Optional") : rowNote(state, started, solved, chapter.stepIds.length);
   return (
     <li className={state === "done" || state === "read" ? "is-grown" : undefined}>
       <Link className={chapter.kind === "bridge" ? "gh-row is-review" : "gh-row"} href={hrefOf(chapter)} aria-current={state === "here" ? "step" : undefined}>
