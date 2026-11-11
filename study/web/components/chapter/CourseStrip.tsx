@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef } from "react";
-import { Berry } from "@/components/home/Berry";
+import { Flower } from "@/components/home/Flower";
 import { LeafShape } from "@/components/home/LeafShape";
 import { Stem } from "@/components/home/Stem";
 import { useLeafBrush } from "@/components/home/useLeafBrush";
@@ -49,7 +49,7 @@ export function CourseStrip({ courseId, chapters: all, currentId }: { courseId: 
           return (
             <Link key={chapter.id} className="gh-leaf-link" href={hrefOf(chapter)} aria-label={`${chapter.title}${state === "locked" ? ", locked" : state === "done" ? ", done" : ", optional"}`}>
               <title>{chapter.title}</title>
-              <Berry spot={berries[index]} size={BERRY[state]} state={state} index={chapter.pos} delay={0} />
+              <Flower spot={berries[index]} size={BERRY[state]} state={state} index={chapter.pos} delay={0} />
             </Link>
           );
         })}
