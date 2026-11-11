@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { hrefOf } from "./chapters";
+
+export { hrefOf, nameOf } from "./chapters";
 
 export type Progress = {
   solved: string[];
@@ -12,7 +15,8 @@ export type Progress = {
   openAll?: boolean;
 };
 
-export type ChapterInfo = { id: string; title: string; num: number; stepIds: string[] };
+// pos is the place in the course, counting bridges. num is the printed chapter number, which skips bridges; a bridge has 0.
+export type ChapterInfo = { id: string; title: string; num: number; pos: number; stepIds: string[]; kind?: "bridge" };
 export type ChapterState = "done" | "read" | "here" | "ahead" | "locked";
 
 export function storageKey(courseId: string) {
@@ -76,7 +80,9 @@ export function setOpenAll(courseId: string, on: boolean) {
 const allSolved =(chapter: ChapterInfo, progress: Progress) => chapter.stepIds.every((id) => progress.solved.includes(id));
 
 // Read means Finish reading was pressed. Students from before that button count as read once all their practice was solved.
+// A bridge has nothing to read, so only its steps count.
 export function isRead(chapter: ChapterInfo, progress: Progress) {
+  if (chapter.kind === "bridge") return true;
   if ((progress.read ?? []).includes(chapter.id)) return true;
   return chapter.stepIds.length > 0 && (progress.seen ?? []).includes(chapter.id) && allSolved(chapter, progress);
 }
@@ -111,13 +117,14 @@ export function nextChapter(chapters: ChapterInfo[], progress: Progress): Chapte
 }
 
 export function resumeHref(chapter: ChapterInfo, progress: Progress) {
+  if (chapter.kind === "bridge") return hrefOf(chapter);
   return isRead(chapter, progress) && !isDone(chapter, progress) ? `/sessions/${chapter.id}/` : `/topics/${chapter.id}/`;
 }
 
 export function chapterState(chapter: ChapterInfo, next: ChapterInfo | null, progress: Progress): ChapterState {
   if (isDone(chapter, progress)) return "done";
   if (next?.id === chapter.id) return "here";
-  return isRead(chapter, progress) ? "read" : "ahead";
+  return chapter.kind !== "bridge" && isRead(chapter, progress) ? "read" : "ahead";
 }
 
 // Every chapter's state, with the ones that have not opened yet as locked.
@@ -127,6 +134,15 @@ export function courseStates(chapters: ChapterInfo[], progress: Progress): Chapt
     const state = chapterState(chapter, next, progress);
     return !isUnlocked(chapters, chapter.id, progress) ? "locked" : state;
   });
+}
+
+// The stem draws one leaf per chapter. A bridge sits between two leaves and is not drawn, but it still holds the next leaf shut.
+export function leavesOf(chapters: ChapterInfo[]) {
+  return chapters.filter((chapter) => chapter.kind !== "bridge");
+}
+
+export function leafStates(chapters: ChapterInfo[], progress: Progress): ChapterState[] {
+  return courseStates(chapters, progress).filter((_, index) => chapters[index].kind !== "bridge");
 }
 
 // How far the plant has grown: the index of the last chapter that is open.

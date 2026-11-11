@@ -5,7 +5,7 @@ import { rowNote } from "./CourseMap";
 import { Icon } from "./Icon";
 import { LeafBlade, LeafShape } from "./LeafShape";
 import { Mixed } from "@/lib/bidi";
-import { courseStates, hasStarted, useProgress, type ChapterInfo, type ChapterState, type Progress } from "@/lib/progress";
+import { courseStates, hasStarted, hrefOf, leavesOf, useProgress, type ChapterInfo, type ChapterState, type Progress } from "@/lib/progress";
 import type { Leaf } from "@/lib/stem";
 
 type Part = { title: string; lang: string; summary: string; chapters: ChapterInfo[] };
@@ -20,8 +20,10 @@ const LEGEND: { state: ChapterState; label: string }[] = [
 // Done, here and locked are the only looks; a chapter read but not finished counts as done, one open but not next as locked.
 const looks = (state: ChapterState): ChapterState => (state === "read" ? "done" : state === "ahead" ? "locked" : state);
 
-function Vine({ num, state, grown, first, last }: { num: number; state: ChapterState; grown: boolean; first: boolean; last: boolean }) {
-  const side = num % 2 ? -1 : 1;
+// `place` is the row's 1-based place on the vine, which sets the side its leaf grows on. A bridge's leaf is smaller and carries no number.
+function Vine({ place, num, state, grown, first, last }: { place: number; num: number; state: ChapterState; grown: boolean; first: boolean; last: boolean }) {
+  const side = place % 2 ? -1 : 1;
+  const small = num === 0;
   const bow = 52 + side * 6;
   const leaf: Leaf = { x: bow, y: 36, angle: side > 0 ? -28 : -152, along: 0, side };
   const here = state === "here";
@@ -30,7 +32,7 @@ function Vine({ num, state, grown, first, last }: { num: number; state: ChapterS
   return (
     <svg className="gh-bed-vine" viewBox="0 0 104 72" aria-hidden="true">
       <path className={`gh-bed-stem${grown ? " is-grown" : state === "locked" ? " is-ghost" : ""}`} d={`${above}${below}`} pathLength={1} />
-      <LeafShape leaf={leaf} size={here ? 52 : 46} state={state} num={num} numSize={here ? 16 : 15} index={num} delay={0} halo={`gh-halo-bed-${num}`} />
+      <LeafShape leaf={leaf} size={small ? (here ? 40 : 34) : here ? 52 : 46} state={state} num={num} numSize={here ? 16 : 15} index={place} delay={0} halo={`gh-halo-bed-${place}`} />
     </svg>
   );
 }
@@ -38,13 +40,15 @@ function Vine({ num, state, grown, first, last }: { num: number; state: ChapterS
 function Row({ chapter, state, progress, started, run, total }: { chapter: ChapterInfo; state: ChapterState; progress: Progress; started: boolean; run: number; total: number }) {
   const questions = chapter.stepIds.length;
   const solved = chapter.stepIds.filter((id) => progress.solved.includes(id)).length;
-  const count = questions > 0 ? `${questions} ${questions === 1 ? "question" : "questions"}` : "";
+  const bridge = chapter.kind === "bridge";
+  const unit = bridge ? "step" : "question";
+  const count = questions > 0 ? `${questions} ${questions === 1 ? unit : `${unit}s`}` : "";
   const note = rowNote(state, started, solved, questions) || count;
   return (
-    <Link className={`gh-bed-row is-${state}`} href={`/topics/${chapter.id}`} aria-current={state === "here" ? "step" : undefined}>
-      <Vine num={chapter.num} state={looks(state)} grown={chapter.num <= run} first={chapter.num === 1} last={chapter.num === total} />
+    <Link className={`gh-bed-row is-${state}${bridge ? " is-review" : ""}`} href={hrefOf(chapter)} aria-current={state === "here" ? "step" : undefined}>
+      <Vine place={chapter.pos + 1} num={chapter.num} state={looks(state)} grown={chapter.pos < run} first={chapter.pos === 0} last={chapter.pos === total - 1} />
       <span className="gh-bed-text">
-        <span className="sr-only">Chapter {chapter.num}: </span>
+        {!bridge && <span className="sr-only">Chapter {chapter.num}: </span>}
         <span className="gh-bed-title"><Mixed text={chapter.title} /></span>
         {note && <span className="gh-bed-note">{note}</span>}
       </span>
@@ -57,7 +61,7 @@ function Row({ chapter, state, progress, started, run, total }: { chapter: Chapt
 export function CourseBed({ courseId, parts, finale, chapters }: { courseId: string; parts: Part[]; finale: ChapterInfo[]; chapters: ChapterInfo[] }) {
   const progress = useProgress(courseId);
   const states = courseStates(chapters, progress);
-  const stateOf = (chapter: ChapterInfo) => states[chapter.num - 1];
+  const stateOf = (chapter: ChapterInfo) => states[chapter.pos];
   const started = hasStarted(progress);
   // As on the hero's stem, the vine is solid only through the unbroken run of chapters opened from the start.
   const broken = states.findIndex((state) => state !== "done" && state !== "read");
@@ -76,8 +80,9 @@ export function CourseBed({ courseId, parts, finale, chapters }: { courseId: str
         ))}
       </ul>
       {beds.map((part, index) => {
-        const finished = part.chapters.filter((chapter) => stateOf(chapter) === "done").length;
-        const meta = [part.lang, finished > 0 ? `${finished} of ${part.chapters.length} done` : ""].filter(Boolean).join(" · ");
+        const counted = leavesOf(part.chapters);
+        const finished = counted.filter((chapter) => stateOf(chapter) === "done").length;
+        const meta = [part.lang, finished > 0 ? `${finished} of ${counted.length} done` : ""].filter(Boolean).join(" · ");
         const following = beds[index + 1]?.chapters[0];
         return (
           <section className="gh-bed-part" key={part.title} aria-label={part.title}>
@@ -87,13 +92,13 @@ export function CourseBed({ courseId, parts, finale, chapters }: { courseId: str
               {part.summary && <p className="gh-bed-summary">{part.summary}</p>}
             </div>
             <div className="gh-bed-rows">
-              {index > 0 && <span className={`gh-bed-gap${part.chapters[0].num <= run ? " is-grown" : stateOf(part.chapters[0]) === "locked" ? " is-ghost" : ""}`} />}
+              {index > 0 && <span className={`gh-bed-gap${part.chapters[0].pos < run ? " is-grown" : stateOf(part.chapters[0]) === "locked" ? " is-ghost" : ""}`} />}
               <ol>
                 {part.chapters.map((chapter) => (
                   <li key={chapter.id}><Row chapter={chapter} state={stateOf(chapter)} progress={progress} started={started} run={run} total={chapters.length} /></li>
                 ))}
               </ol>
-              {following && <span className={`gh-bed-gap is-tail${following.num <= run ? " is-grown" : stateOf(following) === "locked" ? " is-ghost" : ""}`} />}
+              {following && <span className={`gh-bed-gap is-tail${following.pos < run ? " is-grown" : stateOf(following) === "locked" ? " is-ghost" : ""}`} />}
             </div>
           </section>
         );

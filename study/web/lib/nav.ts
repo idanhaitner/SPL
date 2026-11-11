@@ -7,11 +7,15 @@ export type NavPart = { title: string; lang: string; summary: string; chapters: 
 export type CourseNav = { chapters: ChapterInfo[]; parts: NavPart[]; finale: ChapterInfo[] };
 
 export function courseNav(course: Course): CourseNav {
-  const chapters = course.topics.map((topic, index) => ({
+  let count = 0;
+  const chapters: ChapterInfo[] = course.topics.map((topic, index) => ({
     id: topic.id,
     title: topic.title,
-    num: index + 1,
+    // Bridges sit between chapters without taking a chapter number.
+    num: topic.kind === "bridge" ? 0 : (count += 1),
+    pos: index,
     stepIds: stepsOf(topic).map((step) => step.id),
+    kind: topic.kind,
   }));
   const byId = new Map(chapters.map((chapter) => [chapter.id, chapter]));
   const parts = PARTS.map(({ title, lang, summary, ids }) => ({
@@ -32,5 +36,8 @@ const STEM_LABELS = ["Memory", "Concurrency", "Communication", "Databases"];
 
 // Where each part's name hangs on the course stem: at the leaf of its first chapter.
 export function stemParts(nav: CourseNav) {
-  return nav.parts.map((part, index) => ({ label: STEM_LABELS[index], num: part.chapters[0].num }));
+  return nav.parts.flatMap((part, index) => {
+    const first = part.chapters.find((chapter) => chapter.kind !== "bridge");
+    return first ? [{ label: STEM_LABELS[index], num: first.num }] : [];
+  });
 }

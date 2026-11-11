@@ -17,7 +17,7 @@ export function matchHits(hits: SearchHit[], query: string): SearchHit[] {
     const inTitle = normalize(hit.title).includes(needle);
     if (!inTitle && !normalize(hit.text).includes(needle)) continue;
     // Titles first; within each, a whole chapter before a single question or term.
-    ranked.push({ hit, rank: (inTitle ? 0 : 2) + (hit.kind === "Chapter" ? 0 : 1) });
+    ranked.push({ hit, rank: (inTitle ? 0 : 2) + (hit.kind === "Chapter" || hit.kind === "Review" ? 0 : 1) });
   }
   return ranked
     .sort((a, b) => a.rank - b.rank)

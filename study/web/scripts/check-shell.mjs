@@ -102,8 +102,10 @@ try {
       await button.click();
       const drawer = page.getByRole("dialog", { name: "Course" });
       if (!(await drawer.isVisible())) fail(`${label}: drawer did not open`);
-      const rows = await drawer.locator("a.gh-row").count();
+      const rows = await drawer.locator("a.gh-row:not(.is-review)").count();
       if (rows !== 16) fail(`${label}: drawer lists ${rows} chapters, not 16`);
+      const reviews = await drawer.locator("a.gh-row.is-review").count();
+      if (reviews !== 6) fail(`${label}: drawer lists ${reviews} reviews, not 6`);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(50);
       if (await drawer.isVisible()) fail(`${label}: Esc did not close the drawer`);

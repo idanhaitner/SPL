@@ -11,6 +11,7 @@ import { TryQuestion } from "@/components/home/TryQuestion";
 import { loadCourse } from "@/lib/course";
 import { highlight } from "@/lib/highlight";
 import { courseNav, stemParts } from "@/lib/nav";
+import { stepsOf } from "@/lib/steps";
 import { PARTS } from "@/lib/parts";
 import type { Block } from "@/lib/types";
 
@@ -43,10 +44,13 @@ export default async function HomePage() {
   const nav = courseNav(course);
   const { chapters, parts, finale } = nav;
   const byId = new Map(chapters.map((chapter) => [chapter.id, chapter]));
-  const practiceCount = chapters.reduce((sum, chapter) => sum + chapter.stepIds.length, 0);
+  // A bridge's reminder cards are steps, but they are not practice.
+  const practiceCount = course.topics.reduce((sum, topic) => sum + stepsOf(topic).filter((step) => step.kind !== "recap").length, 0);
   const examCount = course.topics.reduce((sum, topic) => sum + countProblems(topic.blocks, "exam"), 0);
   const questionChapter = byId.get("memory-model");
   const partStarts = stemParts(nav);
+  // Reviews sit between chapters and are not counted as chapters.
+  const chapterCount = chapters.filter((chapter) => chapter.kind !== "bridge").length;
   const questionCode = (await highlight(QUESTION_CODE, "cpp")).replace(' tabindex="0"', "");
 
   return (
@@ -66,7 +70,7 @@ export default async function HomePage() {
               ))}
             </h1>
             <p className="gh-lede">{course.title} from zero, one chapter at a time, with questions from the course&rsquo;s own past exams.</p>
-            <p className="gh-facts">{chapters.length} chapters in {PARTS.length} parts, in the course&rsquo;s order</p>
+            <p className="gh-facts">{chapterCount} chapters in {PARTS.length} parts, in the course&rsquo;s order</p>
           </div>
           <div className="gh-hero-action">
             <ContinueButton courseId={course.id} chapters={chapters} showNote />
@@ -79,7 +83,7 @@ export default async function HomePage() {
         <section className="gh-section gh-course" id="course" aria-labelledby="course-title">
           <div className="gh-head">
             <h2 id="course-title">The whole course, in order</h2>
-            <p>{chapters.length} chapters and {practiceCount} practice questions, {examCount} of them from past exams.</p>
+            <p>{chapterCount} chapters and {practiceCount} practice questions, {examCount} of them from past exams.</p>
             <div className="gh-head-search"><SearchBox id="course-q" /></div>
           </div>
           <CourseBed courseId={course.id} parts={parts} finale={finale} chapters={chapters} />

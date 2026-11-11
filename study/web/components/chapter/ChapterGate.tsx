@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/home/Icon";
 import { Mixed } from "@/lib/bidi";
-import { blockerOf, isUnlocked, setOpenAll, useLoadedProgress, type ChapterInfo } from "@/lib/progress";
+import { blockerOf, hrefOf, isUnlocked, nameOf, setOpenAll, useLoadedProgress, type ChapterInfo } from "@/lib/progress";
 
 // A chapter, or its session, stays a bud until the chapter before it is finished, unless the student opens every chapter.
 // Links, search, and typed addresses all land here.
@@ -21,12 +21,16 @@ export function ChapterGate({ courseId, chapters, chapterId, children }: { cours
         <path className="locked-bud-shape" d="M32 64C14 52 12 22 32 4c20 18 18 48 0 60Z" />
         <path className="locked-bud-rib" d="M32 58V16" />
       </svg>
-      <h2 id="locked-title">Chapter {chapter.num} is still a bud</h2>
+      <h2 id="locked-title">{chapter.kind === "bridge" ? "This review" : nameOf(chapter)} is still a bud</h2>
       <p>
-        To unlock it, finish chapter {blocker.num}, <Mixed text={blocker.title} />: read every section and solve all of its practice questions.
+        {blocker.kind === "bridge" ? (
+          <>To unlock it, finish the review before it, <Mixed text={blocker.title} />: go through every step.</>
+        ) : (
+          <>To unlock it, finish chapter {blocker.num}, <Mixed text={blocker.title} />: read every section and solve all of its practice questions.</>
+        )}
       </p>
       <div className="locked-actions">
-        <Link className="gh-btn" href={`/topics/${blocker.id}/`}>Go to chapter {blocker.num}<Icon name="arrow" /></Link>
+        <Link className="gh-btn" href={hrefOf(blocker)}>{blocker.kind === "bridge" ? "Go to the review" : `Go to chapter ${blocker.num}`}<Icon name="arrow" /></Link>
         <Link className="gh-quiet" href="/">Back to the course</Link>
       </div>
       <p className="locked-skip">

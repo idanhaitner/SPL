@@ -9,6 +9,7 @@ import type { SearchHit } from "@/lib/types";
 
 const KINDS: Record<string, string> = {
   Chapter: "Chapter",
+  Review: "Review",
   Practice: "Practice",
   Worked: "Example",
   Glossary: "Term",

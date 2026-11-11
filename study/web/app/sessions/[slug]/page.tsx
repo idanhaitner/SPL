@@ -8,7 +8,8 @@ import { TopBar } from "@/components/shell/TopBar";
 import { Visit } from "@/components/Visit";
 import { loadCourse } from "@/lib/course";
 import { courseNav, partOf } from "@/lib/nav";
-import { stepsOf } from "@/lib/steps";
+import { hrefOf } from "@/lib/chapters";
+import { introOf, stepsOf } from "@/lib/steps";
 import type { Block, Exercise } from "@/lib/types";
 
 export function generateStaticParams() {
@@ -25,7 +26,9 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   if (steps.length === 0) notFound();
   const nav = courseNav(course);
   const part = partOf(nav, topic.id);
-  const nextTopic = course.topics[index + 1];
+  const nextChapter = nav.chapters[index + 1];
+  const bridge = topic.kind === "bridge";
+  const introBlocks = bridge ? introOf(topic) : [];
   const render = (blocks: Block[], key?: string | number) => <Blocks key={key} blocks={blocks} courseId={course.id} />;
   const rendered: Record<string, ReactNode> = {};
   const exercises: Record<string, Exercise> = {};
@@ -33,6 +36,8 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
   for (const step of steps) {
     if (step.kind === "question") {
       rendered[step.id] = render([step.block]);
+    } else if (step.kind === "recap") {
+      rendered[step.id] = render(step.blocks);
     } else {
       const { exercise } = step;
       exercises[step.id] = exercise;
@@ -57,7 +62,9 @@ export default async function SessionPage({ params }: { params: Promise<{ slug: 
           exercises={exercises}
           pieces={pieces}
           harness={course.harness}
-          next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
+          next={nextChapter ? { href: hrefOf(nextChapter), title: nextChapter.title, review: nextChapter.kind === "bridge" } : null}
+          intro={introBlocks.length > 0 ? render(introBlocks) : undefined}
+          reviews={(topic.reviews ?? []).map((id) => ({ id, title: course.topics.find((item) => item.id === id)?.title ?? id }))}
         />
       </ChapterGate>
     </div>

@@ -65,6 +65,8 @@ changelog:
     note: "Chapters follow the order and material of Adler's lecture notes: a run-time environment chapter, the Student, Bag, and Book memory examples, design by contract as safety and correctness inside concurrency, new synchronization and waiting chapters, the general server, the command-invocation server, the Python persistence layer, and a course review. Back to Java was folded into the chapters that use it."
   - date: 2026-11-08
     note: "Coding exercises now run in Java and Python as well as C++: ten Java exercises across design by contract, concurrency, synchronization, waiting, serialization, and the reactor, and five Python and SQL exercises in the persistence chapter."
+  - date: 2026-11-10
+    note: "Review bridges sit between chapters: a guided session of short reminders, questions, and a coding exercise that use the last two or three chapters together. The first one follows the pointers chapter."
 
 sources:
   - path: "materials/lectures/Chapter 1 - The Memory Model.pptx"
@@ -505,12 +507,19 @@ topics:
     title: Variables, pointers, and references
     exam_weight: taught
     prerequisites: [memory-model]
+    unlocks: [bridge-memory-basics]
+  - id: bridge-memory-basics
+    file: topics/bridge-memory-basics.md
+    title: "Review: memory and pointers"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [pointers]
     unlocks: [classes-and-objects]
   - id: classes-and-objects
     file: topics/classes-and-objects.md
     title: Classes and objects
     exam_weight: taught
-    prerequisites: [pointers]
+    prerequisites: [bridge-memory-basics]
     unlocks: [rule-of-three]
   - id: rule-of-three
     file: topics/rule-of-three.md
@@ -518,13 +527,20 @@ topics:
     exam_weight: core
     exam_shape: "A small class owns a raw array. Write the destructor and the deep copy. The trap is the default memberwise copy, or an assignment that frees the buffer before the new one exists."
     prerequisites: [classes-and-objects]
+    unlocks: [bridge-objects-and-copies]
+  - id: bridge-objects-and-copies
+    file: topics/bridge-objects-and-copies.md
+    title: "Review: objects that own memory"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [rule-of-three]
     unlocks: [rule-of-five]
   - id: rule-of-five
     file: topics/rule-of-five.md
     title: The rule of five and smart pointers
     exam_weight: core
     exam_shape: "Steal a buffer, or delay the clone until a write. The trap is leaving the source pointer alive so two destructors free one block, or copying a unique_ptr."
-    prerequisites: [rule-of-three]
+    prerequisites: [bridge-objects-and-copies]
     unlocks: [inheritance]
   - id: inheritance
     file: topics/inheritance.md
@@ -532,12 +548,19 @@ topics:
     exam_weight: core
     exam_shape: "Two derived types sit behind one base pointer. The call is non-virtual, the destructor is non-virtual, or an overload is used where an override was needed. The trap is a memory drawing that omits the vptr, or a delete through the base that skips the derived destructor."
     prerequisites: [rule-of-five]
+    unlocks: [bridge-ownership-and-polymorphism]
+  - id: bridge-ownership-and-polymorphism
+    file: topics/bridge-ownership-and-polymorphism.md
+    title: "Review: ownership and polymorphism"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [inheritance]
     unlocks: [concurrency]
   - id: concurrency
     file: topics/concurrency.md
     title: Threads
     exam_weight: taught
-    prerequisites: [inheritance]
+    prerequisites: [bridge-ownership-and-polymorphism]
     unlocks: [design-by-contract]
   - id: design-by-contract
     file: topics/design-by-contract.md
@@ -545,13 +568,20 @@ topics:
     exam_weight: core
     exam_shape: "Write the invariant and the preconditions and postconditions of a method. The trap is an invariant that forgets the empty case, or a postcondition that is only true when nobody else mutates the object."
     prerequisites: [concurrency]
+    unlocks: [bridge-threads-and-safety]
+  - id: bridge-threads-and-safety
+    file: topics/bridge-threads-and-safety.md
+    title: "Review: threads and safe objects"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [design-by-contract]
     unlocks: [synchronization]
   - id: synchronization
     file: topics/synchronization.md
     title: Synchronization
     exam_weight: core
     exam_shape: "A shared structure. Show a race, or repair it with synchronized, an immutable copy, or an atomic compare-and-set. The trap is protecting the update but not the read that publishes it, or relying on a thread-safe class across two calls."
-    prerequisites: [design-by-contract]
+    prerequisites: [bridge-threads-and-safety]
     unlocks: [waiting-and-liveness]
   - id: waiting-and-liveness
     file: topics/waiting-and-liveness.md
@@ -559,13 +589,20 @@ topics:
     exam_weight: core
     exam_shape: "A guarded wait on a shared queue or resource, or a deadlock to explain and fix. The trap is if instead of while around wait, notify where notifyAll is needed, or a lock order that waits forever."
     prerequisites: [synchronization]
+    unlocks: [bridge-locks-and-waiting]
+  - id: bridge-locks-and-waiting
+    file: topics/bridge-locks-and-waiting.md
+    title: "Review: locks and waiting"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [waiting-and-liveness]
     unlocks: [networking]
   - id: networking
     file: topics/networking.md
     title: Communication between processes
     exam_weight: core
     exam_shape: "Replace a delimiter with a length prefix, cap the clients, or write a small command protocol. The trap is treating a TCP read as a whole message, or forgetting that UDP has no accept."
-    prerequisites: [waiting-and-liveness]
+    prerequisites: [bridge-locks-and-waiting]
     unlocks: [reactor]
   - id: reactor
     file: topics/reactor.md
@@ -580,13 +617,20 @@ topics:
     exam_weight: core
     exam_shape: "A class must travel over a socket. Write the fields, the version id, and the write and read order. The trap is a transient or static field that silently vanishes, or a thread field that makes the write fail."
     prerequisites: [reactor]
+    unlocks: [bridge-servers]
+  - id: bridge-servers
+    file: topics/bridge-servers.md
+    title: "Review: protocols and servers"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [serialization]
     unlocks: [persistence]
   - id: persistence
     file: topics/persistence.md
     title: Databases
     exam_weight: core
     exam_shape: "Design the tables, with a primary key, foreign keys, and a junction table for a many-to-many, then write one SELECT with a join. The trap is a Cartesian product with no join condition, or a list stored as columns instead of a junction table."
-    prerequisites: [serialization]
+    prerequisites: [bridge-servers]
     unlocks: [course-review]
   - id: course-review
     file: topics/course-review.md

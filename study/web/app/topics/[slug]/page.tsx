@@ -8,9 +8,11 @@ import { Visit } from "@/components/Visit";
 import { Mixed } from "@/lib/bidi";
 import { loadCourse } from "@/lib/course";
 import { courseNav, partOf } from "@/lib/nav";
+import { hrefOf } from "@/lib/chapters";
 
 export function generateStaticParams() {
-  return loadCourse().topics.map((topic) => ({ slug: topic.id }));
+  // A bridge has no reading page: it lives in its session.
+  return loadCourse().topics.filter((topic) => topic.kind !== "bridge").map((topic) => ({ slug: topic.id }));
 }
 
 export default async function TopicPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -19,8 +21,11 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
   const index = course.topics.findIndex((topic) => topic.id === slug);
   if (index < 0) notFound();
   const topic = course.topics[index];
-  const nextTopic = course.topics[index + 1];
+  if (topic.kind === "bridge") notFound();
   const nav = courseNav(course);
+  const chapter = nav.chapters[index];
+  const nextChapter = nav.chapters[index + 1];
+  const chapterCount = nav.chapters.filter((item) => item.kind !== "bridge").length;
   const part = partOf(nav, topic.id);
   return (
     <div className="chapter-page">
@@ -30,11 +35,11 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         <div className="gh-arch gh-arch-1" />
         <div className="gh-arch gh-arch-2" />
         <div className="masthead-inner">
-          <svg className="masthead-leaf" viewBox="0 0 112 112" role="img" aria-label={`Chapter ${index + 1} of ${course.topics.length}`}>
+          <svg className="masthead-leaf" viewBox="0 0 112 112" role="img" aria-label={`Chapter ${chapter.num} of ${chapterCount}`}>
             <g transform="translate(6 106) rotate(-45)">
               <g className="masthead-leaf-open"><LeafBlade size={138} /></g>
             </g>
-            <text x="57" y="67" textAnchor="middle" fontSize="36">{index + 1}</text>
+            <text x="57" y="67" textAnchor="middle" fontSize="36">{chapter.num}</text>
           </svg>
           <div>
             <h1><Mixed text={topic.title} /></h1>
@@ -48,7 +53,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
           topic={topic}
           courseId={course.id}
           session={nav.chapters[index].stepIds.length > 0 ? { href: `/sessions/${topic.id}/`, title: `Guided session: ${topic.title}` } : null}
-          next={nextTopic ? { href: `/topics/${nextTopic.id}/`, title: nextTopic.title } : null}
+          next={nextChapter ? { href: hrefOf(nextChapter), title: nextChapter.title } : null}
         />
       </ChapterGate>
     </div>

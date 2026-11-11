@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { LeafMark } from "./LeafMark";
 import { Mixed } from "@/lib/bidi";
-import { courseStates, hasStarted, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
+import { courseStates, hasStarted, hrefOf, useProgress, type ChapterInfo, type ChapterState } from "@/lib/progress";
 
 type Part = { title: string; lang: string; summary: string; chapters: ChapterInfo[] };
 
@@ -20,9 +20,9 @@ function Row({ chapter, state, started, solved }: { chapter: ChapterInfo; state:
   const note = rowNote(state, started, solved, chapter.stepIds.length);
   return (
     <li className={state === "done" || state === "read" ? "is-grown" : undefined}>
-      <Link className="gh-row" href={`/topics/${chapter.id}`} aria-current={state === "here" ? "step" : undefined}>
+      <Link className={chapter.kind === "bridge" ? "gh-row is-review" : "gh-row"} href={hrefOf(chapter)} aria-current={state === "here" ? "step" : undefined}>
         <LeafMark className="gh-row-mark" state={state} />
-        <span className="gh-row-num">{chapter.num}</span>
+        <span className="gh-row-num">{chapter.kind === "bridge" ? null : chapter.num}</span>
         <span className="gh-row-title"><Mixed text={chapter.title} /></span>
         {note && <span className="gh-row-note">{note}</span>}
       </Link>
@@ -33,7 +33,7 @@ function Row({ chapter, state, started, solved }: { chapter: ChapterInfo; state:
 export function CourseMap({ courseId, parts, finale, chapters }: { courseId: string; parts: Part[]; finale: ChapterInfo[]; chapters: ChapterInfo[] }) {
   const progress = useProgress(courseId);
   const states = courseStates(chapters, progress);
-  const stateOf = (chapter: ChapterInfo) => states[chapter.num - 1];
+  const stateOf = (chapter: ChapterInfo) => states[chapter.pos];
   const started = hasStarted(progress);
   const row = (chapter: ChapterInfo) => (
     <Row

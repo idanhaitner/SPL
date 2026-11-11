@@ -11,9 +11,10 @@ import { ExerciseStep } from "./ExerciseStep";
 import type { RenderedStep } from "./rendered";
 import { StepStem, type StepMeta, type StepStatus } from "./StepStem";
 
-type Hop = { href: string; title: string };
+type Hop = { href: string; title: string; review?: boolean };
+type Reviewed = { id: string; title: string };
 
-export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces, harness, next }: { courseId: string; chapter: ChapterInfo; steps: StepMeta[]; rendered: Record<string, ReactNode>; exercises: Record<string, Exercise>; pieces: Record<string, RenderedStep>; harness: string; next: Hop | null }) {
+export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces, harness, next, intro, reviews = [] }: { courseId: string; chapter: ChapterInfo; steps: StepMeta[]; rendered: Record<string, ReactNode>; exercises: Record<string, Exercise>; pieces: Record<string, RenderedStep>; harness: string; next: Hop | null; intro?: ReactNode; reviews?: Reviewed[] }) {
   const ids = useMemo(() => steps.map((step) => step.id), [steps]);
   const progress = useProgress(courseId);
   const solved = progress.solved;
@@ -41,6 +42,9 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
   }, [index]);
 
   function go(target: number) {
+    // A reminder has nothing to answer: leaving it is what finishes it.
+    const leaving = index !== null && index >= 0 ? steps[index] : undefined;
+    if (leaving?.kind === "recap") markSolved(courseId, leaving.id);
     moved.current = true;
     setIndex(Math.max(0, Math.min(target, ids.length)));
     window.scrollTo({ top: 0 });
@@ -50,17 +54,22 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
 
   const finished = index >= ids.length;
   const current = index >= 0 && !finished ? steps[index] : null;
-  const isSolved = current ? solved.includes(current.id) : false;
+  const isRecap = current?.kind === "recap";
+  const isBridge = chapter.kind === "bridge";
+  const isSolved = current ? isRecap || solved.includes(current.id) : false;
   const statusOf = (id: string, at: number): StepStatus => (solved.includes(id) ? "done" : at === index ? "current" : skipped.includes(id) ? "skipped" : "upcoming");
   const doneCount = ids.filter((id) => solved.includes(id)).length;
   const open = steps.filter((step) => !solved.includes(step.id));
-  const reread = <Link href={`/topics/${chapter.id}/`}>Reread: <Mixed text={chapter.title} /></Link>;
+  const reviewLinks = reviews.map((item, at) => (
+    <span key={item.id}>{at > 0 && ", "}<Link href={`/topics/${item.id}/`}><Mixed text={item.title} /></Link></span>
+  ));
+  const reread = isBridge ? <>Reread: {reviewLinks}</> : <Link href={`/topics/${chapter.id}/`}>Reread: <Mixed text={chapter.title} /></Link>;
 
   return (
     <div className={`session${current?.kind === "exercise" ? " is-coding" : ""}`}>
       <div className="session-bar">
         <div className="session-bar-row">
-          <Link className="session-back" href={`/topics/${chapter.id}/`}>Chapter {chapter.num}</Link>
+          {isBridge ? <Link className="session-back" href="/">Review</Link> : <Link className="session-back" href={`/topics/${chapter.id}/`}>Chapter {chapter.num}</Link>}
           <span className="session-count">{current ? `Step ${index + 1} of ${ids.length}` : finished ? "Session finished" : `${ids.length} steps`}</span>
           <span className="gh-nav-spacer" />
           {current && (
@@ -94,8 +103,18 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
 
       {index === -1 && (
         <div className="session-reading session-intro">
-          <h1 ref={heading} tabIndex={-1}>Guided session: <Mixed text={chapter.title} /></h1>
-          <p>This session teaches nothing new. It has you use what the chapter taught, one step at a time. If a step feels unfamiliar, it links back to the chapter.</p>
+          {isBridge ? (
+            <>
+              <h1 ref={heading} tabIndex={-1}><Mixed text={chapter.title} /></h1>
+              {intro ?? <p>This review teaches nothing new. It brings back the last chapters and has you use them together.</p>}
+              {reviews.length > 0 && <p className="session-reviews">Looks back at: {reviewLinks}</p>}
+            </>
+          ) : (
+            <>
+              <h1 ref={heading} tabIndex={-1}>Guided session: <Mixed text={chapter.title} /></h1>
+              <p>This session teaches nothing new. It has you use what the chapter taught, one step at a time. If a step feels unfamiliar, it links back to the chapter.</p>
+            </>
+          )}
           <p>{ids.length} steps. Skip any of them and come back later. Your place is saved in this browser.</p>
           <button type="button" className="gh-btn" onClick={() => go(0)}>Start step 1<Icon name="arrow" /></button>
         </div>
@@ -104,7 +123,13 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
       {current && (
         <div key={current.id} className={current.kind === "exercise" ? "session-code" : "session-reading"}>
           <h2 className="sr-only" ref={heading} tabIndex={-1}>Step {index + 1} of {ids.length}</h2>
-          {current.kind === "question" ? (
+          {current.kind === "recap" ? (
+            <div className="session-recap">
+              <p className="session-recap-kicker">Reminder</p>
+              <h2><Mixed text={current.title} /></h2>
+              {rendered[current.id]}
+            </div>
+          ) : current.kind === "question" ? (
             <>
               {rendered[current.id]}
               <p className="session-reread">{reread}</p>
@@ -114,10 +139,7 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
               exercise={exercises[current.id]}
               courseId={courseId}
               done={isSolved}
-              onComplete={() => {
-                const saved = readProgress(courseId);
-                if (!saved.solved.includes(current.id)) writeProgress(courseId, { ...saved, solved: [...saved.solved, current.id] });
-              }}
+              onComplete={() => markSolved(courseId, current.id)}
               harness={harness}
               rendered={pieces[current.id] ?? {}}
               moved={moved.current}
@@ -143,7 +165,7 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
           )}
           {!isRead(chapter, progress) && <p>You haven&rsquo;t finished reading this chapter yet. <Link href={`/topics/${chapter.id}/`}>Open the chapter</Link></p>}
           {next ? (
-            <Link className="gh-btn" href={next.href}>Next chapter: <Mixed text={next.title} /><Icon name="arrow" /></Link>
+            <Link className="gh-btn" href={next.href}>{next.review ? "Next: " : "Next chapter: "}<Mixed text={next.title} /><Icon name="arrow" /></Link>
           ) : (
             <Link className="gh-btn" href="/">Back to the course<Icon name="arrow" /></Link>
           )}
@@ -151,6 +173,11 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
       )}
     </div>
   );
+}
+
+function markSolved(courseId: string, id: string) {
+  const saved = readProgress(courseId);
+  if (!saved.solved.includes(id)) writeProgress(courseId, { ...saved, solved: [...saved.solved, id] });
 }
 
 function readSolved(courseId: string): string[] {

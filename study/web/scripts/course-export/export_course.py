@@ -97,6 +97,20 @@ def chapter_text(blurb: str, blocks) -> str:
     return " ".join(part for part in [blurb, *section_excerpts(blocks), *chapter_terms(blocks)] if part)
 
 
+def bridge_reviews(slug: str, reviews, earlier: list[dict]) -> list[str]:
+    """The chapters a bridge reviews: each one a real chapter that comes before it."""
+    if not isinstance(reviews, list) or not reviews:
+        raise studylib.StudyError(f"{slug}: a bridge needs reviews, a list of the chapters it reviews")
+    before = {topic["id"]: topic for topic in earlier}
+    for ref in reviews:
+        ref = str(ref)
+        if ref not in before:
+            raise studylib.StudyError(f"{slug}: reviews names {ref}, which is not a chapter before this bridge")
+        if before[ref].get("kind") == "bridge":
+            raise studylib.StudyError(f"{slug}: reviews names {ref}, which is a bridge, not a chapter")
+    return [str(ref) for ref in reviews]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", required=True)
@@ -116,6 +130,7 @@ def main() -> None:
         slug = str(entry.get("id") or "")
         title = str(entry.get("title") or slug)
         blurb = lecture_blurb(sources, meta)
+        bridge = meta.get("kind") == "bridge"
         topics.append({
             "id": slug,
             "title": title,
@@ -123,14 +138,21 @@ def main() -> None:
             "practiceIds": practice_ids(topic["blocks"]),
             "blocks": topic["blocks"],
         })
+        if bridge:
+            # A bridge reviews earlier chapters and has no reading page, only a session.
+            topics[-1]["kind"] = "bridge"
+            topics[-1]["reviews"] = bridge_reviews(slug, meta.get("reviews"), topics[:-1])
         search.append({
-            "kind": "Chapter",
+            "kind": "Review" if bridge else "Chapter",
             "title": title,
             "text": chapter_text(blurb, topic["blocks"]),
-            "href": f"/topics/{slug}",
+            "href": f"/sessions/{slug}" if bridge else f"/topics/{slug}",
         })
         for _parent, block in studylib.walk_directives(topic["blocks"]):
             if block["name"] != "problem":
+                continue
+            if bridge and block["attrs"].get("kind") == "worked":
+                # A worked example links to its chapter page, and a bridge has none.
                 continue
             statement, _hints, _solutions = studylib.problem_parts(block)
             text = studylib.blocks_plain(statement)
