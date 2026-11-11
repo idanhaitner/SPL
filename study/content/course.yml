@@ -617,13 +617,20 @@ topics:
     exam_weight: core
     exam_shape: "A class must travel over a socket. Write the fields, the version id, and the write and read order. The trap is a transient or static field that silently vanishes, or a thread field that makes the write fail."
     prerequisites: [reactor]
+    unlocks: [bridge-servers]
+  - id: bridge-servers
+    file: topics/bridge-servers.md
+    title: "Review: protocols and servers"
+    kind: bridge
+    exam_weight: taught
+    prerequisites: [serialization]
     unlocks: [persistence]
   - id: persistence
     file: topics/persistence.md
     title: Databases
     exam_weight: core
     exam_shape: "Design the tables, with a primary key, foreign keys, and a junction table for a many-to-many, then write one SELECT with a join. The trap is a Cartesian product with no join condition, or a list stored as columns instead of a junction table."
-    prerequisites: [serialization]
+    prerequisites: [bridge-servers]
     unlocks: [course-review]
   - id: course-review
     file: topics/course-review.md
