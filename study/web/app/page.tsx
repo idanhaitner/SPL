@@ -6,7 +6,6 @@ import { CloseHeading, ContinueButton } from "@/components/home/ContinueButton";
 import { HeroAir } from "@/components/home/HeroAir";
 import { CourseBed } from "@/components/home/CourseBed";
 import { CourseStem } from "@/components/home/CourseStem";
-import { TourLink } from "@/components/tour/TourLink";
 import { TopBar } from "@/components/shell/TopBar";
 import { TryQuestion } from "@/components/home/TryQuestion";
 import { loadCourse } from "@/lib/course";
@@ -73,7 +72,7 @@ export default async function HomePage() {
             <p className="gh-lede">{course.title} from zero, one chapter at a time, with questions from the course&rsquo;s own past exams.</p>
             <p className="gh-facts">{chapterCount} chapters in {PARTS.length} parts, in the course&rsquo;s order</p>
           </div>
-          <div className="gh-hero-action" data-tour="continue">
+          <div className="gh-hero-action">
             <ContinueButton courseId={course.id} chapters={chapters} showNote />
           </div>
           <CourseStem courseId={course.id} chapters={chapters} partStarts={partStarts} />
@@ -82,7 +81,7 @@ export default async function HomePage() {
 
       <div>
         <section className="gh-section gh-course" id="course" aria-labelledby="course-title">
-          <div className="gh-head" data-tour="course">
+          <div className="gh-head">
             <h2 id="course-title">The whole course, in order</h2>
             <p>{chapterCount} chapters and {practiceCount} practice questions, {examCount} of them from past exams.</p>
             <div className="gh-head-search"><SearchBox id="course-q" /></div>
@@ -120,7 +119,6 @@ export default async function HomePage() {
             <nav aria-label="Footer">
               <a href="#course">Course</a>
               <Link href="/glossary">Glossary ({course.glossary.length} terms)</Link>
-              <TourLink />
             </nav>
           </div>
         </div>

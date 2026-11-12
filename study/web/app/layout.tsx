@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Gabarito, Heebo, JetBrains_Mono } from "next/font/google";
 import { ChapterBloom } from "@/components/shell/ChapterBloom";
-import { TourLauncher } from "@/components/tour/TourLauncher";
 import { loadCourse } from "@/lib/course";
 import { courseNav, stemParts } from "@/lib/nav";
 import "katex/dist/katex.min.css";
@@ -59,7 +58,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip" href="#content">Skip to content</a>
         <main id="content">{children}</main>
         <ChapterBloom courseId={course.id} chapters={nav.chapters} partStarts={stemParts(nav)} />
-        <TourLauncher courseId={course.id} />
       </body>
     </html>
   );
