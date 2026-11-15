@@ -254,6 +254,7 @@ a.session-back { display: inline-flex; align-items: center; min-height: 44px; co
 .session-reading > p { margin-bottom: 16px; }
 .session-intro .gh-btn, .session-finish .gh-btn { margin-top: 16px; }
 .session-reread { margin-top: 16px; font-size: 1rem; }
+.session-foot { display: flex; justify-content: flex-end; margin-top: 24px; }
 .session-reread a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
 .session-open { margin-bottom: 16px; list-style: none !important; padding: 0 !important; }
 a.gh-btn { max-width: 100%; }

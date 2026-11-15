@@ -65,6 +65,15 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
   ));
   const reread = isBridge ? <>Reread: {reviewLinks}</> : <Link href={`/topics/${chapter.id}/`}>Reread: <Mixed text={chapter.title} /></Link>;
 
+  const nextButton = isSolved ? (
+    <button type="button" className="gh-btn is-compact" onClick={() => go(index + 1)}>
+      {index === ids.length - 1 ? "Finish" : "Next"}
+      <Icon name="arrow" />
+    </button>
+  ) : (
+    <button type="button" className="gh-pill" disabled title="Answer this step to go on">Next</button>
+  );
+
   return (
     <div className={`session${current?.kind === "exercise" ? " is-coding" : ""}`}>
       <div className="session-bar">
@@ -87,14 +96,7 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
                   Skip for now
                 </button>
               )}
-              {isSolved ? (
-                <button type="button" className="gh-btn is-compact" onClick={() => go(index + 1)}>
-                  {index === ids.length - 1 ? "Finish" : "Next"}
-                  <Icon name="arrow" />
-                </button>
-              ) : (
-                <button type="button" className="gh-pill" disabled title="Answer this step to go on">Next</button>
-              )}
+              {nextButton}
             </>
           )}
         </div>
@@ -129,11 +131,13 @@ export function Stepper({ courseId, chapter, steps, rendered, exercises, pieces,
               <p className="session-recap-kicker">Reminder</p>
               <h2><Mixed text={current.title} /></h2>
               {rendered[current.id]}
+              <div className="session-foot">{nextButton}</div>
             </div>
           ) : current.kind === "question" ? (
             <>
               {rendered[current.id]}
               <p className="session-reread">{reread}</p>
+              <div className="session-foot">{nextButton}</div>
             </>
           ) : (
             <ExerciseStep
