@@ -45,18 +45,28 @@ function memoryStore(board: TestBoard): BoardStore {
       }
       const listener = () => onRows([...board.rows]);
       listeners.add(listener);
+      // A check can change the rows itself, the way another student's write arrives, and then announce it.
+      window.addEventListener("study-board-test", listener);
       listener();
-      return () => listeners.delete(listener);
+      return () => {
+        listeners.delete(listener);
+        window.removeEventListener("study-board-test", listener);
+      };
     },
   };
 }
 
 let store: Promise<BoardStore | null> | null = null;
+// One memory store per test board, so a write from one part of the page reaches every watcher.
+const memory = new WeakMap<TestBoard, BoardStore>();
 
 // The Firebase SDK is only ever loaded from here, on demand, so no page carries it at first paint.
 export function getStore(): Promise<BoardStore | null> {
   const board = testBoard();
-  if (board) return Promise.resolve(memoryStore(board));
+  if (board) {
+    if (!memory.has(board)) memory.set(board, memoryStore(board));
+    return Promise.resolve(memory.get(board) ?? null);
+  }
   if (!FIREBASE_CONFIG) return Promise.resolve(null);
   const config = FIREBASE_CONFIG;
   store ??= import("./board-firestore").then(({ firestoreStore }) => firestoreStore(config)).catch(() => {

@@ -1,0 +1,42 @@
+/* The leaderboard: the name dialog, the board page, and the line on home. Colors come from the greenhouse tokens only. */
+
+/* ---- Name dialog ---- */
+/* A modal, so it grows from the middle of the screen. It arrives in 220ms on the strong ease-out and leaves faster than it came. */
+.board-join {
+  width: min(440px, calc(100vw - 32px)); max-width: none; margin: auto; padding: 0;
+  border: 1px solid var(--rule); border-radius: 28px; background: var(--raised); color: var(--ink); box-shadow: var(--shadow-float);
+  opacity: 1; transform: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out), overlay 160ms allow-discrete, display 160ms allow-discrete;
+}
+.board-join[open] { transition-duration: 220ms; }
+@starting-style { .board-join[open] { opacity: 0; transform: scale(0.96) translateY(6px); } }
+.board-join:not([open]) { opacity: 0; transform: scale(0.98); }
+.board-join::backdrop { background: rgb(5 25 18 / 0); transition: background-color 200ms var(--ease-out), overlay 200ms allow-discrete, display 200ms allow-discrete; }
+.board-join[open]::backdrop { background: rgb(5 25 18 / 0.5); }
+@starting-style { .board-join[open]::backdrop { background: rgb(5 25 18 / 0); } }
+html:has(.board-join[open]) { overflow-y: clip; }
+
+.board-join-form { display: grid; gap: 14px; padding: 28px 28px 22px; }
+.board-join-mark { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: 999px; background: var(--wash); color: var(--bud); }
+.board-join-mark .gh-mark { width: 26px; height: 26px; }
+.board-join h2 { margin: 2px 0 0; font: 800 1.5rem/1.15 var(--gh-display); letter-spacing: 0; max-width: none; }
+.board-join-lede { margin: 0; color: var(--ink-soft); font-size: 0.9875rem; line-height: 1.5; }
+
+.board-field { display: grid; gap: 6px; margin-top: 4px; font-weight: 600; font-size: 0.9375rem; }
+.board-field input {
+  width: 100%; min-height: 48px; padding: 0 18px; border: 1.5px solid var(--edge); border-radius: 999px; background: var(--ground);
+  color: var(--ink); font: 500 1.0625rem var(--gh-body); outline-offset: 2px;
+  transition: border-color 120ms ease;
+}
+.board-field input:focus-visible { outline: 2px solid var(--link); border-color: var(--link); }
+.board-field input[aria-invalid] { border-color: var(--rust); }
+.board-error { margin: -4px 0 0 18px; color: var(--rust-text); font-size: 0.9rem; font-weight: 500; }
+
+.board-join-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 6px; }
+.board-join-actions .gh-btn { min-width: 128px; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the fade so the dialog still arrives gently; drop the movement. */
+  .board-join, .board-join[open], .board-join:not([open]) { transform: none; }
+  @starting-style { .board-join[open] { transform: none; } }
+}

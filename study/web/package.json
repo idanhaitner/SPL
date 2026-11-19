@@ -10,7 +10,8 @@
     "check:exercises": "tsx scripts/check-exercises.ts",
     "check:shell": "node scripts/check-shell.mjs",
     "check:chapter": "node scripts/check-chapter.mjs",
-    "check:session": "node scripts/check-session.mjs"
+    "check:session": "node scripts/check-session.mjs",
+    "check:board": "node scripts/check-board.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.4",

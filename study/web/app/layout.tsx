@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Gabarito, Heebo, JetBrains_Mono } from "next/font/google";
+import { BoardSync } from "@/components/board/BoardSync";
+import { JoinDialog } from "@/components/board/JoinDialog";
 import { ChapterBloom } from "@/components/shell/ChapterBloom";
 import { loadCourse } from "@/lib/course";
 import { courseNav, stemParts } from "@/lib/nav";
@@ -59,6 +61,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip" href="#content">Skip to content</a>
         <main id="content">{children}</main>
         <ChapterBloom courseId={course.id} chapters={nav.chapters} partStarts={stemParts(nav)} />
+        <JoinDialog courseId={course.id} />
+        <BoardSync courseId={course.id} chapters={nav.chapters} />
       </body>
     </html>
   );
