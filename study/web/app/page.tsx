@@ -6,6 +6,7 @@ import { CloseHeading, ContinueButton } from "@/components/home/ContinueButton";
 import { HeroAir } from "@/components/home/HeroAir";
 import { CourseBed } from "@/components/home/CourseBed";
 import { CourseStem } from "@/components/home/CourseStem";
+import { BoardRankLine } from "@/components/home/BoardRankLine";
 import { TopBar } from "@/components/shell/TopBar";
 import { TryQuestion } from "@/components/home/TryQuestion";
 import { loadCourse } from "@/lib/course";
@@ -74,6 +75,7 @@ export default async function HomePage() {
           </div>
           <div className="gh-hero-action">
             <ContinueButton courseId={course.id} chapters={chapters} showNote />
+            <BoardRankLine courseId={course.id} />
           </div>
           <CourseStem courseId={course.id} chapters={chapters} partStarts={partStarts} />
         </div>

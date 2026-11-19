@@ -154,3 +154,17 @@ html:has(.board-join[open]) { overflow-y: clip; }
   .board-row { animation: gh-fade 160ms linear backwards; }
   .board-plant svg { transition: none; }
 }
+
+/* ---- The line on home ---- */
+/* Under the note beneath Continue. Its place is held from the start, so nothing moves when it fades in. */
+.home .board-rank {
+  position: absolute; top: calc(100% - var(--hero-h) * 0.122 + 62px); left: 4px; width: max-content; min-height: 1.4em; margin: 0;
+  font-size: 0.9375rem; line-height: 1.35; opacity: 0; transition: opacity 240ms var(--ease-out);
+}
+.home .board-rank.is-shown { opacity: 1; }
+.home .board-rank a { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; color: var(--leaf); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.2em; transition: text-decoration-color 160ms ease; }
+@media (hover: hover) and (pointer: fine) { .home .board-rank a:hover { text-decoration-color: currentColor; } }
+@media (max-width: 56.25rem) {
+  .home .board-rank { position: static; width: auto; margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .home .board-rank { transition: none; } }
