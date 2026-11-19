@@ -93,8 +93,8 @@ async function staysAway(page, locator, ms = 2000) {
 
 // While someone is typing code, the dialog waits until they leave the editor.
 {
-  const { context, page } = await open({ seed: "new", progress: { solved: [], seen: [], openAll: true } });
-  await page.goto(base + "/sessions/pointers/?step=ex-swap-values", { waitUntil: "networkidle" });
+  const { context, page } = await open({ seed: "new", progress: { solved: [], seen: [] } });
+  await page.goto(base + "/sessions/run-time-environment/?step=ex-declare-then-define", { waitUntil: "networkidle" });
   await page.locator(".cm-content").waitFor();
   await page.locator(".cm-content").click();
   await page.evaluate((KEY) => {
@@ -202,6 +202,44 @@ const joined = { solved: ["x"], read: ["run-time-environment"] };
   const { context, page } = await open({ board: null });
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
   if (!(await appears(page.getByText(/The leaderboard isn.t set up yet\./)))) fail("board not configured: no message");
+  await context.close();
+}
+
+// A guest with no progress and no name can watch the board.
+{
+  const { context, page, errors } = await open({ board: { rows: seedRows() } });
+  await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
+  if (!(await appears(page.locator(".board-row")))) fail("guest: cannot see the board");
+  else if ((await page.locator(".board-row").count()) !== 4) fail("guest: watching added a row");
+  if (!(await appears(page.getByRole("button", { name: "Join the leaderboard" })))) fail("guest: no Join button");
+  if (await dialog(page).count()) fail("guest: the name dialog opened just from watching");
+  if (errors.length) fail(`guest: page errors: ${errors.join("; ")}`);
+  await context.close();
+}
+
+// A student who opened every chapter is never asked, and the board tells them why they are not on it.
+{
+  const { context, page } = await open({ board: { rows: seedRows() }, seed: "existing", progress: { solved: ["x"], read: ["run-time-environment"], openAll: true } });
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  if (!(await staysAway(page, dialog(page)))) fail("open every chapter: the name dialog opened");
+  await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
+  if (!(await appears(page.getByText(/Open every chapter/)))) fail("open every chapter: the board does not explain why they are left off");
+  if (await page.getByRole("button", { name: "Join the leaderboard" }).count()) fail("open every chapter: a Join button shows");
+  await context.close();
+}
+
+// A joined student who then opens every chapter drops off the board.
+{
+  const { context, page } = await open({ board: { rows: seedRows() }, player: viewer, progress: joined, seed: "new" });
+  await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
+  await page.waitForFunction(() => document.querySelectorAll(".board-row").length === 5, null, { timeout: 4000 }).catch(() => fail("open every chapter later: the viewer never joined the board"));
+  await page.evaluate((KEY) => {
+    const progress = JSON.parse(localStorage.getItem(KEY));
+    localStorage.setItem(KEY, JSON.stringify({ ...progress, openAll: true }));
+    window.dispatchEvent(new Event("study-progress"));
+  }, KEY);
+  await page.waitForFunction(() => window.__studyBoard.rows.find((row) => row.id === "viewer")?.hidden === true, null, { timeout: 5000 }).catch(() => fail("open every chapter later: the row was not hidden"));
+  if (!(await appears(page.locator(".board-row"), 1000)) || (await page.locator(".board-row .board-name", { hasText: "Viewer" }).count())) fail("open every chapter later: still listed");
   await context.close();
 }
 

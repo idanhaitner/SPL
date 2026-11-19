@@ -16,6 +16,8 @@ Success: a friend opens the site, types a name once, keeps studying exactly as t
 - The site stays a static Next.js export on GitHub Pages at `idanhaitner.github.io/SPL`. No server of our own.
 - The shared table lives in **Firebase Cloud Firestore** on the free Spark plan.
 - No security beyond basic data-shape checks.
+- **Only students who take the chapters in order are on the board** (added by the author during the build). A student with "Open every chapter" on is never asked to join. If they had joined, their row is hidden while the switch is on and comes back when they turn it off. The page and the switch's hint say so.
+- **Anyone can watch** (added by the author during the build). The leaderboard page needs no name and no progress; guests see the board and a Join button.
 - **One board for anyone on the site**, not an invite-only friends group. Every student who makes progress is asked to join, so classmates the author doesn't know may appear too. The author accepts that, without accounts, anyone could technically rename or reset another row.
 - Look and feel are left to the builder, inside the existing Greenhouse design system (`DESIGN.md`).
 

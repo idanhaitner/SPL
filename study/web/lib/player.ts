@@ -5,7 +5,7 @@ import { hasStarted, storageKey, type Progress } from "./progress";
 export type Player = { id: string; name: string };
 export type PlayerState = Player | { declined: true } | null;
 // What this device last sent, so an unchanged summary is not sent again.
-export type Published = { id: string; name: string; summary: Summary; reachedAt: number };
+export type Published = { id: string; name: string; summary: Summary; reachedAt: number; hidden?: boolean };
 export type Seed = "existing" | "new";
 
 const playerKey = (courseId: string) => `${storageKey(courseId)}:player`;
@@ -79,8 +79,9 @@ export function boardSeedScript(courseId: string) {
 
 // A student who studied here before the leaderboard is asked on their next visit. A new student is asked once they have
 // read a chapter or solved a question, so they never join with nothing to show.
+// The leaderboard is for students who take the chapters in order, so one who opened every chapter is never asked.
 export function shouldAsk(progress: Progress, player: PlayerState, seed: Seed) {
-  if (player) return false;
+  if (player || progress.openAll) return false;
   if (seed === "existing") return hasStarted(progress);
   return (progress.read ?? []).length > 0 || progress.solved.length > 0;
 }

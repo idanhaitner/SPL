@@ -54,7 +54,7 @@ describe("publishIfChanged", () => {
     setProgress({ solved: ["a1", "a2"], read: ["a"], last: "b", seen: ["a", "b"] });
     const player = joinAs("c", "Dana");
     expect(await publishIfChanged("c", course, fake, 100)).toBe("published");
-    expect(fake.puts[0]).toEqual({ courseId: "c", id: player.id, row: { name: "Dana", chapters: 1, reviews: 0, solved: 2, current: "b", reachedAt: 100 } });
+    expect(fake.puts[0]).toEqual({ courseId: "c", id: player.id, row: { name: "Dana", chapters: 1, reviews: 0, solved: 2, current: "b", reachedAt: 100, hidden: false } });
     expect(readPublished("c")?.reachedAt).toBe(100);
   });
   it("skips when nothing changed", async () => {
@@ -64,13 +64,29 @@ describe("publishIfChanged", () => {
     expect(await publishIfChanged("c", course, fake, 200)).toBe("skipped");
     expect(fake.puts.length).toBe(1);
   });
-  it("keeps reachedAt when only the current chapter moved", async () => {
-    setProgress({ solved: ["a1", "a2", "b1"], read: ["a", "b"], last: "r1" });
+  it("sends hidden: false with every normal write, so a row hidden before comes back", async () => {
+    setProgress({ solved: ["a1"] });
     joinAs("c", "Dana");
     await publishIfChanged("c", course, fake, 100);
-    setProgress({ solved: ["a1", "a2", "b1"], read: ["a", "b"], last: "c", openAll: true });
+    expect(fake.puts[0].row.hidden).toBe(false);
+  });
+  it("never publishes a student who opened every chapter before joining", async () => {
+    setProgress({ solved: ["a1"], openAll: true });
+    joinAs("c", "Dana");
+    expect(await publishIfChanged("c", course, fake, 100)).toBe("skipped");
+    expect(fake.puts).toEqual([]);
+  });
+  it("hides a joined student's row once they open every chapter, and shows it again when they stop", async () => {
+    setProgress({ solved: ["a1"] });
+    joinAs("c", "Dana");
+    await publishIfChanged("c", course, fake, 100);
+    setProgress({ solved: ["a1"], openAll: true });
+    expect(await publishIfChanged("c", course, fake, 200)).toBe("published");
+    expect(fake.puts[1].row).toMatchObject({ hidden: true, reachedAt: 100 });
+    expect(await publishIfChanged("c", course, fake, 250)).toBe("skipped");
+    setProgress({ solved: ["a1"] });
     expect(await publishIfChanged("c", course, fake, 300)).toBe("published");
-    expect(fake.puts[1].row).toMatchObject({ current: "c", reachedAt: 100 });
+    expect(fake.puts[2].row).toMatchObject({ hidden: false, reachedAt: 100 });
   });
   it("moves reachedAt on a gain", async () => {
     setProgress({ solved: ["a1"] });
