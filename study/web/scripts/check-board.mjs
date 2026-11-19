@@ -1,6 +1,7 @@
 // Browser check for the leaderboard: the name dialog, publishing, the board page, and the home line. Run after `npm run build`.
 // It installs an in-memory board (window.__studyBoard) in place of Firestore, so it needs no Firebase project.
 import { chromium } from "playwright";
+import fs from "node:fs";
 import { startServer } from "./serve-out.mjs";
 
 const { server, base } = await startServer();
@@ -9,6 +10,8 @@ const failures = [];
 const fail = (message) => failures.push(message);
 const KEY = "study:systems-programming";
 const DAY = 86_400_000;
+// A build with a Firebase config shows the leaderboard link; the cases about the switched-off leaderboard only apply without one.
+const CONFIGURED = fs.readFileSync("out/index.html", "utf8").includes('/leaderboard/"');
 
 // A browser context with a test board and, optionally, progress, a seed, and a player already stored.
 async function open({ board = { rows: [] }, progress, seed, player, width = 1280, theme = "light" } = {}) {
@@ -109,7 +112,7 @@ async function staysAway(page, locator, ms = 2000) {
 }
 
 // Without Firebase set up and without a test board, nothing about the leaderboard shows.
-{
+if (!CONFIGURED) {
   const { context, page } = await open({ board: null, progress: { solved: [], last: "memory-model", seen: ["memory-model"] } });
   await page.goto(base + "/", { waitUntil: "networkidle" });
   if (!(await staysAway(page, dialog(page)))) fail("not configured: the dialog opened");
@@ -198,7 +201,7 @@ const joined = { solved: ["x"], read: ["run-time-environment"] };
 }
 
 // Not configured: the page still exists and says so.
-{
+if (!CONFIGURED) {
   const { context, page } = await open({ board: null });
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
   if (!(await appears(page.getByText(/The leaderboard isn.t set up yet\./)))) fail("board not configured: no message");
