@@ -136,3 +136,9 @@ export const STRIP_STEM: Curve[] = [
   [{ x: 480, y: 84 }, { x: 660, y: 108 }, { x: 760, y: 132 }, { x: 940, y: 84 }],
   [{ x: 940, y: 84 }, { x: 1120, y: 36 }, { x: 1200, y: 26 }, { x: 1354, y: 44 }],
 ];
+
+// One small upright plant on the leaderboard: a gentle S from the soil to the tip, in a 120 × 300 box.
+export const PLANT_STEM: Curve[] = [
+  [{ x: 60, y: 292 }, { x: 48, y: 236 }, { x: 74, y: 196 }, { x: 60, y: 150 }],
+  [{ x: 60, y: 150 }, { x: 46, y: 104 }, { x: 72, y: 66 }, { x: 62, y: 26 }],
+];

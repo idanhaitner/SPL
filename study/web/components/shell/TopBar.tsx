@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { PlantMark } from "@/components/home/Icon";
 import { SearchBox } from "@/components/SearchBox";
+import { FIREBASE_CONFIG } from "@/lib/firebase-config";
 import type { CourseNav } from "@/lib/nav";
 import { CourseDrawer } from "./CourseDrawer";
 import { ThemeToggle } from "./ThemeToggle";
@@ -21,6 +22,7 @@ export function TopBar({ courseId, title, nav, where, tone = "canopy" }: { cours
         {where && <span className="gh-where">{where}</span>}
         <div className="gh-nav-links">
           <Link href="/glossary">Glossary</Link>
+          {FIREBASE_CONFIG && <Link href="/leaderboard">Leaderboard</Link>}
         </div>
         <span className="gh-nav-spacer" />
         <div className="gh-nav-search">

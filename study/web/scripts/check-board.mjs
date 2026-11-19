@@ -140,24 +140,30 @@ const seedRows = () => [
   { id: "dana", name: "Dana", chapters: 3, reviews: 1, solved: 22, current: "rule-of-three", reachedAt: now - 9 * DAY, updatedAt: now - DAY, hidden: false },
   { id: "old", name: "Old", chapters: 1, reviews: 0, solved: 1, current: "memory-model", reachedAt: now - 120 * DAY, updatedAt: now - 90 * DAY, hidden: false },
 ];
-const dana = { id: "dana", name: "Dana" };
+// The checking device joins as "Viewer". Its own row always comes from its local progress (0 chapters, 1 solved), so it ranks last.
+const viewer = { id: "viewer", name: "Viewer" };
 const joined = { solved: ["x"], read: ["run-time-environment"] };
 
 {
-  const { context, page, errors } = await open({ board: { rows: seedRows() }, player: dana, progress: joined, seed: "new" });
+  const { context, page, errors } = await open({ board: { rows: seedRows() }, player: viewer, progress: joined, seed: "new" });
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
   const names = page.locator(".board-row .board-name");
-  if (!(await appears(names))) fail("board: no rows rendered");
+  if (!(await appears(names))) {
+    fail("board: no rows rendered");
+    await context.close();
+    await finish();
+  }
+  await page.waitForFunction(() => document.querySelectorAll(".board-row").length === 5, null, { timeout: 4000 }).catch(() => fail("board: the viewer's own row was not published"));
   const order = await names.allInnerTexts();
-  if (order.join(",") !== "Noa,עידן,Dana,Old") fail(`board: rows in order ${order.join(",")}`);
+  if (order.join(",") !== "Noa,עידן,Dana,Old,Viewer") fail(`board: rows in order ${order.join(",")}`);
   const places = await page.locator(".board-row .board-place").allInnerTexts();
-  if (places.map((p) => p.trim()).join(",") !== "1,2,2,4") fail(`board: places ${places.join(",")}`);
+  if (places.map((p) => p.trim()).join(",") !== "1,2,2,4,5") fail(`board: places ${places.join(",")}`);
   if (!(await page.locator(".board-row.is-stale").filter({ hasText: "Old" }).count())) fail("board: the 90-day-idle row is not marked stale");
-  const lede = await page.locator(".board-you").innerText().catch(() => "");
-  if (!lede.includes("You're 2nd of 4")) fail(`board: masthead says "${lede}"`);
+  const lede = (await page.locator(".board-you").innerText().catch(() => "")).replace(/\u2019/g, "'");
+  if (!lede.includes("You're 5th of 5")) fail(`board: masthead says "${lede}"`);
   const plants = await page.locator(".board-plant").count();
-  if (plants !== 3) fail(`board: garden has ${plants} plants, expected 3`);
-  if (!(await page.locator(".board-plant.is-you").filter({ hasText: "Dana" }).count())) fail("board: Dana's plant is not marked as yours");
+  if (plants !== 4) fail(`board: garden has ${plants} plants, expected 4`);
+  if (!(await page.locator(".board-plant.is-you").filter({ hasText: "Viewer" }).count())) fail("board: the viewer's plant is not marked as yours");
   const bidi = await page.locator(".board-row .board-name").nth(1).evaluate((el) => !!el.querySelector("bdi, [dir]") || el.closest("[dir]") !== null || el.tagName === "BDI");
   if (!bidi) fail("board: the Hebrew name is not isolated for direction");
 
@@ -170,14 +176,14 @@ const joined = { solved: ["x"], read: ["run-time-environment"] };
 
   // Change name.
   await page.getByRole("button", { name: "Change name" }).click();
-  await page.getByLabel("New name").fill("Dana K");
+  await page.getByLabel("New name").fill("Viewer K");
   await page.getByRole("button", { name: "Save" }).click();
-  await page.waitForFunction(() => window.__studyBoard.rows.some((row) => row.name === "Dana K"), null, { timeout: 4000 }).catch(() => fail("board: rename did not reach the board"));
+  await page.waitForFunction(() => window.__studyBoard.rows.some((row) => row.name === "Viewer K"), null, { timeout: 4000 }).catch(() => fail("board: rename did not reach the board"));
 
   // Leave.
   await page.getByRole("button", { name: "Leave the leaderboard" }).click();
-  await page.waitForFunction(() => window.__studyBoard.rows.find((row) => row.id === "dana")?.hidden === true, null, { timeout: 4000 }).catch(() => fail("board: leaving did not hide the row"));
-  if (await page.locator(".board-row .board-name", { hasText: "Dana" }).count()) fail("board: Dana is still listed after leaving");
+  await page.waitForFunction(() => window.__studyBoard.rows.find((row) => row.id === "viewer")?.hidden === true, null, { timeout: 4000 }).catch(() => fail("board: leaving did not hide the row"));
+  if (await page.locator(".board-row .board-name", { hasText: "Viewer" }).count()) fail("board: the viewer is still listed after leaving");
   if (!(await appears(page.getByRole("button", { name: "Join the leaderboard" })))) fail("board: no Join button after leaving");
   if (errors.length) fail(`board: page errors: ${errors.join("; ")}`);
   await context.close();
@@ -185,9 +191,9 @@ const joined = { solved: ["x"], read: ["run-time-environment"] };
 
 // The board cannot be reached.
 {
-  const { context, page } = await open({ board: { rows: [], fail: true }, player: dana, progress: joined, seed: "new" });
+  const { context, page } = await open({ board: { rows: [], fail: true }, player: viewer, progress: joined, seed: "new" });
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
-  if (!(await appears(page.getByText("The leaderboard can't be reached right now.")))) fail("board offline: no error line");
+  if (!(await appears(page.getByText(/The leaderboard can.t be reached right now\./)))) fail("board offline: no error line");
   await context.close();
 }
 
@@ -195,14 +201,14 @@ const joined = { solved: ["x"], read: ["run-time-environment"] };
 {
   const { context, page } = await open({ board: null });
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
-  if (!(await appears(page.getByText("The leaderboard isn't set up yet.")))) fail("board not configured: no message");
+  if (!(await appears(page.getByText(/The leaderboard isn.t set up yet\./)))) fail("board not configured: no message");
   await context.close();
 }
 
 // Layout at phone and desktop widths, in both themes.
 for (const width of [375, 1280]) {
   for (const theme of ["light", "dark"]) {
-    const { context, page } = await open({ board: { rows: seedRows() }, player: dana, progress: joined, seed: "new", width, theme });
+    const { context, page } = await open({ board: { rows: seedRows() }, player: viewer, progress: joined, seed: "new", width, theme });
     await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
     await appears(page.locator(".board-row"));
     const sideways = await overflow(page);
@@ -215,20 +221,20 @@ for (const width of [375, 1280]) {
 
 // ---- The line on home ----
 {
-  const { context, page, errors } = await open({ board: { rows: seedRows() }, player: dana, progress: joined, seed: "new" });
+  const { context, page, errors } = await open({ board: { rows: seedRows() }, player: viewer, progress: joined, seed: "new" });
   await page.goto(base + "/", { waitUntil: "networkidle" });
   const line = page.locator(".board-rank a");
   if (!(await appears(line, 4000))) fail("home: no leaderboard line for a joined student");
   else {
-    const text = await line.innerText();
-    if (!text.includes("You're 2nd of 4 on the leaderboard")) fail(`home: line says "${text}"`);
+    const text = (await line.innerText()).replace(/\u2019/g, "'");
+    if (!text.includes("You're 5th of 5 on the leaderboard")) fail(`home: line says "${text}"`);
     if (!(await line.getAttribute("href"))?.includes("/leaderboard")) fail("home: the line does not link to the leaderboard");
   }
   if (errors.length) fail(`home: page errors: ${errors.join("; ")}`);
   await context.close();
 }
 for (const width of [375, 1280]) {
-  const { context, page } = await open({ board: { rows: seedRows() }, player: dana, progress: joined, seed: "new", width });
+  const { context, page } = await open({ board: { rows: seedRows() }, player: viewer, progress: joined, seed: "new", width });
   await page.goto(base + "/", { waitUntil: "networkidle" });
   if (await appears(page.locator(".board-rank a"), 4000)) {
     const hit = await page.evaluate(() => {
@@ -249,7 +255,7 @@ for (const width of [375, 1280]) {
   await context.close();
 }
 {
-  const { context, page, errors } = await open({ board: { rows: [], fail: true }, player: dana, progress: joined, seed: "new" });
+  const { context, page, errors } = await open({ board: { rows: [], fail: true }, player: viewer, progress: joined, seed: "new" });
   await page.goto(base + "/", { waitUntil: "networkidle" });
   if (!(await staysAway(page, page.locator(".board-rank a")))) fail("home offline: the line shows");
   if (errors.length) fail(`home offline: page errors: ${errors.join("; ")}`);

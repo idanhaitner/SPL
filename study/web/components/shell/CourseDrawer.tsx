@@ -1,5 +1,6 @@
 "use client";
 
+import { FIREBASE_CONFIG } from "@/lib/firebase-config";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { CourseMap } from "@/components/home/CourseMap";
@@ -43,6 +44,7 @@ export function CourseDrawer({ open, onClose, courseId, nav }: { open: boolean; 
             <div className="gh-drawer-links">
               <Link href="/">Home</Link>
               <Link href="/glossary">Glossary</Link>
+              {FIREBASE_CONFIG && <Link href="/leaderboard">Leaderboard</Link>}
             </div>
             <OpenAllSwitch courseId={courseId} />
             <CourseMap courseId={courseId} parts={nav.parts} finale={nav.finale} chapters={nav.chapters} />

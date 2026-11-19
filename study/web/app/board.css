@@ -40,3 +40,115 @@ html:has(.board-join[open]) { overflow-y: clip; }
   .board-join, .board-join[open], .board-join:not([open]) { transform: none; }
   @starting-style { .board-join[open] { transform: none; } }
 }
+
+/* ---- Leaderboard page ---- */
+/* The header is one green field: the title, your place, and the garden of everyone's plants under the arches.
+   The ranked list below sits in a pale room, like every page that is for reading. */
+.board-masthead { padding-bottom: 8px; }
+.board-masthead .masthead-inner { display: block; padding-block: 44px 8px; }
+.board-masthead h1 { font-size: clamp(3rem, 6vw + 0.5rem, 6rem); line-height: 0.98; }
+.board-standing { min-height: 56px; margin-top: 24px; }
+.board-you { margin: 0; font: 800 clamp(1.375rem, 1vw + 1rem, 1.75rem)/1.2 var(--gh-display); color: var(--leaf); letter-spacing: -0.01em; }
+
+/* The garden: a labels column for the four parts, and a bed that scrolls sideways on a phone rather than the page. */
+.board-garden {
+  --plant-w: 120px; --plant-h: 300px;
+  position: relative; z-index: 1; display: grid; grid-template-columns: 112px minmax(0, 1fr);
+  max-width: 1440px; margin: 20px auto 0; padding: 0 var(--gh-gutter) 32px;
+}
+.board-garden-parts { position: relative; height: var(--plant-h); }
+.board-garden-parts span {
+  position: absolute; left: 0; top: calc(var(--plant-h) * var(--at)); translate: 0 -50%;
+  font: 600 0.8125rem/1 var(--gh-body); color: var(--canopy-ink-soft); letter-spacing: 0.02em;
+}
+.board-garden-bed { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--canopy-high) transparent; }
+/* One column per plant, wide enough to breathe but never so wide that a few plants scatter across the bed. */
+.board-garden-row { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(var(--plant-w), 1fr)); width: max-content; min-width: min(100%, calc(var(--n) * 150px + 48px)); max-width: calc(var(--n) * 150px + 48px); padding: 4px 24px 0; }
+/* The bed's edge: soil the plants all stand in, so their roots line up. */
+.board-garden-row::after {
+  content: ""; position: absolute; left: 12px; right: 12px; top: calc(var(--plant-h) - 2px); height: 14px;
+  border-radius: 999px; background: rgb(5 25 18 / 0.32);
+}
+.board-garden-line { position: absolute; left: 0; right: 0; top: calc(var(--plant-h) * var(--at)); border-top: 1px dashed rgb(242 247 238 / 0.16); pointer-events: none; }
+
+.board-plant { position: relative; z-index: 1; display: grid; justify-items: center; width: 100%; margin: 0; }
+.board-plant svg { display: block; width: var(--plant-w); height: var(--plant-h); overflow: visible; transition: transform 220ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .board-plant:hover svg { transform: translateY(-4px); }
+}
+/* The leader stands in a soft pool of light that breathes. */
+.board-plant.is-leader::before {
+  content: ""; position: absolute; left: 50%; top: 24px; width: 150px; height: 260px; translate: -50% 0; z-index: -1;
+  background: radial-gradient(closest-side, rgb(244 251 217 / 0.22), rgb(217 240 163 / 0.07) 60%, transparent);
+  animation: gh-breathe 4.5s ease-in-out infinite alternate;
+}
+.board-plant figcaption { display: grid; justify-items: center; gap: 2px; width: 100%; margin-top: 10px; text-align: center; }
+.board-plaque {
+  display: inline-flex; align-items: center; min-height: 22px; padding: 0 9px; border-radius: 999px;
+  background: rgb(242 247 238 / 0.1); color: var(--canopy-ink-soft); font: 800 0.75rem/1 var(--gh-display); letter-spacing: 0.02em;
+}
+.board-plant.is-leader .board-plaque { background: var(--leaf); color: var(--leaf-ink); }
+.board-plant-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 0.9375rem/1.3 var(--gh-body); color: var(--canopy-ink); }
+.board-plant-count { font-size: 0.8125rem; color: var(--canopy-ink-soft); font-variant-numeric: tabular-nums; }
+.board-plant.is-you .board-plant-name, .board-plant.is-you .board-plant-count { color: var(--leaf); }
+/* The flower sits where the stem's searching curl would be, so the curl is left out. */
+.board-plant .gh-stem-curl { display: none; }
+
+/* Arrival: each plant climbs out of the soil in rank order, then its leaves open one after another. Seen once per visit, so it may take its time. */
+.board-plant .gh-stem-reveal { animation: gh-draw 900ms var(--ease-out) calc(var(--p) * 90ms + 120ms) backwards; }
+.board-plant .gh-leaf-body { animation: gh-unfurl 560ms cubic-bezier(0.3, 1.35, 0.5, 1) calc(var(--p) * 90ms + 420ms + var(--i) * 45ms) backwards; }
+.board-plant figcaption { animation: board-rise 320ms var(--ease-out) calc(var(--p) * 90ms + 200ms) backwards; }
+
+/* The pale room below the field. */
+.board-body { max-width: 1120px; margin: 0 auto; padding: 40px var(--gh-gutter) 96px; }
+.board-note, .board-placeholder { padding: 48px 32px; border: 1px solid var(--rule); border-radius: 28px; background: var(--raised); color: var(--ink-soft); font-size: 1.0625rem; text-align: center; }
+.board-placeholder { min-height: 420px; background: var(--wash); border-color: transparent; opacity: 0.6; }
+
+.board-list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--rule); border-radius: 28px; background: var(--raised); box-shadow: var(--shadow-card); overflow: clip; }
+.board-list.is-pinned { margin-top: 12px; }
+.board-row {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; column-gap: 20px; row-gap: 6px;
+  padding: 18px 28px; animation: board-rise 280ms var(--ease-out) calc(var(--r) * 35ms) backwards;
+}
+.board-row + .board-row { border-top: 1px solid var(--rule); }
+.board-row.is-you { background: var(--wash); }
+.board-row.is-stale { opacity: 0.55; }
+.board-place { font: 800 1.625rem/1 var(--gh-display); color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.board-row:first-child .board-place { color: var(--link); }
+.board-who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.board-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 1.1875rem/1.25 var(--gh-display); color: var(--ink); }
+.board-meta { flex-basis: 100%; color: var(--muted); font-size: 0.9rem; }
+.board-you-tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 10px; border-radius: 999px; background: var(--leaf); color: var(--leaf-ink); font: 800 0.75rem/1 var(--gh-display); }
+.board-stats { display: flex; gap: 28px; margin: 0; }
+.board-stats div { display: grid; justify-items: end; gap: 2px; }
+.board-stats dt { color: var(--muted); font-size: 0.8125rem; }
+.board-stats dd { margin: 0; font: 800 1.375rem/1 var(--gh-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.board-stats dd span { font: 500 0.875rem var(--gh-body); color: var(--muted); }
+.board-your-actions, .board-rename { grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
+.board-your-actions .gh-quiet { padding-inline: 0; font-size: 0.9375rem; }
+.board-rename input {
+  flex: 1 1 200px; max-width: 320px; min-height: 44px; padding: 0 18px; border: 1.5px solid var(--edge); border-radius: 999px;
+  background: var(--raised); color: var(--ink); font: 500 1rem var(--gh-body); outline-offset: 2px;
+}
+.board-rename input:focus-visible { outline: 2px solid var(--link); border-color: var(--link); }
+.board-rename .gh-pill { min-height: 44px; }
+.board-rename .board-error { flex-basis: 100%; margin: 0 0 0 18px; }
+.board-more { display: flex; min-height: 44px; margin: 20px auto 0; }
+
+@keyframes board-rise { from { opacity: 0; transform: translateY(6px); } }
+
+@media (max-width: 640px) {
+  .board-garden { --plant-w: 92px; --plant-h: 230px; grid-template-columns: 84px minmax(0, 1fr); padding-inline: 16px 0; }
+  .board-garden-parts span { font-size: 0.75rem; }
+  .board-row { grid-template-columns: 36px minmax(0, 1fr); padding: 16px 18px; column-gap: 14px; }
+  .board-place { font-size: 1.375rem; }
+  .board-stats { grid-column: 2; justify-content: flex-start; gap: 22px; }
+  .board-stats div { justify-items: start; }
+  .board-your-actions, .board-rename { grid-column: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-plant .gh-stem-reveal, .board-plant .gh-leaf-body, .board-plant figcaption, .board-plant.is-leader::before { animation: none; }
+  .board-row { animation: gh-fade 160ms linear backwards; }
+  .board-plant svg { transition: none; }
+}
