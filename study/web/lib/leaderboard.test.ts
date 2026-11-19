@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { ago, cleanName, gained, ordinal, rankRows, STALE_MS, summarize, toRow, type Row } from "./leaderboard";
+import { describe, expect, it, vi } from "vitest";
+import { ago, cleanName, gained, labelOf, ordinal, rankRows, snapshotGate, STALE_MS, summarize, toRow, type Row } from "./leaderboard";
 import type { ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, pos: 0, stepIds });
@@ -88,5 +88,46 @@ describe("words", () => {
     expect(ago(0, 2 * 3600_000)).toBe("2 hours ago");
     expect(ago(0, 86_400_000)).toBe("yesterday");
     expect(ago(0, 90 * 86_400_000)).toBe("3 months ago");
+  });
+});
+
+describe("labelOf", () => {
+  it("only finds real chapter ids, never what an object inherits", () => {
+    const labels = { threads: "Chapter 8 · Threads" };
+    expect(labelOf(labels, "threads")).toBe("Chapter 8 · Threads");
+    expect(labelOf(labels, "__proto__")).toBeNull();
+    expect(labelOf(labels, "constructor")).toBeNull();
+    expect(labelOf(labels, "toString")).toBeNull();
+    expect(labelOf(labels, null)).toBeNull();
+  });
+});
+
+describe("snapshotGate", () => {
+  it("waits on an empty answer from the cache, then calls it an error if the server never answers", () => {
+    vi.useFakeTimers();
+    const seen: string[] = [];
+    const gate = snapshotGate((rows) => seen.push(`rows:${rows.length}`), () => seen.push("error"), 8000);
+    gate({ fromCache: true, rows: [] });
+    expect(seen).toEqual([]);
+    vi.advanceTimersByTime(8000);
+    expect(seen).toEqual(["error"]);
+    gate({ fromCache: false, rows: [row("a", 1, 1, 1)] });
+    expect(seen).toEqual(["error", "rows:1"]);
+    gate.stop();
+    vi.useRealTimers();
+  });
+  it("shows the server's answer at once, even an empty one", () => {
+    const seen: string[] = [];
+    const gate = snapshotGate((rows) => seen.push(`rows:${rows.length}`), () => seen.push("error"), 8000);
+    gate({ fromCache: false, rows: [] });
+    expect(seen).toEqual(["rows:0"]);
+    gate.stop();
+  });
+  it("shows cached rows while the server is away", () => {
+    const seen: string[] = [];
+    const gate = snapshotGate((rows) => seen.push(`rows:${rows.length}`), () => seen.push("error"), 8000);
+    gate({ fromCache: true, rows: [row("a", 1, 1, 1)] });
+    expect(seen).toEqual(["rows:1"]);
+    gate.stop();
   });
 });

@@ -93,3 +93,27 @@ export function ago(then: number, now: number) {
   }
   return "just now";
 }
+
+// A chapter's label from a row's `current`. Rows come from anyone, so an id like "__proto__" must not reach what objects inherit.
+export function labelOf(labels: Record<string, string>, id: string | null): string | null {
+  return id !== null && Object.hasOwn(labels, id) ? labels[id] : null;
+}
+
+type Snapshot = { fromCache: boolean; rows: Row[] };
+
+// When Firestore is blocked or offline it answers from its cache, often with nothing, instead of reporting an error.
+// An empty answer from the cache waits for the server; if the server stays silent for `waitMs`, that is an error. Any real answer shows at once.
+export function snapshotGate(onRows: (rows: Row[]) => void, onError: () => void, waitMs: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const gate = (snapshot: Snapshot) => {
+    if (snapshot.fromCache && snapshot.rows.length === 0) {
+      timer ??= setTimeout(onError, waitMs);
+      return;
+    }
+    clearTimeout(timer);
+    timer = undefined;
+    onRows(snapshot.rows);
+  };
+  gate.stop = () => clearTimeout(timer);
+  return gate;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type CSSProperties, type FormEvent } from "react";
-import { ago, cleanName, NAME_MAX, type RankedRow } from "@/lib/leaderboard";
+import { ago, labelOf, NAME_MAX, type RankedRow } from "@/lib/leaderboard";
 
 export const LIST_MAX = 50;
 
@@ -72,7 +72,7 @@ export function BoardList({ rows, you, labels, now, total, onRename, onLeave }: 
   const mine = rows.find((row) => row.id === you);
   const pinned = mine && !shown.includes(mine) ? mine : null;
   const row = (entry: RankedRow, index: number) => (
-    <Row key={entry.id} row={entry} you={entry.id === you} label={entry.current ? labels[entry.current] ?? null : null} now={now} total={total} index={index} onRename={onRename} onLeave={onLeave} />
+    <Row key={entry.id} row={entry} you={entry.id === you} label={labelOf(labels, entry.current)} now={now} total={total} index={index} onRename={onRename} onLeave={onLeave} />
   );
   return (
     <section className="board-list-wrap" aria-label="Everyone, ranked">

@@ -132,6 +132,16 @@ describe("hideRow", () => {
     await hideRow("c", fake);
     expect(fake.puts.at(-1)).toEqual({ courseId: "c", id: player.id, row: { name: "Dana", chapters: 0, reviews: 0, solved: 1, current: "a", reachedAt: 50, hidden: true } });
   });
+  it("can still hide the row after the device has already left", async () => {
+    const fake = fakeStore();
+    setProgress({ solved: ["a1"] });
+    const player = joinAs("c", "Dana");
+    await publishIfChanged("c", course, fake, 50);
+    const last = readPublished("c");
+    declinePlayer("c");
+    await hideRow("c", fake, last);
+    expect(fake.puts.at(-1)).toMatchObject({ id: player.id, row: { hidden: true } });
+  });
   it("does nothing when nothing was published", async () => {
     const fake = fakeStore();
     await hideRow("c", fake);

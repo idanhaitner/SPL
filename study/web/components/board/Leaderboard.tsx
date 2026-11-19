@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Icon } from "@/components/home/Icon";
 import { boardEnabled, getStore } from "@/lib/board-store";
 import { cleanName, ordinal, rankRows, type Row } from "@/lib/leaderboard";
-import { declinePlayer, readPlayer, renamePlayer, type PlayerState } from "@/lib/player";
+import { declinePlayer, readPlayer, readPublished, renamePlayer, type PlayerState } from "@/lib/player";
 import { useProgress } from "@/lib/progress";
 import { hideRow } from "@/lib/publish";
 import { BoardList } from "./BoardList";
@@ -74,10 +74,13 @@ export function Leaderboard({ courseId, total, partStarts, labels, decor }: { co
     renamePlayer(courseId, name);
     return true;
   };
-  const leave = async () => {
-    const store = await getStore().catch(() => null);
-    if (store) await hideRow(courseId, store).catch(() => {});
+  // Leaving happens on this device at once; hiding the row is sent after, since Firestore holds writes until it is back online.
+  const leave = () => {
+    const last = readPublished(courseId);
     declinePlayer(courseId);
+    void getStore()
+      .then((store) => (store && last ? hideRow(courseId, store, last) : undefined))
+      .catch(() => {});
   };
 
   const standing = status !== "ready" ? null : openAll ? (

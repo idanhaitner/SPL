@@ -28,8 +28,8 @@ export async function publishIfChanged(courseId: string, chapters: ChapterInfo[]
 }
 
 // Leaving the leaderboard: the site cannot delete a row, so it sends the last row again, marked hidden.
-export async function hideRow(courseId: string, store: BoardStore) {
-  const last = readPublished(courseId);
+// `last` can be read before the device forgets it, so leaving never has to wait on the network.
+export async function hideRow(courseId: string, store: BoardStore, last = readPublished(courseId)) {
   if (!last) return;
   await store.put(courseId, last.id, { name: last.name, ...last.summary, reachedAt: last.reachedAt, hidden: true });
 }

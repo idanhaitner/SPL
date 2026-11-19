@@ -1,7 +1,7 @@
 import { initializeApp, type FirebaseOptions } from "firebase/app";
 import { Timestamp, collection, doc, getDocs, getFirestore, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import type { BoardStore } from "./board-store";
-import { toRow, type Row } from "./leaderboard";
+import { snapshotGate, toRow, type Row } from "./leaderboard";
 
 // Firestore holds one document per device at courses/{courseId}/players/{playerId}. Loaded only through getStore().
 export function firestoreStore(config: FirebaseOptions): BoardStore {
@@ -16,7 +16,12 @@ export function firestoreStore(config: FirebaseOptions): BoardStore {
       return rows((await getDocs(players(courseId))).docs);
     },
     watch(courseId, onRows, onError) {
-      return onSnapshot(players(courseId), (snapshot) => onRows(rows(snapshot.docs)), () => onError());
+      const gate = snapshotGate(onRows, onError, 8000);
+      const stop = onSnapshot(players(courseId), { includeMetadataChanges: true }, (snapshot) => gate({ fromCache: snapshot.metadata.fromCache, rows: rows(snapshot.docs) }), () => onError());
+      return () => {
+        gate.stop();
+        stop();
+      };
     },
   };
 }
