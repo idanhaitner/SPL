@@ -2,8 +2,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { BoardStore, RowInput } from "./board-store";
 import { hideRow, publishIfChanged } from "./publish";
-import { joinAs, readPublished, renamePlayer, declinePlayer } from "./player";
-import type { ChapterInfo } from "./progress";
+import { summarize } from "./leaderboard";
+import { joinAs, readPublished, renamePlayer, declinePlayer, writePublished } from "./player";
+import { readProgress, type ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, pos: 0, stepIds });
 const br = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 0, pos: 0, stepIds, kind: "bridge" });
@@ -70,23 +71,27 @@ describe("publishIfChanged", () => {
     await publishIfChanged("c", course, fake, 100);
     expect(fake.puts[0].row.hidden).toBe(false);
   });
-  it("never publishes a student who opened every chapter before joining", async () => {
+  it("publishes a student who opened every chapter", async () => {
     setProgress({ solved: ["a1"], openAll: true });
     joinAs("c", "Dana");
-    expect(await publishIfChanged("c", course, fake, 100)).toBe("skipped");
-    expect(fake.puts).toEqual([]);
+    expect(await publishIfChanged("c", course, fake, 100)).toBe("published");
+    expect(fake.puts[0].row.hidden).toBe(false);
   });
-  it("hides a joined student's row once they open every chapter, and shows it again when they stop", async () => {
+  it("turning on every chapter changes nothing on the board", async () => {
     setProgress({ solved: ["a1"] });
     joinAs("c", "Dana");
     await publishIfChanged("c", course, fake, 100);
     setProgress({ solved: ["a1"], openAll: true });
+    expect(await publishIfChanged("c", course, fake, 200)).toBe("skipped");
+    expect(fake.puts.length).toBe(1);
+  });
+  it("brings back a row hidden earlier by the old open-all rule, with no new progress", async () => {
+    setProgress({ solved: ["a1"], openAll: true });
+    const { id } = joinAs("c", "Dana");
+    // What this device recorded when the old rule hid its row.
+    writePublished("c", { id, name: "Dana", summary: summarize(course, readProgress("c")), reachedAt: 100, hidden: true });
     expect(await publishIfChanged("c", course, fake, 200)).toBe("published");
-    expect(fake.puts[1].row).toMatchObject({ hidden: true, reachedAt: 100 });
-    expect(await publishIfChanged("c", course, fake, 250)).toBe("skipped");
-    setProgress({ solved: ["a1"] });
-    expect(await publishIfChanged("c", course, fake, 300)).toBe("published");
-    expect(fake.puts[2].row).toMatchObject({ hidden: false, reachedAt: 100 });
+    expect(fake.puts[0].row).toMatchObject({ hidden: false, reachedAt: 100 });
   });
   it("moves reachedAt on a gain", async () => {
     setProgress({ solved: ["a1"] });

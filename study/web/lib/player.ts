@@ -79,9 +79,8 @@ export function boardSeedScript(courseId: string) {
 
 // A student who studied here before the leaderboard is asked on their next visit. A new student is asked once they have
 // read a chapter or solved a question, so they never join with nothing to show.
-// The leaderboard is for students who take the chapters in order, so one who opened every chapter is never asked.
 export function shouldAsk(progress: Progress, player: PlayerState, seed: Seed) {
-  if (player || progress.openAll) return false;
+  if (player) return false;
   if (seed === "existing") return hasStarted(progress);
   return (progress.read ?? []).length > 0 || progress.solved.length > 0;
 }

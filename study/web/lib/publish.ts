@@ -10,20 +10,18 @@ export async function publishIfChanged(courseId: string, chapters: ChapterInfo[]
   if (!player || !("id" in player)) return "skipped";
   const progress = readProgress(courseId);
   const summary = summarize(chapters, progress);
-  // Only students who take the chapters in order are on the board. Opening every chapter hides the row until it is turned off.
-  const hidden = progress.openAll === true;
   const last = readPublished(courseId);
   const mine = last?.id === player.id ? last : null;
-  if (hidden && !mine) return "skipped";
-  if (mine && mine.name === player.name && sameSummary(mine.summary, summary) && (mine.hidden ?? false) === hidden) return "skipped";
+  // A row hidden earlier (when opening every chapter used to hide it) is sent again even with nothing new, so it comes back.
+  if (mine && mine.name === player.name && sameSummary(mine.summary, summary) && !mine.hidden) return "skipped";
   const reachedAt = mine && !gained(mine.summary, summary) ? mine.reachedAt : now;
   try {
     // hidden is always sent, because the store merges and a row hidden earlier would otherwise stay hidden.
-    await store.put(courseId, player.id, { name: player.name, ...summary, reachedAt, hidden });
+    await store.put(courseId, player.id, { name: player.name, ...summary, reachedAt, hidden: false });
   } catch {
     return "failed";
   }
-  writePublished(courseId, { id: player.id, name: player.name, summary, reachedAt, hidden });
+  writePublished(courseId, { id: player.id, name: player.name, summary, reachedAt, hidden: false });
   return "published";
 }
 

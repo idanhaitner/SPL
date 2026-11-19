@@ -14,9 +14,10 @@ describe("player", () => {
     expect(shouldAsk({ solved: [], last: "a", seen: ["a"] }, null, "existing")).toBe(true);
     expect(shouldAsk({ solved: [] }, null, "existing")).toBe(false);
   });
-  it("never asks a student who opened every chapter", () => {
-    expect(shouldAsk({ solved: ["s"], read: ["a"], openAll: true }, null, "new")).toBe(false);
-    expect(shouldAsk({ solved: [], seen: ["a"], openAll: true }, null, "existing")).toBe(false);
+  it("asks a student who opened every chapter, like anyone else", () => {
+    expect(shouldAsk({ solved: ["s"], read: ["a"], openAll: true }, null, "new")).toBe(true);
+    expect(shouldAsk({ solved: [], last: "a", seen: ["a"], openAll: true }, null, "existing")).toBe(true);
+    expect(shouldAsk({ solved: [], openAll: true }, null, "new")).toBe(false);
   });
   it("never asks again after joining or declining", () => {
     expect(shouldAsk({ solved: ["s"] }, { id: "i", name: "n" }, "new")).toBe(false);
