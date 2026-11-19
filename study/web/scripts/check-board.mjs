@@ -220,18 +220,19 @@ if (!CONFIGURED) {
   await context.close();
 }
 
-// A student who opened every chapter is never asked, and the board tells them why they are not on it.
+// A student who opened every chapter is asked like anyone else, and the board treats them like anyone else.
 {
   const { context, page } = await open({ board: { rows: seedRows() }, seed: "existing", progress: { solved: ["x"], read: ["run-time-environment"], openAll: true } });
   await page.goto(base + "/", { waitUntil: "networkidle" });
-  if (!(await staysAway(page, dialog(page)))) fail("open every chapter: the name dialog opened");
+  if (!(await appears(dialog(page)))) fail("open every chapter: the name dialog did not open");
+  else await page.getByRole("button", { name: "Not now" }).click();
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
-  if (!(await appears(page.getByText(/Open every chapter/)))) fail("open every chapter: the board does not explain why they are left off");
-  if (await page.getByRole("button", { name: "Join the leaderboard" }).count()) fail("open every chapter: a Join button shows");
+  if (!(await appears(page.getByRole("button", { name: "Join the leaderboard" })))) fail("open every chapter: no Join button");
+  if (await page.getByText(/Open every chapter/).count()) fail("open every chapter: the board still says they are left off");
   await context.close();
 }
 
-// A joined student who then opens every chapter drops off the board.
+// A joined student who then opens every chapter stays on the board.
 {
   const { context, page } = await open({ board: { rows: seedRows() }, player: viewer, progress: joined, seed: "new" });
   await page.goto(base + "/leaderboard/", { waitUntil: "networkidle" });
@@ -241,8 +242,16 @@ if (!CONFIGURED) {
     localStorage.setItem(KEY, JSON.stringify({ ...progress, openAll: true }));
     window.dispatchEvent(new Event("study-progress"));
   }, KEY);
-  await page.waitForFunction(() => window.__studyBoard.rows.find((row) => row.id === "viewer")?.hidden === true, null, { timeout: 5000 }).catch(() => fail("open every chapter later: the row was not hidden"));
-  if (!(await appears(page.locator(".board-row"), 1000)) || (await page.locator(".board-row .board-name", { hasText: "Viewer" }).count())) fail("open every chapter later: still listed");
+  await page.waitForTimeout(2500);
+  if (await page.evaluate(() => window.__studyBoard.rows.find((row) => row.id === "viewer")?.hidden === true)) fail("open every chapter later: the row was hidden");
+  if (!(await page.locator(".board-row .board-name", { hasText: "Viewer" }).count())) fail("open every chapter later: no longer listed");
+  await context.close();
+}
+// The test board lives in page memory, so home gets a fresh device that has already joined with every chapter open.
+{
+  const { context, page } = await open({ board: { rows: seedRows() }, player: viewer, progress: { ...joined, openAll: true }, seed: "new" });
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  if (!(await appears(page.locator(".board-rank a"), 4000))) fail("open every chapter: no leaderboard line on home");
   await context.close();
 }
 

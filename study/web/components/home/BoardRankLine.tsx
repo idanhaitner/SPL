@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { boardEnabled, getStore } from "@/lib/board-store";
 import { ordinal, rankRows } from "@/lib/leaderboard";
 import { readPlayer } from "@/lib/player";
-import { readProgress } from "@/lib/progress";
 
 // One quiet line under Continue for a student on the leaderboard: their place, linking to the board.
 // It reads the board once the page is idle, so home paints exactly as fast as before, and says nothing if the board can't be reached.
@@ -14,7 +13,7 @@ export function BoardRankLine({ courseId }: { courseId: string }) {
 
   useEffect(() => {
     const player = readPlayer(courseId);
-    if (!boardEnabled() || !player || !("id" in player) || readProgress(courseId).openAll) return;
+    if (!boardEnabled() || !player || !("id" in player)) return;
     let gone = false;
     const load = async () => {
       const store = await getStore().catch(() => null);

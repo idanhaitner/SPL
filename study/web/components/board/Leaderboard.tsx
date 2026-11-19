@@ -5,7 +5,6 @@ import { Icon } from "@/components/home/Icon";
 import { boardEnabled, getStore } from "@/lib/board-store";
 import { cleanName, ordinal, rankRows, type Row } from "@/lib/leaderboard";
 import { declinePlayer, readPlayer, readPublished, renamePlayer, type PlayerState } from "@/lib/player";
-import { useProgress } from "@/lib/progress";
 import { hideRow } from "@/lib/publish";
 import { BoardList } from "./BoardList";
 import { Garden } from "./Garden";
@@ -36,8 +35,6 @@ export function Leaderboard({ courseId, total, partStarts, labels, decor }: { co
   const [now, setNow] = useState(0);
   const player = usePlayer(courseId);
   const you = player && "id" in player ? player.id : null;
-  // The board is for students who take the chapters in order; opening every chapter leaves a student off it.
-  const openAll = Boolean(useProgress(courseId).openAll);
 
   useEffect(() => {
     if (!boardEnabled()) {
@@ -83,9 +80,7 @@ export function Leaderboard({ courseId, total, partStarts, labels, decor }: { co
       .catch(() => {});
   };
 
-  const standing = status !== "ready" ? null : openAll ? (
-    <p className="board-off">You&rsquo;ve turned on <strong>Open every chapter</strong>, so you&rsquo;re not on the leaderboard. Turn it off in the Course menu to take part.</p>
-  ) : mine ? (
+  const standing = status !== "ready" ? null : mine ? (
     <p className="board-you">You&rsquo;re {ordinal(mine.place)} of {ranked.length}</p>
   ) : you ? (
     <p className="board-you">Finding your place&hellip;</p>
