@@ -9,6 +9,7 @@ An interactive study site for **Systems Programming** (תכנות מערכות, 
 - Chapter-by-chapter lessons in syllabus order
 - Worked examples with real code, hints, and solutions
 - Practice cards you can mark as solved (progress stays in the browser)
+- A public leaderboard: pick a name once and see how far everyone has grown
 - Diagrams for frames, heaps, vtables, reactors, and more
 - Six review bridges between chapters: short reminders, questions, and a coding exercise that combine the last two or three chapters
 - Search across chapters, reviews, practice, and the glossary
@@ -23,6 +24,7 @@ An interactive study site for **Systems Programming** (תכנות מערכות, 
 | Content | Markdown + YAML under `study/content/` |
 | Math / code | KaTeX, Shiki |
 | Hosting | GitHub Pages via Actions |
+| Leaderboard | Firebase Cloud Firestore (free Spark plan) |
 
 ## Repository layout
 
@@ -64,6 +66,20 @@ npm run audit   # optional content/UI checks
 4. Refresh the local dev server to see changes.
 
 Topic markdown uses the study dialect: definitions, traps, practice problems with hints/solutions, and `topic:` links between chapters.
+
+## Leaderboard setup
+
+The leaderboard keeps one small row per student in Cloud Firestore: their name, chapters done, reviews done, questions solved, and the chapter they are on. Progress itself stays in each browser. Until `study/web/lib/firebase-config.ts` holds a config, the leaderboard stays switched off and the site works as before.
+
+One-time setup:
+
+1. In the [Firebase console](https://console.firebase.google.com/), create a project on the free Spark plan (no billing account needed).
+2. Create a Cloud Firestore database in **production mode**, in a region near you (for example `europe-west`).
+3. Open Firestore → **Rules**, paste the contents of [firebase/firestore.rules](firebase/firestore.rules), and publish.
+4. In Project settings → **Your apps**, register a Web app and copy its `firebaseConfig` object into `FIREBASE_CONFIG` in `study/web/lib/firebase-config.ts`. This config is public by design; the rules decide what anyone may do.
+5. Optional: in Google Cloud → APIs & Services → Credentials, restrict the API key to the referrers `idanhaitner.github.io/*` and `localhost`.
+
+To remove or fix a row, edit it in the Firebase console under `courses/systems-programming/players`.
 
 ## Deploy
 

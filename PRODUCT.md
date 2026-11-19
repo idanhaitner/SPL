@@ -27,8 +27,9 @@ It follows this course's lecture order and terms rather than a generic curriculu
 
 ## Capabilities and Constraints
 
-- Static Next.js export on GitHub Pages. No backend, no accounts, no sync between devices.
-- Progress is stored in the browser (`localStorage`).
+- Static Next.js export on GitHub Pages. No backend of our own, no accounts, no sync between devices.
+- Progress is stored in the browser (`localStorage`) and stays on the device.
+- A public leaderboard shares only a summary per student (name, chapters done, reviews done, questions solved, current chapter) through Firebase Cloud Firestore. Names are picked once per device, with no login.
 - Existing surfaces: home, 16 chapter pages, glossary, and search. Lessons include code blocks (Shiki), maths (KaTeX), definitions, traps, checks, and problems.
 - Planned: guided sessions per chapter. Chapters in the C++ part get in-browser coding first; later parts have question-only sessions until their turn.
 - Compiler Explorer lists C++, Java, and Python but not SQL. Running code from the browser has not yet been tested. Code sent to run leaves the browser, and the site must say so.
@@ -48,4 +49,4 @@ Undecided: whether the site keeps stating that it is unofficial; which later par
 2. Doing beats reading: every idea leads quickly to a question or to code the student runs.
 3. Follow the course: its order and terms are the backbone.
 4. Never lose the student's work or progress.
-5. No account and no server of our own.
+5. No accounts and no server of our own; a small shared leaderboard summary lives in Firestore.

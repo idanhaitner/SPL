@@ -25,6 +25,7 @@
     "@lezer/highlight": "^1.2.5",
     "@wasm-fmt/clang-format": "^23.1.1",
     "codemirror": "^6.0.2",
+    "firebase": "^13.4.0",
     "katex": "^0.19.1",
     "next": "^15.5.4",
     "react": "^19.1.1",
