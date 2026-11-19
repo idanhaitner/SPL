@@ -3,6 +3,7 @@ import { Figtree, Gabarito, Heebo, JetBrains_Mono } from "next/font/google";
 import { ChapterBloom } from "@/components/shell/ChapterBloom";
 import { loadCourse } from "@/lib/course";
 import { courseNav, stemParts } from "@/lib/nav";
+import { boardSeedScript } from "@/lib/player";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
@@ -52,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={course.lang} dir={course.dir} className={`${mono.variable} ${gabarito.variable} ${figtree.variable} ${heebo.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT + boardSeedScript(course.id) }} />
       </head>
       <body>
         <a className="skip" href="#content">Skip to content</a>
