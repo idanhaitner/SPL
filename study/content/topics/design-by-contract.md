@@ -468,6 +468,15 @@ Which change would fix the lost update?
 :::problem id=ps5-stack-contract title="The contract for Stack" source="materials/sessions/SPL_PS5.pptx" kind=exercise solution_origin=source
 `Stack` has `push`, `top`, `isEmpty`, and `size`. `push` rejects null. `top` returns the last element that was pushed and does not remove it. `size` is never negative, and an empty stack has size 0.
 
+```java
+interface Stack<T> {
+    void push(T obj);     // adds obj on top; rejects null
+    T top();              // the last element pushed, not removed
+    boolean isEmpty();
+    int size();
+}
+```
+
 :::check id=ps5-stack-contract-q1
 The postcondition of `push` writes the old size as {{=size()@pre|size()|capacity()}}.
 
@@ -546,6 +555,11 @@ A caller runs `inc()` when `get() == max()`: the bug belongs to {{=the caller|th
 This `Even` starts at 0, and its invariant is `get() % 2 == 0`. Two threads each call `next()` once on the same object, with no synchronization.
 
 ```java
+interface Even {
+    int get();
+    void next();   // moves to the next even number
+}
+
 class EvenImpl implements Even {
     private int counter = 0;
     public int get() { return counter; }
@@ -588,6 +602,15 @@ Thread A prints `Hello` and thread B prints `Goodbye`, one letter at a time, and
 
 :::problem id=exam-18a-q2 title="A bounded stack" source="materials/exams/18-a.pdf" kind=exam solution_origin=derived
 `Stack<T>` is bounded. `push` may store null. `pop` removes an element. `size` is the current number of elements. `capacity` is the maximum.
+
+```java
+interface Stack<T> {
+    void push(T data);    // adds data on top; data may be null
+    T pop();              // removes and returns the top element
+    int size();           // how many elements it holds now
+    int capacity();       // the most it can ever hold
+}
+```
 
 :::check id=exam-18a-q2-q1
 The precondition of `push` is {{=size() < capacity()|data != null|size() == 0}}.

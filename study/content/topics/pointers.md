@@ -581,7 +581,7 @@ delete b;
 ```
 
 :::check id=ps2-pointer-dangers-q1
-Which of these lines or statements in the code above are faults?
+Which of these lines or statements in the four fragments are faults?
 
 - [ ] `int* r = new int` stores an indeterminate address.
 - [x] `*p = 3` dereferences null.

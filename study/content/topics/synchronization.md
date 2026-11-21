@@ -560,7 +560,19 @@ Which other form is correct?
 :::
 
 :::problem id=ps10-lock-guard title="A lock in C++" source="materials/sessions/SPL_PS10.pptx" kind=exercise solution_origin=source
-This Java code locks a mutex around a print, then starts a worker thread and waits for it. The exercise translates it into C++.
+This Java code locks a mutex around a print, then starts a worker thread and waits for it. The exercise translates it into C++, where the task is a class `Task` that holds its id and a reference to the shared mutex.
+
+```cpp
+class Task {
+    int taskId;
+    std::mutex& mutex;   // shared by all the tasks
+public:
+    Task(int id, std::mutex& m) : taskId(id), mutex(m) { }
+    void run();          // the questions choose its body
+};
+```
+
+The Java code being translated:
 
 ```java
 synchronized (mutex) {
@@ -656,7 +668,20 @@ System.out.println(e.get());
 :::
 
 :::check id=prac-sync-immutable-q3
-Two `Adder` threads each start from the same `Even(0)` and run `e = e.next();` on their own field. After both are joined, each adder's `e.get()` is {{=2|4|0}}, and the merge `a1.e.get() + a2.e.get() - 0` gives {{=4|2|8}}.
+Two `Adder` tasks each start from the same `Even(0)` and run `e = e.next();` on their own field, each on its own thread.
+
+```java
+class Adder implements Runnable {
+    Even e;
+    Adder(Even e) { this.e = e; }
+    public void run() { e = e.next(); }     // its own new Even
+}
+
+Even e = new Even(0);
+Adder a1 = new Adder(e), a2 = new Adder(e);
+```
+
+After both are joined, each adder's `e.get()` is {{=2|4|0}}, and the merge `a1.e.get() + a2.e.get() - 0` gives {{=4|2|8}}.
 
 - **Each thread gets its own new copy,** built from the shared `Even(0)`, so each ends with 2.
 - **The merge** adds what each thread contributed: 2 + 2 - 0 = 4, the same result as two serial calls to `next`.

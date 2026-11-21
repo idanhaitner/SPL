@@ -55,6 +55,22 @@ UDP hands over messages, not a stream, so there is nothing to frame. What it doe
 :::check id=br6-what-arrives-q3
 The TCP server uses a `LineMessageEncoderDecoder`, which keeps the bytes of an unfinished message in a field. Two clients are connected. How many decoder objects does the server need?
 
+```java
+class LineMessageEncoderDecoder {
+    private List<Byte> bytes = new LinkedList<>();   // the unfinished message so far
+
+    public String decodeNextByte(byte nextByte) {
+        if (nextByte == '\n') {
+            String line = toUtf8String(bytes);
+            bytes.clear();
+            return line;
+        }
+        bytes.add(nextByte);
+        return null;
+    }
+}
+```
+
 - [ ] One. Decoding is the same for every client.
 - [x] One for each client. Each connection has its own unfinished message.
 - [ ] One for each message.
@@ -87,7 +103,34 @@ public interface MessagingProtocol<T> {
 ```
 
 :::problem id=br6-prefix-in-pieces title="A length prefix in pieces" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-The server frames messages with a 4-byte length prefix, most significant byte first. Two reads bring these bytes, written here as numbers, with letters for the bytes of text:
+The server frames messages with a 4-byte length prefix, most significant byte first. The connection handler passes every byte it reads to the decoder, one call per byte:
+
+```java
+class LengthPrefixDecoder {
+    private final List<Byte> lengthBytes = new ArrayList<>();
+    private final List<Byte> textBytes = new ArrayList<>();
+    private int length;
+
+    // a message when one is complete, else null
+    public String decodeNextByte(byte nextByte) {
+        if (lengthBytes.size() < 4) {                  // still reading the length
+            lengthBytes.add(nextByte);
+            if (lengthBytes.size() == 4)
+                length = bytesToInt(lengthBytes);
+            return null;
+        }
+        textBytes.add(nextByte);                       // reading the text
+        if (textBytes.size() < length)
+            return null;
+        String message = toUtf8String(textBytes);
+        lengthBytes.clear();
+        textBytes.clear();
+        return message;
+    }
+}
+```
+
+Two reads bring these bytes, written here as numbers, with letters for the bytes of text:
 
 ```text
 first read:    0 0 0 2 h i 0 0 0
@@ -139,9 +182,13 @@ public interface Command<T> extends Serializable {
 ```
 
 :::problem id=br6-what-travels title="What travels, and what stays" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-The server holds one `Counter`. A client sends this command.
+The server holds one `Counter`. A client sends this command. The server's protocol reads the command object and calls `execute` on it with the server's `Counter`.
 
 ```java
+public interface Command<T> extends Serializable {
+    Serializable execute(T data);
+}
+
 class Counter {
     private int count = 0;
     public void add(int n) { count = count + n; }
@@ -190,7 +237,29 @@ Everything reachable from a serializable object must itself be serializable, or 
 :::
 
 :::problem id=br6-two-clients-one-counter title="Two clients, one counter" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-The server is a reactor with an actor thread pool, and it holds the `Counter` from the last question, starting at 0. Clients A and B each send one `Add(1)` at the same moment.
+The server is a reactor with an actor thread pool, and it holds one `Counter`, starting at 0. Clients A and B each send one `Add(1)` at the same moment. A worker runs a command by calling `execute` with the server's `Counter`, and sends back what it returns.
+
+```java
+public interface Command<T> extends Serializable {
+    Serializable execute(T data);
+}
+
+class Counter {
+    private int count = 0;
+    public void add(int n) { count = count + n; }
+    public int get() { return count; }
+}
+
+class Add implements Command<Counter> {
+    private final int n;
+    Add(int n) { this.n = n; }
+
+    public Serializable execute(Counter data) {
+        data.add(n);
+        return data.get();
+    }
+}
+```
 
 :::check id=br6-two-clients-one-counter-q1
 What does the actor thread pool promise here?

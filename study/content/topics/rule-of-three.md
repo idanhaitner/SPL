@@ -308,6 +308,11 @@ char c = avi(0, 0);      // calls avi.operator()(0, 0): the color of the first p
 `List` holds a `Node* head` that points at a chain of nodes allocated with `new`. The class still uses the special members that the compiler generates.
 
 ```cpp
+struct Node {
+    int value;
+    Node* next;   // the next node, or nullptr at the end
+};
+
 class List {
     Node* head;
 };
@@ -344,9 +349,20 @@ This way, assignment needs no new code of its own: it reuses the copy constructo
 :::
 
 :::problem id=prac-r3-which-member title="Which special member runs?" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=exercise solution_origin=derived
-`Image` has the three special members from this chapter: a destructor, a copy constructor, and an assignment operator. Its constructor `Image(int width, int height)` allocates a buffer of `width * height` bytes.
+`Image` owns a buffer on the heap, so it writes all three special members: a destructor, a copy constructor, and an assignment operator.
 
 ```cpp
+class Image {
+public:
+    Image(int width, int height);           // allocates width * height bytes
+    ~Image();                               // destructor
+    Image(const Image& other);              // copy constructor
+    Image& operator=(const Image& other);   // assignment operator
+private:
+    int _width, _height;
+    char* _pixels;
+};
+
 void show(Image img) { ... }          // by value
 void peek(const Image& img) { ... }   // by reference
 
@@ -475,19 +491,36 @@ Playlist(const Playlist& other) : _size(other._size) {
 :::
 
 :::problem id=prac-r3-assignment title="Assigning one playlist to another" source="materials/lectures/Chapter 4 - Rule of Thee.pptx" kind=exercise solution_origin=derived
-`Playlist` from the previous question now has the deep copy constructor (Version B). Here is its assignment operator, written the way the chapter wrote it for `Student`.
+`Playlist` owns an array of song numbers on the heap, and it already has a destructor and a deep copy constructor. Here is its assignment operator, written in the usual way: check for self-assignment, release the old array, then copy.
 
 ```cpp
-Playlist& operator=(const Playlist& other) {
-    if (this != &other) {
-        delete[] _songs;                    // 1. release the old array
-        _size = other._size;
-        _songs = new int[_size];            // 2. take a copy of the other's
+class Playlist {
+    int* _songs;
+    int _size;
+public:
+    Playlist(int size) : _songs(new int[size]), _size(size) {
+        for (int i = 0; i < size; i++)
+            _songs[i] = 0;
+    }
+    ~Playlist() { delete[] _songs; }
+
+    Playlist(const Playlist& other)                  // deep copy
+        : _songs(new int[other._size]), _size(other._size) {
         for (int i = 0; i < _size; i++)
             _songs[i] = other._songs[i];
     }
-    return *this;
-}
+
+    Playlist& operator=(const Playlist& other) {
+        if (this != &other) {
+            delete[] _songs;                    // 1. release the old array
+            _size = other._size;
+            _songs = new int[_size];            // 2. take a copy of the other's
+            for (int i = 0; i < _size; i++)
+                _songs[i] = other._songs[i];
+        }
+        return *this;
+    }
+};
 ```
 
 :::check id=prac-r3-assignment-q1
@@ -549,6 +582,9 @@ class Buffer {
     char* _data;      // allocated with new[] in Buffer's constructor
     int _len;
 };
+
+class Bag;            // classes defined elsewhere
+class University;
 
 class Student {
     int _id;
@@ -670,7 +706,7 @@ Which of these are true about the destructor and the copy constructor of `Terrai
 
 - **The generated assignment** copies the fields one by one, so `a._cells` gets the same address as `b._cells`, and the two boards are now shared.
 - **`a`'s old array is leaked:** nothing points at it anymore, and nothing releases it.
-- **The fix** is a copy assignment operator, for example with copy and swap, as on `Image` earlier in this chapter.
+- **The fix** is a copy assignment operator, for example with copy and swap, which builds a full copy first and then swaps it in.
 :::
 :::
 

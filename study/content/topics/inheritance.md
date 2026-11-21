@@ -797,6 +797,12 @@ public:
     Person(int id, const std::string& name) : _id(id), _name(name) { }
 };
 
+class Bag {
+public:
+    Bag(int size);
+    Bag* clone() const;   // a new copy of this bag
+};
+
 class Student : public Person {
     Bag* _bag;
 public:

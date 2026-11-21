@@ -689,7 +689,7 @@ After `foo` returns with no `delete`, what remains?
 :::
 
 :::problem id=mm-regions-quiz title="Which region holds the name" source="materials/lectures/Chapter 1 - The Memory Model.pptx" kind=exercise solution_origin=derived
-Use the five-region layout from this chapter.
+A process has five regions: the code, initialized static data, uninitialized static data (BSS), the heap, and the stack, which holds one frame for each running call.
 
 ```cpp
 int ready = 1;

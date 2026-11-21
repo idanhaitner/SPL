@@ -884,7 +884,21 @@ To sum up the roles:
 ## Practice
 
 :::problem id=ps12-foreign-key title="A teaching assistant's foreign key" source="materials/sessions/SPL_PS12.pptx" kind=exercise solution_origin=source
-Session 12 uses two tables.
+Session 12 uses two tables. Their column types and keys are left as `???`: the questions decide them.
+
+```sql
+CREATE TABLE TEACHING_ASSISTANTS (
+  ID          ???,
+  Name        ???,
+  OfficeHours ???
+);
+CREATE TABLE PRACTICAL_SESSIONS (
+  GroupNum    ???,
+  TA_ID       ???,   -- the teaching assistant who runs the session
+  Location    ???,
+  Time        ???
+);
+```
 
 - **`PRACTICAL_SESSIONS`** has the columns `TA_ID`, `GroupNum`, `Location`, and `Time`, and its primary key is `GroupNum`.
 - **`TEACHING_ASSISTANTS`** has the columns `ID`, `Name`, and `OfficeHours`, and its primary key is `ID`.
@@ -917,7 +931,7 @@ Inserting a practical session with `TA_ID = 8` fails when:
 - [ ] `GroupNum` is already 8
 - [x] no teaching assistant has `ID` 8
 
-The foreign key on `TA_ID` rejects the row if no teaching assistant has `ID` 8. This is exactly the error the insert example in session 12 runs into.
+The foreign key on `TA_ID` rejects the row if no teaching assistant has `ID` 8. Rejecting such a row is exactly what a foreign key is for.
 :::
 
 :::
@@ -969,7 +983,34 @@ Which of these are true about the rows that the inner join in the example return
 :::
 
 :::problem id=ps13-dto-dao title="DTO versus DAO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
-The tester in session 13 has tables `students(id, name)`, `assignments(num, expected_output)`, and `grades(student_id, assignment_num, grade)`.
+The tester in session 13 grades students' submissions. It has tables `students(id, name)`, `assignments(num, expected_output)`, and `grades(student_id, assignment_num, grade)`. It runs each submission, compares the output with the assignment's `expected_output`, and records a row in `grades`. Its Python code has these classes:
+
+```python
+class Student:
+    def __init__(self, id, name): ...
+
+class Assignment:
+    def __init__(self, num, expected_output): ...
+
+class Grade:
+    def __init__(self, student_id, assignment_num, grade): ...
+
+class _Students:
+    def __init__(self, conn): ...
+    def insert(self, student): ...
+    def find(self, student_id): ...
+
+class _Assignments:   # insert and find, for assignments
+    ...
+
+class _Grades:        # insert and find, for grades
+    ...
+
+class _Repository:
+    def __init__(self): ...           # opens the connection, builds the three classes above
+    def create_tables(self): ...
+    def get_grades_with_names(self): ...
+```
 
 :::check id=ps13-dto-dao-q1
 Which of these are DTOs?
@@ -1014,6 +1055,24 @@ Bob's submission `"main"` against `expected_output` `"Main"` is recorded as a mi
 :::problem id=ps13-orm-find title="Mapping columns onto a DTO" source="materials/sessions/SPL_PS13_PRES.pptx" kind=exercise solution_origin=source
 Session 13 replaces a hand-written `find` with a generic function that maps a row onto a DTO.
 
+```python
+class Assignment:                     # the DTO: one row of assignments
+    def __init__(self, num, expected_output):
+        self.num = num
+        self.expected_output = expected_output
+
+# before: written by hand for one table
+def find(self, num):
+    c = self._conn.cursor()
+    c.execute("SELECT num, expected_output FROM assignments WHERE num = ?", [num])
+    return Assignment(*c.fetchone())
+
+# after: one generic row mapper
+def row_map(row, col_mapping, dto_type):
+    ctor_args = [row[idx] for idx in col_mapping]
+    return dto_type(*ctor_args)
+```
+
 - **`row_map(row, col_mapping, dto_type)`** picks values out of the row by index, in the order the constructor expects, and calls the DTO's constructor with them.
 - **This is a small ORM** (object-relational mapping), and `row_map` is its row mapper.
 - **Before,** `Assignment.find` was written by hand as `return Assignment(*c.fetchone())`.
@@ -1050,7 +1109,7 @@ Which of these are true about `col_mapping` and `row_map`?
 :::
 
 :::problem id=prac-sql-constraints title="Which statement fails?" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=exercise solution_origin=derived
-These are the chapter's tables. `Departments` holds 201 (`math`) and 202 (`cs`). `Students` holds Dina (17, department 201), Danny (89, department 202), and Ringo (5, department 202, with no `Login`).
+These are the tables of a small university database. `Departments` holds 201 (`math`) and 202 (`cs`). `Students` holds Dina (17, department 201), Danny (89, department 202), and Ringo (5, department 202, with no `Login`).
 
 ```sql
 CREATE TABLE Departments (Id INTEGER PRIMARY KEY,
@@ -1104,15 +1163,32 @@ The primary key of `StudentsCourses` is the three fields together: student, cour
 :::
 
 :::problem id=prac-sql-join-steps title="Building a query step by step" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=exercise solution_origin=derived
-The tables from the previous question hold this data. Ringo is enrolled in nothing.
+A university keeps students, courses, and the grade of each student in each course. Here are the tables and their data. Ringo is enrolled in nothing.
+
+```sql
+CREATE TABLE Students (Id INTEGER PRIMARY KEY,
+                       Name VARCHAR(20) NOT NULL,
+                       Login VARCHAR(10) UNIQUE,
+                       DeptId INTEGER);
+
+CREATE TABLE Courses (Id INTEGER PRIMARY KEY,
+                      Name VARCHAR(20) UNIQUE NOT NULL,
+                      NAKAZ INTEGER);
+
+CREATE TABLE StudentsCourses (StudId INTEGER REFERENCES Students(Id),
+                              CourseId INTEGER REFERENCES Courses(Id),
+                              Year INTEGER,
+                              Grade INTEGER,
+                              PRIMARY KEY (StudId, CourseId, Year));
+```
 
 ```text
-Students           Courses    StudentsCourses
-Id  Name   Dept    Id  Name   Stud  Course  Year  Grade
-17  Dina   201     7   infi   17    7       18    70
-89  Danny  202     8   spl    17    8       19    90
-5   Ringo  202     9   ppl    89    7       18    80
-                              89    8       19    85
+Students              Courses       StudentsCourses
+Id  Name   DeptId     Id  Name      StudId  CourseId  Year  Grade
+17  Dina   201        7   infi      17      7         18    70
+89  Danny  202        8   spl       17      8         19    90
+5   Ringo  202        9   ppl       89      7         18    80
+                                    89      8         19    85
 ```
 
 :::check id=prac-sql-join-steps-q1
@@ -1160,7 +1236,35 @@ Query B with `WHERE Students.DeptId = 201` keeps {{=Dina's two rows|Danny's two 
 :::
 
 :::problem id=prac-sql-group title="Counting with GROUP BY" source="materials/lectures/Chapter 13 - Persistance.pptx" kind=exercise solution_origin=derived
-Same data as before: Dina has 70 in `infi` and 90 in `spl`, Danny has 80 in `infi` and 85 in `spl`, and Ringo has no grades.
+A university keeps students, courses, and the grade of each student in each course. Dina has 70 in `infi` and 90 in `spl`, Danny has 80 in `infi` and 85 in `spl`, and Ringo has no grades.
+
+```sql
+CREATE TABLE Students (Id INTEGER PRIMARY KEY,
+                       Name VARCHAR(20) NOT NULL,
+                       Login VARCHAR(10) UNIQUE,
+                       DeptId INTEGER);
+
+CREATE TABLE Courses (Id INTEGER PRIMARY KEY,
+                      Name VARCHAR(20) UNIQUE NOT NULL,
+                      NAKAZ INTEGER);
+
+CREATE TABLE StudentsCourses (StudId INTEGER REFERENCES Students(Id),
+                              CourseId INTEGER REFERENCES Courses(Id),
+                              Year INTEGER,
+                              Grade INTEGER,
+                              PRIMARY KEY (StudId, CourseId, Year));
+```
+
+```text
+Students              Courses       StudentsCourses
+Id  Name   DeptId     Id  Name      StudId  CourseId  Year  Grade
+17  Dina   201        7   infi      17      7         18    70
+89  Danny  202        8   spl       17      8         19    90
+5   Ringo  202        9   ppl       89      7         18    80
+                                    89      8         19    85
+```
+
+The query:
 
 ```sql
 SELECT Students.Name, COUNT(StudentsCourses.Grade)

@@ -536,9 +536,22 @@ A `unique_ptr` cannot be copied, but its ownership can be transferred with `auto
 :::
 
 :::problem id=prac-r5-copy-or-move title="Copy or move?" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=exercise solution_origin=derived
-`Image` now has all five special members. Its constructor `Image(int width, int height)` allocates a buffer of `width * height` bytes, and its move operations take the other image's buffer and leave it with `nullptr`.
+`Image` owns a buffer on the heap and has all five special members. Its move operations take the other image's buffer and leave it with `nullptr`.
 
 ```cpp
+class Image {
+public:
+    Image(int width, int height);              // allocates width * height bytes
+    ~Image();
+    Image(const Image& other);                 // copy constructor
+    Image& operator=(const Image& other);      // copy assignment
+    Image(Image&& other);                      // move constructor
+    Image& operator=(Image&& other);           // move assignment
+private:
+    int _width, _height;
+    char* _pixels;
+};
+
 void keep(Image img) { ... }    // by value
 
 Image a(2, 2);
@@ -592,9 +605,19 @@ Which of these expressions are rvalues?
 :::
 
 :::problem id=prac-r5-move-playlist title="A move constructor for Playlist" source="materials/lectures/Chapter 5 - Rule of Five and Zero.pptx" kind=exercise solution_origin=derived
-`Playlist` owns an array of song numbers on the heap, as in [The rule of three](topic:rule-of-three): `int* _songs` and `int _size`, with a destructor that runs `delete[] _songs`. Here are three candidates for its move constructor.
+`Playlist` owns an array of song numbers on the heap. Here are the class and three candidates for its move constructor.
 
 ```cpp
+class Playlist {
+    int* _songs;     // allocated with new[]
+    int _size;
+public:
+    Playlist(int size) : _songs(new int[size]), _size(size) { }
+    ~Playlist() { delete[] _songs; }
+    Playlist(const Playlist& other);   // deep copy
+    Playlist(Playlist&& other);        // which version below?
+};
+
 // Version A
 Playlist(Playlist&& other)
     : _songs(other._songs), _size(other._size) { }
@@ -697,6 +720,11 @@ Suppose Version 1 writes a destructor and a copy constructor, but no move constr
 This `Student` holds its bag in a `std::unique_ptr` instead of a raw `Bag*`, and writes none of the five special members.
 
 ```cpp
+class Bag {
+public:
+    Bag(int size);
+};
+
 class Student {
     int _id;
     std::unique_ptr<Bag> _bag;

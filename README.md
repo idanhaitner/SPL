@@ -67,6 +67,8 @@ npm run audit   # optional content/UI checks
 
 Topic markdown uses the study dialect: definitions, traps, practice problems with hints/solutions, and `topic:` links between chapters.
 
+**Every practice problem must stand on its own.** A session shows one problem at a time, without the chapter text around it. So write every class, interface, and table a problem uses inside that problem, even if the chapter already showed it (a forward declaration such as `class Bag;` is enough for a type the problem only points at). Never write "the class above", "from the previous question", "from the chapter", or "as before". `npm test` in `study/web` checks this (`lib/self-contained.test.ts`), and the site does not deploy while it fails.
+
 ## Leaderboard setup
 
 The leaderboard keeps one small row per student in Cloud Firestore: their name, chapters done, reviews done, questions solved, and the chapter they are on. Progress itself stays in each browser. Until `study/web/lib/firebase-config.ts` holds a config, the leaderboard stays switched off and the site works as before.

@@ -36,9 +36,24 @@ class Tank {
 - **An immutable object needs no lock.** Its fields are `private final`, its class is `final`, and a command returns a new object.
 
 :::problem id=br5-two-safe-calls title="Two safe calls, one unsafe pair" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-Every method of the `Tank` above is `synchronized`. Two threads share one tank of capacity 8, and each runs:
+Every method of this `Tank` is `synchronized`. Two threads share one tank of capacity 8, and each runs the `if` at the bottom.
 
 ```java
+class Tank {
+    private int level = 0;
+    private final int capacity;
+
+    Tank(int capacity) { this.capacity = capacity; }
+
+    // @inv 0 <= level() <= capacity
+    public synchronized int level() { return level; }
+    public synchronized boolean hasRoom(int n) { return level + n <= capacity; }
+
+    // @pre n >= 0 && hasRoom(n)
+    public synchronized void fill(int n) { level = level + n; }
+}
+
+// each thread:
 if (tank.hasRoom(5)) {
     tank.fill(5);
 }
@@ -98,18 +113,27 @@ synchronized (o) {
 | `notifyAll`, not `notify` | The one thread that is woken may be one that cannot go on |
 
 :::problem id=br5-drain-that-waits title="A drain that waits" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Tank` gets a `drain` that waits for water instead of failing, and `fill` now announces the change.
+`Tank` gets a `drain` that waits for water instead of failing, and `fill` now announces the change. Its invariant is `0 <= level() <= capacity`.
 
 ```java
-public synchronized void drain(int n) throws InterruptedException {
-    if (level < n)
-        wait();
-    level = level - n;
-}
+class Tank {
+    private int level = 0;
+    private final int capacity;
 
-public synchronized void fill(int n) {
-    level = level + n;
-    notifyAll();
+    Tank(int capacity) { this.capacity = capacity; }
+
+    public synchronized int level() { return level; }
+
+    public synchronized void drain(int n) throws InterruptedException {
+        if (level < n)
+            wait();
+        level = level - n;
+    }
+
+    public synchronized void fill(int n) {
+        level = level + n;
+        notifyAll();
+    }
 }
 ```
 
@@ -167,9 +191,21 @@ Every method that changes the state may have made some other thread's preconditi
 - **Starvation:** one thread never gets its turn while the others keep going. **Livelock:** threads keep running and reacting to each other, and nothing gets done.
 
 :::problem id=br5-two-pumps title="Two pumps, two tanks" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`move` pumps water from one tank to another, and needs both tanks to stay still while it works.
+`move` pumps water from one tank to another, and needs both tanks to stay still while it works. Every method of `Tank` is `synchronized`, so each one locks its own tank.
 
 ```java
+class Tank {
+    private int level = 0;
+    private final int capacity;
+
+    Tank(int capacity) { this.capacity = capacity; }
+
+    public synchronized int level() { return level; }
+    public synchronized boolean hasRoom(int n) { return level + n <= capacity; }
+    public synchronized void fill(int n) { level = level + n; }
+    public synchronized void drain(int n) { level = level - n; }
+}
+
 static void move(Tank from, Tank to, int n) {
     synchronized (from) {
         synchronized (to) {

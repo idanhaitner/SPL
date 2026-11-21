@@ -738,22 +738,29 @@ Which description of the three failures is right?
 :::
 
 :::problem id=prac-wait-queue title="The bounded queue, one rule at a time" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-This is the bounded queue from the chapter. Each question breaks one part of it.
+This is a bounded queue: `add` waits while the queue is full, and `remove` waits while it is empty. Each question breaks one part of it.
 
 ```java
-public synchronized void add(T obj) throws InterruptedException {
-    while (lst.size() == capacity)
-        wait();
-    lst.add(obj);
-    notifyAll();
-}
+class BoundedQueue<T> {
+    private final List<T> lst = new ArrayList<>();
+    private final int capacity;
 
-public synchronized T remove() throws InterruptedException {
-    while (lst.size() == 0)
-        wait();
-    T ret = lst.remove(0);
-    notifyAll();
-    return ret;
+    BoundedQueue(int capacity) { this.capacity = capacity; }
+
+    public synchronized void add(T obj) throws InterruptedException {
+        while (lst.size() == capacity)
+            wait();
+        lst.add(obj);
+        notifyAll();
+    }
+
+    public synchronized T remove() throws InterruptedException {
+        while (lst.size() == 0)
+            wait();
+        T ret = lst.remove(0);
+        notifyAll();
+        return ret;
+    }
 }
 ```
 
@@ -790,25 +797,32 @@ Now both methods call `notify()` instead of `notifyAll()`, and the capacity is 1
 :::
 
 :::problem id=prac-wait-semaphore title="A semaphore with three permits" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-This is the semaphore from the chapter, created with `new Semaphore(3)`.
+This semaphore hands out a fixed number of permits. It is created with `new Semaphore(3)`.
 
 ```java
-public synchronized void acquire() throws InterruptedException {
-    while (free == 0)
-        wait();
-    free--;
-}
+class Semaphore {
+    private final int permits;   // how many permits exist
+    private int free;            // how many are not taken
 
-public synchronized void release() {
-    if (free < permits)
-        free++;
-    notify();
-}
+    Semaphore(int permits) { this.permits = permits; this.free = permits; }
 
-public synchronized boolean tryAcquire() {
-    if (free == 0) return false;
-    free--;
-    return true;
+    public synchronized void acquire() throws InterruptedException {
+        while (free == 0)
+            wait();
+        free--;
+    }
+
+    public synchronized void release() {
+        if (free < permits)
+            free++;
+        notify();
+    }
+
+    public synchronized boolean tryAcquire() {
+        if (free == 0) return false;
+        free--;
+        return true;
+    }
 }
 ```
 
@@ -842,7 +856,7 @@ Which of these are true about the semaphore?
 :::
 
 :::problem id=prac-wait-readers-writers title="Readers and writers" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-The reader-writer lock from the chapter decides who may enter with two methods.
+A reader-writer lock lets many readers in together, or one writer alone. It counts who is inside in `activeReaders` and `activeWriters`, and decides who may enter with two methods.
 
 ```java
 protected boolean allowRead()  { return activeWriters == 0; }
@@ -930,7 +944,7 @@ Each thread holds the lock of one stack and waits for the lock the other thread 
 :::check id=exam-18b-q2-q3
 The repair is one order. In both threads, lock the `Stack` with the {{=lower identity|higher capacity|lock already held}} first.
 
-If both threads always lock the stack with the lower identity first (for example, by `System.identityHashCode`), they can never hold the locks in opposite orders, so the cycle cannot form. The same fix applies to any method that locks two objects of the same class, such as an `Image.mix` that locks two images.
+If both threads always lock the stack with the lower identity first (for example, by `System.identityHashCode`), they can never hold the locks in opposite orders, so the cycle cannot form. The same fix applies to any method that locks two objects of the same class, such as a transfer that locks two bank accounts.
 :::
 
 :::

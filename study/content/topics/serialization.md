@@ -449,7 +449,7 @@ After the fix, in the object that `readObject` returns, `user` is {{=Noa|null|em
 :::
 
 :::problem id=prac-ser-version title="Reading an old file" source="materials/lectures/Chapter 12 - Serialization.pptx" kind=exercise solution_origin=derived
-A file was written with this version of the class. Now you change the class and try to read that old file.
+A file was written with this version of the class, holding one player named `Noa` with score 80. Now you change the class and try to read that old file.
 
 ```java
 public class Player implements Serializable {
@@ -491,14 +491,41 @@ Another class declares no `serialVersionUID`. You write a file, add one small he
 - **The fix:** declare an explicit `serialVersionUID` on every class that is part of a file format or a protocol.
 - **Why not the method code:** the bytes record the object's type, the shape of its fields, and the values of those fields.
 - **Why not the field order:** a new method does not touch the fields.
-- **Why not "cannot be serialized":** classes with methods are serialized all the time, as `Pet`'s `hashCode` shows.
+- **Why not "cannot be serialized":** classes with methods are serialized all the time. Only the fields are written.
 :::
 :::
 
 :::problem id=prac-ser-frame title="Following the length prefix" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`ObjectEncoderDecoder` frames each object with a four-byte length, most significant byte first. The bytes below are written in hexadecimal.
+`ObjectEncoderDecoder` frames each object with a four-byte length, most significant byte first. `encode` writes the object and puts its length in front. `decodeNextByte` is called once for each byte that arrives: it first collects the 4 bytes of the length, then exactly that many bytes of object.
 
 ```java
+public byte[] encode(Serializable message) {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    bytes.write(new byte[4]);                      // room for the length
+    ObjectOutputStream out = new ObjectOutputStream(bytes);
+    out.writeObject(message);
+    out.flush();
+    byte[] result = bytes.toByteArray();
+    intToBytes(result.length - 4, result);         // fill in the length
+    return result;
+}
+
+public Serializable decodeNextByte(byte nextByte) {
+    if (lengthBytes.size() < 4) {                  // still reading the length
+        lengthBytes.add(nextByte);
+        if (lengthBytes.size() == 4)
+            objectLength = bytesToInt(lengthBytes);
+        return null;
+    }
+    objectBytes.add(nextByte);                     // reading the object
+    if (objectBytes.size() < objectLength)
+        return null;
+    Serializable result = readObjectFrom(objectBytes);
+    lengthBytes.clear();
+    objectBytes.clear();
+    return result;
+}
+
 static int bytesToInt(byte[] b) {
     return ((b[0] & 0xff) << 24) | ((b[1] & 0xff) << 16)
          | ((b[2] & 0xff) << 8)  |  (b[3] & 0xff);
@@ -548,9 +575,18 @@ With the mask, the byte `0x80` contributes 128 to the length, as it should. With
 :::
 
 :::problem id=prac-ser-command title="A new command for the news feed" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-Here is one more command for the news-feed server. It reports how many items a category has.
+The news-feed server keeps one `NewsFeed` object, shared by all its clients. A client sends it a command object, and the server's protocol calls `execute` on that command with the feed, then sends back what `execute` returns. Here is one more command. It reports how many items a category has.
 
 ```java
+public interface Command<T> extends Serializable {
+    Serializable execute(T data);
+}
+
+public interface NewsFeed {
+    void publish(String category, String news);
+    List<String> fetch(String category);
+}
+
 public class CountNewsCommand implements Command<NewsFeed> {
     private String category;
 

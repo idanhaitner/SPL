@@ -384,7 +384,7 @@ The versions the compiler writes copy each member one by one. That is correct fo
 ## Practice
 
 :::problem id=prac-classes-layout title="The cells of a Reader" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Reader` has three fields. Count cells the way this chapter does: an `int` or a pointer takes one cell, and a `string` takes two. These questions look only at where things live.
+`Reader` has three fields. Count cells this way: an `int` or a pointer takes one cell, and a `string` takes two. These questions look only at where things live.
 
 ```cpp
 class Bag { };
@@ -492,7 +492,7 @@ public:
 :::
 
 :::check id=prac-classes-seat-q3
-A reference member such as `const University& _univ` must get its value in {{=the initializer list|the constructor body|the destructor}}. An ordinary member such as `int _year` is {{=also best initialized there|only allowed in the body|never initialized at all}}.
+A reference member such as `const std::string& _label` must get its value in {{=the initializer list|the constructor body|the destructor}}. An ordinary member such as `int _year` is {{=also best initialized there|only allowed in the body|never initialized at all}}.
 
 `const` members and reference members cannot be assigned after they exist, so the list is the only place for them. Other members may be assigned in the body, but the list gives each one its value directly, so it is the better habit.
 :::

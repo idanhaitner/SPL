@@ -44,9 +44,28 @@ class Tank {
 - **The scheduler chooses the interleaving.** Between any two steps of one thread, another thread may run. `join` makes the calling thread wait until the other thread has finished.
 
 :::problem id=br4-what-main-prints title="What can main print?" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`FillTask` fills one tank by 5. Both tasks are given the same tank, whose capacity is 20.
+`Tank` holds water up to a capacity, and `FillTask` fills one tank by 5. Both tasks are given the same tank, whose capacity is 20.
 
 ```java
+class Tank {
+    private int level = 0;
+    private final int capacity;
+
+    Tank(int capacity) { this.capacity = capacity; }
+
+    int level() { return level; }
+    boolean hasRoom(int n) { return level + n <= capacity; }
+
+    // @inv  0 <= level() <= capacity
+    // @pre  n >= 0 && hasRoom(n)
+    // @post level() == @pre(level()) + n
+    void fill(int n) {
+        int tmp = level;    // read
+        tmp = tmp + n;      // add
+        level = tmp;        // write
+    }
+}
+
 class FillTask implements Runnable {
     private final Tank tank;
     FillTask(Tank tank) { this.tank = tank; }
@@ -106,7 +125,26 @@ Choose every value that the last line can print in each version of `main`.
 | Invariant | The class, after every public method | `0 <= level() <= capacity` |
 
 :::problem id=br4-a-contract-for-drain title="A contract for drain" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Tank` gets a new method, `void drain(int n)`, which takes `n` units of water out.
+`Tank` holds water up to a capacity, and its contract is written in the comments. It gets a new method, `void drain(int n)`, which takes `n` units of water out.
+
+```java
+class Tank {
+    private int level = 0;
+    private final int capacity;
+
+    Tank(int capacity) { this.capacity = capacity; }
+
+    int level() { return level; }
+    boolean hasRoom(int n) { return level + n <= capacity; }
+
+    // @inv  0 <= level() <= capacity
+    // @pre  n >= 0 && hasRoom(n)
+    // @post level() == @pre(level()) + n
+    void fill(int n) { level = level + n; }
+
+    void drain(int n) { level = level - n; }   // the new method: which contract?
+}
+```
 
 :::check id=br4-a-contract-for-drain-q1
 Which precondition and postcondition belong to `drain`?
@@ -143,11 +181,37 @@ In a program with one thread, the code runs `tank.drain(3);` while `level()` is 
 - **Safe does not imply correct.** A lost update can leave every invariant true and still give a result that no serial order gives.
 
 :::problem id=br4-one-tank-two-threads title="One tank, two threads" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-Two threads run the `FillTask` from the first question on one shared tank, and `main` joins both. Each thread runs these steps:
+Two threads each run a `FillTask` on one shared tank, and `main` joins both. `FillTask.run` checks for room, then fills by 5.
 
 ```java
-if (tank.hasRoom(5)) {   // check
-    tank.fill(5);        // act: read, add, write
+class Tank {
+    private int level = 0;
+    private final int capacity;
+
+    Tank(int capacity) { this.capacity = capacity; }
+
+    int level() { return level; }
+    boolean hasRoom(int n) { return level + n <= capacity; }
+
+    // @inv  0 <= level() <= capacity
+    // @pre  n >= 0 && hasRoom(n)
+    // @post level() == @pre(level()) + n
+    void fill(int n) {
+        int tmp = level;    // read
+        tmp = tmp + n;      // add
+        level = tmp;        // write
+    }
+}
+
+class FillTask implements Runnable {
+    private final Tank tank;
+    FillTask(Tank tank) { this.tank = tank; }
+    public void run() {
+        int amount = 5;
+        if (tank.hasRoom(amount)) {
+            tank.fill(amount);
+        }
+    }
 }
 ```
 
@@ -193,7 +257,45 @@ In the capacity-8 run, thread B called `fill(5)` when there was no room. B did c
 :::
 
 :::problem id=br4-a-tank-each title="A tank for each thread" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-No locks yet. Someone suggests changing the design so that the problem cannot happen at all.
+Two threads `a` and `b` each run a `FillTask` on one shared `Tank`. With no locks, the two calls to `fill` can interleave, so one fill can be lost. Someone suggests changing the design so that this cannot happen at all.
+
+```java
+class Tank {
+    private int level = 0;
+    private final int capacity;
+
+    Tank(int capacity) { this.capacity = capacity; }
+
+    int level() { return level; }
+    boolean hasRoom(int n) { return level + n <= capacity; }
+
+    // @inv  0 <= level() <= capacity
+    // @pre  n >= 0 && hasRoom(n)
+    // @post level() == @pre(level()) + n
+    void fill(int n) {
+        int tmp = level;    // read
+        tmp = tmp + n;      // add
+        level = tmp;        // write
+    }
+}
+
+class FillTask implements Runnable {
+    private final Tank tank;
+    FillTask(Tank tank) { this.tank = tank; }
+    public void run() {
+        int amount = 5;
+        if (tank.hasRoom(amount)) {
+            tank.fill(amount);
+        }
+    }
+}
+
+Tank tank = new Tank(20);
+Thread a = new Thread(new FillTask(tank));
+Thread b = new Thread(new FillTask(tank));
+a.start();
+b.start();
+```
 
 :::check id=br4-a-tank-each-q1
 Which designs make every run of two filling threads safe and correct?

@@ -35,9 +35,19 @@ class Deck {
 - **A `const` member function promises not to change the object.** Only `const` member functions can be called on a `const` object or through a `const` reference.
 
 :::problem id=br2-two-decks title="Two decks, three blocks" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`main` makes one `Deck` on the stack and one on the heap.
+`Deck` owns an array of card numbers on the heap. `main` makes one `Deck` on the stack and one on the heap.
 
 ```cpp
+class Deck {
+  public:
+    Deck(int size) : _size(size), _cards(new int[size]) {}
+    ~Deck() { delete[] _cards; }
+
+  private:
+    int _size;
+    int* _cards;
+};
+
 int main() {
     Deck a(3);
     Deck* b = new Deck(5);
@@ -76,10 +86,19 @@ Each `Deck` is two fields. `a` is a local, so its fields are in the frame. `new 
 :::
 
 :::problem id=br2-lending-the-address title="Lending out the address" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-Someone adds a getter to `Deck` so that callers can read all the cards.
+`Deck` owns an array of card numbers on the heap. Someone adds a getter, `cards`, so that callers can read all the cards.
 
 ```cpp
-int* cards() const { return _cards; }
+class Deck {
+  public:
+    Deck(int size) : _size(size), _cards(new int[size]) {}
+    ~Deck() { delete[] _cards; }
+    int* cards() const { return _cards; }   // the new getter
+
+  private:
+    int _size;
+    int* _cards;
+};
 ```
 
 :::check id=br2-lending-the-address-q1
@@ -124,9 +143,21 @@ Deck(const Deck& other) : _size(other._size), _cards(new int[other._size]) {
 ```
 
 :::problem id=br2-by-value-trap title="A deck passed by value" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Deck` is as written at the top of this review: it has a destructor, but no copy constructor of its own.
+`Deck` has a destructor, but no copy constructor of its own.
 
 ```cpp
+class Deck {
+  public:
+    Deck(int size) : _size(size), _cards(new int[size]) {}
+    ~Deck() { delete[] _cards; }
+    int first() const { return _cards[0]; }
+    void setFirst(int value) { _cards[0] = value; }
+
+  private:
+    int _size;
+    int* _cards;
+};
+
 int top(Deck d) {
     return d.first();
 }
@@ -200,9 +231,25 @@ Deck& operator=(const Deck& other) {
 ```
 
 :::problem id=br2-assign-and-lose title="Counting blocks after an assignment" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Deck` now has the deep copy constructor shown above, but still no copy assignment operator of its own.
+`Deck` now has a deep copy constructor, but still no copy assignment operator of its own.
 
 ```cpp
+class Deck {
+  public:
+    Deck(int size) : _size(size), _cards(new int[size]) {}
+    ~Deck() { delete[] _cards; }
+
+    Deck(const Deck& other) : _size(other._size), _cards(new int[other._size]) {
+        for (int i = 0; i < _size; i++) {
+            _cards[i] = other._cards[i];
+        }
+    }
+
+  private:
+    int _size;
+    int* _cards;
+};
+
 int main() {
     Deck a(3);
     Deck b = a;

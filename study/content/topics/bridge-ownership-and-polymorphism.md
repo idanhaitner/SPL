@@ -26,9 +26,29 @@ Image::Image(Image&& other) : _size(other._size), _bytes(other._bytes) {
 ```
 
 :::problem id=br3-after-the-move title="What is left after a move" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Image` owns a `char` array, and has a destructor that runs `delete[] _bytes;`, a deep copy constructor, and the move constructor shown above.
+`Image` owns a `char` array on the heap. It has a destructor, a deep copy constructor, and a move constructor.
 
 ```cpp
+class Image {
+  public:
+    Image(int size) : _size(size), _bytes(new char[size]) {}
+    ~Image() { delete[] _bytes; }
+
+    Image(const Image& other) : _size(other._size), _bytes(new char[other._size]) {
+        for (int i = 0; i < _size; i++)
+            _bytes[i] = other._bytes[i];
+    }
+
+    Image(Image&& other) : _size(other._size), _bytes(other._bytes) {
+        other._bytes = nullptr;
+        other._size = 0;
+    }
+
+  private:
+    int _size;
+    char* _bytes;
+};
+
 int main() {
     Image a(100);
     Image b = a;
@@ -80,6 +100,17 @@ class Shape {
   public:
     ~Shape() {}
     virtual int area() const = 0;
+};
+
+class Circle : public Shape {
+  public:
+    Circle(int radius) : _radius(radius), _points(new int[radius * 8]) {}
+    ~Circle() { delete[] _points; }
+    int area() const override { return 3 * _radius * _radius; }
+
+  private:
+    int _radius;
+    int* _points;
 };
 
 void run() {
@@ -135,9 +166,26 @@ class Circle : public Shape {
 ```
 
 :::problem id=br3-copy-a-frame title="Copying a class that owns a shape" source="materials/notes/lecture-notes.docx.pdf" kind=exercise solution_origin=derived
-`Frame` owns one shape through a base pointer, and its destructor runs `delete _shape;`. `Shape` has a virtual destructor, a pure virtual `area`, and a virtual `clone`.
+`Frame` owns one shape through a base pointer, and its destructor runs `delete _shape;`. `Shape` is abstract. Each derived class, such as `Circle`, overrides `clone` to copy itself.
 
 ```cpp
+class Shape {
+  public:
+    virtual ~Shape() {}
+    virtual int area() const = 0;
+    virtual Shape* clone() const = 0;
+};
+
+class Circle : public Shape {
+  public:
+    Circle(int radius) : _radius(radius) {}
+    int area() const override { return 3 * _radius * _radius; }
+    Shape* clone() const override { return new Circle(*this); }
+
+  private:
+    int _radius;
+};
+
 class Frame {
   public:
     Frame(Shape* shape) : _shape(shape) {}

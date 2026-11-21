@@ -769,9 +769,19 @@ To leave politely, the client sends `DISCONNECT` with a `receipt` header. The se
 :::
 
 :::problem id=prac-reactor-encdec title="Finding messages in a byte stream" source="materials/lectures/Chapter 11 - Reactor.pptx" kind=exercise solution_origin=derived
-This is the line encoder-decoder from the chapter. The connection handler feeds it one byte at a time.
+This is a line encoder-decoder: a message ends at a newline. The connection handler feeds it one byte at a time, and passes each complete message to the protocol.
 
 ```java
+public interface MessageEncoderDecoder<T> {
+    byte[] encode(T message);
+    T decodeNextByte(byte nextByte);   // a message when one is complete, else null
+}
+
+public interface MessagingProtocol<T> {
+    T process(T msg);                  // the reply, or null for none
+    boolean shouldTerminate();         // true once the conversation is over
+}
+
 public class LineMessageEncoderDecoder implements MessageEncoderDecoder<String> {
     private List<Byte> bytes = new LinkedList<>();
 
@@ -819,7 +829,44 @@ The encoder adds the same delimiter that the decoder looks for. Without the `\n`
 :::
 
 :::problem id=prac-reactor-factories title="One protocol object per client" source="materials/lectures/Chapter 11 - Reactor.pptx" kind=exercise solution_origin=derived
-The base server receives factories, not objects, and calls `get()` for every client it accepts.
+The base server receives factories, not objects, and calls `get()` for every client it accepts. These are the protocol and the decoder it builds.
+
+```java
+public class PrintingProtocol {
+    private boolean shouldTerminate = false;
+
+    public String process(String msg) {
+        if (msg.equals("bye!")) shouldTerminate = true;
+        else System.out.println(msg);
+        return null;
+    }
+
+    public boolean shouldTerminate() { return shouldTerminate; }
+}
+
+public class LineMessageEncoderDecoder {
+    private List<Byte> bytes = new LinkedList<>();   // the message so far
+
+    public String decodeNextByte(byte nextByte) {
+        if (nextByte == '\n') {
+            String ret = toUtf8String(bytes);
+            bytes.clear();
+            return ret;
+        }
+        bytes.add(nextByte);
+        return null;
+    }
+}
+
+class BaseServer {
+    BaseServer(int port,
+               Supplier<PrintingProtocol> protocolFactory,
+               Supplier<LineMessageEncoderDecoder> encdecFactory) { ... }
+    public void serve() { ... }   // for each client: protocolFactory.get(), encdecFactory.get()
+}
+```
+
+The server is started like this:
 
 ```java
 new BaseServer(7000,

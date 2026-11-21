@@ -39,7 +39,7 @@ A copy constructor that does not name a base constructor builds the base with it
 :::
 
 :::hint
-The compiler does not call the base's assignment for you. The way to name it, inside the body, is in the chapter's "Assigning" paragraph.
+The compiler does not call the base's assignment for you. Call it yourself, inside the body, by its full name: the base class, then `::`, then `operator=`.
 :::
 
 :::hint
