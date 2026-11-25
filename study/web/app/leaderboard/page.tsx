@@ -3,6 +3,7 @@ import { Leaderboard } from "@/components/board/Leaderboard";
 import { HeroAir } from "@/components/home/HeroAir";
 import { TopBar } from "@/components/shell/TopBar";
 import { loadCourse } from "@/lib/course";
+import { solvedMarks } from "@/lib/leaderboard";
 import { courseNav, stemParts } from "@/lib/nav";
 
 export const metadata: Metadata = { title: "Leaderboard" };
@@ -18,6 +19,7 @@ export default function LeaderboardPage() {
       <Leaderboard
         courseId={course.id}
         total={leaves.length}
+        marks={solvedMarks(nav.chapters)}
         partStarts={stemParts(nav)}
         labels={labels}
         decor={<><div className="gh-arch gh-arch-1" /><div className="gh-arch gh-arch-2" /><HeroAir /></>}

@@ -29,7 +29,7 @@ function usePlayer(courseId: string) {
 
 // The live board: who is where, as plants and as a ranked list. Everything here is read from the shared board; nothing waits on it to study.
 // `decor` is the masthead's arches and sprig, drawn on the server.
-export function Leaderboard({ courseId, total, partStarts, labels, decor }: { courseId: string; total: number; partStarts: { label: string; num: number }[]; labels: Record<string, string>; decor: ReactNode }) {
+export function Leaderboard({ courseId, total, marks, partStarts, labels, decor }: { courseId: string; total: number; marks: number[]; partStarts: { label: string; num: number }[]; labels: Record<string, string>; decor: ReactNode }) {
   const [status, setStatus] = useState<Status>("loading");
   const [rows, setRows] = useState<Row[]>([]);
   const [now, setNow] = useState(0);
@@ -100,7 +100,7 @@ export function Leaderboard({ courseId, total, partStarts, labels, decor }: { co
           <p className="masthead-lede">How far everyone has grown</p>
           <div className="board-standing">{standing}</div>
         </div>
-        {status === "ready" && ranked.length > 0 && <Garden rows={ranked} you={you} total={total} partStarts={partStarts} />}
+        {status === "ready" && ranked.length > 0 && <Garden rows={ranked} you={you} total={total} marks={marks} partStarts={partStarts} />}
       </header>
       <div className="board-body">
         {status === "loading" && <div className="board-placeholder" aria-busy="true" aria-label="Loading the leaderboard" />}

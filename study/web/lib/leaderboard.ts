@@ -19,6 +19,24 @@ export function summarize(chapters: ChapterInfo[], progress: Progress): Summary 
   };
 }
 
+// For each chapter, how many questions the course holds up to and including it, reviews before it counted too.
+// A plant's stem reaches a chapter's leaf once that many are solved.
+export function solvedMarks(chapters: ChapterInfo[]): number[] {
+  let sum = 0;
+  return chapters.flatMap((chapter) => {
+    sum += chapter.stepIds.length;
+    return chapter.kind === "bridge" ? [] : [sum];
+  });
+}
+
+// How far up the leaves `solved` questions reach: 0 is the shoot, k is the k-th chapter's leaf, and in between is part of the way there.
+export function climb(solved: number, marks: number[]): number {
+  const next = marks.findIndex((mark) => mark > solved);
+  if (next === -1) return marks.length;
+  const from = next === 0 ? 0 : marks[next - 1];
+  return next + (solved - from) / (marks[next] - from);
+}
+
 export function sameSummary(a: Summary, b: Summary) {
   return a.chapters === b.chapters && a.reviews === b.reviews && a.solved === b.solved && a.current === b.current;
 }

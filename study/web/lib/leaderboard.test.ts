@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ago, cleanName, gained, labelOf, ordinal, rankRows, snapshotGate, STALE_MS, summarize, toRow, type Row } from "./leaderboard";
+import { ago, cleanName, climb, gained, labelOf, ordinal, rankRows, snapshotGate, solvedMarks, STALE_MS, summarize, toRow, type Row } from "./leaderboard";
 import type { ChapterInfo } from "./progress";
 
 const ch = (id: string, stepIds: string[] = []): ChapterInfo => ({ id, title: id, num: 1, pos: 0, stepIds });
@@ -24,6 +24,38 @@ describe("summarize", () => {
   });
   it("a student past a waived review is not credited with it", () => {
     expect(summarize(course, { solved: ["a1", "a2", "b1", "c1"], read: ["a", "b", "c"] })).toMatchObject({ chapters: 3, reviews: 0 });
+  });
+});
+
+describe("solvedMarks", () => {
+  it("counts every question up to and including each chapter, reviews before it too", () => {
+    expect(solvedMarks(course)).toEqual([2, 3, 5]);
+  });
+});
+
+describe("climb", () => {
+  const marks = [2, 3, 5];
+  it("nothing solved is the shoot", () => {
+    expect(climb(0, marks)).toBe(0);
+  });
+  it("reaches a chapter's leaf once as many questions are solved as it and those before it hold", () => {
+    expect(climb(2, marks)).toBe(1);
+    expect(climb(3, marks)).toBe(2);
+    expect(climb(5, marks)).toBe(3);
+  });
+  it("grows part of the way between leaves", () => {
+    expect(climb(1, marks)).toBe(0.5);
+    expect(climb(4, marks)).toBe(2.5);
+  });
+  it("never passes the last leaf", () => {
+    expect(climb(99, marks)).toBe(3);
+  });
+  it("passes a chapter with no questions as soon as the one before it is reached", () => {
+    expect(climb(3, [3, 3, 6])).toBe(2);
+    expect(climb(6, [3, 6, 6])).toBe(3);
+  });
+  it("a course with no questions has nothing to climb", () => {
+    expect(climb(0, [])).toBe(0);
   });
 });
 
