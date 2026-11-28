@@ -185,6 +185,7 @@ async function Directive({ block, courseId }: { block: Extract<Block, { type: "d
     return (
       <CheckCard
         id={attrs.id || "check"}
+        courseId={courseId}
         question={parts.mode === "blank" ? null : <Blocks blocks={parts.question} courseId={courseId} />}
         prompt={parts.mode === "blank" ? await withCodeTokens(parts.prompt) : undefined}
         choices={parts.choices}

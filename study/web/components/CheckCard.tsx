@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/home/Icon";
 import { Inline } from "@/lib/inline";
+import { readCheck, writeCheck } from "@/lib/session-store";
 import type { Block, CodeToken } from "@/lib/types";
 
 type Choice = { correct: boolean; text: React.ReactNode };
@@ -235,12 +236,14 @@ function renderPrompt(
 
 export function CheckCard({
   id,
+  courseId,
   question,
   choices,
   why,
   prompt,
 }: {
   id: string;
+  courseId: string;
   question: React.ReactNode;
   choices: Choice[];
   why: React.ReactNode;
@@ -256,6 +259,23 @@ export function CheckCard({
     blanks.map((blank, index) => shuffle(blank.options, hash(`${id}:${index}:${blank.correct}`))),
   );
   const [graded, setGraded] = useState(false);
+  // False until the saved answer has been read, so the empty first render is not saved over it.
+  const [restored, setRestored] = useState(false);
+
+  useEffect(() => {
+    const saved = readCheck(courseId, id);
+    if (saved) {
+      setPicked(saved.picked);
+      setPickedMany(saved.pickedMany);
+      setValues(saved.values);
+      setGraded(saved.graded);
+    }
+    setRestored(true);
+  }, [courseId, id]);
+
+  useEffect(() => {
+    if (restored) writeCheck(courseId, id, { picked, pickedMany, values, graded });
+  }, [restored, courseId, id, picked, pickedMany, values, graded]);
 
   const manyCorrect =
     multi &&

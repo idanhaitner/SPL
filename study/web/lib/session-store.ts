@@ -60,6 +60,22 @@ export const writeCode = (courseId: string, exerciseId: string, code: string) =>
 export const readSplit = (courseId: string, name: string) => read(`${storageKey(courseId)}:split:${name}`);
 export const writeSplit = (courseId: string, name: string, fraction: number) => write(`${storageKey(courseId)}:split:${name}`, String(fraction));
 
+// A check's last answer, so leaving the page (say, to reread the chapter) does not wipe what was already answered.
+export type CheckAnswer = { picked: number | null; pickedMany: number[]; values: string[]; graded: boolean };
+
+export function readCheck(courseId: string, checkId: string): CheckAnswer | null {
+  try {
+    const parsed = JSON.parse(read(`${storageKey(courseId)}:check:${checkId}`) ?? "null") as Partial<CheckAnswer> | null;
+    if (!parsed || typeof parsed !== "object") return null;
+    const numbers = Array.isArray(parsed.pickedMany) ? parsed.pickedMany.filter((item): item is number => Number.isInteger(item)) : [];
+    return { picked: Number.isInteger(parsed.picked) ? (parsed.picked as number) : null, pickedMany: numbers, values: strings(parsed.values), graded: parsed.graded === true };
+  } catch {
+    return null;
+  }
+}
+
+export const writeCheck = (courseId: string, checkId: string, answer: CheckAnswer) => write(`${storageKey(courseId)}:check:${checkId}`, JSON.stringify(answer));
+
 export function clearCode(courseId: string, exerciseId: string) {
   try {
     localStorage.removeItem(`${storageKey(courseId)}:code:${exerciseId}`);

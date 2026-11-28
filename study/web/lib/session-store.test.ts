@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { openStep, readSession, resumeStep, writeSession } from "./session-store";
+import { openStep, readCheck, readSession, resumeStep, writeCheck, writeSession } from "./session-store";
 import { stepsOf } from "./steps";
 import type { Topic } from "./types";
 
 describe("session store", () => {
   beforeEach(() => localStorage.clear());
 
+  it("keeps a check's answer, and drops a malformed one", () => {
+    expect(readCheck("c", "q1")).toBeNull();
+    writeCheck("c", "q1", { picked: 2, pickedMany: [0, 1], values: ["object file"], graded: true });
+    expect(readCheck("c", "q1")).toEqual({ picked: 2, pickedMany: [0, 1], values: ["object file"], graded: true });
+    localStorage.setItem("study:c:check:q2", JSON.stringify({ picked: "x", pickedMany: [1, "y"], values: [3, "a"], graded: 1 }));
+    expect(readCheck("c", "q2")).toEqual({ picked: null, pickedMany: [1], values: ["a"], graded: false });
+  });
   it("resumes past solved and skipped steps", () => {
     expect(resumeStep(["a", "b", "c"], ["a"], ["b"])).toBe(2);
     expect(resumeStep(["a", "b"], ["a"], ["b"])).toBe(2);
